@@ -1,0 +1,144 @@
+# Architecture Review Team Members
+# HTM (Hierarchical Temporary Memory) Project
+
+systems_architect:
+  name: Systems Architect
+  focus: Distributed systems architecture, scalability patterns, and system decomposition
+  expertise:
+    - High-level architecture planning
+    - Component interaction design
+    - Distributed system patterns
+    - Scalability and performance at the system level
+    - Service boundaries and integration patterns
+  responsibilities:
+    - Ensure architectural coherence across components
+    - Evaluate system-wide scalability approaches
+    - Review distributed system patterns and practices
+    - Assess component coupling and cohesion
+
+domain_expert:
+  name: Domain Expert
+  focus: Domain-driven design, business logic accuracy, and semantic modeling
+  expertise:
+    - Domain-driven design (DDD) principles
+    - Translating business requirements to technical solutions
+    - Ubiquitous language development
+    - Bounded context definition
+    - Business logic validation
+  responsibilities:
+    - Validate domain model accuracy
+    - Ensure business requirements are properly translated
+    - Review memory semantics and categorization
+    - Assess knowledge graph modeling
+
+security_specialist:
+  name: Security Specialist
+  focus: Threat modeling, vulnerability assessment, and security controls
+  expertise:
+    - Security threat modeling
+    - Vulnerability identification and mitigation
+    - Data protection and privacy
+    - Authentication and authorization patterns
+    - Secure coding practices
+  responsibilities:
+    - Identify security implications in architecture
+    - Review data protection mechanisms
+    - Assess embedding and API key security
+    - Evaluate multi-tenant security (hive mind)
+
+maintainability_expert:
+  name: Maintainability Expert
+  focus: Code quality, technical debt, and long-term evolution
+  expertise:
+    - Code quality assessment
+    - Technical debt identification
+    - Refactoring strategies
+    - Documentation standards
+    - Testing strategies
+  responsibilities:
+    - Evaluate code maintainability
+    - Identify technical debt
+    - Review testing coverage and quality
+    - Assess documentation completeness
+
+performance_specialist:
+  name: Performance Specialist
+  focus: System optimization, resource utilization, and bottleneck identification
+  expertise:
+    - Performance profiling and optimization
+    - Database query optimization
+    - Caching strategies
+    - Resource utilization analysis
+    - Latency and throughput optimization
+  responsibilities:
+    - Identify performance bottlenecks
+    - Review database indexing strategies
+    - Assess TimescaleDB hypertable configuration
+    - Evaluate embedding generation performance
+    - Review token counting efficiency
+
+ai_engineer:
+  name: AI Engineer
+  focus: LLM integration, RAG systems, and AI-powered features
+  expertise:
+    - LLM integration patterns
+    - RAG (Retrieval-Augmented Generation) systems
+    - Embedding generation and vector search
+    - Context window management
+    - AI agent interaction patterns
+  responsibilities:
+    - Evaluate RAG implementation quality
+    - Review embedding service integration
+    - Assess context assembly strategies
+    - Validate vector search effectiveness
+    - Review token management approaches
+
+ruby_expert:
+  name: Ruby Expert
+  focus: Ruby best practices, gem development, and ecosystem integration
+  expertise:
+    - Ruby idioms and best practices
+    - Gem development and distribution
+    - Ruby performance optimization
+    - Testing with Minitest/RSpec
+    - Ruby metaprogramming when appropriate
+  responsibilities:
+    - Ensure Ruby idioms are followed
+    - Review gem structure and dependencies
+    - Assess testing strategy
+    - Evaluate error handling patterns
+    - Review API design for Ruby developers
+
+database_architect:
+  name: Database Architect
+  focus: PostgreSQL, TimescaleDB, and pgvector optimization
+  expertise:
+    - PostgreSQL performance tuning
+    - TimescaleDB hypertable design
+    - pgvector indexing strategies
+    - Connection pooling
+    - Database schema design
+  responsibilities:
+    - Review database schema design
+    - Optimize TimescaleDB configuration
+    - Assess indexing strategies
+    - Evaluate query performance
+    - Review connection pooling setup
+
+review_process:
+  phases:
+    - name: Independent Analysis
+      description: Each expert reviews the architecture independently from their perspective
+
+    - name: Collaborative Discussion
+      description: Experts discuss findings, reconcile conflicts, and identify trade-offs
+
+    - name: Final Recommendations
+      description: Consolidated recommendations balancing all perspectives with actionable items
+
+  principles:
+    - Consider both current needs and future evolution
+    - Balance theoretical best practices with practical constraints
+    - Provide specific, actionable recommendations
+    - Identify risks and mitigation strategies
+    - Document trade-offs and decision rationale

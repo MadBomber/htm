@@ -1,0 +1,187 @@
+# MkDocs Configuration for HTM Documentation
+site_name: HTM - Hierarchical Temporary Memory
+site_description: Intelligent memory management for LLM robots with two-tier architecture and RAG-based retrieval
+site_author: Dewayne VanHoozer
+site_url: https://madbomber.github.io/htm
+copyright: Copyright &copy; 2025 Dewayne VanHoozer
+
+# Repository information
+repo_name: madbomber/htm
+repo_url: https://github.com/madbomber/htm
+edit_uri: edit/main/docs/
+
+# Configuration
+theme:
+  name: material
+  
+  # Color scheme - Default to light mode
+  palette:
+    # Palette toggle for light mode (default)
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  # Typography
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  # Theme features
+  features:
+    # Navigation
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+
+    # Table of contents
+    - toc.follow
+
+    # Search
+    - search.suggest
+    - search.highlight
+    - search.share
+
+    # Header
+    - header.autohide
+
+    # Content
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - content.action.edit
+    - content.action.view
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+
+# Extensions
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: On this page
+
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: madbomber
+      repo: htm
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Extra CSS and JavaScript
+extra_css:
+  - assets/css/custom.css
+
+extra_javascript:
+  - assets/js/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+# Social media and extra configuration
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/madbomber/htm
+      name: HTM on GitHub
+    - icon: fontawesome/solid/gem
+      link: https://rubygems.org/gems/htm
+      name: HTM on RubyGems
+  
+  version:
+    provider: mike
+
+# Navigation
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quick Start: quick-start.md
+  - Architecture:
+    - architecture/index.md
+    - Overview: architecture/overview.md
+    - Two-Tier Memory: architecture/two-tier-memory.md
+    - Hive Mind: architecture/hive-mind.md
+    - ADRs:
+      - architecture/adrs/index.md
+      - ADR-001 PostgreSQL & TimescaleDB: architecture/adrs/001-postgresql-timescaledb.md
+      - ADR-002 Two-Tier Memory: architecture/adrs/002-two-tier-memory.md
+      - ADR-003 Ollama Embeddings: architecture/adrs/003-ollama-embeddings.md
+      - ADR-004 Hive Mind: architecture/adrs/004-hive-mind.md
+      - ADR-005 RAG Retrieval: architecture/adrs/005-rag-retrieval.md
+      - ADR-006 Context Assembly: architecture/adrs/006-context-assembly.md
+      - ADR-007 Eviction Strategy: architecture/adrs/007-eviction-strategy.md
+      - ADR-008 Robot Identification: architecture/adrs/008-robot-identification.md
+      - ADR-009 Never-Forget Philosophy: architecture/adrs/009-never-forget.md
+  - Guides:
+    - guides/index.md
+    - Getting Started: guides/getting-started.md
+    - Adding Memories: guides/adding-memories.md
+    - Recalling Memories: guides/recalling-memories.md
+    - Working Memory: guides/working-memory.md
+    - Long-Term Memory: guides/long-term-memory.md
+    - Multi-Robot Usage: guides/multi-robot.md
+    - Search Strategies: guides/search-strategies.md
+    - Context Assembly: guides/context-assembly.md
+  - API Reference:
+    - api/index.md
+    - HTM Class: api/htm.md
+    - Working Memory: api/working-memory.md
+    - Long-Term Memory: api/long-term-memory.md
+    - Embedding Service: api/embedding-service.md
+    - Database: api/database.md
+  - Development:
+    - development/index.md
+    - Setup: development/setup.md
+    - Testing: development/testing.md
+    - Contributing: development/contributing.md
+    - Database Schema: development/schema.md
