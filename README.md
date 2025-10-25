@@ -6,8 +6,14 @@
   <p>Intelligent memory management for LLM-based applications. HTM implements a two-tier memory system with durable long-term storage and token-limited working memory, enabling robots to recall context from past conversations using RAG (Retrieval-Augmented Generation).</p>
 </div>
 
+<br/><br/>
+
 > [!CAUTION]
 > This library is under active development. APIs and features may change without notice. Not recommended for production use yet.
+> <br /><br/>
+> Apologies to Jeff Hawkins for using his term in such a macro-superficial way.
+
+<br/><br/>
 
 ## Features
 
