@@ -15,8 +15,8 @@ class MockEmbeddingService
   def initialize(provider = :ollama, model: 'gpt-oss', ollama_url: nil, dimensions: nil)
     @provider = provider
     @model = model
-    # Use 1536 to match existing database schema (vector(1536) in schema.sql)
-    # TODO: Make database schema support variable dimensions
+    # Default to 1536 for most common embedding models
+    # Database now supports up to 3072 dimensions (will auto-pad)
     @dimensions = dimensions || 1536
     @llm_client = nil
     @tokenizer = Tiktoken.encoding_for_model("gpt-3.5-turbo")

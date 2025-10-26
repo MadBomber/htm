@@ -2,6 +2,7 @@
 
 require 'pg'
 require 'uri'
+require 'set'
 
 class HTM
   # Database setup and configuration for HTM
@@ -11,9 +12,10 @@ class HTM
       # Set up the HTM database schema
       #
       # @param db_url [String] Database connection URL (uses ENV['TIGER_DBURL'] if not provided)
+      # @param run_migrations [Boolean] Whether to run migrations (default: true)
       # @return [void]
       #
-      def setup(db_url = nil)
+      def setup(db_url = nil, run_migrations: true)
         config = parse_connection_url(db_url || ENV['TIGER_DBURL'])
 
         raise "Database configuration not found. Please source ~/.bashrc__tiger" unless config
@@ -26,11 +28,32 @@ class HTM
         # Run schema
         run_schema(conn)
 
+        # Run migrations if requested
+        run_migrations_if_needed(conn) if run_migrations
+
         # Convert tables to hypertables for time-series optimization
         setup_hypertables(conn)
 
         conn.close
         puts "✓ HTM database schema created successfully"
+      end
+
+      # Run pending database migrations
+      #
+      # @param db_url [String] Database connection URL (uses ENV['TIGER_DBURL'] if not provided)
+      # @return [void]
+      #
+      def migrate(db_url = nil)
+        config = parse_connection_url(db_url || ENV['TIGER_DBURL'])
+
+        raise "Database configuration not found. Please source ~/.bashrc__tiger" unless config
+
+        conn = PG.connect(config)
+
+        run_migrations_if_needed(conn)
+
+        conn.close
+        puts "✓ Database migrations completed"
       end
 
       # Parse database connection URL
@@ -134,6 +157,43 @@ class HTM
           if e.message.match?(/already exists/)
             puts "✓ Schema already exists (updated if needed)"
           else
+            raise e
+          end
+        end
+      end
+
+      def run_migrations_if_needed(conn)
+        # Create migrations tracking table if it doesn't exist
+        conn.exec(<<~SQL)
+          CREATE TABLE IF NOT EXISTS schema_migrations (
+            version TEXT PRIMARY KEY,
+            applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          );
+        SQL
+
+        # Get list of applied migrations
+        applied = conn.exec("SELECT version FROM schema_migrations").map { |r| r['version'] }.to_set
+
+        # Get list of available migrations
+        migrations_dir = File.expand_path('../../sql/migrations', __dir__)
+        return unless Dir.exist?(migrations_dir)
+
+        migration_files = Dir.glob(File.join(migrations_dir, '*.sql')).sort
+
+        migration_files.each do |file|
+          version = File.basename(file, '.sql')
+
+          next if applied.include?(version)
+
+          puts "Running migration: #{version}"
+          migration_sql = File.read(file)
+
+          begin
+            conn.exec(migration_sql)
+            conn.exec_params("INSERT INTO schema_migrations (version) VALUES ($1)", [version])
+            puts "  ✓ Migration #{version} applied"
+          rescue PG::Error => e
+            puts "  ✗ Migration #{version} failed: #{e.message}"
             raise e
           end
         end

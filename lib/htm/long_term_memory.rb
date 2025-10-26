@@ -21,6 +21,7 @@ class HTM
     DEFAULT_POOL_SIZE = 5
     DEFAULT_POOL_TIMEOUT = 5  # seconds to wait for a connection from the pool
     DEFAULT_QUERY_TIMEOUT = 30_000  # milliseconds (30 seconds)
+    MAX_VECTOR_DIMENSION = 2000  # Maximum supported dimension with HNSW index (pgvector limitation)
 
     attr_reader :pool_size, :query_timeout
 
@@ -53,14 +54,29 @@ class HTM
     # @return [Integer] Node database ID
     #
     def add(key:, value:, type: nil, category: nil, importance: 1.0, token_count: 0, robot_id:, embedding:)
+      # Store the actual embedding dimension
+      actual_dimension = embedding.length
+
+      # Validate dimension
+      if actual_dimension > MAX_VECTOR_DIMENSION
+        raise HTM::ValidationError, "Embedding dimension #{actual_dimension} exceeds maximum #{MAX_VECTOR_DIMENSION}"
+      end
+
+      # Pad embedding to MAX_VECTOR_DIMENSION if needed
+      padded_embedding = if actual_dimension < MAX_VECTOR_DIMENSION
+        embedding + Array.new(MAX_VECTOR_DIMENSION - actual_dimension, 0.0)
+      else
+        embedding
+      end
+
       with_connection do |conn|
         result = conn.exec_params(
           <<~SQL,
-            INSERT INTO nodes (key, value, type, category, importance, token_count, robot_id, embedding)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector)
+            INSERT INTO nodes (key, value, type, category, importance, token_count, robot_id, embedding, embedding_dimension)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector, $9)
             RETURNING id
           SQL
-          [key, value, type, category, importance, token_count, robot_id, embedding.to_s]
+          [key, value, type, category, importance, token_count, robot_id, padded_embedding.to_s, actual_dimension]
         )
         result.first['id'].to_i
       end

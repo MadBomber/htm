@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS nodes (
   token_count INTEGER,
   in_working_memory BOOLEAN DEFAULT FALSE,
   robot_id TEXT NOT NULL,
-  embedding vector(1536)  -- OpenAI ada-002/text-embedding-3-small uses 1536 dimensions
+  embedding vector(2000),  -- Support up to 2000 dimensions (HNSW index limitation)
+  embedding_dimension INTEGER  -- Actual dimension used (required for validation)
 );
 
 -- Relationships between nodes
