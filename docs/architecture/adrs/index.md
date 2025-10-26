@@ -36,6 +36,7 @@ Each ADR follows a consistent structure:
 |--------|---------|
 | **Accepted** | Decision is approved and implemented |
 | **Proposed** | Decision is under consideration |
+| **Rejected** | Decision was considered but not adopted |
 | **Deprecated** | Decision is no longer recommended |
 | **Superseded** | Decision has been replaced by another ADR |
 
@@ -157,13 +158,28 @@ Never-forget philosophy where memories are never automatically deleted, eviction
 
 ---
 
+### ADR-010: Redis-Based Working Memory (Rejected)
+
+**Status**: Rejected | **Date**: 2025-10-25
+
+Proposal to add Redis as a persistent storage layer for working memory was thoroughly analyzed and rejected. PostgreSQL already provides durability, working memory's ephemeral nature is by design, and Redis would add complexity without solving a proven problem.
+
+**Key Decision**: Keep two-tier architecture with in-memory working memory. Trust PostgreSQL for durability. Apply YAGNI principle.
+
+**Why Rejected**: Unnecessary complexity, performance penalty, operational burden, and no proven requirement. PostgreSQL already handles multi-process sharing and crash recovery.
+
+**Read more**: [ADR-010: Redis Working Memory (Rejected)](010-redis-working-memory-rejected.md)
+
+---
+
 ## ADR Dependencies
 
 ```
 ADR-001 (Storage)
   └─> ADR-002 (Two-Tier Memory)
-        └─> ADR-007 (Eviction Strategy)
-        └─> ADR-009 (Never-Forget)
+        ├─> ADR-007 (Eviction Strategy)
+        ├─> ADR-009 (Never-Forget)
+        └─> ADR-010 (Redis WM - Rejected Alternative)
   └─> ADR-003 (Embeddings)
         └─> ADR-005 (RAG Retrieval)
   └─> ADR-004 (Hive Mind)
