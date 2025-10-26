@@ -2,6 +2,7 @@
 
 require 'tiktoken_ruby'
 require 'ruby_llm'
+require_relative 'errors'
 
 class HTM
   # Embedding Service - Generate vector embeddings for semantic search
@@ -13,19 +14,50 @@ class HTM
   # - :local - Local sentence transformers
   #
   class EmbeddingService
-    attr_reader :provider, :llm_client
+    # Known embedding dimensions for common models
+    KNOWN_DIMENSIONS = {
+      # Ollama models
+      'gpt-oss' => 768,
+      'nomic-embed-text' => 768,
+      'all-minilm' => 384,
+      'mxbai-embed-large' => 1024,
+
+      # OpenAI models
+      'text-embedding-3-small' => 1536,
+      'text-embedding-3-large' => 3072,
+      'text-embedding-ada-002' => 1536,
+
+      # Cohere models
+      'embed-english-v3.0' => 1024,
+      'embed-multilingual-v3.0' => 1024,
+
+      # Local models (sentence-transformers)
+      'all-MiniLM-L6-v2' => 384,
+      'all-mpnet-base-v2' => 768
+    }.freeze
+
+    attr_reader :provider, :llm_client, :dimensions
 
     # Initialize embedding service
     #
     # @param provider [Symbol] Embedding provider (:ollama, :openai, :cohere, :local)
     # @param model [String] Model name (default: 'gpt-oss' for ollama)
     # @param ollama_url [String] Ollama server URL (default: http://localhost:11434)
+    # @param dimensions [Integer] Expected embedding dimensions (auto-detected from KNOWN_DIMENSIONS if not provided)
     #
-    def initialize(provider = :ollama, model: 'gpt-oss', ollama_url: nil)
+    def initialize(provider = :ollama, model: 'gpt-oss', ollama_url: nil, dimensions: nil)
       @provider = provider
       @model = model
       @ollama_url = ollama_url || ENV['OLLAMA_URL'] || 'http://localhost:11434'
       @tokenizer = Tiktoken.encoding_for_model("gpt-3.5-turbo")
+
+      # Auto-detect dimensions from known models, or use provided value
+      @dimensions = dimensions || KNOWN_DIMENSIONS[@model]
+
+      # Warn if we don't know the expected dimensions
+      if @dimensions.nil?
+        warn "WARNING: Unknown embedding dimensions for model '#{@model}'. Dimension validation disabled."
+      end
 
       # Note: RubyLLM is used via direct Ollama API calls for embeddings
       # We don't need to initialize RubyLLM::Client here since we're making
@@ -36,7 +68,7 @@ class HTM
     # Generate embedding for text
     #
     # @param text [String] Text to embed
-    # @return [Array<Float>] Embedding vector (1536 dimensions)
+    # @return [Array<Float>] Embedding vector (dimensions vary by model)
     #
     def embed(text)
       case @provider
@@ -93,49 +125,63 @@ class HTM
           embedding = result['embedding']
 
           unless embedding.is_a?(Array) && !embedding.empty?
-            raise "Invalid embedding received from Ollama API"
+            raise HTM::EmbeddingError, "Invalid embedding received from Ollama API for model '#{@model}'"
+          end
+
+          # Validate dimensions if known
+          if @dimensions && embedding.length != @dimensions
+            raise HTM::EmbeddingError, "Embedding dimension mismatch for model '#{@model}': expected #{@dimensions}, got #{embedding.length}"
           end
 
           embedding
         else
-          raise "Ollama API returned error: #{response.code} #{response.message}"
+          raise HTM::EmbeddingError, "Ollama API error: #{response.code} #{response.message}. Ensure Ollama is running and model '#{@model}' is available."
         end
-      rescue => e
-        warn "Error generating embedding with Ollama: #{e.message}"
-        warn "Falling back to stub embeddings (random vectors)"
-        warn "Please ensure Ollama is running and the #{@model} model is available"
-        Array.new(1536) { rand(-1.0..1.0) }
+      rescue JSON::ParserError => e
+        raise HTM::EmbeddingError, "Failed to parse Ollama response: #{e.message}"
+      rescue Errno::ECONNREFUSED
+        raise HTM::EmbeddingError, "Cannot connect to Ollama at #{@ollama_url}. Ensure Ollama is running."
+      rescue Net::OpenTimeout, Net::ReadTimeout => e
+        raise HTM::EmbeddingError, "Timeout connecting to Ollama: #{e.message}"
+      rescue HTM::EmbeddingError
+        # Re-raise our own errors without wrapping
+        raise
+      rescue StandardError => e
+        raise HTM::EmbeddingError, "Unexpected error generating embedding: #{e.class} - #{e.message}"
       end
     end
 
     def embed_openai(text)
       # TODO: Implement actual OpenAI API call
-      # For now, return a stub embedding (1536 dimensions of random values)
+      # For now, return a stub embedding with configured dimensions
       # This should be replaced with:
       # require 'openai'
       # client = OpenAI::Client.new(access_token: ENV['OPENAI_API_KEY'])
       # response = client.embeddings(
       #   parameters: {
-      #     model: "text-embedding-3-small",
+      #     model: @model,
       #     input: text
       #   }
       # )
       # response.dig("data", 0, "embedding")
 
-      warn "STUB: Using random embeddings. Implement OpenAI API integration for production."
-      Array.new(1536) { rand(-1.0..1.0) }
+      dim = @dimensions || 1536
+      warn "STUB: Using random #{dim}-dimensional embeddings. Implement OpenAI API integration for production."
+      Array.new(dim) { rand(-1.0..1.0) }
     end
 
     def embed_cohere(text)
       # TODO: Implement Cohere API call
-      warn "STUB: Cohere embedding not yet implemented"
-      Array.new(1536) { rand(-1.0..1.0) }
+      dim = @dimensions || 1024
+      warn "STUB: Cohere embedding not yet implemented. Using random #{dim}-dimensional embeddings."
+      Array.new(dim) { rand(-1.0..1.0) }
     end
 
     def embed_local(text)
       # TODO: Implement local sentence transformers
-      warn "STUB: Local embedding not yet implemented"
-      Array.new(1536) { rand(-1.0..1.0) }
+      dim = @dimensions || 384
+      warn "STUB: Local embedding not yet implemented. Using random #{dim}-dimensional embeddings."
+      Array.new(dim) { rand(-1.0..1.0) }
     end
   end
 end

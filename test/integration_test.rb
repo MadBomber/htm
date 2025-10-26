@@ -9,12 +9,14 @@ class IntegrationTest < Minitest::Test
       skip "Database not configured. Set TIGER_DBURL to run integration tests."
     end
 
-    # Initialize HTM with Ollama/gpt-oss via RubyLLM
+    # Use mock embedding service for tests (real Ollama not required)
+    mock_service = MockEmbeddingService.new(:ollama, model: 'gpt-oss')
+
+    # Initialize HTM with mock embedding service
     @htm = HTM.new(
       robot_name: "Test Robot",
       working_memory_size: 128_000,
-      embedding_service: :ollama,
-      embedding_model: 'gpt-oss'
+      embedding_service: mock_service
     )
   end
 

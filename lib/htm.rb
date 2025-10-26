@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "htm/version"
+require_relative "htm/errors"
 require_relative "htm/database"
 require_relative "htm/long_term_memory"
 require_relative "htm/working_memory"
@@ -47,7 +48,7 @@ class HTM
   # @param robot_id [String] Unique identifier for this robot (auto-generated if not provided)
   # @param robot_name [String] Human-readable name for this robot
   # @param db_config [Hash] Database configuration (uses ENV['TIGER_DBURL'] if not provided)
-  # @param embedding_service [Symbol] Embedding service to use (:ollama, :openai, :cohere, :local) (default: :ollama)
+  # @param embedding_service [Symbol, Object] Embedding service to use (:ollama, :openai, :cohere, :local) or a service object (default: :ollama)
   # @param embedding_model [String] Model name for embedding service (default: 'gpt-oss' for ollama)
   #
   def initialize(
@@ -64,7 +65,13 @@ class HTM
     # Initialize components
     @working_memory = HTM::WorkingMemory.new(max_tokens: working_memory_size)
     @long_term_memory = HTM::LongTermMemory.new(db_config || HTM::Database.default_config)
-    @embedding_service = HTM::EmbeddingService.new(embedding_service, model: embedding_model)
+
+    # Allow dependency injection of embedding service (for testing)
+    @embedding_service = if embedding_service.is_a?(Symbol)
+      HTM::EmbeddingService.new(embedding_service, model: embedding_model)
+    else
+      embedding_service
+    end
 
     # Register this robot in the database
     register_robot
@@ -200,12 +207,18 @@ class HTM
   #
   # @param key [String] Key of the node to delete
   # @param confirm [Symbol] Must be :confirmed to proceed
-  # @return [Boolean] true if deleted, false otherwise
+  # @return [Boolean] true if deleted
+  # @raise [ArgumentError] if confirmation not provided
+  # @raise [HTM::NotFoundError] if node doesn't exist
   #
   def forget(key, confirm: false)
     raise ArgumentError, "Must pass confirm: :confirmed to delete" unless confirm == :confirmed
 
+    # Get node ID - will be nil if node doesn't exist
     node_id = @long_term_memory.get_node_id(key)
+
+    # Raise error if node not found
+    raise HTM::NotFoundError, "Node not found: #{key}" unless node_id
 
     # Log operation BEFORE deleting to avoid foreign key violation
     @long_term_memory.log_operation(
