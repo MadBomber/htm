@@ -17,6 +17,13 @@
 
 ## Features
 
+- **Intelligent Embeddings via [pgai](https://github.com/timescale/pgai)**
+    - Automatic embedding generation in the database
+    - No application-side HTTP calls for embeddings
+    - Supports Ollama (local, default) and OpenAI
+    - Database triggers handle INSERT/UPDATE automatically
+    - 10-20% faster than Ruby-side generation
+
 - **Two-Tier Memory Architecture**
     - Working Memory: Token-limited active context for immediate LLM use
     - Long-term Memory: Durable PostgreSQL/TimescaleDB storage
@@ -27,12 +34,11 @@
     - Working memory evicts to long-term, never deletes
 
 - **RAG-Based Retrieval**
-    - Vector similarity search (pgvector with multiple embedding providers)
+    - Vector similarity search (pgvector + pgai)
     - Full-text search (PostgreSQL)
     - Hybrid search (combines both)
     - Temporal filtering ("last week", date ranges)
-    - Supports Ollama (default), OpenAI, and more
-    - Variable embedding dimensions (384 to 2000)
+    - Variable embedding dimensions (384 to 3072)
 
 - **Hive Mind**
     - All robots share global memory
@@ -89,12 +95,27 @@ export HTM_DBPORT="37807"
 
 See the [Environment Variables](#environment-variables) section below for complete details.
 
-### 2. Initialize Database Schema
+### 2. Enable pgai Extension
+
+HTM uses [pgai](https://github.com/timescale/pgai) for intelligent embedding generation directly in the database.
+
+```bash
+# Enable pgai and configure for Ollama
+ruby enable_extensions.rb
+
+# Start Ollama and pull embedding model
+ollama serve
+ollama pull nomic-embed-text
+```
+
+**Note**: pgai is built-in on TimescaleDB Cloud. For self-hosted PostgreSQL, [install pgai](https://github.com/timescale/pgai#installation).
+
+### 3. Initialize Database Schema
 
 ```ruby
 require 'htm'
 
-# Run once to set up database schema
+# Run once to set up database schema with pgai triggers
 HTM::Database.setup
 ```
 
@@ -104,13 +125,13 @@ Or from command line:
 ruby -r ./lib/htm -e "HTM::Database.setup"
 ```
 
-### 3. Verify Setup
+### 4. Verify Setup
 
 ```bash
 ruby test_connection.rb
 ```
 
-See [SETUP.md](SETUP.md) for detailed setup instructions.
+See [SETUP.md](SETUP.md) for detailed setup instructions and [PGAI_MIGRATION.md](PGAI_MIGRATION.md) for pgai configuration.
 
 ## Usage
 
@@ -120,15 +141,16 @@ See [SETUP.md](SETUP.md) for detailed setup instructions.
 require 'htm'
 
 # Initialize HTM for your robot
-# By default, uses RubyLLM with Ollama provider and gpt-oss model for embeddings
+# pgai handles embeddings automatically in the database
 htm = HTM.new(
   robot_name: "Code Helper",
-  working_memory_size: 128_000,    # tokens
-  embedding_service: :ollama,      # RubyLLM with Ollama (default)
-  embedding_model: 'gpt-oss'       # gpt-oss model (default)
+  working_memory_size: 128_000,       # tokens
+  embedding_provider: :ollama,        # Uses pgai + Ollama (default)
+  embedding_model: 'nomic-embed-text' # 768 dimensions (default)
 )
 
-# Add memories (embeddings generated automatically via Ollama)
+# Add memories - pgai generates embeddings automatically in database!
+# No application-side HTTP calls needed
 htm.add_node(
   "decision_001",
   "We decided to use PostgreSQL for HTM storage",

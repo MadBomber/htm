@@ -35,6 +35,23 @@ rescue PG::Error => e
   puts "✗ Failed to enable pg_trgm: #{e.message}"
 end
 
+# Enable pgai for intelligent embedding generation
+puts "Enabling ai (pgai) extension..."
+begin
+  conn.exec("CREATE EXTENSION IF NOT EXISTS ai CASCADE")
+  version = conn.exec("SELECT extversion FROM pg_extension WHERE extname='ai'").first
+  puts "✓ ai (pgai) enabled (version #{version['extversion']})"
+
+  # Configure pgai for Ollama
+  puts "Configuring pgai for Ollama..."
+  ollama_url = ENV['OLLAMA_URL'] || 'http://localhost:11434'
+  conn.exec_params("SELECT htm_set_embedding_config('ollama', 'nomic-embed-text', $1, NULL, 768)", [ollama_url])
+  puts "✓ pgai configured: provider=ollama, model=nomic-embed-text, url=#{ollama_url}"
+rescue PG::Error => e
+  puts "✗ Failed to enable or configure ai extension: #{e.message}"
+  puts "  Note: pgai requires TimescaleDB Cloud or a PostgreSQL instance with pgai installed"
+end
+
 puts
 puts "Summary of extensions for HTM:"
 puts

@@ -10,6 +10,95 @@ HTM provides three search strategies for retrieving memories: vector search, ful
 | **Full-text** | PostgreSQL text search | Exact keyword matching | Specific terms, proper nouns |
 | **Hybrid** | Combines both approaches | Best overall accuracy | General purpose queries |
 
+<svg viewBox="0 0 900 650" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">HTM Search Strategy Comparison</text>
+
+  <!-- Vector Search Strategy -->
+  <rect x="30" y="70" width="260" height="250" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="3" rx="5"/>
+  <text x="160" y="100" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Vector Search</text>
+  <text x="160" y="125" text-anchor="middle" fill="#2196F3" font-size="13" font-weight="bold">Semantic Similarity</text>
+
+  <text x="50" y="155" fill="#B0B0B0" font-size="12" font-weight="bold">How it works:</text>
+  <text x="50" y="175" fill="#B0B0B0" font-size="11">• Generate query embedding</text>
+  <text x="50" y="195" fill="#B0B0B0" font-size="11">• Find nearest neighbors</text>
+  <text x="50" y="215" fill="#B0B0B0" font-size="11">• Rank by cosine similarity</text>
+
+  <text x="50" y="245" fill="#4CAF50" font-size="12" font-weight="bold">Best for:</text>
+  <text x="50" y="265" fill="#4CAF50" font-size="11">✓ Conceptual queries</text>
+  <text x="50" y="285" fill="#4CAF50" font-size="11">✓ Related topics</text>
+  <text x="50" y="305" fill="#4CAF50" font-size="11">✓ Understanding intent</text>
+
+  <!-- Full-text Search Strategy -->
+  <rect x="320" y="70" width="260" height="250" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="3" rx="5"/>
+  <text x="450" y="100" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Full-Text Search</text>
+  <text x="450" y="125" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">Keyword Matching</text>
+
+  <text x="340" y="155" fill="#B0B0B0" font-size="12" font-weight="bold">How it works:</text>
+  <text x="340" y="175" fill="#B0B0B0" font-size="11">• Tokenize query</text>
+  <text x="340" y="195" fill="#B0B0B0" font-size="11">• Match against ts_vector</text>
+  <text x="340" y="215" fill="#B0B0B0" font-size="11">• Rank by tf-idf</text>
+
+  <text x="340" y="245" fill="#2196F3" font-size="12" font-weight="bold">Best for:</text>
+  <text x="340" y="265" fill="#2196F3" font-size="11">✓ Exact keywords</text>
+  <text x="340" y="285" fill="#2196F3" font-size="11">✓ Proper nouns</text>
+  <text x="340" y="305" fill="#2196F3" font-size="11">✓ Acronyms & commands</text>
+
+  <!-- Hybrid Search Strategy -->
+  <rect x="610" y="70" width="260" height="250" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3" rx="5"/>
+  <text x="740" y="100" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Hybrid Search</text>
+  <text x="740" y="125" text-anchor="middle" fill="#9C27B0" font-size="13" font-weight="bold">Best of Both Worlds</text>
+
+  <text x="630" y="155" fill="#B0B0B0" font-size="12" font-weight="bold">How it works:</text>
+  <text x="630" y="175" fill="#B0B0B0" font-size="11">• Run both searches</text>
+  <text x="630" y="195" fill="#B0B0B0" font-size="11">• Apply RRF scoring</text>
+  <text x="630" y="215" fill="#B0B0B0" font-size="11">• Merge & rank results</text>
+
+  <text x="630" y="245" fill="#FFC107" font-size="12" font-weight="bold">Best for:</text>
+  <text x="630" y="265" fill="#FFC107" font-size="11">✓ General queries</text>
+  <text x="630" y="285" fill="#FFC107" font-size="11">✓ Production default</text>
+  <text x="630" y="305" fill="#FFC107" font-size="11">✓ Mixed terminology</text>
+
+  <!-- Example Query -->
+  <text x="450" y="365" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Example Query: "improve database performance"</text>
+
+  <!-- Vector Results -->
+  <rect x="30" y="390" width="260" height="230" fill="rgba(33, 150, 243, 0.1)" stroke="#2196F3" stroke-width="2" rx="3"/>
+  <text x="160" y="415" text-anchor="middle" fill="#2196F3" font-size="13" font-weight="bold">Vector Results</text>
+  <text x="50" y="440" fill="#B0B0B0" font-size="10">1. "Query optimization" (0.92)</text>
+  <text x="50" y="460" fill="#B0B0B0" font-size="10">2. "Caching strategies" (0.87)</text>
+  <text x="50" y="480" fill="#B0B0B0" font-size="10">3. "Index tuning" (0.85)</text>
+  <text x="50" y="500" fill="#B0B0B0" font-size="10">4. "Connection pooling" (0.82)</text>
+  <text x="160" y="530" text-anchor="middle" fill="#4CAF50" font-size="11" font-weight="bold">Finds conceptually</text>
+  <text x="160" y="550" text-anchor="middle" fill="#4CAF50" font-size="11" font-weight="bold">related memories</text>
+  <text x="160" y="570" text-anchor="middle" fill="#FF9800" font-size="10">(May miss exact terms)</text>
+  <text x="160" y="600" text-anchor="middle" fill="#B0B0B0" font-size="10">Speed: ~80ms</text>
+
+  <!-- Full-text Results -->
+  <rect x="320" y="390" width="260" height="230" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="2" rx="3"/>
+  <text x="450" y="415" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">Full-Text Results</text>
+  <text x="340" y="440" fill="#B0B0B0" font-size="10">1. "Database performance" (0.95)</text>
+  <text x="340" y="460" fill="#B0B0B0" font-size="10">2. "Improve query speed" (0.88)</text>
+  <text x="340" y="480" fill="#B0B0B0" font-size="10">3. "Performance testing" (0.72)</text>
+  <text x="340" y="500" fill="#B0B0B0" font-size="10">(May miss related concepts)</text>
+  <text x="450" y="530" text-anchor="middle" fill="#2196F3" font-size="11" font-weight="bold">Finds exact keyword</text>
+  <text x="450" y="550" text-anchor="middle" fill="#2196F3" font-size="11" font-weight="bold">matches</text>
+  <text x="450" y="570" text-anchor="middle" fill="#FF9800" font-size="10">(Needs right words)</text>
+  <text x="450" y="600" text-anchor="middle" fill="#B0B0B0" font-size="10">Speed: ~30ms</text>
+
+  <!-- Hybrid Results -->
+  <rect x="610" y="390" width="260" height="230" fill="rgba(156, 39, 176, 0.1)" stroke="#9C27B0" stroke-width="2" rx="3"/>
+  <text x="740" y="415" text-anchor="middle" fill="#9C27B0" font-size="13" font-weight="bold">Hybrid Results</text>
+  <text x="630" y="440" fill="#B0B0B0" font-size="10">1. "Database performance" (0.96)</text>
+  <text x="630" y="460" fill="#B0B0B0" font-size="10">2. "Query optimization" (0.93)</text>
+  <text x="630" y="480" fill="#B0B0B0" font-size="10">3. "Improve query speed" (0.91)</text>
+  <text x="630" y="500" fill="#B0B0B0" font-size="10">4. "Caching strategies" (0.89)</text>
+  <text x="740" y="530" text-anchor="middle" fill="#FFC107" font-size="11" font-weight="bold">Balanced precision</text>
+  <text x="740" y="550" text-anchor="middle" fill="#FFC107" font-size="11" font-weight="bold">& recall</text>
+  <text x="740" y="570" text-anchor="middle" fill="#4CAF50" font-size="10">(Recommended!)</text>
+  <text x="740" y="600" text-anchor="middle" fill="#B0B0B0" font-size="10">Speed: ~120ms</text>
+</svg>
+
 ## Vector Search (Semantic)
 
 Vector search finds memories based on semantic similarity using embeddings.

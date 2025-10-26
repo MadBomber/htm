@@ -46,6 +46,126 @@ Working memory is token-limited (default 128,000 tokens). When adding new memori
 
 We will implement a **hybrid eviction strategy** that prioritizes memories by both importance and recency, evicting low-importance older memories first.
 
+<svg viewBox="0 0 950 750" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <defs>
+    <style>
+      .flow-box { fill: rgba(33, 150, 243, 0.2); stroke: #2196F3; stroke-width: 2; }
+      .tier-box { fill: rgba(76, 175, 80, 0.2); stroke: #4CAF50; stroke-width: 2; }
+      .tier1-box { fill: rgba(244, 67, 54, 0.3); stroke: #F44336; stroke-width: 2; }
+      .tier2-box { fill: rgba(255, 152, 0, 0.3); stroke: #FF9800; stroke-width: 2; }
+      .tier3-box { fill: rgba(255, 235, 59, 0.3); stroke: #FFEB3B; stroke-width: 2; }
+      .tier4-box { fill: rgba(76, 175, 80, 0.3); stroke: #4CAF50; stroke-width: 2; }
+      .text-header { fill: #E0E0E0; font-size: 18px; font-weight: bold; }
+      .text-label { fill: #E0E0E0; font-size: 14px; font-weight: bold; }
+      .text-small { fill: #B0B0B0; font-size: 11px; }
+      .text-tiny { fill: #A0A0A0; font-size: 10px; }
+      .arrow { stroke: #4A9EFF; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4A9EFF" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="475" y="30" text-anchor="middle" class="text-header">Hybrid Eviction Algorithm</text>
+
+  <!-- Algorithm Flow -->
+  <text x="50" y="65" class="text-label">Eviction Process</text>
+
+  <!-- Step 1 -->
+  <rect x="50" y="80" width="380" height="60" class="flow-box" rx="5"/>
+  <text x="60" y="100" class="text-label">1. Calculate Eviction Score</text>
+  <text x="60" y="120" class="text-small">score = [importance, -recency]</text>
+
+  <!-- Step 2 -->
+  <rect x="50" y="155" width="380" height="60" class="flow-box" rx="5"/>
+  <text x="60" y="175" class="text-label">2. Sort Memories by Score</text>
+  <text x="60" y="195" class="text-small">Primary: importance (asc), Secondary: age (desc)</text>
+
+  <!-- Step 3 -->
+  <rect x="50" y="230" width="380" height="60" class="flow-box" rx="5"/>
+  <text x="60" y="250" class="text-label">3. Greedy Eviction</text>
+  <text x="60" y="270" class="text-small">Evict from front until needed_tokens freed</text>
+
+  <!-- Step 4 -->
+  <rect x="50" y="305" width="380" height="60" class="flow-box" rx="5"/>
+  <text x="60" y="325" class="text-label">4. Mark as Evicted</text>
+  <text x="60" y="345" class="text-small">Set in_working_memory = false in database</text>
+
+  <!-- Arrows -->
+  <path d="M 240 140 L 240 155" class="arrow"/>
+  <path d="M 240 215 L 240 230" class="arrow"/>
+  <path d="M 240 290 L 240 305" class="arrow"/>
+
+  <!-- Eviction Tiers -->
+  <text x="520" y="65" class="text-label">Eviction Priority Tiers</text>
+  <text x="520" y="80" class="text-small">(Lower tier = evicted first)</text>
+
+  <!-- Tier 1 -->
+  <rect x="520" y="100" width="380" height="110" class="tier1-box" rx="5"/>
+  <text x="530" y="120" class="text-label" fill="#F44336">Tier 1: Low Importance + Old</text>
+  <text x="530" y="140" class="text-small">Evicted First</text>
+  <text x="530" y="165" class="text-tiny">importance: 1.0, age: 5 days → evicted 1st</text>
+  <text x="530" y="180" class="text-tiny">importance: 2.0, age: 3 days → evicted 2nd</text>
+  <text x="530" y="195" class="text-tiny">Examples: Temporary notes, scratch data</text>
+
+  <!-- Tier 2 -->
+  <rect x="520" y="225" width="380" height="110" class="tier2-box" rx="5"/>
+  <text x="530" y="245" class="text-label" fill="#FF9800">Tier 2: Low Importance + Recent</text>
+  <text x="530" y="265" class="text-small">Evicted Second</text>
+  <text x="530" y="290" class="text-tiny">importance: 1.0, age: 1 hour → evicted 3rd</text>
+  <text x="530" y="305" class="text-tiny">importance: 2.0, age: 30 min → evicted 4th</text>
+  <text x="530" y="320" class="text-tiny">Examples: Recent but low-value context</text>
+
+  <!-- Tier 3 -->
+  <rect x="520" y="350" width="380" height="110" class="tier3-box" rx="5"/>
+  <text x="530" y="370" class="text-label" fill="#FDD835">Tier 3: High Importance + Old</text>
+  <text x="530" y="390" class="text-small">Evicted Third</text>
+  <text x="530" y="415" class="text-tiny">importance: 9.0, age: 30 days → evicted 5th</text>
+  <text x="530" y="430" class="text-tiny">importance: 10.0, age: 90 days → evicted 6th</text>
+  <text x="530" y="445" class="text-tiny">Examples: Old but critical decisions</text>
+
+  <!-- Tier 4 -->
+  <rect x="520" y="475" width="380" height="110" class="tier4-box" rx="5"/>
+  <text x="530" y="495" class="text-label" fill="#4CAF50">Tier 4: High Importance + Recent</text>
+  <text x="530" y="515" class="text-small">Kept (Evicted Last)</text>
+  <text x="530" y="540" class="text-tiny">importance: 9.0, age: 1 hour → kept longest</text>
+  <text x="530" y="555" class="text-tiny">importance: 10.0, age: 5 min → never evicted (if possible)</text>
+  <text x="530" y="570" class="text-tiny">Examples: Critical + actively used data</text>
+
+  <!-- Key Features -->
+  <text x="50" y="410" class="text-label">Guarantees</text>
+
+  <rect x="50" y="425" width="170" height="140" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="60" y="450" class="text-small">✓ Never-forget principle</text>
+  <text x="60" y="470" class="text-small">✓ Preserved in long-term</text>
+  <text x="60" y="490" class="text-small">✓ Can be recalled</text>
+  <text x="60" y="510" class="text-small">✓ No data loss</text>
+  <text x="60" y="530" class="text-small">✓ Deterministic order</text>
+  <text x="60" y="550" class="text-small">✓ O(n log n) complexity</text>
+
+  <rect x="240" y="425" width="190" height="140" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="250" y="450" class="text-small">Performance:</text>
+  <text x="250" y="470" class="text-tiny">• Sort: O(n log n)</text>
+  <text x="250" y="485" class="text-tiny">• Eviction: O(k) greedy</text>
+  <text x="250" y="500" class="text-tiny">• Typical: &lt;10ms</text>
+  <text x="250" y="515" class="text-tiny">• Memory: O(n) temp</text>
+  <text x="250" y="530" class="text-tiny">• Stops when enough</text>
+  <text x="250" y="545" class="text-tiny">  space freed</text>
+
+  <!-- Example -->
+  <text x="50" y="600" class="text-label">Example: Need 5,000 tokens</text>
+
+  <rect x="50" y="615" width="850" height="110" fill="rgba(33, 150, 243, 0.1)" stroke="#2196F3" stroke-width="1" rx="3"/>
+
+  <text x="60" y="635" class="text-tiny">Working memory contains:</text>
+  <text x="70" y="655" class="text-tiny" fill="#F44336">• "random_note" (imp: 1.0, 2000 tok, 1 hr ago) → EVICTED (Tier 2)</text>
+  <text x="70" y="670" class="text-tiny" fill="#F44336">• "debug_log" (imp: 2.0, 1500 tok, 2 days ago) → EVICTED (Tier 1)</text>
+  <text x="70" y="685" class="text-tiny" fill="#F44336">• "temp_calc" (imp: 1.5, 1600 tok, 5 days ago) → EVICTED (Tier 1)</text>
+  <text x="70" y="700" class="text-tiny" fill="#4CAF50">• "user_pref" (imp: 8.0, 100 tok, 5 days ago) → KEPT (Tier 3)</text>
+  <text x="70" y="715" class="text-tiny" fill="#4CAF50">• "architecture_decision" (imp: 10.0, 3000 tok, 3 days ago) → KEPT (Tier 3)</text>
+</svg>
+
 ### Eviction Algorithm
 
 ```ruby

@@ -23,6 +23,123 @@ memories.each do |memory|
 end
 ```
 
+<svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">HTM RAG-Based Recall Process</text>
+
+  <!-- Step 1: User Query -->
+  <rect x="50" y="70" width="200" height="80" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="3" rx="5"/>
+  <text x="150" y="95" text-anchor="middle" fill="#4CAF50" font-size="14" font-weight="bold">1. User Query</text>
+  <text x="150" y="120" text-anchor="middle" fill="#B0B0B0" font-size="11">recall(</text>
+  <text x="150" y="135" text-anchor="middle" fill="#B0B0B0" font-size="11">  "database design")</text>
+
+  <!-- Arrow 1 to 2 -->
+  <line x1="250" y1="110" x2="290" y2="110" stroke="#4CAF50" stroke-width="2" marker-end="url(#arrow-g)"/>
+
+  <!-- Step 2: Generate Embedding -->
+  <rect x="290" y="70" width="200" height="80" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
+  <text x="390" y="95" text-anchor="middle" fill="#2196F3" font-size="14" font-weight="bold">2. Generate Embedding</text>
+  <text x="390" y="120" text-anchor="middle" fill="#B0B0B0" font-size="10">Ollama/OpenAI</text>
+  <text x="390" y="135" text-anchor="middle" fill="#B0B0B0" font-size="10">[0.23, -0.57, ...]</text>
+
+  <!-- Arrow 2 to 3 -->
+  <line x1="490" y1="110" x2="530" y2="110" stroke="#2196F3" stroke-width="2" marker-end="url(#arrow-b)"/>
+
+  <!-- Step 3: Database Search -->
+  <rect x="530" y="70" width="200" height="80" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="2" rx="5"/>
+  <text x="630" y="95" text-anchor="middle" fill="#9C27B0" font-size="14" font-weight="bold">3. Search Database</text>
+  <text x="630" y="120" text-anchor="middle" fill="#B0B0B0" font-size="10">Vector + Temporal</text>
+  <text x="630" y="135" text-anchor="middle" fill="#B0B0B0" font-size="10">+ Full-text</text>
+
+  <!-- Search Strategy Branches -->
+  <line x1="630" y1="150" x2="200" y2="200" stroke="#2196F3" stroke-width="2" marker-end="url(#arrow-b2)"/>
+  <line x1="630" y1="150" x2="450" y2="200" stroke="#4CAF50" stroke-width="2" marker-end="url(#arrow-g2)"/>
+  <line x1="630" y1="150" x2="680" y2="200" stroke="#9C27B0" stroke-width="2" marker-end="url(#arrow-p)"/>
+
+  <!-- Vector Search -->
+  <rect x="100" y="210" width="200" height="120" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="2" rx="3"/>
+  <text x="200" y="235" text-anchor="middle" fill="#2196F3" font-size="12" font-weight="bold">Vector Search</text>
+  <text x="120" y="260" fill="#B0B0B0" font-size="10">pgvector HNSW</text>
+  <text x="120" y="280" fill="#B0B0B0" font-size="10">Cosine similarity</text>
+  <text x="120" y="300" fill="#B0B0B0" font-size="10">Semantic matching</text>
+  <text x="200" y="320" text-anchor="middle" fill="#4CAF50" font-size="9">~80ms</text>
+
+  <!-- Full-text Search -->
+  <rect x="350" y="210" width="200" height="120" fill="rgba(76, 175, 80, 0.15)" stroke="#4CAF50" stroke-width="2" rx="3"/>
+  <text x="450" y="235" text-anchor="middle" fill="#4CAF50" font-size="12" font-weight="bold">Full-Text Search</text>
+  <text x="370" y="260" fill="#B0B0B0" font-size="10">PostgreSQL GIN</text>
+  <text x="370" y="280" fill="#B0B0B0" font-size="10">ts_query matching</text>
+  <text x="370" y="300" fill="#B0B0B0" font-size="10">Keyword matching</text>
+  <text x="450" y="320" text-anchor="middle" fill="#4CAF50" font-size="9">~30ms</text>
+
+  <!-- Hybrid Search -->
+  <rect x="600" y="210" width="200" height="120" fill="rgba(156, 39, 176, 0.15)" stroke="#9C27B0" stroke-width="2" rx="3"/>
+  <text x="700" y="235" text-anchor="middle" fill="#9C27B0" font-size="12" font-weight="bold">Hybrid Search</text>
+  <text x="620" y="260" fill="#B0B0B0" font-size="10">Both searches</text>
+  <text x="620" y="280" fill="#B0B0B0" font-size="10">RRF scoring</text>
+  <text x="620" y="300" fill="#B0B0B0" font-size="10">Best results</text>
+  <text x="700" y="320" text-anchor="middle" fill="#FFC107" font-size="9">~120ms</text>
+
+  <!-- Results merge -->
+  <line x1="200" y1="330" x2="450" y2="380" stroke="#2196F3" stroke-width="2"/>
+  <line x1="450" y1="330" x2="450" y2="380" stroke="#4CAF50" stroke-width="2"/>
+  <line x1="700" y1="330" x2="450" y2="380" stroke="#9C27B0" stroke-width="2"/>
+
+  <!-- Step 4: Ranked Results -->
+  <rect x="300" y="390" width="300" height="110" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
+  <text x="450" y="415" text-anchor="middle" fill="#FF9800" font-size="14" font-weight="bold">4. Ranked Results</text>
+  <text x="320" y="440" fill="#B0B0B0" font-size="10">1. "PostgreSQL design" (0.92)</text>
+  <text x="320" y="460" fill="#B0B0B0" font-size="10">2. "Database schema" (0.89)</text>
+  <text x="320" y="480" fill="#B0B0B0" font-size="10">3. "Table relationships" (0.85)</text>
+
+  <!-- Arrow 4 to 5 -->
+  <line x1="450" y1="500" x2="450" y2="530" stroke="#FF9800" stroke-width="2" marker-end="url(#arrow-o)"/>
+
+  <!-- Step 5: Load to Working Memory -->
+  <rect x="300" y="540" width="300" height="110" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="2" rx="5"/>
+  <text x="450" y="565" text-anchor="middle" fill="#4CAF50" font-size="14" font-weight="bold">5. Load to Working Memory</text>
+  <text x="320" y="590" fill="#B0B0B0" font-size="10">• Add to in-memory cache</text>
+  <text x="320" y="610" fill="#B0B0B0" font-size="10">• Fast LLM access</text>
+  <text x="320" y="630" fill="#B0B0B0" font-size="10">• Return to user</text>
+
+  <!-- Key Features -->
+  <rect x="50" y="540" width="200" height="110" fill="rgba(33, 150, 243, 0.1)" stroke="#2196F3" stroke-width="1" rx="3"/>
+  <text x="150" y="560" text-anchor="middle" fill="#2196F3" font-size="11" font-weight="bold">Key Features:</text>
+  <text x="70" y="580" fill="#B0B0B0" font-size="9">✓ Temporal filtering</text>
+  <text x="70" y="600" fill="#B0B0B0" font-size="9">✓ Semantic search</text>
+  <text x="70" y="620" fill="#B0B0B0" font-size="9">✓ Keyword matching</text>
+  <text x="70" y="640" fill="#B0B0B0" font-size="9">✓ Importance ranking</text>
+
+  <!-- Performance -->
+  <rect x="650" y="540" width="200" height="110" fill="rgba(255, 193, 7, 0.1)" stroke="#FFC107" stroke-width="1" rx="3"/>
+  <text x="750" y="560" text-anchor="middle" fill="#FFC107" font-size="11" font-weight="bold">Performance:</text>
+  <text x="670" y="580" fill="#B0B0B0" font-size="9">Vector: ~80ms</text>
+  <text x="670" y="600" fill="#B0B0B0" font-size="9">Full-text: ~30ms</text>
+  <text x="670" y="620" fill="#B0B0B0" font-size="9">Hybrid: ~120ms</text>
+  <text x="670" y="640" fill="#B0B0B0" font-size="9">✓ Optimized indexes</text>
+
+  <defs>
+    <marker id="arrow-g" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
+    </marker>
+    <marker id="arrow-g2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
+    </marker>
+    <marker id="arrow-b" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2196F3"/>
+    </marker>
+    <marker id="arrow-b2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2196F3"/>
+    </marker>
+    <marker id="arrow-p" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#9C27B0"/>
+    </marker>
+    <marker id="arrow-o" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#FF9800"/>
+    </marker>
+  </defs>
+</svg>
+
 ## Understanding Timeframes
 
 HTM supports both natural language timeframes and explicit ranges.

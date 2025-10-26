@@ -13,23 +13,7 @@ Long-term memory provides:
 - **Relationship graphs** for knowledge connections
 - **Audit logging** for all operations
 
-```
-┌─────────────────────────────────────────┐
-│         Long-term Memory                │
-├─────────────────────────────────────────┤
-│  Tables:                                │
-│  • nodes (memories + embeddings)        │
-│  • relationships (knowledge graph)      │
-│  • tags (categorization)                │
-│  • operations_log (audit trail)         │
-│  • robots (identity registry)           │
-│                                         │
-│  Indexes:                               │
-│  • Vector similarity (HNSW)             │
-│  • Full-text search (GIN)               │
-│  • Time-range (hypertable chunks)       │
-└─────────────────────────────────────────┘
-```
+![Long-term Memory Architecture](../assets/images/htm-long-term-memory-architecture.svg)
 
 ## Database Schema
 

@@ -5,6 +5,103 @@ Get started with HTM in just 5 minutes! This guide will walk you through buildin
 !!! info "Prerequisites"
     Make sure you've completed the [Installation Guide](installation.md) before starting this tutorial.
 
+<svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">HTM Quick Start Workflow</text>
+
+  <!-- Step 1: Initialize -->
+  <rect x="50" y="70" width="180" height="100" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="3" rx="5"/>
+  <text x="140" y="95" text-anchor="middle" fill="#4CAF50" font-size="16" font-weight="bold">Step 1</text>
+  <text x="140" y="115" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Initialize HTM</text>
+  <text x="140" y="140" text-anchor="middle" fill="#B0B0B0" font-size="11">HTM.new()</text>
+  <text x="140" y="160" text-anchor="middle" fill="#B0B0B0" font-size="10">Set robot name</text>
+
+  <!-- Arrow 1 to 2 -->
+  <line x1="230" y1="120" x2="270" y2="120" stroke="#4CAF50" stroke-width="3" marker-end="url(#arrow-green)"/>
+
+  <!-- Step 2: Add Memories -->
+  <rect x="270" y="70" width="180" height="100" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="3" rx="5"/>
+  <text x="360" y="95" text-anchor="middle" fill="#2196F3" font-size="16" font-weight="bold">Step 2</text>
+  <text x="360" y="115" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Add Memories</text>
+  <text x="360" y="140" text-anchor="middle" fill="#B0B0B0" font-size="11">add_node()</text>
+  <text x="360" y="160" text-anchor="middle" fill="#B0B0B0" font-size="10">Store knowledge</text>
+
+  <!-- Arrow 2 to 3 -->
+  <line x1="450" y1="120" x2="490" y2="120" stroke="#2196F3" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <!-- Step 3: Recall -->
+  <rect x="490" y="70" width="180" height="100" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3" rx="5"/>
+  <text x="580" y="95" text-anchor="middle" fill="#9C27B0" font-size="16" font-weight="bold">Step 3</text>
+  <text x="580" y="115" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Recall Memories</text>
+  <text x="580" y="140" text-anchor="middle" fill="#B0B0B0" font-size="11">recall()</text>
+  <text x="580" y="160" text-anchor="middle" fill="#B0B0B0" font-size="10">Search & retrieve</text>
+
+  <!-- Arrow 3 to 4 -->
+  <line x1="670" y1="120" x2="710" y2="120" stroke="#9C27B0" stroke-width="3" marker-end="url(#arrow-purple)"/>
+
+  <!-- Step 4: Use Context -->
+  <rect x="710" y="70" width="180" height="100" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="3" rx="5"/>
+  <text x="800" y="95" text-anchor="middle" fill="#FF9800" font-size="16" font-weight="bold">Step 4</text>
+  <text x="800" y="115" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Use Context</text>
+  <text x="800" y="140" text-anchor="middle" fill="#B0B0B0" font-size="11">create_context()</text>
+  <text x="800" y="160" text-anchor="middle" fill="#B0B0B0" font-size="10">For LLM prompts</text>
+
+  <!-- Memory Layers Visualization -->
+  <text x="450" y="220" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">HTM Memory System</text>
+
+  <!-- Working Memory -->
+  <rect x="100" y="250" width="300" height="120" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
+  <text x="250" y="275" text-anchor="middle" fill="#E0E0E0" font-size="13" font-weight="bold">Working Memory (Fast)</text>
+  <text x="120" y="300" fill="#B0B0B0" font-size="11">• Token-limited (128K)</text>
+  <text x="120" y="320" fill="#B0B0B0" font-size="11">• In-memory storage</text>
+  <text x="120" y="340" fill="#B0B0B0" font-size="11">• Immediate LLM access</text>
+  <text x="120" y="360" fill="#4CAF50" font-size="10" font-weight="bold">O(1) lookups</text>
+
+  <!-- Long-Term Memory -->
+  <rect x="500" y="250" width="300" height="120" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="2" rx="5"/>
+  <text x="650" y="275" text-anchor="middle" fill="#E0E0E0" font-size="13" font-weight="bold">Long-Term Memory (Durable)</text>
+  <text x="520" y="300" fill="#B0B0B0" font-size="11">• Unlimited storage</text>
+  <text x="520" y="320" fill="#B0B0B0" font-size="11">• PostgreSQL + TimescaleDB</text>
+  <text x="520" y="340" fill="#B0B0B0" font-size="11">• RAG search (vector + text)</text>
+  <text x="520" y="360" fill="#4CAF50" font-size="10" font-weight="bold">Permanent storage</text>
+
+  <!-- Data Flow -->
+  <path d="M 250 390 L 250 420 L 450 420 L 450 390" stroke="#4CAF50" stroke-width="2" fill="none"/>
+  <text x="350" y="410" text-anchor="middle" fill="#4CAF50" font-size="10">Stored in both</text>
+
+  <path d="M 400 440 L 650 440" stroke="#FF9800" stroke-width="2" marker-end="url(#arrow-orange)"/>
+  <text x="525" y="430" text-anchor="middle" fill="#FF9800" font-size="10">Evicted when full</text>
+
+  <path d="M 650 460 L 250 460" stroke="#9C27B0" stroke-width="2" marker-end="url(#arrow-purple2)"/>
+  <text x="450" y="450" text-anchor="middle" fill="#9C27B0" font-size="10">Recalled when needed</text>
+
+  <!-- Code Example -->
+  <rect x="50" y="490" width="800" height="90" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="2" rx="5"/>
+  <text x="450" y="515" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">Quick Example Code:</text>
+  <text x="70" y="540" fill="#B0B0B0" font-family="monospace" font-size="10">htm = HTM.new(robot_name: "My Assistant")</text>
+  <text x="70" y="555" fill="#B0B0B0" font-family="monospace" font-size="10">htm.add_node("key1", "Remember this fact", type: :fact)</text>
+  <text x="70" y="570" fill="#B0B0B0" font-family="monospace" font-size="10">memories = htm.recall(timeframe: "today", topic: "fact")</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2196F3"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#9C27B0"/>
+    </marker>
+    <marker id="arrow-purple2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#9C27B0"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#FF9800"/>
+    </marker>
+  </defs>
+</svg>
+
 ## Your First HTM Application
 
 Let's build a simple coding assistant that remembers project decisions and preferences.

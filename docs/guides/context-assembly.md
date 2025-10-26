@@ -6,17 +6,107 @@ Context assembly is the process of converting working memory into a formatted st
 
 Context assembly transforms working memory into LLM-ready context:
 
-```
-Working Memory (Nodes)              Context String
-┌──────────────────┐               ┌─────────────────────┐
-│ Node 1 (1000 tok)│               │ Node 3 (important)  │
-│ Node 2 (500 tok) │  Assembly →   │ Node 1 (recent)     │
-│ Node 3 (2000 tok)│   Strategy    │ Node 2 (balanced)   │
-│ Node 4 (800 tok) │               │                     │
-└──────────────────┘               └─────────────────────┘
-                                         ↓
-                                    LLM Prompt
-```
+<svg viewBox="0 0 900 550" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <defs>
+    <style>
+      .box { fill: rgba(33, 150, 243, 0.2); stroke: #2196F3; stroke-width: 2; }
+      .strategy-box { fill: rgba(76, 175, 80, 0.2); stroke: #4CAF50; stroke-width: 2; }
+      .output-box { fill: rgba(255, 152, 0, 0.2); stroke: #FF9800; stroke-width: 2; }
+      .llm-box { fill: rgba(156, 39, 176, 0.2); stroke: #9C27B0; stroke-width: 3; }
+      .text-header { fill: #E0E0E0; font-size: 16px; font-weight: bold; }
+      .text-label { fill: #E0E0E0; font-size: 13px; }
+      .text-small { fill: #B0B0B0; font-size: 11px; }
+      .arrow { stroke: #4A9EFF; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4A9EFF" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="25" text-anchor="middle" class="text-header" fill="#E0E0E0">Context Assembly Process</text>
+
+  <!-- Working Memory Box -->
+  <rect x="50" y="60" width="200" height="200" class="box" rx="5"/>
+  <text x="150" y="85" text-anchor="middle" class="text-header">Working Memory</text>
+  <text x="150" y="105" text-anchor="middle" class="text-small">(Nodes)</text>
+
+  <text x="60" y="135" class="text-label">Node 1</text>
+  <text x="180" y="135" text-anchor="end" class="text-small">1000 tok</text>
+  <text x="60" y="155" class="text-label">Node 2</text>
+  <text x="180" y="155" text-anchor="end" class="text-small">500 tok</text>
+  <text x="60" y="175" class="text-label">Node 3</text>
+  <text x="180" y="175" text-anchor="end" class="text-small">2000 tok</text>
+  <text x="60" y="195" class="text-label">Node 4</text>
+  <text x="180" y="195" text-anchor="end" class="text-small">800 tok</text>
+  <text x="60" y="215" class="text-label">Node 5</text>
+  <text x="180" y="215" text-anchor="end" class="text-small">1200 tok</text>
+  <text x="60" y="235" class="text-label">...</text>
+
+  <!-- Assembly Strategies -->
+  <rect x="330" y="60" width="240" height="200" class="strategy-box" rx="5"/>
+  <text x="450" y="85" text-anchor="middle" class="text-header">Assembly Strategy</text>
+
+  <!-- Strategy 1: Recent -->
+  <rect x="340" y="100" width="220" height="35" fill="rgba(76, 175, 80, 0.3)" rx="3"/>
+  <text x="350" y="120" class="text-label">:recent</text>
+  <text x="550" y="120" text-anchor="end" class="text-small">Sort by access time</text>
+
+  <!-- Strategy 2: Important -->
+  <rect x="340" y="145" width="220" height="35" fill="rgba(76, 175, 80, 0.3)" rx="3"/>
+  <text x="350" y="165" class="text-label">:important</text>
+  <text x="550" y="165" text-anchor="end" class="text-small">Sort by importance</text>
+
+  <!-- Strategy 3: Balanced -->
+  <rect x="340" y="190" width="220" height="35" fill="rgba(76, 175, 80, 0.3)" rx="3"/>
+  <text x="350" y="210" class="text-label">:balanced</text>
+  <text x="550" y="210" text-anchor="end" class="text-small">Weighted formula</text>
+
+  <text x="450" y="250" text-anchor="middle" class="text-small">Assembles until max_tokens reached</text>
+
+  <!-- Context String Box -->
+  <rect x="650" y="60" width="200" height="200" class="output-box" rx="5"/>
+  <text x="750" y="85" text-anchor="middle" class="text-header">Context String</text>
+  <text x="750" y="105" text-anchor="middle" class="text-small">(Ordered)</text>
+
+  <text x="660" y="135" class="text-label">Node 3</text>
+  <text x="840" y="135" text-anchor="end" class="text-small">(important)</text>
+  <text x="660" y="155" class="text-label">Node 1</text>
+  <text x="840" y="155" text-anchor="end" class="text-small">(recent)</text>
+  <text x="660" y="175" class="text-label">Node 5</text>
+  <text x="840" y="175" text-anchor="end" class="text-small">(balanced)</text>
+  <text x="660" y="195" class="text-label">Node 2</text>
+  <text x="840" y="195" text-anchor="end" class="text-small">(fits)</text>
+  <text x="660" y="215" class="text-small" fill="#808080">...</text>
+  <text x="750" y="245" text-anchor="middle" class="text-small" fill="#66BB6A">✓ Within token limit</text>
+
+  <!-- LLM Prompt Box -->
+  <rect x="250" y="330" width="400" height="180" class="llm-box" rx="5"/>
+  <text x="450" y="355" text-anchor="middle" class="text-header">LLM Prompt</text>
+
+  <text x="260" y="385" class="text-small" fill="#BB86FC">System: You are a helpful assistant...</text>
+  <text x="260" y="410" class="text-small" fill="#BB86FC">Context from memory:</text>
+  <text x="270" y="430" class="text-small" fill="#E0E0E0">[Assembled Context String]</text>
+  <text x="260" y="455" class="text-small" fill="#BB86FC">User: How do we handle auth?</text>
+  <text x="260" y="480" class="text-small" fill="#BB86FC">Assistant:</text>
+
+  <!-- Arrows -->
+  <path d="M 250 160 L 330 160" class="arrow"/>
+  <text x="290" y="150" text-anchor="middle" class="text-small">select &amp;</text>
+  <text x="290" y="163" text-anchor="middle" class="text-small">sort</text>
+
+  <path d="M 570 160 L 650 160" class="arrow"/>
+  <text x="610" y="150" text-anchor="middle" class="text-small">assemble</text>
+
+  <path d="M 750 260 L 750 330" class="arrow"/>
+  <text x="770" y="300" class="text-small">insert into</text>
+  <text x="770" y="313" class="text-small">prompt</text>
+
+  <!-- Token count indicator -->
+  <rect x="650" y="275" width="200" height="30" fill="rgba(255, 152, 0, 0.1)" stroke="#FF9800" stroke-width="1" rx="3"/>
+  <rect x="650" y="275" width="140" height="30" fill="rgba(76, 175, 80, 0.3)" rx="3"/>
+  <text x="750" y="293" text-anchor="middle" class="text-small">4700 / 5000 tokens</text>
+</svg>
 
 ## Basic Usage
 

@@ -15,28 +15,7 @@ Think of it as RAM for your robot's consciousness - fast, limited, and volatile.
 
 ## Architecture
 
-```
-┌─────────────────────────────────┐
-│      Working Memory             │
-│  (In-memory, token-limited)     │
-│                                 │
-│  • Fast access                  │
-│  • Token-based capacity         │
-│  • Automatic eviction           │
-│  • Importance-based retention   │
-└─────────┬───────────────────────┘
-          │
-          │ Eviction/Recall
-          ↓
-┌─────────────────────────────────┐
-│    Long-term Memory             │
-│  (PostgreSQL, unlimited)        │
-│                                 │
-│  • Durable storage              │
-│  • Full history                 │
-│  • RAG retrieval                │
-└─────────────────────────────────┘
-```
+![Working Memory Architecture](../assets/images/htm-working-memory-architecture.svg)
 
 ## Initialization
 

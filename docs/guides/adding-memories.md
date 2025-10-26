@@ -334,6 +334,8 @@ htm.add_node(
 
 The importance score (0.0-10.0) determines memory retention and eviction priority.
 
+![Importance Scoring Framework](../assets/images/htm-importance-scoring-framework.svg)
+
 ### Scoring Framework
 
 ```ruby

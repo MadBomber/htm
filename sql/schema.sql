@@ -3,6 +3,7 @@
 
 CREATE EXTENSION IF NOT EXISTS pgvector;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS ai CASCADE;  -- pgai for intelligent embedding generation
 
 -- Main nodes table
 CREATE TABLE IF NOT EXISTS nodes (
@@ -132,3 +133,85 @@ SELECT
 FROM robots r
 LEFT JOIN nodes n ON n.robot_id = r.id
 GROUP BY r.id, r.name;
+
+-- pgai Configuration and Vectorizer Setup
+-- This enables automatic embedding generation using pgai
+
+-- Function to generate embeddings using pgai
+-- Supports multiple providers: ollama (default), openai
+CREATE OR REPLACE FUNCTION generate_node_embedding()
+RETURNS TRIGGER AS $$
+DECLARE
+  embedding_provider TEXT;
+  embedding_model TEXT;
+  ollama_host TEXT;
+  embedding_dim INTEGER;
+  generated_embedding vector;
+BEGIN
+  -- Get configuration from environment or use defaults
+  -- These can be set via: SELECT set_config('htm.embedding_provider', 'ollama', false);
+  embedding_provider := COALESCE(current_setting('htm.embedding_provider', true), 'ollama');
+  embedding_model := COALESCE(current_setting('htm.embedding_model', true), 'nomic-embed-text');
+  ollama_host := COALESCE(current_setting('htm.ollama_url', true), 'http://localhost:11434');
+  embedding_dim := COALESCE(current_setting('htm.embedding_dimension', true)::INTEGER, 768);
+
+  -- Generate embedding based on provider
+  IF embedding_provider = 'ollama' THEN
+    -- Use pgai's ollama embedding function
+    generated_embedding := ai.ollama_embed(
+      embedding_model,
+      NEW.value,
+      host => ollama_host
+    );
+  ELSIF embedding_provider = 'openai' THEN
+    -- Use pgai's openai embedding function
+    -- Requires OPENAI_API_KEY to be set in PostgreSQL environment
+    generated_embedding := ai.openai_embed(
+      embedding_model,
+      NEW.value,
+      api_key => current_setting('htm.openai_api_key', true)
+    );
+  ELSE
+    RAISE EXCEPTION 'Unknown embedding provider: %. Use ollama or openai.', embedding_provider;
+  END IF;
+
+  -- Set the embedding and dimension
+  NEW.embedding := generated_embedding;
+  NEW.embedding_dimension := array_length(generated_embedding::real[], 1);
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to automatically generate embeddings on INSERT and UPDATE
+DROP TRIGGER IF EXISTS nodes_generate_embedding ON nodes;
+CREATE TRIGGER nodes_generate_embedding
+  BEFORE INSERT OR UPDATE OF value ON nodes
+  FOR EACH ROW
+  WHEN (NEW.embedding IS NULL OR NEW.value IS DISTINCT FROM OLD.value)
+  EXECUTE FUNCTION generate_node_embedding();
+
+-- Helper function to set pgai configuration
+CREATE OR REPLACE FUNCTION htm_set_embedding_config(
+  provider TEXT DEFAULT 'ollama',
+  model TEXT DEFAULT 'nomic-embed-text',
+  ollama_url TEXT DEFAULT 'http://localhost:11434',
+  openai_api_key TEXT DEFAULT NULL,
+  dimension INTEGER DEFAULT 768
+) RETURNS void AS $$
+BEGIN
+  PERFORM set_config('htm.embedding_provider', provider, false);
+  PERFORM set_config('htm.embedding_model', model, false);
+  PERFORM set_config('htm.ollama_url', ollama_url, false);
+  PERFORM set_config('htm.embedding_dimension', dimension::TEXT, false);
+
+  IF openai_api_key IS NOT NULL THEN
+    PERFORM set_config('htm.openai_api_key', openai_api_key, false);
+  END IF;
+
+  RAISE NOTICE 'HTM embedding configuration updated: provider=%, model=%, dimension=%', provider, model, dimension;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Set default configuration for Ollama with nomic-embed-text (768 dimensions)
+SELECT htm_set_embedding_config();

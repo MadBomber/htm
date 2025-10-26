@@ -6,26 +6,7 @@ HTM's "hive mind" architecture enables multiple robots to share knowledge throug
 
 In HTM, all robots share the same long-term memory database but maintain separate working memories:
 
-```
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│   Robot Alpha   │  │   Robot Beta    │  │   Robot Gamma   │
-│                 │  │                 │  │                 │
-│  Working Memory │  │  Working Memory │  │  Working Memory │
-│  (Private)      │  │  (Private)      │  │  (Private)      │
-└────────┬────────┘  └────────┬────────┘  └────────┬────────┘
-         │                    │                    │
-         └────────────────────┼────────────────────┘
-                              │
-                              ▼
-                   ┌────────────────────┐
-                   │   Long-term Memory  │
-                   │     (Shared)        │
-                   │                     │
-                   │  • All robot data   │
-                   │  • Full history     │
-                   │  • Attribution      │
-                   └────────────────────┘
-```
+![HTM Hive Mind Architecture](../assets/images/htm-hive-mind-architecture.svg)
 
 **Key Principles:**
 

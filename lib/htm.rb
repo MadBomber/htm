@@ -125,13 +125,10 @@ class HTM
     validate_array!(related_to, "related_to")
     validate_array!(tags, "tags")
 
-    # Generate embedding
-    embedding = @embedding_service.embed(value)
-
-    # Calculate token count
+    # Calculate token count (embedding generated automatically by pgai trigger)
     token_count = @embedding_service.count_tokens(value)
 
-    # Store in long-term memory
+    # Store in long-term memory (pgai will auto-generate embedding)
     node_id = @long_term_memory.add(
       key: key,
       value: value,
@@ -139,8 +136,7 @@ class HTM
       category: category,
       importance: importance,
       token_count: token_count,
-      robot_id: @robot_id,
-      embedding: embedding
+      robot_id: @robot_id
     )
 
     # Add relationships

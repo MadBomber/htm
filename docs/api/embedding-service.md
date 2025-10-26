@@ -1,23 +1,28 @@
 # EmbeddingService Class
 
-Vector embedding generation service for semantic search.
+Configuration service for pgai-based database-side embedding generation.
 
 ## Overview
 
-`HTM::EmbeddingService` generates vector embeddings from text for semantic similarity search. It supports multiple embedding providers:
+!!! warning "Architecture Change (October 2025)"
+    `HTM::EmbeddingService` no longer generates embeddings directly. With pgai integration, embedding generation happens automatically via PostgreSQL database triggers. This class now configures pgai settings and provides token counting.
 
-- **Ollama** - Local embedding server (default, via `gpt-oss` model)
+`HTM::EmbeddingService` configures pgai database settings for automatic embedding generation. It supports multiple embedding providers:
+
+- **Ollama** - Local embedding server (default, via `nomic-embed-text` model)
 - **OpenAI** - OpenAI's `text-embedding-3-small` model
-- **Cohere** - Cohere embedding API
-- **Local** - Local sentence transformers
 
 The service also provides token counting for working memory management.
+
+**Architecture:**
+- **Before pgai**: Ruby application → HTTP → Ollama/OpenAI → Embedding → PostgreSQL
+- **With pgai**: Ruby application → PostgreSQL → pgai → Ollama/OpenAI → Embedding (automatic via triggers)
 
 ## Class Definition
 
 ```ruby
 class HTM::EmbeddingService
-  attr_reader :provider, :llm_client
+  attr_reader :provider, :model, :dimensions
 end
 ```
 
@@ -25,13 +30,15 @@ end
 
 ### `new(provider, **options)` {: #new }
 
-Create a new embedding service instance.
+Create a new embedding service instance and configure pgai database settings.
 
 ```ruby
 HTM::EmbeddingService.new(
   provider = :ollama,
-  model: 'gpt-oss',
-  ollama_url: nil
+  model: 'nomic-embed-text',
+  ollama_url: nil,
+  dimensions: nil,
+  db_config: nil
 )
 ```
 
@@ -39,9 +46,11 @@ HTM::EmbeddingService.new(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `provider` | Symbol | `:ollama` | Embedding provider (`:ollama`, `:openai`, `:cohere`, `:local`) |
-| `model` | String | `'gpt-oss'` | Model name for the provider |
+| `provider` | Symbol | `:ollama` | Embedding provider (`:ollama`, `:openai`) |
+| `model` | String | `'nomic-embed-text'` | Model name for the provider |
 | `ollama_url` | String, nil | From `ENV['OLLAMA_URL']` or `'http://localhost:11434'` | Ollama server URL |
+| `dimensions` | Integer, nil | Auto-detected from model | Embedding vector dimensions |
+| `db_config` | Hash, nil | Database connection config | Required for pgai configuration |
 
 #### Returns
 
@@ -54,30 +63,44 @@ HTM::EmbeddingService.new(
 #### Examples
 
 ```ruby
-# Default: Ollama with gpt-oss
-service = HTM::EmbeddingService.new
+# Typical usage within HTM (db_config provided automatically)
+htm = HTM.new(robot_name: "My Robot")
+# EmbeddingService configured automatically with pgai
+
+# Default: Ollama with nomic-embed-text (768 dimensions)
+service = HTM::EmbeddingService.new(
+  :ollama,
+  db_config: {host: 'localhost', dbname: 'htm_dev', ...}
+)
+# Automatically calls configure_pgai()
 
 # Ollama with custom model
-service = HTM::EmbeddingService.new(:ollama, model: 'nomic-embed-text')
+service = HTM::EmbeddingService.new(
+  :ollama,
+  model: 'mxbai-embed-large',
+  dimensions: 1024,
+  db_config: db_config
+)
 
 # Custom Ollama URL
 service = HTM::EmbeddingService.new(
   :ollama,
-  model: 'gpt-oss',
-  ollama_url: 'http://192.168.1.100:11434'
+  model: 'nomic-embed-text',
+  ollama_url: 'http://192.168.1.100:11434',
+  db_config: db_config
 )
 
-# OpenAI (stub implementation)
+# OpenAI
 service = HTM::EmbeddingService.new(
   :openai,
-  model: 'text-embedding-3-small'
+  model: 'text-embedding-3-small',
+  db_config: db_config
 )
+# Requires ENV['OPENAI_API_KEY']
 
-# Cohere (stub implementation)
-service = HTM::EmbeddingService.new(:cohere)
-
-# Local sentence transformers (stub implementation)
-service = HTM::EmbeddingService.new(:local)
+# Without database (no pgai configuration, token counting only)
+service = HTM::EmbeddingService.new(:ollama)
+# Skips configure_pgai(), only useful for count_tokens()
 ```
 
 ---
@@ -90,30 +113,109 @@ The embedding provider being used.
 
 - **Type**: Symbol
 - **Read-only**: Yes
-- **Values**: `:ollama`, `:openai`, `:cohere`, `:local`
+- **Values**: `:ollama`, `:openai`
 
 ```ruby
 service.provider  # => :ollama
 ```
 
-### `llm_client` {: #llm_client }
+### `model` {: #model }
 
-LLM client instance (currently unused, placeholder for future compatibility).
+The embedding model name.
 
-- **Type**: nil
+- **Type**: String
 - **Read-only**: Yes
 
 ```ruby
-service.llm_client  # => nil
+service.model  # => "nomic-embed-text"
+```
+
+### `dimensions` {: #dimensions }
+
+The embedding vector dimensions.
+
+- **Type**: Integer
+- **Read-only**: Yes
+
+```ruby
+service.dimensions  # => 768
 ```
 
 ---
 
 ## Public Methods
 
-### `embed(text)` {: #embed }
+### `configure_pgai()` {: #configure_pgai }
 
-Generate a vector embedding for the given text.
+Configure pgai database extension with embedding provider settings.
+
+```ruby
+configure_pgai()
+```
+
+#### Parameters
+
+None (uses instance variables: `@provider`, `@model`, `@ollama_url`, `@dimensions`)
+
+#### Returns
+
+- `nil`
+
+#### Raises
+
+- `PG::Error` - If database connection fails or pgai extension not available
+
+#### Examples
+
+```ruby
+# Automatically called during initialization if db_config provided
+service = HTM::EmbeddingService.new(
+  :ollama,
+  model: 'nomic-embed-text',
+  db_config: {host: 'localhost', dbname: 'htm'}
+)
+# configure_pgai() called automatically
+
+# Manual configuration (advanced)
+service = HTM::EmbeddingService.new(:ollama)
+service.instance_variable_set(:@db_config, db_config)
+service.configure_pgai
+```
+
+#### Technical Details
+
+Sets PostgreSQL session variables via `htm_set_embedding_config()` function:
+
+```sql
+-- For Ollama
+SELECT htm_set_embedding_config(
+  'ollama',                    -- provider
+  'nomic-embed-text',          -- model
+  'http://localhost:11434',    -- ollama_url
+  NULL,                        -- openai_api_key
+  768                          -- dimensions
+);
+
+-- For OpenAI
+SELECT htm_set_embedding_config(
+  'openai',                    -- provider
+  'text-embedding-3-small',    -- model
+  NULL,                        -- ollama_url
+  'sk-...',                    -- openai_api_key
+  1536                         -- dimensions
+);
+```
+
+These settings are used by pgai database triggers for automatic embedding generation.
+
+---
+
+### `embed(text)` {: #embed } **DEPRECATED**
+
+!!! danger "Deprecated Method"
+    **This method is deprecated and will raise an error.** Embedding generation now happens automatically via pgai database triggers. Do not call this method.
+
+Attempt to generate a vector embedding (raises deprecation error).
 
 ```ruby
 embed(text)
@@ -123,89 +225,47 @@ embed(text)
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `text` | String | Text to embed |
+| `text` | String | Text to embed (ignored) |
 
 #### Returns
 
-- `Array<Float>` - Embedding vector (typically 1536 dimensions)
+Never returns - always raises error
 
 #### Raises
 
-- `RuntimeError` - If provider is unknown
+- `HTM::EmbeddingError` - Always raises with deprecation message
 
 #### Examples
 
 ```ruby
-# Generate embedding
-text = "PostgreSQL is a powerful relational database"
-embedding = service.embed(text)
-# => [0.123, -0.456, 0.789, ..., 0.234]  # 1536 floats
+# Old code (no longer works)
+embedding = service.embed("text")
+# Raises: HTM::EmbeddingError: Direct embedding generation is deprecated in HTM.
+#         Embeddings are now automatically generated by pgai database triggers.
 
-# Check dimensions
-embedding.length  # => 1536
-
-# Embeddings are normalized
-magnitude = Math.sqrt(embedding.map { |x| x**2 }.sum)
-# magnitude ≈ 1.0 for normalized vectors
-
-# Use in similarity calculation
-text1 = "database optimization"
-text2 = "performance tuning"
-
-emb1 = service.embed(text1)
-emb2 = service.embed(text2)
-
-# Cosine similarity
-similarity = emb1.zip(emb2).map { |a, b| a * b }.sum
-puts "Similarity: #{similarity}"  # 0.0 to 1.0
+# New code (automatic via pgai)
+htm.add_node("key", "PostgreSQL is powerful", type: :fact)
+# Embedding generated automatically by database trigger!
+# No embed() call needed
 ```
 
-#### Provider-Specific Behavior
+#### Migration Guide
 
-##### Ollama
-
-Makes HTTP POST request to Ollama's `/api/embeddings` endpoint:
+If you have code calling `embed()`:
 
 ```ruby
-# Request
-{
-  "model": "gpt-oss",
-  "prompt": "text to embed"
-}
+# Before pgai
+embedding = embedding_service.embed(text)
+htm.add_node(key, value, embedding: embedding)
 
-# Response
-{
-  "embedding": [0.123, -0.456, ...]
-}
+# After pgai (correct)
+htm.add_node(key, value)
+# Embedding generated automatically by pgai trigger
+
+# Query embeddings also automatic
+memories = htm.recall(timeframe: "last week", topic: "database")
+# pgai generates query embedding in SQL automatically
 ```
-
-If Ollama is unavailable, falls back to random vectors with a warning.
-
-##### OpenAI (Stub)
-
-Currently returns random vectors. Production implementation should:
-
-```ruby
-# Intended implementation (not yet implemented)
-require 'openai'
-
-client = OpenAI::Client.new(access_token: ENV['OPENAI_API_KEY'])
-response = client.embeddings(
-  parameters: {
-    model: "text-embedding-3-small",
-    input: text
-  }
-)
-embedding = response.dig("data", 0, "embedding")
-```
-
-##### Cohere (Stub)
-
-Currently returns random vectors. Production implementation pending.
-
-##### Local (Stub)
-
-Currently returns random vectors. Intended for local sentence transformer models.
 
 ---
 
@@ -259,11 +319,14 @@ end
 
 ## Supported Providers
 
+!!! info "pgai Integration"
+    All providers are now accessed via pgai database extension. Configuration happens during initialization, and embedding generation is handled by database triggers.
+
 ### Ollama (Default)
 
-**Status**: ✅ Fully implemented
+**Status**: ✅ Fully implemented via pgai
 
-Local embedding server with various models.
+Local embedding server with various models, accessed via pgai database triggers.
 
 #### Setup
 
@@ -271,143 +334,109 @@ Local embedding server with various models.
 # Install Ollama
 curl https://ollama.ai/install.sh | sh
 
-# Pull gpt-oss model
-ollama pull gpt-oss
+# Pull nomic-embed-text model (default)
+ollama pull nomic-embed-text
 
 # Or use other embedding models
-ollama pull nomic-embed-text
 ollama pull mxbai-embed-large
+ollama pull all-minilm
+
+# Verify Ollama is running
+curl http://localhost:11434/api/version
 ```
 
 #### Configuration
 
 ```ruby
-# Default (localhost)
-service = HTM::EmbeddingService.new
+# Default (nomic-embed-text on localhost)
+htm = HTM.new(robot_name: "My Robot")
+# Configures pgai automatically
 
 # Custom URL
-service = HTM::EmbeddingService.new(
-  :ollama,
+htm = HTM.new(
+  robot_name: "My Robot",
+  embedding_provider: :ollama,
+  embedding_model: 'nomic-embed-text',
   ollama_url: 'http://192.168.1.100:11434'
 )
 
 # From environment
 ENV['OLLAMA_URL'] = 'http://ollama.local:11434'
-service = HTM::EmbeddingService.new
+htm = HTM.new(robot_name: "My Robot")
 ```
 
 #### Available Models
 
 | Model | Dimensions | Size | Speed |
 |-------|------------|------|-------|
-| `gpt-oss` | 1536 | ~270MB | Fast |
-| `nomic-embed-text` | 768 | ~274MB | Fast |
+| `nomic-embed-text` (default) | 768 | ~274MB | Fast |
 | `mxbai-embed-large` | 1024 | ~670MB | Medium |
 | `all-minilm` | 384 | ~23MB | Very Fast |
 
 #### Error Handling
 
-If Ollama is unavailable:
+If Ollama is unavailable, pgai database trigger will fail:
 
 ```ruby
-embedding = service.embed("text")
-# Warning: Error generating embedding with Ollama: Connection refused
-# Warning: Falling back to stub embeddings (random vectors)
-# Warning: Please ensure Ollama is running and the gpt-oss model is available
-# => [random vector]
+htm.add_node("key", "value")
+# PG::Error: Connection to server at "localhost" (::1), port 11434 failed
+# Ensure Ollama is running: ollama serve
+```
+
+Solution:
+```bash
+# Start Ollama
+ollama serve
+
+# Pull model if needed
+ollama pull nomic-embed-text
 ```
 
 ---
 
 ### OpenAI
 
-**Status**: ⚠️ Stub implementation
+**Status**: ✅ Fully implemented via pgai
 
-Uses OpenAI's embedding API.
+Uses OpenAI's embedding API, accessed via pgai database triggers.
 
-#### Planned Configuration
+#### Configuration
 
 ```ruby
 # Set API key
 ENV['OPENAI_API_KEY'] = 'sk-...'
 
-# Initialize
-service = HTM::EmbeddingService.new(
-  :openai,
-  model: 'text-embedding-3-small'
+# Initialize HTM with OpenAI
+htm = HTM.new(
+  robot_name: "My Robot",
+  embedding_provider: :openai,
+  embedding_model: 'text-embedding-3-small'
 )
+# Configures pgai automatically
 
-# Generate embedding
-embedding = service.embed("text")
+# Add node - embedding generated via pgai + OpenAI API
+htm.add_node("key", "PostgreSQL is powerful", type: :fact)
+# pgai calls OpenAI API automatically in database trigger
 ```
 
 #### Models
 
 | Model | Dimensions | Cost (per 1M tokens) |
 |-------|------------|---------------------|
-| `text-embedding-3-small` | 1536 | $0.02 |
-| `text-embedding-3-large` | 3072 | $0.13 |
-| `ada-002` (legacy) | 1536 | $0.10 |
+| `text-embedding-3-small` (recommended) | 1536 | $0.02 |
+| `text-embedding-ada-002` (legacy) | 1536 | $0.10 |
 
-#### Current Behavior
+!!! warning "Dimension Limit"
+    `text-embedding-3-large` (3072 dimensions) exceeds pgvector's HNSW index limit of 2000 dimensions and is not supported.
 
-Returns random 1536-dimensional vectors with warning:
+#### Error Handling
 
-```
-Warning: STUB: Using random embeddings. Implement OpenAI API integration for production.
-```
-
----
-
-### Cohere
-
-**Status**: ⚠️ Stub implementation
-
-Uses Cohere's embedding API.
-
-#### Planned Configuration
+If API key is missing or invalid:
 
 ```ruby
-# Set API key
-ENV['COHERE_API_KEY'] = 'xxx'
-
-# Initialize
-service = HTM::EmbeddingService.new(:cohere)
-
-# Generate embedding
-embedding = service.embed("text")
-```
-
-#### Current Behavior
-
-Returns random 1536-dimensional vectors with warning:
-
-```
-Warning: STUB: Cohere embedding not yet implemented
-```
-
----
-
-### Local
-
-**Status**: ⚠️ Stub implementation
-
-Intended for local sentence transformer models (Python-based).
-
-#### Planned Implementation
-
-Would use models like:
-
-- `sentence-transformers/all-MiniLM-L6-v2` (384 dim)
-- `sentence-transformers/all-mpnet-base-v2` (768 dim)
-- `BAAI/bge-large-en-v1.5` (1024 dim)
-
-#### Current Behavior
-
-Returns random 1536-dimensional vectors with warning:
-
-```
-Warning: STUB: Local embedding not yet implemented
+htm.add_node("key", "value")
+# PG::Error: OpenAI API error: Incorrect API key provided
+# Ensure OPENAI_API_KEY is set correctly
 ```
 
 ---
