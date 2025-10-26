@@ -12,7 +12,7 @@ Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new]
 class MockEmbeddingService
   attr_reader :provider, :llm_client, :dimensions
 
-  def initialize(provider = :ollama, model: 'gpt-oss', ollama_url: nil, dimensions: nil)
+  def initialize(provider = :ollama, model: 'gpt-oss', ollama_url: nil, dimensions: nil, cache_size: 1000)
     @provider = provider
     @model = model
     # Default to 1536 for most common embedding models
@@ -20,18 +20,65 @@ class MockEmbeddingService
     @dimensions = dimensions || 1536
     @llm_client = nil
     @tokenizer = Tiktoken.encoding_for_model("gpt-3.5-turbo")
+
+    # Initialize embedding cache (same as real EmbeddingService)
+    if cache_size > 0
+      require 'lru_redux'
+      require 'digest'
+      @embedding_cache = LruRedux::Cache.new(cache_size)
+      @cache_stats = { hits: 0, misses: 0 }
+    end
   end
 
   def embed(text)
-    # Return deterministic mock embeddings based on text hash
-    seed = text.hash.abs
-    @dimensions.times.map { |i| Random.new(seed + i).rand(-1.0..1.0) }
+    # Return uncached if cache disabled
+    return embed_uncached(text) unless @embedding_cache
+
+    # Generate cache key from text
+    cache_key = Digest::SHA256.hexdigest(text)
+
+    # Try to get from cache
+    cached = @embedding_cache[cache_key]
+    if cached
+      @cache_stats[:hits] += 1
+      return cached
+    end
+
+    # Cache miss - generate embedding
+    @cache_stats[:misses] += 1
+    embedding = embed_uncached(text)
+
+    # Store in cache
+    @embedding_cache[cache_key] = embedding
+    embedding
+  end
+
+  def cache_stats
+    return nil unless @embedding_cache
+
+    total = @cache_stats[:hits] + @cache_stats[:misses]
+    hit_rate = total > 0 ? (@cache_stats[:hits].to_f / total * 100).round(2) : 0.0
+
+    {
+      hits: @cache_stats[:hits],
+      misses: @cache_stats[:misses],
+      hit_rate: hit_rate,
+      size: @embedding_cache.count
+    }
   end
 
   def count_tokens(text)
     @tokenizer.encode(text.to_s).length
   rescue
     text.to_s.split.size
+  end
+
+  private
+
+  def embed_uncached(text)
+    # Return deterministic mock embeddings based on text hash
+    seed = text.hash.abs
+    @dimensions.times.map { |i| Random.new(seed + i).rand(-1.0..1.0) }
   end
 end
 

@@ -42,6 +42,17 @@ require "uri"
 class HTM
   attr_reader :robot_id, :robot_name, :working_memory, :long_term_memory
 
+  # Validation constants
+  MAX_KEY_LENGTH = 255
+  MAX_VALUE_LENGTH = 1_000_000  # 1MB
+  MAX_ARRAY_SIZE = 1000
+
+  VALID_TYPES = [:fact, :context, :code, :preference, :decision, :question].freeze
+  IMPORTANCE_RANGE = (0.0..10.0).freeze
+
+  VALID_RECALL_STRATEGIES = [:vector, :fulltext, :hybrid].freeze
+  VALID_CONTEXT_STRATEGIES = [:recent, :important, :balanced].freeze
+
   # Initialize a new HTM instance
   #
   # @param working_memory_size [Integer] Maximum tokens for working memory (default: 128,000)
@@ -52,6 +63,9 @@ class HTM
   # @param embedding_model [String] Model name for embedding service (default: 'gpt-oss' for ollama)
   # @param db_pool_size [Integer] Database connection pool size (default: 5)
   # @param db_query_timeout [Integer] Database query timeout in milliseconds (default: 30000)
+  # @param db_cache_size [Integer] Number of database query results to cache (default: 1000, use 0 to disable)
+  # @param db_cache_ttl [Integer] Database cache TTL in seconds (default: 300)
+  # @param embedding_cache_size [Integer] Number of embeddings to cache (default: 1000, use 0 to disable)
   #
   def initialize(
     working_memory_size: 128_000,
@@ -61,7 +75,10 @@ class HTM
     embedding_service: :ollama,
     embedding_model: 'gpt-oss',
     db_pool_size: 5,
-    db_query_timeout: 30_000
+    db_query_timeout: 30_000,
+    db_cache_size: 1000,
+    db_cache_ttl: 300,
+    embedding_cache_size: 1000
   )
     @robot_id = robot_id || SecureRandom.uuid
     @robot_name = robot_name || "robot_#{@robot_id[0..7]}"
@@ -71,12 +88,14 @@ class HTM
     @long_term_memory = HTM::LongTermMemory.new(
       db_config || HTM::Database.default_config,
       pool_size: db_pool_size,
-      query_timeout: db_query_timeout
+      query_timeout: db_query_timeout,
+      cache_size: db_cache_size,
+      cache_ttl: db_cache_ttl
     )
 
     # Allow dependency injection of embedding service (for testing)
     @embedding_service = if embedding_service.is_a?(Symbol)
-      HTM::EmbeddingService.new(embedding_service, model: embedding_model)
+      HTM::EmbeddingService.new(embedding_service, model: embedding_model, cache_size: embedding_cache_size)
     else
       embedding_service
     end
@@ -97,6 +116,15 @@ class HTM
   # @return [Integer] Database ID of the created node
   #
   def add_node(key, value, type: nil, category: nil, importance: 1.0, related_to: [], tags: [])
+    # Validate all inputs
+    validate_key!(key)
+    validate_value!(value)
+    validate_type!(type)
+    validate_category!(category)
+    validate_importance!(importance)
+    validate_array!(related_to, "related_to")
+    validate_array!(tags, "tags")
+
     # Generate embedding
     embedding = @embedding_service.embed(value)
 
@@ -149,6 +177,12 @@ class HTM
   # @return [Array<Hash>] Retrieved memory nodes
   #
   def recall(timeframe:, topic:, limit: 20, strategy: :vector)
+    # Validate inputs
+    validate_timeframe!(timeframe)
+    validate_value!(topic)
+    validate_positive_integer!(limit, "limit")
+    validate_recall_strategy!(strategy)
+
     parsed_timeframe = parse_timeframe(timeframe)
 
     # Perform RAG-based retrieval
@@ -198,6 +232,9 @@ class HTM
   # @return [Hash, nil] The node data or nil if not found
   #
   def retrieve(key)
+    # Validate input
+    validate_key!(key)
+
     node = @long_term_memory.retrieve(key)
     if node
       @long_term_memory.update_last_accessed(key)
@@ -220,6 +257,8 @@ class HTM
   # @raise [HTM::NotFoundError] if node doesn't exist
   #
   def forget(key, confirm: false)
+    # Validate inputs
+    validate_key!(key)
     raise ArgumentError, "Must pass confirm: :confirmed to delete" unless confirm == :confirmed
 
     # Get node ID - will be nil if node doesn't exist
@@ -251,6 +290,10 @@ class HTM
   # @return [String] Assembled context
   #
   def create_context(strategy: :balanced, max_tokens: nil)
+    # Validate inputs
+    validate_context_strategy!(strategy)
+    validate_positive_integer!(max_tokens, "max_tokens") if max_tokens
+
     @working_memory.assemble_context(strategy: strategy, max_tokens: max_tokens)
   end
 
@@ -259,7 +302,7 @@ class HTM
   # @return [Hash] Statistics about memory usage
   #
   def memory_stats
-    @long_term_memory.stats.merge({
+    stats = @long_term_memory.stats.merge({
       robot_id: @robot_id,
       robot_name: @robot_name,
       working_memory: {
@@ -273,6 +316,13 @@ class HTM
         query_timeout_ms: @long_term_memory.query_timeout
       }
     })
+
+    # Add embedding cache stats if available
+    if @embedding_service.respond_to?(:cache_stats) && @embedding_service.cache_stats
+      stats[:embedding_cache] = @embedding_service.cache_stats
+    end
+
+    stats
   end
 
   # Shutdown HTM and release resources
@@ -334,17 +384,21 @@ class HTM
   end
 
   def add_to_working_memory(node)
-    if @working_memory.has_space?(node['token_count'])
+    # Convert token_count to integer (may be String from database/cache)
+    token_count = node['token_count'].to_i
+    importance = node['importance'].to_f
+
+    if @working_memory.has_space?(token_count)
       @working_memory.add(
         node['key'],
         node['value'],
-        token_count: node['token_count'],
-        importance: node['importance'],
+        token_count: token_count,
+        importance: importance,
         from_recall: true
       )
     else
       # Evict to make space
-      evicted = @working_memory.evict_to_make_space(node['token_count'])
+      evicted = @working_memory.evict_to_make_space(token_count)
       evicted_keys = evicted.map { |n| n[:key] }
       @long_term_memory.mark_evicted(evicted_keys) if evicted_keys.any?
 
@@ -352,12 +406,86 @@ class HTM
       @working_memory.add(
         node['key'],
         node['value'],
-        token_count: node['token_count'],
-        importance: node['importance'],
+        token_count: token_count,
+        importance: importance,
         from_recall: true
       )
     end
   end
+
+  private
+
+  # Validation helper methods
+
+  def validate_key!(key)
+    raise ValidationError, "Key cannot be nil" if key.nil?
+    raise ValidationError, "Key must be a String" unless key.is_a?(String)
+    raise ValidationError, "Key cannot be empty" if key.empty?
+    raise ValidationError, "Key too long (max #{MAX_KEY_LENGTH} characters)" if key.length > MAX_KEY_LENGTH
+
+    # Prevent path traversal or special characters
+    if key =~ /[\/\\\x00-\x1f]/
+      raise ValidationError, "Key contains invalid characters"
+    end
+  end
+
+  def validate_value!(value)
+    raise ValidationError, "Value cannot be nil" if value.nil?
+    raise ValidationError, "Value must be a String" unless value.is_a?(String)
+    raise ValidationError, "Value cannot be empty" if value.empty?
+    raise ValidationError, "Value too long (max #{MAX_VALUE_LENGTH} characters)" if value.length > MAX_VALUE_LENGTH
+  end
+
+  def validate_type!(type)
+    return if type.nil?  # Optional parameter
+    raise ValidationError, "Type must be a Symbol" unless type.is_a?(Symbol)
+    unless VALID_TYPES.include?(type)
+      raise ValidationError, "Invalid type: #{type}. Must be one of #{VALID_TYPES.join(', ')}"
+    end
+  end
+
+  def validate_category!(category)
+    return if category.nil?  # Optional parameter
+    raise ValidationError, "Category must be a String" unless category.is_a?(String)
+    raise ValidationError, "Category too long (max 100 characters)" if category.length > 100
+  end
+
+  def validate_importance!(importance)
+    raise ValidationError, "Importance must be a Numeric" unless importance.is_a?(Numeric)
+    unless IMPORTANCE_RANGE.cover?(importance)
+      raise ValidationError, "Importance must be between #{IMPORTANCE_RANGE.min} and #{IMPORTANCE_RANGE.max}"
+    end
+  end
+
+  def validate_array!(array, name, max_size: MAX_ARRAY_SIZE)
+    raise ValidationError, "#{name} must be an Array" unless array.is_a?(Array)
+    raise ValidationError, "#{name} too large (max #{max_size} items)" if array.size > max_size
+  end
+
+  def validate_recall_strategy!(strategy)
+    raise ValidationError, "Strategy must be a Symbol" unless strategy.is_a?(Symbol)
+    unless VALID_RECALL_STRATEGIES.include?(strategy)
+      raise ValidationError, "Invalid strategy: #{strategy}. Must be one of #{VALID_RECALL_STRATEGIES.join(', ')}"
+    end
+  end
+
+  def validate_context_strategy!(strategy)
+    raise ValidationError, "Strategy must be a Symbol" unless strategy.is_a?(Symbol)
+    unless VALID_CONTEXT_STRATEGIES.include?(strategy)
+      raise ValidationError, "Invalid strategy: #{strategy}. Must be one of #{VALID_CONTEXT_STRATEGIES.join(', ')}"
+    end
+  end
+
+  def validate_timeframe!(timeframe)
+    return if timeframe.is_a?(Range) || timeframe.is_a?(String)
+    raise ValidationError, "Timeframe must be a Range or String, got #{timeframe.class}"
+  end
+
+  def validate_positive_integer!(value, name)
+    raise ValidationError, "#{name} must be a positive Integer" unless value.is_a?(Integer) && value > 0
+  end
+
+  # Timeframe parsing methods
 
   def parse_timeframe(timeframe)
     case timeframe

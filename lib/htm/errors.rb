@@ -8,6 +8,9 @@ class HTM
   # Validation errors
   class ValidationError < Error; end
 
+  # Resource exhausted errors (memory, tokens, etc.)
+  class ResourceExhaustedError < Error; end
+
   # Resource not found errors
   class NotFoundError < Error; end
 

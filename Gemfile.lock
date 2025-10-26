@@ -3,6 +3,7 @@ PATH
   specs:
     htm (0.1.0)
       connection_pool
+      lru_redux
       pg
       pgvector
       ruby_llm
@@ -39,6 +40,7 @@ GEM
     hashdiff (1.2.1)
     json (2.15.1)
     logger (1.7.0)
+    lru_redux (1.1.0)
     marcel (1.1.0)
     method_source (1.1.0)
     minitest (5.26.0)

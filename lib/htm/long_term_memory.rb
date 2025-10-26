@@ -4,6 +4,8 @@ require 'pg'
 require 'pgvector'
 require 'json'
 require 'connection_pool'
+require 'lru_redux'
+require 'digest'
 
 class HTM
   # Long-term Memory - PostgreSQL/TimescaleDB-backed permanent storage
@@ -22,10 +24,12 @@ class HTM
     DEFAULT_POOL_TIMEOUT = 5  # seconds to wait for a connection from the pool
     DEFAULT_QUERY_TIMEOUT = 30_000  # milliseconds (30 seconds)
     MAX_VECTOR_DIMENSION = 2000  # Maximum supported dimension with HNSW index (pgvector limitation)
+    DEFAULT_CACHE_SIZE = 1000  # Number of queries to cache
+    DEFAULT_CACHE_TTL = 300    # Cache lifetime in seconds (5 minutes)
 
     attr_reader :pool_size, :query_timeout
 
-    def initialize(config, pool_size: DEFAULT_POOL_SIZE, query_timeout: DEFAULT_QUERY_TIMEOUT)
+    def initialize(config, pool_size: DEFAULT_POOL_SIZE, query_timeout: DEFAULT_QUERY_TIMEOUT, cache_size: DEFAULT_CACHE_SIZE, cache_ttl: DEFAULT_CACHE_TTL)
       @config = config
       raise "Database configuration required" unless @config
 
@@ -38,6 +42,12 @@ class HTM
         # Set statement timeout for all queries on this connection
         conn.exec("SET statement_timeout = #{@query_timeout}")
         conn
+      end
+
+      # Initialize query result cache (disable with cache_size: 0)
+      if cache_size > 0
+        @query_cache = LruRedux::TTL::ThreadSafeCache.new(cache_size, cache_ttl)
+        @cache_stats = { hits: 0, misses: 0 }
       end
     end
 
@@ -69,7 +79,7 @@ class HTM
         embedding
       end
 
-      with_connection do |conn|
+      node_id = with_connection do |conn|
         result = conn.exec_params(
           <<~SQL,
             INSERT INTO nodes (key, value, type, category, importance, token_count, robot_id, embedding, embedding_dimension)
@@ -80,6 +90,11 @@ class HTM
         )
         result.first['id'].to_i
       end
+
+      # Invalidate cache since database content changed
+      invalidate_cache!
+
+      node_id
     end
 
     # Retrieve a node by key
@@ -117,6 +132,9 @@ class HTM
       with_connection do |conn|
         conn.exec_params("DELETE FROM nodes WHERE key = $1", [key])
       end
+
+      # Invalidate cache since database content changed
+      invalidate_cache!
     end
 
     # Get node database ID
@@ -140,22 +158,26 @@ class HTM
     # @return [Array<Hash>] Matching nodes
     #
     def search(timeframe:, query:, limit:, embedding_service:)
-      query_embedding = embedding_service.embed(query)
+      # Return uncached if cache disabled
+      return search_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service) unless @query_cache
 
-      with_connection do |conn|
-        result = conn.exec_params(
-          <<~SQL,
-            SELECT id, key, value, type, category, importance, created_at, robot_id, token_count,
-                   1 - (embedding <=> $1::vector) as similarity
-            FROM nodes
-            WHERE created_at BETWEEN $2 AND $3
-            ORDER BY embedding <=> $1::vector
-            LIMIT $4
-          SQL
-          [query_embedding.to_s, timeframe.begin, timeframe.end, limit]
-        )
-        result.to_a
+      # Generate cache key
+      cache_key = cache_key_for(:search, timeframe, query, limit)
+
+      # Try to get from cache
+      cached = @query_cache[cache_key]
+      if cached
+        @cache_stats[:hits] += 1
+        return cached
       end
+
+      # Cache miss - execute query
+      @cache_stats[:misses] += 1
+      result = search_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service)
+
+      # Store in cache
+      @query_cache[cache_key] = result
+      result
     end
 
     # Full-text search
@@ -166,21 +188,26 @@ class HTM
     # @return [Array<Hash>] Matching nodes
     #
     def search_fulltext(timeframe:, query:, limit:)
-      with_connection do |conn|
-        result = conn.exec_params(
-          <<~SQL,
-            SELECT id, key, value, type, category, importance, created_at, robot_id, token_count,
-                   ts_rank(to_tsvector('english', value), plainto_tsquery('english', $1)) as rank
-            FROM nodes
-            WHERE created_at BETWEEN $2 AND $3
-            AND to_tsvector('english', value) @@ plainto_tsquery('english', $1)
-            ORDER BY rank DESC
-            LIMIT $4
-          SQL
-          [query, timeframe.begin, timeframe.end, limit]
-        )
-        result.to_a
+      # Return uncached if cache disabled
+      return search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit) unless @query_cache
+
+      # Generate cache key
+      cache_key = cache_key_for(:fulltext, timeframe, query, limit)
+
+      # Try to get from cache
+      cached = @query_cache[cache_key]
+      if cached
+        @cache_stats[:hits] += 1
+        return cached
       end
+
+      # Cache miss - execute query
+      @cache_stats[:misses] += 1
+      result = search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit)
+
+      # Store in cache
+      @query_cache[cache_key] = result
+      result
     end
 
     # Hybrid search (full-text + vector)
@@ -193,28 +220,26 @@ class HTM
     # @return [Array<Hash>] Matching nodes
     #
     def search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit: 100)
-      query_embedding = embedding_service.embed(query)
+      # Return uncached if cache disabled
+      return search_hybrid_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service, prefilter_limit: prefilter_limit) unless @query_cache
 
-      with_connection do |conn|
-        result = conn.exec_params(
-          <<~SQL,
-            WITH candidates AS (
-              SELECT id, key, value, type, category, importance, created_at, robot_id, token_count, embedding
-              FROM nodes
-              WHERE created_at BETWEEN $2 AND $3
-              AND to_tsvector('english', value) @@ plainto_tsquery('english', $1)
-              LIMIT $5
-            )
-            SELECT id, key, value, type, category, importance, created_at, robot_id, token_count,
-                   1 - (embedding <=> $4::vector) as similarity
-            FROM candidates
-            ORDER BY embedding <=> $4::vector
-            LIMIT $6
-          SQL
-          [query, timeframe.begin, timeframe.end, query_embedding.to_s, prefilter_limit, limit]
-        )
-        result.to_a
+      # Generate cache key
+      cache_key = cache_key_for(:hybrid, timeframe, query, limit, prefilter_limit)
+
+      # Try to get from cache
+      cached = @query_cache[cache_key]
+      if cached
+        @cache_stats[:hits] += 1
+        return cached
       end
+
+      # Cache miss - execute query
+      @cache_stats[:misses] += 1
+      result = search_hybrid_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service, prefilter_limit: prefilter_limit)
+
+      # Store in cache
+      @query_cache[cache_key] = result
+      result
     end
 
     # Add a relationship between nodes
@@ -328,7 +353,7 @@ class HTM
     # @return [Hash] Statistics
     #
     def stats
-      with_connection do |conn|
+      base_stats = with_connection do |conn|
         {
           total_nodes: conn.exec("SELECT COUNT(*) FROM nodes").first['count'].to_i,
           nodes_by_robot: conn.exec(
@@ -344,6 +369,13 @@ class HTM
           database_size: conn.exec("SELECT pg_database_size(current_database())").first['pg_database_size'].to_i
         }
       end
+
+      # Include cache statistics if cache is enabled
+      if @query_cache
+        base_stats[:cache] = cache_stats
+      end
+
+      base_stats
     end
 
     # Shutdown the connection pool
@@ -353,6 +385,153 @@ class HTM
     end
 
     private
+
+    # Generate cache key for query
+    #
+    # @param method [Symbol] Search method name
+    # @param timeframe [Range] Time range
+    # @param query [String] Search query
+    # @param limit [Integer] Result limit
+    # @param args [Array] Additional arguments
+    # @return [String] Cache key
+    #
+    def cache_key_for(method, timeframe, query, limit, *args)
+      key_parts = [
+        method,
+        timeframe.begin.to_i,
+        timeframe.end.to_i,
+        query,
+        limit,
+        *args
+      ]
+      Digest::SHA256.hexdigest(key_parts.join('|'))
+    end
+
+    # Get cache statistics
+    #
+    # @return [Hash, nil] Cache stats or nil if cache disabled
+    #
+    def cache_stats
+      return nil unless @query_cache
+
+      total = @cache_stats[:hits] + @cache_stats[:misses]
+      hit_rate = total > 0 ? (@cache_stats[:hits].to_f / total * 100).round(2) : 0.0
+
+      {
+        hits: @cache_stats[:hits],
+        misses: @cache_stats[:misses],
+        hit_rate: hit_rate,
+        size: @query_cache.count
+      }
+    end
+
+    # Invalidate (clear) the query cache
+    #
+    # @return [void]
+    #
+    def invalidate_cache!
+      @query_cache.clear if @query_cache
+    end
+
+    # Uncached vector similarity search
+    #
+    # @param timeframe [Range] Time range to search
+    # @param query [String] Search query
+    # @param limit [Integer] Maximum results
+    # @param embedding_service [Object] Service to generate embeddings
+    # @return [Array<Hash>] Matching nodes
+    #
+    def search_uncached(timeframe:, query:, limit:, embedding_service:)
+      query_embedding = embedding_service.embed(query)
+
+      # Pad query embedding to MAX_VECTOR_DIMENSION (same as stored embeddings)
+      padded_embedding = if query_embedding.length < MAX_VECTOR_DIMENSION
+        query_embedding + Array.new(MAX_VECTOR_DIMENSION - query_embedding.length, 0.0)
+      else
+        query_embedding
+      end
+
+      with_connection do |conn|
+        result = conn.exec_params(
+          <<~SQL,
+            SELECT id, key, value, type, category, importance, created_at, robot_id, token_count,
+                   1 - (embedding <=> $1::vector) as similarity
+            FROM nodes
+            WHERE created_at BETWEEN $2 AND $3
+            ORDER BY embedding <=> $1::vector
+            LIMIT $4
+          SQL
+          [padded_embedding.to_s, timeframe.begin, timeframe.end, limit]
+        )
+        result.to_a
+      end
+    end
+
+    # Uncached full-text search
+    #
+    # @param timeframe [Range] Time range to search
+    # @param query [String] Search query
+    # @param limit [Integer] Maximum results
+    # @return [Array<Hash>] Matching nodes
+    #
+    def search_fulltext_uncached(timeframe:, query:, limit:)
+      with_connection do |conn|
+        result = conn.exec_params(
+          <<~SQL,
+            SELECT id, key, value, type, category, importance, created_at, robot_id, token_count,
+                   ts_rank(to_tsvector('english', value), plainto_tsquery('english', $1)) as rank
+            FROM nodes
+            WHERE created_at BETWEEN $2 AND $3
+            AND to_tsvector('english', value) @@ plainto_tsquery('english', $1)
+            ORDER BY rank DESC
+            LIMIT $4
+          SQL
+          [query, timeframe.begin, timeframe.end, limit]
+        )
+        result.to_a
+      end
+    end
+
+    # Uncached hybrid search
+    #
+    # @param timeframe [Range] Time range to search
+    # @param query [String] Search query
+    # @param limit [Integer] Maximum results
+    # @param embedding_service [Object] Service to generate embeddings
+    # @param prefilter_limit [Integer] Candidates to consider
+    # @return [Array<Hash>] Matching nodes
+    #
+    def search_hybrid_uncached(timeframe:, query:, limit:, embedding_service:, prefilter_limit:)
+      query_embedding = embedding_service.embed(query)
+
+      # Pad query embedding to MAX_VECTOR_DIMENSION (same as stored embeddings)
+      padded_embedding = if query_embedding.length < MAX_VECTOR_DIMENSION
+        query_embedding + Array.new(MAX_VECTOR_DIMENSION - query_embedding.length, 0.0)
+      else
+        query_embedding
+      end
+
+      with_connection do |conn|
+        result = conn.exec_params(
+          <<~SQL,
+            WITH candidates AS (
+              SELECT id, key, value, type, category, importance, created_at, robot_id, token_count, embedding
+              FROM nodes
+              WHERE created_at BETWEEN $2 AND $3
+              AND to_tsvector('english', value) @@ plainto_tsquery('english', $1)
+              LIMIT $5
+            )
+            SELECT id, key, value, type, category, importance, created_at, robot_id, token_count,
+                   1 - (embedding <=> $4::vector) as similarity
+            FROM candidates
+            ORDER BY embedding <=> $4::vector
+            LIMIT $6
+          SQL
+          [query, timeframe.begin, timeframe.end, padded_embedding.to_s, prefilter_limit, limit]
+        )
+        result.to_a
+      end
+    end
 
     def with_connection
       @pool.with do |conn|

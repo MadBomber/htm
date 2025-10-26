@@ -27,11 +27,12 @@
     - Working memory evicts to long-term, never deletes
 
 - **RAG-Based Retrieval**
-    - Vector similarity search (pgvector with RubyLLM/Ollama embeddings)
+    - Vector similarity search (pgvector with multiple embedding providers)
     - Full-text search (PostgreSQL)
     - Hybrid search (combines both)
     - Temporal filtering ("last week", date ranges)
-    - Default: Ollama with gpt-oss model via RubyLLM
+    - Supports Ollama (default), OpenAI, and more
+    - Variable embedding dimensions (384 to 2000)
 
 - **Hive Mind**
     - All robots share global memory
@@ -156,10 +157,12 @@ HTM supports different memory types:
 
 ### Embedding Configuration
 
-HTM uses RubyLLM for embedding generation. By default, it uses the Ollama provider with the gpt-oss model:
+HTM supports multiple embedding providers. By default, it uses Ollama with the gpt-oss model:
+
+#### Ollama (Default)
 
 ```ruby
-# Default: Ollama with gpt-oss
+# Default: Ollama with gpt-oss model (768 dimensions)
 htm = HTM.new(robot_name: "My Robot")
 
 # Explicit Ollama configuration
@@ -173,13 +176,7 @@ htm = HTM.new(
 htm = HTM.new(
   robot_name: "My Robot",
   embedding_service: :ollama,
-  embedding_model: 'llama2'
-)
-
-# Use OpenAI (requires implementation)
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_service: :openai
+  embedding_model: 'nomic-embed-text'  # 768 dimensions
 )
 ```
 
@@ -193,6 +190,63 @@ ollama pull gpt-oss
 
 # Verify Ollama is running
 curl http://localhost:11434/api/version
+```
+
+#### OpenAI
+
+```ruby
+# OpenAI text-embedding-3-small (1536 dimensions)
+htm = HTM.new(
+  robot_name: "My Robot",
+  embedding_service: :openai,
+  embedding_model: 'text-embedding-3-small'
+)
+
+# OpenAI text-embedding-3-large (3072 dimensions - exceeds HNSW limit)
+# Note: text-embedding-3-large exceeds the 2000 dimension HNSW index limit
+# and will raise a validation error
+
+# OpenAI ada-002 (1536 dimensions)
+htm = HTM.new(
+  robot_name: "My Robot",
+  embedding_service: :openai,
+  embedding_model: 'text-embedding-ada-002'
+)
+```
+
+**OpenAI Setup:**
+```bash
+# Set your OpenAI API key
+export OPENAI_API_KEY='sk-your-api-key-here'
+```
+
+#### Supported Models and Dimensions
+
+HTM automatically detects embedding dimensions for known models:
+
+| Provider | Model | Dimensions |
+|----------|-------|------------|
+| Ollama | gpt-oss | 768 |
+| Ollama | nomic-embed-text | 768 |
+| Ollama | all-minilm | 384 |
+| Ollama | mxbai-embed-large | 1024 |
+| OpenAI | text-embedding-3-small | 1536 |
+| OpenAI | text-embedding-ada-002 | 1536 |
+| Cohere | embed-english-v3.0 | 1024 (stub) |
+| Local | all-MiniLM-L6-v2 | 384 (stub) |
+
+**Important:** The database uses pgvector's HNSW index which has a maximum limit of 2000 dimensions. OpenAI's text-embedding-3-large (3072 dimensions) exceeds this limit and will raise a `HTM::ValidationError`.
+
+#### Custom Dimensions
+
+```ruby
+# For custom or unknown models, specify dimensions explicitly
+htm = HTM.new(
+  robot_name: "My Robot",
+  embedding_service: :ollama,
+  embedding_model: 'my-custom-model',
+  embedding_dimensions: 1024
+)
 ```
 
 ### Recall Strategies
@@ -284,9 +338,9 @@ See [htm_teamwork.md](htm_teamwork.md) for detailed design documentation and pla
 
 - **HTM**: Main API, coordinates all components
 - **WorkingMemory**: In-memory, token-limited active context
-- **LongTermMemory**: PostgreSQL-backed permanent storage
-- **EmbeddingService**: Vector embedding generation via RubyLLM (Ollama/gpt-oss)
-- **Database**: Schema setup and management
+- **LongTermMemory**: PostgreSQL-backed permanent storage with connection pooling
+- **EmbeddingService**: Vector embedding generation (Ollama, OpenAI, Cohere, Local)
+- **Database**: Schema setup, migrations, and management
 
 ### Database Schema
 

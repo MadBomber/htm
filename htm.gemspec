@@ -41,6 +41,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "connection_pool"
   spec.add_dependency "tiktoken_ruby"
   spec.add_dependency "ruby_llm"
+  spec.add_dependency "lru_redux"
 
   # Development dependencies
   spec.add_development_dependency "rake"

@@ -25,8 +25,12 @@ class IntegrationTest < Minitest::Test
     return unless @htm
 
     begin
-      # Forget test nodes
-      ['test_decision_001', 'test_fact_001', 'test_code_001'].each do |key|
+      # Forget test nodes (use all possible test keys)
+      test_keys = [
+        'test_decision_001', 'test_fact_001', 'test_code_001',
+        'test_forget_001', 'test_forget_confirmation_001'
+      ]
+      test_keys.each do |key|
         @htm.forget(key, confirm: :confirmed) rescue nil
       end
     rescue => e
@@ -160,31 +164,31 @@ class IntegrationTest < Minitest::Test
   end
 
   def test_forget_with_confirmation
-    # Add a node
+    # Add a node with unique key
     @htm.add_node(
-      "test_fact_001",
+      "test_forget_001",
       "This fact will be forgotten",
       type: :fact,
       importance: 1.0
     )
 
     # Verify it exists
-    node = @htm.retrieve("test_fact_001")
+    node = @htm.retrieve("test_forget_001")
     refute_nil node
 
     # Forget it
-    result = @htm.forget("test_fact_001", confirm: :confirmed)
+    result = @htm.forget("test_forget_001", confirm: :confirmed)
     assert result
 
     # Verify it's gone
-    node = @htm.retrieve("test_fact_001")
+    node = @htm.retrieve("test_forget_001")
     assert_nil node
   end
 
   def test_forget_requires_confirmation
-    # Add a node
+    # Add a node with unique key
     @htm.add_node(
-      "test_fact_001",
+      "test_forget_confirmation_001",
       "Testing confirmation requirement",
       type: :fact,
       importance: 1.0
@@ -192,14 +196,14 @@ class IntegrationTest < Minitest::Test
 
     # Try to forget without confirmation
     assert_raises(ArgumentError) do
-      @htm.forget("test_fact_001")
+      @htm.forget("test_forget_confirmation_001")
     end
 
     # Verify it still exists
-    node = @htm.retrieve("test_fact_001")
+    node = @htm.retrieve("test_forget_confirmation_001")
     refute_nil node
 
     # Clean up
-    @htm.forget("test_fact_001", confirm: :confirmed)
+    @htm.forget("test_forget_confirmation_001", confirm: :confirmed)
   end
 end
