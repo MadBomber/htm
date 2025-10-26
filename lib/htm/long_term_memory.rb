@@ -3,6 +3,7 @@
 require 'pg'
 require 'pgvector'
 require 'json'
+require 'connection_pool'
 
 class HTM
   # Long-term Memory - PostgreSQL/TimescaleDB-backed permanent storage
@@ -13,11 +14,30 @@ class HTM
   # - Time-range queries
   # - Relationship graphs
   # - Tag system
+  # - Connection pooling for efficiency
+  # - Query timeouts for reliability
   #
   class LongTermMemory
-    def initialize(config)
+    DEFAULT_POOL_SIZE = 5
+    DEFAULT_POOL_TIMEOUT = 5  # seconds to wait for a connection from the pool
+    DEFAULT_QUERY_TIMEOUT = 30_000  # milliseconds (30 seconds)
+
+    attr_reader :pool_size, :query_timeout
+
+    def initialize(config, pool_size: DEFAULT_POOL_SIZE, query_timeout: DEFAULT_QUERY_TIMEOUT)
       @config = config
       raise "Database configuration required" unless @config
+
+      @pool_size = pool_size
+      @query_timeout = query_timeout  # in milliseconds
+
+      # Create connection pool
+      @pool = ConnectionPool.new(size: @pool_size, timeout: DEFAULT_POOL_TIMEOUT) do
+        conn = PG.connect(@config)
+        # Set statement timeout for all queries on this connection
+        conn.exec("SET statement_timeout = #{@query_timeout}")
+        conn
+      end
     end
 
     # Add a node to long-term memory
@@ -310,18 +330,29 @@ class HTM
       end
     end
 
+    # Shutdown the connection pool
+    # Call this when shutting down the application
+    def shutdown
+      @pool.shutdown { |conn| conn.close }
+    end
+
     private
 
     def with_connection
-      conn = PG.connect(@config)
-      # Pgvector is automatically available after requiring 'pgvector'
-      # No explicit registration needed
-      result = yield(conn)
-      conn.close
-      result
-    rescue => e
-      conn&.close
-      raise e
+      @pool.with do |conn|
+        # Pgvector is automatically available after requiring 'pgvector'
+        # No explicit registration needed
+        yield(conn)
+      end
+    rescue PG::QueryCanceled => e
+      # Query timeout exceeded
+      raise HTM::QueryTimeoutError, "Database query exceeded timeout of #{@query_timeout}ms: #{e.message}"
+    rescue PG::ConnectionBad, PG::UnableToSend => e
+      # Connection issues
+      raise HTM::DatabaseError, "Database connection error: #{e.message}"
+    rescue PG::Error => e
+      # Other PostgreSQL errors
+      raise HTM::DatabaseError, "Database error: #{e.message}"
     end
   end
 end

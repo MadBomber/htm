@@ -127,7 +127,7 @@ class EmbeddingServiceTest < Minitest::Test
       assert_nil service.dimensions
     end
     # Should warn about unknown dimensions
-    assert_match /WARNING.*unknown-model/, err
+    assert_match(/WARNING.*unknown-model/, err)
   end
 
   def test_known_dimensions_constant_exists
@@ -152,6 +152,6 @@ class EmbeddingServiceTest < Minitest::Test
       assert_equal 512, embedding.length
     end
     # Should warn about using stub
-    assert_match /STUB/, err
+    assert_match(/STUB/, err)
   end
 end

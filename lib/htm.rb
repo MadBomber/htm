@@ -50,6 +50,8 @@ class HTM
   # @param db_config [Hash] Database configuration (uses ENV['TIGER_DBURL'] if not provided)
   # @param embedding_service [Symbol, Object] Embedding service to use (:ollama, :openai, :cohere, :local) or a service object (default: :ollama)
   # @param embedding_model [String] Model name for embedding service (default: 'gpt-oss' for ollama)
+  # @param db_pool_size [Integer] Database connection pool size (default: 5)
+  # @param db_query_timeout [Integer] Database query timeout in milliseconds (default: 30000)
   #
   def initialize(
     working_memory_size: 128_000,
@@ -57,14 +59,20 @@ class HTM
     robot_name: nil,
     db_config: nil,
     embedding_service: :ollama,
-    embedding_model: 'gpt-oss'
+    embedding_model: 'gpt-oss',
+    db_pool_size: 5,
+    db_query_timeout: 30_000
   )
     @robot_id = robot_id || SecureRandom.uuid
     @robot_name = robot_name || "robot_#{@robot_id[0..7]}"
 
     # Initialize components
     @working_memory = HTM::WorkingMemory.new(max_tokens: working_memory_size)
-    @long_term_memory = HTM::LongTermMemory.new(db_config || HTM::Database.default_config)
+    @long_term_memory = HTM::LongTermMemory.new(
+      db_config || HTM::Database.default_config,
+      pool_size: db_pool_size,
+      query_timeout: db_query_timeout
+    )
 
     # Allow dependency injection of embedding service (for testing)
     @embedding_service = if embedding_service.is_a?(Symbol)
@@ -259,8 +267,21 @@ class HTM
         max_tokens: @working_memory.max_tokens,
         utilization: @working_memory.utilization_percentage,
         node_count: @working_memory.node_count
+      },
+      database: {
+        pool_size: @long_term_memory.pool_size,
+        query_timeout_ms: @long_term_memory.query_timeout
       }
     })
+  end
+
+  # Shutdown HTM and release resources
+  # Should be called when shutting down the application
+  #
+  # @return [void]
+  #
+  def shutdown
+    @long_term_memory.shutdown
   end
 
   # Which robot discussed a topic?

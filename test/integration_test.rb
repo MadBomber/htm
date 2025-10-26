@@ -32,6 +32,9 @@ class IntegrationTest < Minitest::Test
     rescue => e
       # Ignore errors during cleanup
       puts "Cleanup warning: #{e.message}"
+    ensure
+      # Always shutdown to release connection pool
+      @htm.shutdown
     end
   end
 
