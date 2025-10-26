@@ -55,10 +55,10 @@ HTM requires a TimescaleDB database. Set your database connection:
 
 ```bash
 # Add to your .bashrc or .zshrc
-export TIGER_DBURL="postgresql://user:password@host:port/database"
+export HTM_DBURL="postgresql://user:password@host:port/database"
 
 # Or create a config file
-echo "export TIGER_DBURL='your-connection-string'" > ~/.bashrc__tiger
+echo "export HTM_DBURL='your-connection-string'" > ~/.bashrc__tiger
 source ~/.bashrc__tiger
 ```
 

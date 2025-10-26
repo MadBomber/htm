@@ -520,10 +520,10 @@ curl http://localhost:11434/api/version
 
 ### Issue: "Database connection failed"
 
-**Solution**: Verify your `TIGER_DBURL` is set:
+**Solution**: Verify your `HTM_DBURL` is set:
 
 ```bash
-echo $TIGER_DBURL
+echo $HTM_DBURL
 # Should show your connection string
 ```
 

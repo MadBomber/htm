@@ -82,7 +82,7 @@ ltm = HTM::LongTermMemory.new(
   port: 37807,
   dbname: 'tsdb',
   user: 'tsdbadmin',
-  password: ENV['TIGER_DBPASS'],
+  password: ENV['HTM_DBPASS'],
   sslmode: 'require'
 )
 ```

@@ -15,8 +15,8 @@ puts "HTM Basic Usage Example"
 puts "=" * 60
 
 # Check environment
-unless ENV['TIGER_DBURL']
-  puts "ERROR: TIGER_DBURL not set. Please run: source ~/.bashrc__tiger"
+unless ENV['HTM_DBURL']
+  puts "ERROR: HTM_DBURL not set. Please run: source ~/.bashrc__tiger"
   exit 1
 end
 

@@ -5,8 +5,8 @@ require "test_helper"
 class DatabaseFeaturesTest < Minitest::Test
   def setup
     # Skip if database is not configured
-    unless ENV['TIGER_DBURL']
-      skip "Database not configured. Set TIGER_DBURL to run database feature tests."
+    unless ENV['HTM_DBURL']
+      skip "Database not configured. Set HTM_DBURL to run database feature tests."
     end
   end
 

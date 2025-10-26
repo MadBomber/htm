@@ -829,7 +829,7 @@ begin
   conn.close
 rescue PG::Error => e
   puts "Connection failed: #{e.message}"
-  puts "Check TIGER_DBURL environment variable"
+  puts "Check HTM_DBURL environment variable"
 end
 ```
 

@@ -5,9 +5,9 @@ require 'pg'
 require 'uri'
 
 # Parse connection URL
-db_url = ENV['TIGER_DBURL']
+db_url = ENV['HTM_DBURL']
 unless db_url
-  puts "ERROR: TIGER_DBURL environment variable not set"
+  puts "ERROR: HTM_DBURL environment variable not set"
   exit 1
 end
 

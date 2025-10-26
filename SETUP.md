@@ -97,12 +97,12 @@ After sourcing `~/.bashrc__tiger`, these variables are available:
 
 | Variable | Description | Example Value |
 |----------|-------------|---------------|
-| `TIGER_SERVICE_NAME` | Service identifier | `db-67977` |
-| `TIGER_DBNAME` | Database name | `tsdb` |
-| `TIGER_DBUSER` | Database user | `tsdbadmin` |
-| `TIGER_DBPASS` | Database password | `***` |
-| `TIGER_DBURL` | Full connection URL (preferred) | `postgres://...` |
-| `TIGER_DBPORT` | Database port | `37807` |
+| `HTM_SERVICE_NAME` | Service identifier | `db-67977` |
+| `HTM_DBNAME` | Database name | `tsdb` |
+| `HTM_DBUSER` | Database user | `tsdbadmin` |
+| `HTM_DBPASS` | Database password | `***` |
+| `HTM_DBURL` | Full connection URL (preferred) | `postgres://...` |
+| `HTM_DBPORT` | Database port | `37807` |
 
 ## Development Workflow
 
@@ -219,10 +219,10 @@ If you get connection errors:
 
 ```bash
 # Verify environment variables are set
-echo $TIGER_DBURL
+echo $HTM_DBURL
 
 # Test connection manually
-psql $TIGER_DBURL
+psql $HTM_DBURL
 
 # Check if ~/.bashrc__tiger is sourced
 grep "bashrc__tiger" ~/.bashrc
@@ -237,7 +237,7 @@ If extensions aren't available:
 ruby enable_extensions.rb
 
 # Check extension status manually
-psql $TIGER_DBURL -c "SELECT extname, extversion FROM pg_extension ORDER BY extname"
+psql $HTM_DBURL -c "SELECT extname, extversion FROM pg_extension ORDER BY extname"
 ```
 
 ### SSL Issues
@@ -246,7 +246,7 @@ The TimescaleDB Cloud instance requires SSL. If you see SSL errors:
 
 ```bash
 # Ensure sslmode is set in connection URL
-echo $TIGER_DBURL | grep sslmode
+echo $HTM_DBURL | grep sslmode
 # Should show: sslmode=require
 ```
 

@@ -80,19 +80,19 @@ The easiest way to get started is using [TimescaleDB Cloud](https://www.timescal
 
 ```bash
 # Add to ~/.bashrc__tiger (or your preferred config file)
-export TIGER_DBURL="postgres://username:password@host:port/tsdb?sslmode=require"
-export TIGER_DBNAME="tsdb"
-export TIGER_DBUSER="tsdbadmin"
-export TIGER_DBPASS="your_password"
-export TIGER_DBPORT="37807"
-export TIGER_SERVICE_NAME="your_service_name"
+export HTM_DBURL="postgres://username:password@host:port/tsdb?sslmode=require"
+export HTM_DBNAME="tsdb"
+export HTM_DBUSER="tsdbadmin"
+export HTM_DBPASS="your_password"
+export HTM_DBPORT="37807"
+export HTM_SERVICE_NAME="your_service_name"
 
 # Load the configuration
 source ~/.bashrc__tiger
 ```
 
 !!! tip "Environment Configuration"
-    HTM automatically uses the `TIGER_DBURL` environment variable if available. You can also pass database configuration directly to `HTM.new()`.
+    HTM automatically uses the `HTM_DBURL` environment variable if available. You can also pass database configuration directly to `HTM.new()`.
 
 ### Option B: Local PostgreSQL Installation
 
@@ -160,7 +160,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 Set environment variable:
 
 ```bash
-export TIGER_DBURL="postgres://localhost/htm_db"
+export HTM_DBURL="postgres://localhost/htm_db"
 ```
 
 ## Step 3: Enable PostgreSQL Extensions
@@ -180,7 +180,7 @@ Test your database connection and verify extensions:
 cd /path/to/your/project
 ruby -e "
 require 'pg'
-conn = PG.connect(ENV['TIGER_DBURL'])
+conn = PG.connect(ENV['HTM_DBURL'])
 result = conn.exec('SELECT extname, extversion FROM pg_extension ORDER BY extname')
 result.each { |row| puts \"✓ #{row['extname']}: Version #{row['extversion']}\" }
 conn.close
@@ -374,11 +374,11 @@ HTM uses the following environment variables:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `TIGER_DBURL` | PostgreSQL connection URL | - | Yes |
-| `TIGER_DBNAME` | Database name | `tsdb` | No |
-| `TIGER_DBUSER` | Database user | `tsdbadmin` | No |
-| `TIGER_DBPASS` | Database password | - | No |
-| `TIGER_DBPORT` | Database port | `5432` | No |
+| `HTM_DBURL` | PostgreSQL connection URL | - | Yes |
+| `HTM_DBNAME` | Database name | `tsdb` | No |
+| `HTM_DBUSER` | Database user | `tsdbadmin` | No |
+| `HTM_DBPASS` | Database password | - | No |
+| `HTM_DBPORT` | Database port | `5432` | No |
 | `OLLAMA_URL` | Ollama API URL | `http://localhost:11434` | No |
 
 ### Example Configuration File
@@ -387,7 +387,7 @@ Create a configuration file for easy loading:
 
 ```bash
 # ~/.bashrc__htm
-export TIGER_DBURL="postgres://user:pass@host:port/db?sslmode=require"
+export HTM_DBURL="postgres://user:pass@host:port/db?sslmode=require"
 export OLLAMA_URL="http://localhost:11434"
 ```
 
@@ -407,11 +407,11 @@ source ~/.bashrc__htm
 **Solutions**:
 
 ```bash
-# 1. Verify TIGER_DBURL is set
-echo $TIGER_DBURL
+# 1. Verify HTM_DBURL is set
+echo $HTM_DBURL
 
 # 2. Test connection manually
-psql $TIGER_DBURL
+psql $HTM_DBURL
 
 # 3. Check if PostgreSQL is running (local installs)
 pg_ctl status
@@ -459,7 +459,7 @@ make
 sudo make install
 
 # Enable in database
-psql $TIGER_DBURL -c "CREATE EXTENSION IF NOT EXISTS pgvector;"
+psql $HTM_DBURL -c "CREATE EXTENSION IF NOT EXISTS pgvector;"
 ```
 
 ### Ruby Version Issues
@@ -488,7 +488,7 @@ ruby --version
 
 ```bash
 # Ensure your database user has necessary permissions
-psql $TIGER_DBURL -c "
+psql $HTM_DBURL -c "
   GRANT ALL PRIVILEGES ON DATABASE your_db TO your_user;
   GRANT ALL ON ALL TABLES IN SCHEMA public TO your_user;
 "

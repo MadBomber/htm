@@ -11,12 +11,12 @@ class HTM
     class << self
       # Set up the HTM database schema
       #
-      # @param db_url [String] Database connection URL (uses ENV['TIGER_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
       # @param run_migrations [Boolean] Whether to run migrations (default: true)
       # @return [void]
       #
       def setup(db_url = nil, run_migrations: true)
-        config = parse_connection_url(db_url || ENV['TIGER_DBURL'])
+        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
 
         raise "Database configuration not found. Please source ~/.bashrc__tiger" unless config
 
@@ -40,11 +40,11 @@ class HTM
 
       # Run pending database migrations
       #
-      # @param db_url [String] Database connection URL (uses ENV['TIGER_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
       # @return [void]
       #
       def migrate(db_url = nil)
-        config = parse_connection_url(db_url || ENV['TIGER_DBURL'])
+        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
 
         raise "Database configuration not found. Please source ~/.bashrc__tiger" unless config
 
@@ -82,14 +82,14 @@ class HTM
       # @return [Hash, nil] Connection configuration hash
       #
       def parse_connection_params
-        return nil unless ENV['TIGER_DBNAME']
+        return nil unless ENV['HTM_DBNAME']
 
         {
-          host: ENV['TIGER_DBHOST'] || 'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com',
-          port: (ENV['TIGER_DBPORT'] || 37807).to_i,
-          dbname: ENV['TIGER_DBNAME'],
-          user: ENV['TIGER_DBUSER'],
-          password: ENV['TIGER_DBPASS'],
+          host: ENV['HTM_DBHOST'] || 'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com',
+          port: (ENV['HTM_DBPORT'] || 37807).to_i,
+          dbname: ENV['HTM_DBNAME'],
+          user: ENV['HTM_DBUSER'],
+          password: ENV['HTM_DBPASS'],
           sslmode: 'require'
         }
       end
@@ -99,10 +99,10 @@ class HTM
       # @return [Hash, nil] Connection configuration hash
       #
       def default_config
-        # Prefer TIGER_DBURL if available
-        if ENV['TIGER_DBURL']
-          parse_connection_url(ENV['TIGER_DBURL'])
-        elsif ENV['TIGER_DBNAME']
+        # Prefer HTM_DBURL if available
+        if ENV['HTM_DBURL']
+          parse_connection_url(ENV['HTM_DBURL'])
+        elsif ENV['HTM_DBNAME']
           parse_connection_params
         else
           nil

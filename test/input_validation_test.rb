@@ -5,8 +5,8 @@ require "test_helper"
 class InputValidationTest < Minitest::Test
   def setup
     # Skip if database is not configured
-    unless ENV['TIGER_DBURL']
-      skip "Database not configured. Set TIGER_DBURL to run input validation tests."
+    unless ENV['HTM_DBURL']
+      skip "Database not configured. Set HTM_DBURL to run input validation tests."
     end
 
     # Use mock embedding service for tests

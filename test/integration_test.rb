@@ -5,8 +5,8 @@ require "test_helper"
 class IntegrationTest < Minitest::Test
   def setup
     # Skip if database is not configured
-    unless ENV['TIGER_DBURL']
-      skip "Database not configured. Set TIGER_DBURL to run integration tests."
+    unless ENV['HTM_DBURL']
+      skip "Database not configured. Set HTM_DBURL to run integration tests."
     end
 
     # Use mock embedding service for tests (real Ollama not required)

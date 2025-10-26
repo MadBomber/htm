@@ -754,7 +754,7 @@ Run the complete schema once:
 
 ```sql
 -- Load from file
-psql $TIGER_DBURL -f sql/schema.sql
+psql $HTM_DBURL -f sql/schema.sql
 
 -- Or via Ruby
 ruby -r ./lib/htm -e "HTM::Database.setup"
@@ -885,7 +885,7 @@ HTM uses `connection_pool` gem for efficient connection management:
 
 ```ruby
 pool = ConnectionPool.new(size: 5, timeout: 5) do
-  PG.connect(ENV['TIGER_DBURL'])
+  PG.connect(ENV['HTM_DBURL'])
 end
 ```
 

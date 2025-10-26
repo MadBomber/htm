@@ -73,14 +73,21 @@ gem install htm
 
 ### 1. Database Configuration
 
-HTM uses TimescaleDB (PostgreSQL with time-series extensions). Set up your database connection via environment variables:
+HTM uses TimescaleDB (PostgreSQL with time-series and AI extensions). Set up your database connection via environment variables:
 
 ```bash
-# Source the Tiger database configuration
-source ~/.bashrc__tiger
+# Preferred: Full connection URL
+export HTM_DBURL="postgresql://user:password@host:port/dbname?sslmode=require"
 
-# This loads TIGER_DBURL and other connection parameters
+# Alternative: Individual parameters
+export HTM_DBNAME="tsdb"
+export HTM_DBUSER="tsdbadmin"
+export HTM_DBPASS="your_password"
+export HTM_DBHOST="your-host.tsdb.cloud.timescale.com"
+export HTM_DBPORT="37807"
 ```
+
+See the [Environment Variables](#environment-variables) section below for complete details.
 
 ### 2. Initialize Database Schema
 
@@ -301,6 +308,161 @@ stats = htm.memory_stats
 #   database_size: 52428800,  # bytes
 #   ...
 # }
+```
+
+## Environment Variables
+
+HTM uses environment variables for database and service configuration. These can be set in your shell profile, a `.env` file, or exported directly.
+
+### Database Configuration
+
+#### HTM_DBURL (Recommended)
+
+The preferred method for database configuration is a single connection URL:
+
+```bash
+export HTM_DBURL="postgresql://username:password@host:port/dbname?sslmode=require"
+```
+
+**Format:** `postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=MODE`
+
+**Example for TimescaleDB Cloud:**
+```bash
+export HTM_DBURL="postgresql://tsdbadmin:mypassword@abc123.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require"
+```
+
+**Example for Local PostgreSQL:**
+```bash
+export HTM_DBURL="postgresql://postgres:postgres@localhost:5432/htm_dev?sslmode=disable"
+```
+
+#### Individual Database Parameters (Alternative)
+
+If `HTM_DBURL` is not set, HTM will use individual parameters:
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `HTM_DBNAME` | Database name | None | Yes |
+| `HTM_DBUSER` | Database username | None | Yes |
+| `HTM_DBPASS` | Database password | None | Yes |
+| `HTM_DBHOST` | Database hostname or IP | `cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com` | No |
+| `HTM_DBPORT` | Database port | `37807` | No |
+| `HTM_SERVICE_NAME` | Service identifier (informational only) | None | No |
+
+**Example:**
+```bash
+export HTM_DBNAME="tsdb"
+export HTM_DBUSER="tsdbadmin"
+export HTM_DBPASS="secure_password_here"
+export HTM_DBHOST="myservice.tsdb.cloud.timescale.com"
+export HTM_DBPORT="37807"
+export HTM_SERVICE_NAME="production-db"
+```
+
+**Configuration Priority:**
+1. `HTM_DBURL` (if set, this takes precedence)
+2. Individual parameters (`HTM_DBNAME`, `HTM_DBUSER`, etc.)
+3. Direct configuration passed to `HTM.new(db_config: {...})`
+
+### Embedding Service Configuration
+
+#### OPENAI_API_KEY
+
+Required when using OpenAI as your embedding provider:
+
+```bash
+export OPENAI_API_KEY="sk-proj-your-api-key-here"
+```
+
+This is required for:
+- `embedding_service: :openai`
+- Models: `text-embedding-3-small`, `text-embedding-ada-002`
+
+#### OLLAMA_URL
+
+Custom Ollama server URL (optional):
+
+```bash
+export OLLAMA_URL="http://localhost:11434"  # Default
+export OLLAMA_URL="http://ollama-server:11434"  # Custom
+```
+
+If not set, HTM defaults to `http://localhost:11434`.
+
+### Quick Setup Examples
+
+#### TimescaleDB Cloud
+
+```bash
+# Option 1: Single URL (recommended)
+export HTM_DBURL="postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require"
+
+# Option 2: Individual parameters
+export HTM_SERVICE_NAME="my-service"
+export HTM_DBNAME="tsdb"
+export HTM_DBUSER="tsdbadmin"
+export HTM_DBPASS="your_password"
+export HTM_DBHOST="abc123.tsdb.cloud.timescale.com"
+export HTM_DBPORT="37807"
+```
+
+#### Local Development (PostgreSQL/TimescaleDB)
+
+```bash
+# Simple local setup
+export HTM_DBURL="postgresql://postgres:postgres@localhost:5432/htm_dev?sslmode=disable"
+
+# With custom user
+export HTM_DBURL="postgresql://myuser:mypass@localhost:5432/htm_dev"
+```
+
+#### With OpenAI Embeddings
+
+```bash
+# Database + OpenAI
+export HTM_DBURL="postgresql://user:pass@host:port/db?sslmode=require"
+export OPENAI_API_KEY="sk-proj-your-api-key-here"
+```
+
+### Persistent Configuration
+
+To make environment variables permanent, add them to your shell profile:
+
+**For Bash (~/.bashrc or ~/.bash_profile):**
+```bash
+echo 'export HTM_DBURL="postgresql://user:pass@host:port/db?sslmode=require"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**For Zsh (~/.zshrc):**
+```bash
+echo 'export HTM_DBURL="postgresql://user:pass@host:port/db?sslmode=require"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Or create a dedicated file (~/.bashrc__htm):**
+```bash
+# ~/.bashrc__htm
+export HTM_DBURL="postgresql://user:pass@host:port/db?sslmode=require"
+export OPENAI_API_KEY="sk-proj-your-api-key"
+export HTM_SERVICE_NAME="my-service"
+
+# Then source it from your main profile
+echo 'source ~/.bashrc__htm' >> ~/.bashrc
+```
+
+### Verification
+
+Verify your configuration:
+
+```bash
+# Check database connection
+ruby test_connection.rb
+
+# Or in Ruby
+irb -r ./lib/htm
+> HTM::Database.default_config
+> # Should return a hash with your connection parameters
 ```
 
 ## Development

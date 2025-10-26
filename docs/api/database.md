@@ -38,7 +38,7 @@ HTM::Database.setup(db_url = nil)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `db_url` | String, nil | `ENV['TIGER_DBURL']` | Database connection URL |
+| `db_url` | String, nil | `ENV['HTM_DBURL']` | Database connection URL |
 
 #### Returns
 
@@ -170,25 +170,25 @@ HTM::Database.parse_connection_params()
 #### Returns
 
 - `Hash` - Connection configuration
-- `nil` - If `ENV['TIGER_DBNAME']` not set
+- `nil` - If `ENV['HTM_DBNAME']` not set
 
 #### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `TIGER_DBHOST` | Database hostname | `'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com'` |
-| `TIGER_DBPORT` | Database port | `37807` |
-| `TIGER_DBNAME` | Database name | *required* |
-| `TIGER_DBUSER` | Database user | *required* |
-| `TIGER_DBPASS` | Database password | *required* |
+| `HTM_DBHOST` | Database hostname | `'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com'` |
+| `HTM_DBPORT` | Database port | `37807` |
+| `HTM_DBNAME` | Database name | *required* |
+| `HTM_DBUSER` | Database user | *required* |
+| `HTM_DBPASS` | Database password | *required* |
 
 #### Examples
 
 ```ruby
 # Set environment variables
-ENV['TIGER_DBNAME'] = 'tsdb'
-ENV['TIGER_DBUSER'] = 'tsdbadmin'
-ENV['TIGER_DBPASS'] = 'secret'
+ENV['HTM_DBNAME'] = 'tsdb'
+ENV['HTM_DBUSER'] = 'tsdbadmin'
+ENV['HTM_DBPASS'] = 'secret'
 
 config = HTM::Database.parse_connection_params()
 # => {
@@ -201,14 +201,14 @@ config = HTM::Database.parse_connection_params()
 # }
 
 # Custom host and port
-ENV['TIGER_DBHOST'] = 'localhost'
-ENV['TIGER_DBPORT'] = '5432'
+ENV['HTM_DBHOST'] = 'localhost'
+ENV['HTM_DBPORT'] = '5432'
 
 config = HTM::Database.parse_connection_params()
 # => { host: "localhost", port: 5432, ... }
 
-# Without TIGER_DBNAME
-ENV.delete('TIGER_DBNAME')
+# Without HTM_DBNAME
+ENV.delete('HTM_DBNAME')
 config = HTM::Database.parse_connection_params()
 # => nil
 ```
@@ -230,29 +230,29 @@ HTM::Database.default_config()
 
 #### Priority Order
 
-1. `ENV['TIGER_DBURL']` - Parse connection URL
-2. `ENV['TIGER_DBNAME']` - Parse individual params
+1. `ENV['HTM_DBURL']` - Parse connection URL
+2. `ENV['HTM_DBNAME']` - Parse individual params
 3. `nil` - No configuration available
 
 #### Examples
 
 ```ruby
-# Using TIGER_DBURL
-ENV['TIGER_DBURL'] = 'postgresql://user:pass@host/db'
+# Using HTM_DBURL
+ENV['HTM_DBURL'] = 'postgresql://user:pass@host/db'
 config = HTM::Database.default_config
 # => Parsed from URL
 
-# Using TIGER_DBNAME
-ENV.delete('TIGER_DBURL')
-ENV['TIGER_DBNAME'] = 'mydb'
-ENV['TIGER_DBUSER'] = 'user'
-ENV['TIGER_DBPASS'] = 'pass'
+# Using HTM_DBNAME
+ENV.delete('HTM_DBURL')
+ENV['HTM_DBNAME'] = 'mydb'
+ENV['HTM_DBUSER'] = 'user'
+ENV['HTM_DBPASS'] = 'pass'
 config = HTM::Database.default_config
 # => Parsed from params
 
 # No configuration
-ENV.delete('TIGER_DBURL')
-ENV.delete('TIGER_DBNAME')
+ENV.delete('HTM_DBURL')
+ENV.delete('HTM_DBNAME')
 config = HTM::Database.default_config
 # => nil
 
@@ -555,33 +555,33 @@ Using URL (recommended):
 
 ```bash
 # In ~/.bashrc__tiger
-export TIGER_DBURL='postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require'
+export HTM_DBURL='postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require'
 ```
 
 Using individual variables:
 
 ```bash
 # In ~/.bashrc__tiger
-export TIGER_DBHOST='xxx.tsdb.cloud.timescale.com'
-export TIGER_DBPORT=37807
-export TIGER_DBNAME='tsdb'
-export TIGER_DBUSER='tsdbadmin'
-export TIGER_DBPASS='your_password'
+export HTM_DBHOST='xxx.tsdb.cloud.timescale.com'
+export HTM_DBPORT=37807
+export HTM_DBNAME='tsdb'
+export HTM_DBUSER='tsdbadmin'
+export HTM_DBPASS='your_password'
 ```
 
 ### Local PostgreSQL
 
 ```bash
-export TIGER_DBURL='postgresql://localhost/htm_dev'
+export HTM_DBURL='postgresql://localhost/htm_dev'
 
 # Or with auth
-export TIGER_DBURL='postgresql://user:pass@localhost:5432/htm_dev'
+export HTM_DBURL='postgresql://user:pass@localhost:5432/htm_dev'
 ```
 
 ### Docker PostgreSQL
 
 ```bash
-export TIGER_DBURL='postgresql://postgres:postgres@localhost:5432/htm'
+export HTM_DBURL='postgresql://postgres:postgres@localhost:5432/htm'
 ```
 
 ---
@@ -616,7 +616,7 @@ if config
   puts "Port: #{config[:port]}"
 else
   puts "No database configuration found"
-  puts "Please set TIGER_DBURL or TIGER_DBNAME environment variables"
+  puts "Please set HTM_DBURL or HTM_DBNAME environment variables"
 end
 
 # Test connection
@@ -707,7 +707,7 @@ pg_isready -h localhost -p 5432
 psql -h localhost -U user -d dbname
 
 # Verify environment
-echo $TIGER_DBURL
+echo $HTM_DBURL
 ```
 
 ### Permission Denied
@@ -790,7 +790,7 @@ end
 config = HTM::Database.default_config
 
 unless config
-  raise "Database not configured. Please set TIGER_DBURL environment variable. " \
+  raise "Database not configured. Please set HTM_DBURL environment variable. " \
         "See README.md for configuration instructions."
 end
 ```

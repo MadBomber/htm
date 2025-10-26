@@ -58,7 +58,7 @@ class HTM
   # @param working_memory_size [Integer] Maximum tokens for working memory (default: 128,000)
   # @param robot_id [String] Unique identifier for this robot (auto-generated if not provided)
   # @param robot_name [String] Human-readable name for this robot
-  # @param db_config [Hash] Database configuration (uses ENV['TIGER_DBURL'] if not provided)
+  # @param db_config [Hash] Database configuration (uses ENV['HTM_DBURL'] if not provided)
   # @param embedding_service [Symbol, Object] Embedding service to use (:ollama, :openai, :cohere, :local) or a service object (default: :ollama)
   # @param embedding_model [String] Model name for embedding service (default: 'gpt-oss' for ollama)
   # @param db_pool_size [Integer] Database connection pool size (default: 5)

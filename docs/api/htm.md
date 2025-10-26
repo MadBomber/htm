@@ -49,7 +49,7 @@ HTM.new(
 | `working_memory_size` | Integer | `128_000` | Maximum tokens for working memory |
 | `robot_id` | String, nil | Auto-generated UUID | Unique identifier for this robot |
 | `robot_name` | String, nil | `"robot_#{id[0..7]}"` | Human-readable name |
-| `db_config` | Hash, nil | From `ENV['TIGER_DBURL']` | Database configuration |
+| `db_config` | Hash, nil | From `ENV['HTM_DBURL']` | Database configuration |
 | `embedding_service` | Symbol | `:ollama` | Embedding provider (`:ollama`, `:openai`, `:cohere`, `:local`) |
 | `embedding_model` | String | `'gpt-oss'` | Model name for embeddings |
 
