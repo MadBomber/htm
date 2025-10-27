@@ -84,9 +84,10 @@ if [ -d "/opt/homebrew/var/postgresql@17" ]; then
     mkdir -p "$BACKUP_DIR"
 
     # Try to export database if possible
-    if command -v pg_dump &>/dev/null && psql -lqt 2>/dev/null | grep -qw htm_development; then
+    CURRENT_USER=$(whoami)
+    if command -v pg_dump &>/dev/null && psql -U $CURRENT_USER -lqt 2>/dev/null | grep -qw htm_development; then
         echo "Exporting htm_development database..."
-        pg_dump htm_development > "$BACKUP_DIR/htm_development.sql" 2>/dev/null || echo "Could not export database (server may be stopped)"
+        pg_dump -U $CURRENT_USER htm_development > "$BACKUP_DIR/htm_development.sql" 2>/dev/null || echo "Could not export database (server may be stopped)"
     fi
 
     # Copy data directory
@@ -177,22 +178,50 @@ if ! $PG_BIN/pg_isready -q; then
     exit 1
 fi
 
+# Give PostgreSQL a moment to fully initialize
+sleep 2
+
 echo "✓ PostgreSQL started"
 
 # Step 6: Create databases
 echo
 echo "Step 6: Setting up databases..."
 
+# Get current username
+PGUSER=$(whoami)
+
 # Create default database for user
-$PG_BIN/createdb $(whoami) 2>/dev/null || echo "User database already exists"
+echo "Creating database for user $PGUSER..."
+$PG_BIN/createdb -U $PGUSER $PGUSER 2>/dev/null && echo "✓ Created $PGUSER database" || {
+    # Check if it already exists
+    if $PG_BIN/psql -U $PGUSER -lqt | cut -d \| -f 1 | grep -qw $PGUSER; then
+        echo "✓ User database already exists"
+    else
+        echo "✗ Failed to create user database and it doesn't exist"
+        echo "Checking PostgreSQL connection..."
+        $PG_BIN/psql -U $PGUSER postgres -c "SELECT version();" 2>&1 || true
+        exit 1
+    fi
+}
 
 # Create htm_development database
-$PG_BIN/createdb htm_development 2>/dev/null || echo "Database already exists"
+echo "Creating htm_development database..."
+$PG_BIN/createdb -U $PGUSER htm_development 2>/dev/null && echo "✓ Created htm_development database" || {
+    # Check if it already exists
+    if $PG_BIN/psql -U $PGUSER -lqt | cut -d \| -f 1 | grep -qw htm_development; then
+        echo "✓ htm_development already exists"
+    else
+        echo "✗ Failed to create htm_development database and it doesn't exist"
+        echo "Checking connection..."
+        $PG_BIN/psql -U $PGUSER -l 2>&1 | head -20
+        exit 1
+    fi
+}
 
 # Restore from backup if it exists
 if [ -f "$BACKUP_DIR/htm_development.sql" ]; then
     echo "Restoring from backup..."
-    $PG_BIN/psql htm_development < "$BACKUP_DIR/htm_development.sql" || echo "Could not restore backup (this is OK for fresh install)"
+    $PG_BIN/psql -U $PGUSER htm_development < "$BACKUP_DIR/htm_development.sql" || echo "Could not restore backup (this is OK for fresh install)"
 fi
 
 echo "✓ Databases created"
