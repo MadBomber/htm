@@ -41,6 +41,13 @@ class HTM
         conn = PG.connect(@config)
         # Set statement timeout for all queries on this connection
         conn.exec("SET statement_timeout = #{@query_timeout}")
+
+        # Configure embedding generation via pgai
+        configure_embedding_settings(conn)
+
+        # Configure topic extraction via pgai
+        configure_topic_settings(conn)
+
         conn
       end
 
@@ -577,6 +584,43 @@ class HTM
 
         result.to_a
       end
+    end
+
+    # Configure embedding generation settings from environment variables
+    #
+    # @param conn [PG::Connection] PostgreSQL connection
+    # @return [void]
+    #
+    def configure_embedding_settings(conn)
+      provider = ENV.fetch('HTM_EMBEDDINGS_PROVIDER', 'ollama')
+      model = ENV.fetch('HTM_EMBEDDINGS_MODEL', 'nomic-embed-text')
+      base_url = ENV.fetch('HTM_EMBEDDINGS_BASE_URL', 'http://localhost:11434')
+      dimension = ENV.fetch('HTM_EMBEDDINGS_DIMENSION', '768')
+
+      conn.exec_params("SELECT set_config('htm.embedding_provider', $1, false)", [provider])
+      conn.exec_params("SELECT set_config('htm.embedding_model', $1, false)", [model])
+      conn.exec_params("SELECT set_config('htm.ollama_url', $1, false)", [base_url])
+      conn.exec_params("SELECT set_config('htm.embedding_dimension', $1, false)", [dimension])
+
+      # Set OpenAI API key if provided
+      if ENV['HTM_OPENAI_API_KEY']
+        conn.exec_params("SELECT set_config('htm.openai_api_key', $1, false)", [ENV['HTM_OPENAI_API_KEY']])
+      end
+    end
+
+    # Configure topic extraction settings from environment variables
+    #
+    # @param conn [PG::Connection] PostgreSQL connection
+    # @return [void]
+    #
+    def configure_topic_settings(conn)
+      provider = ENV.fetch('HTM_TOPIC_PROVIDER', 'ollama')
+      model = ENV.fetch('HTM_TOPIC_MODEL', 'llama3')
+      base_url = ENV.fetch('HTM_TOPIC_BASE_URL', 'http://localhost:11434')
+
+      conn.exec_params("SELECT set_config('htm.topic_provider', $1, false)", [provider])
+      conn.exec_params("SELECT set_config('htm.topic_model', $1, false)", [model])
+      conn.exec_params("SELECT set_config('htm.topic_base_url', $1, false)", [base_url])
     end
 
     def with_connection

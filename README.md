@@ -45,6 +45,13 @@
     - Cross-robot context awareness
     - Track which robot said what
 
+- **LLM-Driven Emergent Ontology**
+    - Automatic hierarchical topic extraction from content
+    - Topics in colon-delimited format (e.g., `database:postgresql:performance`)
+    - LLM-powered via pgai triggers (follows embedding generation pattern)
+    - Enables both structured navigation and semantic discovery
+    - Complements vector embeddings (symbolic + sub-symbolic retrieval)
+
 - **Knowledge Graph**
     - Relationship tracking between nodes
     - Tag-based categorization
@@ -410,6 +417,52 @@ export OLLAMA_URL="http://ollama-server:11434"  # Custom
 ```
 
 If not set, HTM defaults to `http://localhost:11434`.
+
+### Topic Extraction Configuration
+
+HTM automatically extracts hierarchical topics from node content using LLM-powered analysis via pgai. Configure the topic extraction behavior with these environment variables:
+
+#### HTM_TOPIC_PROVIDER
+
+Which LLM provider to use for topic extraction:
+
+```bash
+export HTM_TOPIC_PROVIDER="ollama"  # Default (local, recommended)
+export HTM_TOPIC_PROVIDER="openai"  # Cloud-based (requires API key)
+```
+
+#### HTM_TOPIC_MODEL
+
+Which model to use for topic extraction:
+
+```bash
+# For Ollama (default)
+export HTM_TOPIC_MODEL="llama3"
+
+# For OpenAI
+export HTM_TOPIC_MODEL="gpt-4-turbo"
+```
+
+#### HTM_TOPIC_BASE_URL
+
+LLM service endpoint:
+
+```bash
+export HTM_TOPIC_BASE_URL="http://localhost:11434"  # Default Ollama
+export HTM_TOPIC_BASE_URL="http://ollama-server:11434"  # Custom Ollama server
+```
+
+#### Embedding Configuration
+
+Similarly, configure embedding generation:
+
+```bash
+# Embedding provider and model
+export HTM_EMBEDDINGS_PROVIDER="ollama"  # Default
+export HTM_EMBEDDINGS_MODEL="nomic-embed-text"  # Default
+export HTM_EMBEDDINGS_BASE_URL="http://localhost:11434"
+export HTM_EMBEDDINGS_DIMENSION="768"  # Optional, auto-detected
+```
 
 ### Quick Setup Examples
 
