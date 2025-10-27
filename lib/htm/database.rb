@@ -168,28 +168,52 @@ class HTM
           robot_name: "Sample Robot"
         )
 
-        # Add sample nodes
-        puts "  Creating sample nodes..."
+        # Add sample conversation messages
+        puts "  Creating sample conversation..."
 
-        htm.add_node(
-          "sample_001",
-          "PostgreSQL with TimescaleDB provides efficient time-series data storage",
+        htm.add_message(
+          "What is TimescaleDB good for?",
+          speaker: "user",
+          type: :question,
+          importance: 5.0,
+          tags: ["database", "timescaledb"]
+        )
+
+        htm.add_message(
+          "PostgreSQL with TimescaleDB provides efficient time-series data storage and querying capabilities.",
+          speaker: "Sample Robot",
           type: :fact,
           importance: 8.0,
           tags: ["database", "timescaledb"]
         )
 
-        htm.add_node(
-          "sample_002",
-          "Machine learning models require large amounts of training data",
+        htm.add_message(
+          "How much training data do ML models need?",
+          speaker: "user",
+          type: :question,
+          importance: 6.0,
+          tags: ["ai", "machine-learning"]
+        )
+
+        htm.add_message(
+          "Machine learning models require large amounts of training data to achieve good performance.",
+          speaker: "Sample Robot",
           type: :fact,
           importance: 7.0,
           tags: ["ai", "machine-learning"]
         )
 
-        htm.add_node(
-          "sample_003",
-          "Ruby on Rails is a web framework for building database-backed applications",
+        htm.add_message(
+          "Tell me about Ruby on Rails",
+          speaker: "user",
+          type: :question,
+          importance: 5.0,
+          tags: ["ruby", "web-development"]
+        )
+
+        htm.add_message(
+          "Ruby on Rails is a web framework for building database-backed applications.",
+          speaker: "Sample Robot",
           type: :fact,
           importance: 6.0,
           tags: ["ruby", "web-development"]
@@ -197,7 +221,7 @@ class HTM
 
         htm.shutdown
 
-        puts "✓ Database seeded with 3 sample nodes"
+        puts "✓ Database seeded with 6 conversation messages (3 exchanges)"
       end
 
       # Show database info
@@ -414,46 +438,10 @@ class HTM
       end
 
       def setup_hypertables(conn)
-        # Convert operations_log to hypertable for time-series optimization
-        begin
-          conn.exec(
-            "SELECT create_hypertable('operations_log', 'timestamp',
-             if_not_exists => TRUE,
-             migrate_data => TRUE)"
-          )
-          puts "✓ Created hypertable for operations_log"
-        rescue PG::Error => e
-          puts "Note: operations_log hypertable: #{e.message}" if e.message !~ /already a hypertable/
-        end
-
-        # Convert nodes table to hypertable partitioned by created_at
-        # This is now possible because we removed the UNIQUE constraint on key
-        # and use composite PRIMARY KEY (id, created_at)
-        begin
-          conn.exec(
-            "SELECT create_hypertable('nodes', 'created_at',
-             if_not_exists => TRUE,
-             migrate_data => TRUE)"
-          )
-          puts "✓ Created hypertable for nodes (conversation memory)"
-
-          # Enable compression for older conversation data
-          conn.exec(
-            "ALTER TABLE nodes SET (
-             timescaledb.compress,
-             timescaledb.compress_segmentby = 'robot_id,speaker'
-            )"
-          )
-
-          # Add compression policy: compress chunks older than 30 days
-          conn.exec(
-            "SELECT add_compression_policy('nodes', INTERVAL '30 days',
-             if_not_exists => TRUE)"
-          )
-          puts "✓ Enabled compression for conversation older than 30 days"
-        rescue PG::Error => e
-          puts "Note: nodes hypertable: #{e.message}" if e.message !~ /already a hypertable/
-        end
+        # All tables use simple PRIMARY KEY (id), no hypertable conversions
+        # Time-range queries use indexed timestamp columns:
+        # - nodes: indexed created_at column
+        # - operations_log: indexed timestamp column
       end
     end
   end

@@ -324,11 +324,16 @@ cd pgai
 echo "Building and installing pgai (this may take a minute)..."
 sudo python3 projects/extension/build.py install
 
+# Install pgai's Python dependencies into PostgreSQL's Python environment
+echo "Installing pgai Python dependencies for PL/Python..."
+sudo python3 -m pip install --upgrade pip
+sudo python3 -m pip install pydantic pydantic-core httpx psycopg openai
+
 # Clean up
 cd /
 sudo rm -rf /tmp/pgai
 
-echo "✓ pgai installed"
+echo "✓ pgai installed with all Python dependencies"
 
 # Step 11: Enable pgai extension
 echo

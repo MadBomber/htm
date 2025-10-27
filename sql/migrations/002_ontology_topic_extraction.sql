@@ -37,7 +37,7 @@ Use lowercase with hyphens for multi-word terms (e.g., machine-learning).
 Return ONLY the topic tags, one per line, no explanations or additional text.
 Maximum depth: 5 levels.
 
-Text: ' || NEW.value;
+Text: ' || NEW.content;
 
   -- Call LLM via pgai to extract topics
   IF topic_provider = 'ollama' THEN
@@ -86,7 +86,7 @@ $$ LANGUAGE plpgsql;
 -- Trigger to automatically extract topics on INSERT and UPDATE
 DROP TRIGGER IF EXISTS nodes_extract_topics ON nodes;
 CREATE TRIGGER nodes_extract_topics
-  AFTER INSERT OR UPDATE OF value ON nodes
+  AFTER INSERT OR UPDATE OF content ON nodes
   FOR EACH ROW
   EXECUTE FUNCTION extract_ontology_topics();
 

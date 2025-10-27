@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 -- Main nodes table - Conversation memory storage
 -- Each row represents a message/utterance from a conversation between user and robots
 CREATE TABLE IF NOT EXISTS nodes (
-  id BIGSERIAL,
+  id BIGSERIAL PRIMARY KEY,
   content TEXT NOT NULL,                  -- The conversation message/utterance
   speaker TEXT NOT NULL,                  -- Who said it: 'user' or robot name
   type TEXT,                              -- fact, context, code, preference, decision, question
@@ -21,8 +21,7 @@ CREATE TABLE IF NOT EXISTS nodes (
   in_working_memory BOOLEAN DEFAULT FALSE,
   robot_id TEXT NOT NULL,                 -- Robot that stored this memory
   embedding vector(768),                  -- Fixed 768 dimensions for embeddinggemma
-  embedding_dimension INTEGER DEFAULT 768,
-  PRIMARY KEY (id, created_at)            -- Composite PK for TimescaleDB hypertable partitioning
+  embedding_dimension INTEGER DEFAULT 768
 );
 
 -- Relationships between nodes
@@ -47,13 +46,12 @@ CREATE TABLE IF NOT EXISTS tags (
 
 -- Operation log for debugging and replay
 CREATE TABLE IF NOT EXISTS operations_log (
-  id BIGSERIAL,
+  id BIGSERIAL PRIMARY KEY,
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   operation TEXT NOT NULL,  -- add, retrieve, remove, evict, recall
   node_id BIGINT,
   robot_id TEXT NOT NULL,
-  details JSONB,  -- Flexible storage for additional metadata
-  PRIMARY KEY (id, timestamp)  -- Composite PK for TimescaleDB hypertable partitioning
+  details JSONB  -- Flexible storage for additional metadata
 );
 
 -- Robots registry (track all robots using the system)
