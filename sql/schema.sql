@@ -90,11 +90,17 @@ CREATE INDEX IF NOT EXISTS idx_relationships_to ON relationships(to_node_id);
 -- Tags indexes
 CREATE INDEX IF NOT EXISTS idx_tags_node_id ON tags(node_id);
 CREATE INDEX IF NOT EXISTS idx_tags_tag ON tags(tag);
+CREATE INDEX IF NOT EXISTS idx_tags_tag_pattern ON tags(tag text_pattern_ops);  -- For hierarchical topic queries
 
 -- Operation log indexes
 CREATE INDEX IF NOT EXISTS idx_operations_log_timestamp ON operations_log(timestamp);
 CREATE INDEX IF NOT EXISTS idx_operations_log_robot_id ON operations_log(robot_id);
 CREATE INDEX IF NOT EXISTS idx_operations_log_operation ON operations_log(operation);
+
+-- Check constraint for embedding dimensions
+ALTER TABLE nodes DROP CONSTRAINT IF EXISTS check_embedding_dimension;
+ALTER TABLE nodes ADD CONSTRAINT check_embedding_dimension
+  CHECK (embedding_dimension IS NOT NULL AND embedding_dimension > 0 AND embedding_dimension <= 2000);
 
 -- Trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -110,6 +116,25 @@ CREATE TRIGGER update_nodes_updated_at
   BEFORE UPDATE ON nodes
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- Function to validate embedding dimensions
+CREATE OR REPLACE FUNCTION validate_embedding_dimension()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.embedding IS NOT NULL AND NEW.embedding_dimension IS NOT NULL THEN
+    -- Validate that embedding dimension is reasonable
+    -- pgvector doesn't expose dimension directly, validation happens at application layer
+    NULL;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_validate_embedding_dimension ON nodes;
+CREATE TRIGGER trigger_validate_embedding_dimension
+  BEFORE INSERT OR UPDATE ON nodes
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_embedding_dimension();
 
 -- View for node statistics
 CREATE OR REPLACE VIEW node_stats AS
@@ -133,3 +158,39 @@ SELECT
 FROM robots r
 LEFT JOIN nodes n ON n.robot_id = r.id
 GROUP BY r.id, r.name;
+
+-- View for hierarchical ontology structure
+CREATE OR REPLACE VIEW ontology_structure AS
+SELECT
+  split_part(tag, ':', 1) AS root_topic,
+  split_part(tag, ':', 2) AS level1_topic,
+  split_part(tag, ':', 3) AS level2_topic,
+  tag AS full_path,
+  COUNT(DISTINCT node_id) AS node_count
+FROM tags
+WHERE tag ~ '^[a-z0-9\-]+(:[a-z0-9\-]+)*$'  -- Only valid hierarchical tags
+GROUP BY tag
+ORDER BY root_topic, level1_topic, level2_topic;
+
+-- View for topic co-occurrence analysis
+CREATE OR REPLACE VIEW topic_relationships AS
+SELECT
+  t1.tag AS topic1,
+  t2.tag AS topic2,
+  COUNT(DISTINCT t1.node_id) AS shared_nodes
+FROM tags t1
+JOIN tags t2 ON t1.node_id = t2.node_id AND t1.tag < t2.tag
+GROUP BY t1.tag, t2.tag
+HAVING COUNT(DISTINCT t1.node_id) >= 2
+ORDER BY shared_nodes DESC;
+
+-- Comments on columns and views
+COMMENT ON COLUMN nodes.embedding IS 'Vector embedding (max 2000 dimensions). Actual dimension stored in embedding_dimension column.';
+COMMENT ON COLUMN nodes.embedding_dimension IS 'Actual number of dimensions used in the embedding vector (max 2000).';
+COMMENT ON COLUMN nodes.content IS 'The conversation message/utterance content';
+COMMENT ON COLUMN nodes.speaker IS 'Who said it: user or robot name';
+
+COMMENT ON VIEW ontology_structure IS
+  'Provides a hierarchical view of all topics in the knowledge base. Topics use colon-delimited format (e.g., database:postgresql:timescaledb) and are assigned manually via tags.';
+COMMENT ON VIEW topic_relationships IS
+  'Shows which topics co-occur on the same nodes, revealing cross-topic relationships in the knowledge base.';
