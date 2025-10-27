@@ -426,20 +426,22 @@ class HTM
           puts "Note: operations_log hypertable: #{e.message}" if e.message !~ /already a hypertable/
         end
 
-        # Optionally convert nodes table to hypertable partitioned by created_at
+        # Convert nodes table to hypertable partitioned by created_at
+        # This is now possible because we removed the UNIQUE constraint on key
+        # and use composite PRIMARY KEY (id, created_at)
         begin
           conn.exec(
             "SELECT create_hypertable('nodes', 'created_at',
              if_not_exists => TRUE,
              migrate_data => TRUE)"
           )
-          puts "✓ Created hypertable for nodes"
+          puts "✓ Created hypertable for nodes (conversation memory)"
 
-          # Enable compression for older data
+          # Enable compression for older conversation data
           conn.exec(
             "ALTER TABLE nodes SET (
              timescaledb.compress,
-             timescaledb.compress_segmentby = 'robot_id,type'
+             timescaledb.compress_segmentby = 'robot_id,speaker'
             )"
           )
 
@@ -448,7 +450,7 @@ class HTM
             "SELECT add_compression_policy('nodes', INTERVAL '30 days',
              if_not_exists => TRUE)"
           )
-          puts "✓ Enabled compression for nodes older than 30 days"
+          puts "✓ Enabled compression for conversation older than 30 days"
         rescue PG::Error => e
           puts "Note: nodes hypertable: #{e.message}" if e.message !~ /already a hypertable/
         end

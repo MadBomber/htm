@@ -115,10 +115,10 @@ class HTM
   # @param tags [Array<String>] Tags for categorization
   # @return [Integer] Database ID of the created node
   #
-  def add_node(key, value, type: nil, category: nil, importance: 1.0, related_to: [], tags: [])
+  def add_message(content, speaker:, type: nil, category: nil, importance: 1.0, related_to: [], tags: [])
     # Validate all inputs
-    validate_key!(key)
-    validate_value!(value)
+    validate_content!(content)
+    validate_speaker!(speaker)
     validate_type!(type)
     validate_category!(category)
     validate_importance!(importance)
@@ -126,17 +126,17 @@ class HTM
     validate_array!(tags, "tags")
 
     # Calculate token count
-    token_count = @embedding_service.count_tokens(value)
+    token_count = @embedding_service.count_tokens(content)
 
     # Generate embedding client-side
     # If pgai is available in the database, it will be overridden by the trigger
     # If not, this embedding will be stored
-    embedding = @embedding_service.embed(value)
+    embedding = @embedding_service.embed(content)
 
     # Store in long-term memory with embedding
     node_id = @long_term_memory.add(
-      key: key,
-      value: value,
+      content: content,
+      speaker: speaker,
       type: type,
       category: category,
       importance: importance,
@@ -146,8 +146,8 @@ class HTM
     )
 
     # Add relationships
-    related_to.each do |related_key|
-      @long_term_memory.add_relationship(from: key, to: related_key)
+    related_to.each do |related_node_id|
+      @long_term_memory.add_relationship(from: node_id, to: related_node_id)
     end
 
     # Add tags
@@ -156,14 +156,14 @@ class HTM
     end
 
     # Add to working memory
-    @working_memory.add(key, value, token_count: token_count, importance: importance)
+    @working_memory.add(node_id, content, token_count: token_count, importance: importance)
 
     # Log the operation
     @long_term_memory.log_operation(
       operation: 'add',
       node_id: node_id,
       robot_id: @robot_id,
-      details: { key: key, type: type }
+      details: { speaker: speaker, type: type, content_preview: content[0..100] }
     )
 
     update_robot_activity
@@ -258,16 +258,15 @@ class HTM
   # @raise [ArgumentError] if confirmation not provided
   # @raise [HTM::NotFoundError] if node doesn't exist
   #
-  def forget(key, confirm: false)
+  def forget(node_id, confirm: false)
     # Validate inputs
-    validate_key!(key)
+    raise ArgumentError, "node_id cannot be nil" if node_id.nil?
     raise ArgumentError, "Must pass confirm: :confirmed to delete" unless confirm == :confirmed
 
-    # Get node ID - will be nil if node doesn't exist
-    node_id = @long_term_memory.get_node_id(key)
-
-    # Raise error if node not found
-    raise HTM::NotFoundError, "Node not found: #{key}" unless node_id
+    # Verify node exists
+    unless @long_term_memory.exists?(node_id)
+      raise HTM::NotFoundError, "Node not found: #{node_id}"
+    end
 
     # Log operation with NULL node_id since we're about to delete it
     # This prevents foreign key violation
@@ -275,12 +274,12 @@ class HTM
       operation: 'forget',
       node_id: nil,  # NULL since node will be deleted
       robot_id: @robot_id,
-      details: { key: key, node_id: node_id }  # Store node_id in details instead
+      details: { deleted_node_id: node_id }
     )
 
     # Now delete the node and remove from working memory
-    @long_term_memory.delete(key)
-    @working_memory.remove(key)
+    @long_term_memory.delete(node_id)
+    @working_memory.remove(node_id)
 
     update_robot_activity
     true
@@ -496,23 +495,18 @@ class HTM
 
   # Validation helper methods
 
-  def validate_key!(key)
-    raise ValidationError, "Key cannot be nil" if key.nil?
-    raise ValidationError, "Key must be a String" unless key.is_a?(String)
-    raise ValidationError, "Key cannot be empty" if key.empty?
-    raise ValidationError, "Key too long (max #{MAX_KEY_LENGTH} characters)" if key.length > MAX_KEY_LENGTH
-
-    # Prevent path traversal or special characters
-    if key =~ /[\/\\\x00-\x1f]/
-      raise ValidationError, "Key contains invalid characters"
-    end
+  def validate_content!(content)
+    raise ValidationError, "Content cannot be nil" if content.nil?
+    raise ValidationError, "Content must be a String" unless content.is_a?(String)
+    raise ValidationError, "Content cannot be empty" if content.empty?
+    raise ValidationError, "Content too long (max #{MAX_VALUE_LENGTH} characters)" if content.length > MAX_VALUE_LENGTH
   end
 
-  def validate_value!(value)
-    raise ValidationError, "Value cannot be nil" if value.nil?
-    raise ValidationError, "Value must be a String" unless value.is_a?(String)
-    raise ValidationError, "Value cannot be empty" if value.empty?
-    raise ValidationError, "Value too long (max #{MAX_VALUE_LENGTH} characters)" if value.length > MAX_VALUE_LENGTH
+  def validate_speaker!(speaker)
+    raise ValidationError, "Speaker cannot be nil" if speaker.nil?
+    raise ValidationError, "Speaker must be a String" unless speaker.is_a?(String)
+    raise ValidationError, "Speaker cannot be empty" if speaker.empty?
+    raise ValidationError, "Speaker too long (max 255 characters)" if speaker.length > 255
   end
 
   def validate_type!(type)

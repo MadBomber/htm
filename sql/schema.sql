@@ -5,12 +5,13 @@ CREATE EXTENSION IF NOT EXISTS pgvector;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE EXTENSION IF NOT EXISTS ai CASCADE;  -- pgai for intelligent embedding generation
 
--- Main nodes table
+-- Main nodes table - Conversation memory storage
+-- Each row represents a message/utterance from a conversation between user and robots
 CREATE TABLE IF NOT EXISTS nodes (
-  id BIGSERIAL PRIMARY KEY,
-  key TEXT UNIQUE NOT NULL,
-  value TEXT NOT NULL,
-  type TEXT,  -- fact, context, code, preference, decision, question
+  id BIGSERIAL,
+  content TEXT NOT NULL,                  -- The conversation message/utterance
+  speaker TEXT NOT NULL,                  -- Who said it: 'user' or robot name
+  type TEXT,                              -- fact, context, code, preference, decision, question
   category TEXT,
   importance REAL DEFAULT 1.0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -18,9 +19,10 @@ CREATE TABLE IF NOT EXISTS nodes (
   last_accessed TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   token_count INTEGER,
   in_working_memory BOOLEAN DEFAULT FALSE,
-  robot_id TEXT NOT NULL,
-  embedding vector(2000),  -- Support up to 2000 dimensions (HNSW index limitation)
-  embedding_dimension INTEGER  -- Actual dimension used (required for validation)
+  robot_id TEXT NOT NULL,                 -- Robot that stored this memory
+  embedding vector(2000),                 -- Semantic embedding for RAG retrieval
+  embedding_dimension INTEGER,            -- Actual dimension used (required for validation)
+  PRIMARY KEY (id, created_at)            -- Composite PK for TimescaleDB hypertable partitioning
 );
 
 -- Relationships between nodes
@@ -45,12 +47,13 @@ CREATE TABLE IF NOT EXISTS tags (
 
 -- Operation log for debugging and replay
 CREATE TABLE IF NOT EXISTS operations_log (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL,
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   operation TEXT NOT NULL,  -- add, retrieve, remove, evict, recall
-  node_id BIGINT REFERENCES nodes(id) ON DELETE SET NULL,
+  node_id BIGINT,
   robot_id TEXT NOT NULL,
-  details JSONB  -- Flexible storage for additional metadata
+  details JSONB,  -- Flexible storage for additional metadata
+  PRIMARY KEY (id, timestamp)  -- Composite PK for TimescaleDB hypertable partitioning
 );
 
 -- Robots registry (track all robots using the system)
@@ -69,6 +72,7 @@ CREATE INDEX IF NOT EXISTS idx_nodes_last_accessed ON nodes(last_accessed);
 CREATE INDEX IF NOT EXISTS idx_nodes_type ON nodes(type);
 CREATE INDEX IF NOT EXISTS idx_nodes_category ON nodes(category);
 CREATE INDEX IF NOT EXISTS idx_nodes_robot_id ON nodes(robot_id);
+CREATE INDEX IF NOT EXISTS idx_nodes_speaker ON nodes(speaker);  -- Index speaker for filtering conversations
 CREATE INDEX IF NOT EXISTS idx_nodes_in_working_memory ON nodes(in_working_memory);
 
 -- Vector similarity search index (HNSW for better performance)
@@ -76,12 +80,11 @@ CREATE INDEX IF NOT EXISTS idx_nodes_embedding ON nodes
   USING hnsw (embedding vector_cosine_ops)
   WITH (m = 16, ef_construction = 64);
 
--- Full-text search
-CREATE INDEX IF NOT EXISTS idx_nodes_value_gin ON nodes USING gin(to_tsvector('english', value));
-CREATE INDEX IF NOT EXISTS idx_nodes_key_gin ON nodes USING gin(to_tsvector('english', key));
+-- Full-text search on conversation content
+CREATE INDEX IF NOT EXISTS idx_nodes_content_gin ON nodes USING gin(to_tsvector('english', content));
 
--- Trigram indexes for fuzzy matching
-CREATE INDEX IF NOT EXISTS idx_nodes_value_trgm ON nodes USING gin(value gin_trgm_ops);
+-- Trigram indexes for fuzzy matching on conversation content
+CREATE INDEX IF NOT EXISTS idx_nodes_content_trgm ON nodes USING gin(content gin_trgm_ops);
 
 -- Relationship indexes
 CREATE INDEX IF NOT EXISTS idx_relationships_from ON relationships(from_node_id);
@@ -160,7 +163,7 @@ BEGIN
     -- Use pgai's ollama embedding function
     generated_embedding := ai.ollama_embed(
       embedding_model,
-      NEW.value,
+      NEW.content,  -- Generate embedding from conversation content
       host => ollama_host
     );
   ELSIF embedding_provider = 'openai' THEN
@@ -168,7 +171,7 @@ BEGIN
     -- Requires OPENAI_API_KEY to be set in PostgreSQL environment
     generated_embedding := ai.openai_embed(
       embedding_model,
-      NEW.value,
+      NEW.content,  -- Generate embedding from conversation content
       api_key => current_setting('htm.openai_api_key', true)
     );
   ELSE
