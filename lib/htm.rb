@@ -128,9 +128,12 @@ class HTM
     # Calculate token count
     token_count = @embedding_service.count_tokens(value)
 
-    # Store in long-term memory (pgai will auto-generate embedding via trigger)
-    # Note: For seeding or testing without Ollama access from database,
-    # embeddings will need to be generated after insertion
+    # Generate embedding client-side
+    # If pgai is available in the database, it will be overridden by the trigger
+    # If not, this embedding will be stored
+    embedding = @embedding_service.embed(value)
+
+    # Store in long-term memory with embedding
     node_id = @long_term_memory.add(
       key: key,
       value: value,
@@ -138,7 +141,8 @@ class HTM
       category: category,
       importance: importance,
       token_count: token_count,
-      robot_id: @robot_id
+      robot_id: @robot_id,
+      embedding: embedding
     )
 
     # Add relationships
