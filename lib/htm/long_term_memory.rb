@@ -76,15 +76,23 @@ class HTM
       # Insert node with optional embedding
       node_id = with_connection do |conn|
         if embedding
+          # Pad embedding to 2000 dimensions if needed (migration 001 sets vector(2000))
+          actual_dimension = embedding.length
+          if actual_dimension < 2000
+            padded_embedding = embedding + Array.new(2000 - actual_dimension, 0.0)
+          else
+            padded_embedding = embedding
+          end
+
           # Convert embedding array to PostgreSQL vector format
-          embedding_str = "[#{embedding.join(',')}]"
+          embedding_str = "[#{padded_embedding.join(',')}]"
           result = conn.exec_params(
             <<~SQL,
-              INSERT INTO nodes (key, value, type, category, importance, token_count, robot_id, embedding)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector)
+              INSERT INTO nodes (key, value, type, category, importance, token_count, robot_id, embedding, embedding_dimension)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector, $9)
               RETURNING id
             SQL
-            [key, value, type, category, importance, token_count, robot_id, embedding_str]
+            [key, value, type, category, importance, token_count, robot_id, embedding_str, actual_dimension]
           )
         else
           result = conn.exec_params(

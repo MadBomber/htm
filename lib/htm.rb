@@ -73,7 +73,7 @@ class HTM
     robot_name: nil,
     db_config: nil,
     embedding_service: :ollama,
-    embedding_model: 'gpt-oss',
+    embedding_model: 'embeddinggemma:latest',
     db_pool_size: 5,
     db_query_timeout: 30_000,
     db_cache_size: 1000,

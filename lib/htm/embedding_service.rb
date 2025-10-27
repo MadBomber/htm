@@ -152,12 +152,12 @@ class HTM
       require 'net/http'
       require 'json'
 
-      uri = URI("#{@ollama_url}/api/embeddings")
+      uri = URI("#{@ollama_url}/api/embed")
       request = Net::HTTP::Post.new(uri)
       request['Content-Type'] = 'application/json'
       request.body = JSON.generate({
         model: @model,
-        prompt: text
+        input: text
       })
 
       response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') do |http|
@@ -165,11 +165,21 @@ class HTM
       end
 
       unless response.is_a?(Net::HTTPSuccess)
-        raise HTM::EmbeddingError, "Ollama API error: #{response.code} #{response.message}"
+        error_details = "#{response.code} #{response.message}"
+        begin
+          error_body = JSON.parse(response.body)
+          error_details += " - #{error_body['error']}" if error_body['error']
+        rescue
+          error_details += " - #{response.body[0..200]}" unless response.body.empty?
+        end
+        raise HTM::EmbeddingError, "Ollama API error: #{error_details}"
       end
 
       result = JSON.parse(response.body)
-      result['embedding']
+      # Ollama returns embeddings as an array, get the first one
+      result['embeddings']&.first || result['embedding']
+    rescue HTM::EmbeddingError
+      raise
     rescue StandardError => e
       raise HTM::EmbeddingError, "Failed to generate embedding with Ollama: #{e.message}"
     end

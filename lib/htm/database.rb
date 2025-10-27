@@ -338,16 +338,21 @@ class HTM
       end
 
       def run_schema(conn)
-        # Check if pgai extension is available
-        pgai_available = conn.exec("SELECT 1 FROM pg_available_extensions WHERE name='ai'").ntuples > 0
+        # Check if user wants to use pgai via environment variable
+        use_pgai = ENV['HTM_USE_PGAI'] == 'true'
 
-        if pgai_available
+        if use_pgai
+          # Verify pgai extension is actually available
+          pgai_available = conn.exec("SELECT 1 FROM pg_available_extensions WHERE name='ai'").ntuples > 0
+          unless pgai_available
+            raise HTM::DatabaseError, "HTM_USE_PGAI=true but pgai extension is not available in the database"
+          end
           schema_path = File.expand_path('../../sql/schema.sql', __dir__)
           puts "Creating HTM schema with pgai support..."
         else
           schema_path = File.expand_path('../../sql/schema_no_pgai.sql', __dir__)
           puts "Creating HTM schema (client-side embeddings)..."
-          puts "Note: pgai extension not available, embeddings will be generated client-side"
+          puts "Note: Embeddings will be generated client-side. Set HTM_USE_PGAI=true to use pgai."
         end
 
         schema_sql = File.read(schema_path)

@@ -75,8 +75,8 @@ CREATE INDEX IF NOT EXISTS idx_nodes_in_working_memory ON nodes(in_working_memor
 -- Only index rows that have embeddings
 CREATE INDEX IF NOT EXISTS idx_nodes_embedding ON nodes
   USING hnsw (embedding vector_cosine_ops)
-  WHERE embedding IS NOT NULL
-  WITH (m = 16, ef_construction = 64);
+  WITH (m = 16, ef_construction = 64)
+  WHERE embedding IS NOT NULL;
 
 -- Full-text search
 CREATE INDEX IF NOT EXISTS idx_nodes_value_gin ON nodes USING gin(to_tsvector('english', value));
