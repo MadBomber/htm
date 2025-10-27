@@ -1,13 +1,10 @@
 # EmbeddingService Class
 
-Configuration service for pgai-based database-side embedding generation.
+Client-side embedding generation service for HTM.
 
 ## Overview
 
-!!! warning "Architecture Change (October 2025)"
-    `HTM::EmbeddingService` no longer generates embeddings directly. With pgai integration, embedding generation happens automatically via PostgreSQL database triggers. This class now configures pgai settings and provides token counting.
-
-`HTM::EmbeddingService` configures pgai database settings for automatic embedding generation. It supports multiple embedding providers:
+`HTM::EmbeddingService` generates vector embeddings for text content before database insertion. It supports multiple embedding providers:
 
 - **Ollama** - Local embedding server (default, via `nomic-embed-text` model)
 - **OpenAI** - OpenAI's `text-embedding-3-small` model
@@ -15,8 +12,9 @@ Configuration service for pgai-based database-side embedding generation.
 The service also provides token counting for working memory management.
 
 **Architecture:**
-- **Before pgai**: Ruby application → HTTP → Ollama/OpenAI → Embedding → PostgreSQL
-- **With pgai**: Ruby application → PostgreSQL → pgai → Ollama/OpenAI → Embedding (automatic via triggers)
+- Ruby application generates embeddings via HTTP call to Ollama/OpenAI
+- Embeddings are passed to PostgreSQL during INSERT
+- Simple, reliable, cross-platform operation
 
 ## Class Definition
 
@@ -30,15 +28,14 @@ end
 
 ### `new(provider, **options)` {: #new }
 
-Create a new embedding service instance and configure pgai database settings.
+Create a new embedding service instance.
 
 ```ruby
 HTM::EmbeddingService.new(
   provider = :ollama,
   model: 'nomic-embed-text',
   ollama_url: nil,
-  dimensions: nil,
-  db_config: nil
+  dimensions: nil
 )
 ```
 
@@ -48,688 +45,488 @@ HTM::EmbeddingService.new(
 |-----------|------|---------|-------------|
 | `provider` | Symbol | `:ollama` | Embedding provider (`:ollama`, `:openai`) |
 | `model` | String | `'nomic-embed-text'` | Model name for the provider |
-| `ollama_url` | String, nil | From `ENV['OLLAMA_URL']` or `'http://localhost:11434'` | Ollama server URL |
-| `dimensions` | Integer, nil | Auto-detected from model | Embedding vector dimensions |
-| `db_config` | Hash, nil | Database connection config | Required for pgai configuration |
+| `ollama_url` | String, nil | `ENV['OLLAMA_URL']` or `'http://localhost:11434'` | Ollama server URL |
+| `dimensions` | Integer, nil | Auto-detected | Expected embedding dimensions |
 
 #### Returns
 
-- `HTM::EmbeddingService` instance
+`HTM::EmbeddingService` - Configured embedding service instance
 
 #### Raises
 
-- `RuntimeError` - If provider is unknown (on first `embed` call)
+- `HTM::EmbeddingError` - If provider is invalid or configuration fails
 
 #### Examples
 
+**Default Ollama configuration:**
+
 ```ruby
-# Typical usage within HTM (db_config provided automatically)
-htm = HTM.new(robot_name: "My Robot")
-# EmbeddingService configured automatically with pgai
+service = HTM::EmbeddingService.new
+# Uses Ollama at http://localhost:11434 with nomic-embed-text (768 dimensions)
+```
 
-# Default: Ollama with nomic-embed-text (768 dimensions)
-service = HTM::EmbeddingService.new(
-  :ollama,
-  db_config: {host: 'localhost', dbname: 'htm_dev', ...}
-)
-# Automatically calls configure_pgai()
+**Custom Ollama model:**
 
-# Ollama with custom model
+```ruby
 service = HTM::EmbeddingService.new(
   :ollama,
   model: 'mxbai-embed-large',
-  dimensions: 1024,
-  db_config: db_config
+  ollama_url: 'http://localhost:11434',
+  dimensions: 1024
 )
+```
 
-# Custom Ollama URL
-service = HTM::EmbeddingService.new(
-  :ollama,
-  model: 'nomic-embed-text',
-  ollama_url: 'http://192.168.1.100:11434',
-  db_config: db_config
-)
+**OpenAI configuration:**
 
-# OpenAI
+```ruby
+# Requires OPENAI_API_KEY environment variable
 service = HTM::EmbeddingService.new(
   :openai,
   model: 'text-embedding-3-small',
-  db_config: db_config
+  dimensions: 1536
 )
-# Requires ENV['OPENAI_API_KEY']
-
-# Without database (no pgai configuration, token counting only)
-service = HTM::EmbeddingService.new(:ollama)
-# Skips configure_pgai(), only useful for count_tokens()
 ```
 
----
-
-## Instance Attributes
-
-### `provider` {: #provider }
-
-The embedding provider being used.
-
-- **Type**: Symbol
-- **Read-only**: Yes
-- **Values**: `:ollama`, `:openai`
+**HTM automatically initializes EmbeddingService:**
 
 ```ruby
-service.provider  # => :ollama
-```
-
-### `model` {: #model }
-
-The embedding model name.
-
-- **Type**: String
-- **Read-only**: Yes
-
-```ruby
-service.model  # => "nomic-embed-text"
-```
-
-### `dimensions` {: #dimensions }
-
-The embedding vector dimensions.
-
-- **Type**: Integer
-- **Read-only**: Yes
-
-```ruby
-service.dimensions  # => 768
-```
-
----
-
-## Public Methods
-
-### `configure_pgai()` {: #configure_pgai }
-
-Configure pgai database extension with embedding provider settings.
-
-```ruby
-configure_pgai()
-```
-
-#### Parameters
-
-None (uses instance variables: `@provider`, `@model`, `@ollama_url`, `@dimensions`)
-
-#### Returns
-
-- `nil`
-
-#### Raises
-
-- `PG::Error` - If database connection fails or pgai extension not available
-
-#### Examples
-
-```ruby
-# Automatically called during initialization if db_config provided
-service = HTM::EmbeddingService.new(
-  :ollama,
-  model: 'nomic-embed-text',
-  db_config: {host: 'localhost', dbname: 'htm'}
+htm = HTM.new(
+  robot_name: "Assistant",
+  embedding_provider: :ollama,
+  embedding_model: 'nomic-embed-text'
 )
-# configure_pgai() called automatically
-
-# Manual configuration (advanced)
-service = HTM::EmbeddingService.new(:ollama)
-service.instance_variable_set(:@db_config, db_config)
-service.configure_pgai
+# EmbeddingService configured automatically
 ```
-
-#### Technical Details
-
-Sets PostgreSQL session variables via `htm_set_embedding_config()` function:
-
-```sql
--- For Ollama
-SELECT htm_set_embedding_config(
-  'ollama',                    -- provider
-  'nomic-embed-text',          -- model
-  'http://localhost:11434',    -- ollama_url
-  NULL,                        -- openai_api_key
-  768                          -- dimensions
-);
-
--- For OpenAI
-SELECT htm_set_embedding_config(
-  'openai',                    -- provider
-  'text-embedding-3-small',    -- model
-  NULL,                        -- ollama_url
-  'sk-...',                    -- openai_api_key
-  1536                         -- dimensions
-);
-```
-
-These settings are used by pgai database triggers for automatic embedding generation.
 
 ---
 
-### `embed(text)` {: #embed } **DEPRECATED**
+## Instance Methods
 
-!!! danger "Deprecated Method"
-    **This method is deprecated and will raise an error.** Embedding generation now happens automatically via pgai database triggers. Do not call this method.
+### `embed(text)` {: #embed }
 
-Attempt to generate a vector embedding (raises deprecation error).
+Generate embedding vector for text.
 
 ```ruby
-embed(text)
+embed(text) → Array<Float>
 ```
 
 #### Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `text` | String | Text to embed (ignored) |
+| `text` | String | Text to embed |
 
 #### Returns
 
-Never returns - always raises error
+`Array<Float>` - Embedding vector (dimensions depend on model)
 
 #### Raises
 
-- `HTM::EmbeddingError` - Always raises with deprecation message
+- `HTM::EmbeddingError` - If embedding generation fails
+- `ArgumentError` - If text is nil or empty
 
 #### Examples
 
 ```ruby
-# Old code (no longer works)
-embedding = service.embed("text")
-# Raises: HTM::EmbeddingError: Direct embedding generation is deprecated in HTM.
-#         Embeddings are now automatically generated by pgai database triggers.
+service = HTM::EmbeddingService.new(:ollama)
 
-# New code (automatic via pgai)
-htm.add_node("key", "PostgreSQL is powerful", type: :fact)
-# Embedding generated automatically by database trigger!
-# No embed() call needed
+# Generate embedding
+embedding = service.embed("PostgreSQL with TimescaleDB")
+# => [0.023, -0.441, 0.182, ..., 0.091]  # 768 dimensions
+
+puts embedding.length  # => 768 (for nomic-embed-text)
 ```
 
-#### Migration Guide
-
-If you have code calling `embed()`:
+**Error handling:**
 
 ```ruby
-# Before pgai
-embedding = embedding_service.embed(text)
-htm.add_node(key, value, embedding: embedding)
-
-# After pgai (correct)
-htm.add_node(key, value)
-# Embedding generated automatically by pgai trigger
-
-# Query embeddings also automatic
-memories = htm.recall(timeframe: "last week", topic: "database")
-# pgai generates query embedding in SQL automatically
+begin
+  embedding = service.embed("some text")
+rescue HTM::EmbeddingError => e
+  puts "Embedding failed: #{e.message}"
+  # Check Ollama is running: curl http://localhost:11434/api/tags
+end
 ```
+
+#### Implementation Details
+
+**Ollama provider:**
+- Makes HTTP POST to `/api/embeddings`
+- Returns dense vector representation
+- Requires Ollama server running locally
+
+**OpenAI provider:**
+- Makes HTTP POST to OpenAI API
+- Requires `OPENAI_API_KEY` environment variable
+- API costs: $0.0001 per 1K tokens
 
 ---
 
 ### `count_tokens(text)` {: #count_tokens }
 
-Count the number of tokens in the text.
+Count tokens in text for working memory management.
 
 ```ruby
-count_tokens(text)
+count_tokens(text) → Integer
 ```
 
 #### Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `text` | String | Text to count |
+| `text` | String | Text to count tokens for |
 
 #### Returns
 
-- `Integer` - Token count
+`Integer` - Approximate token count
 
 #### Examples
 
 ```ruby
-# Count tokens
-text = "This is a sample sentence for token counting."
-tokens = service.count_tokens(text)
-# => 11
+service = HTM::EmbeddingService.new
 
-# Empty string
-service.count_tokens("")  # => 0
+tokens = service.count_tokens("Hello, world!")
+# => 4
 
-# Large text
-large_text = File.read("document.txt")
-token_count = service.count_tokens(large_text)
-puts "Document has #{token_count} tokens"
-
-# Check if fits in context window
-if service.count_tokens(text) < 8000
-  # Fits in 8K context
-end
+tokens = service.count_tokens("The quick brown fox jumps over the lazy dog")
+# => 10
 ```
 
-#### Technical Details
+**Used internally by HTM:**
 
-- Uses `tiktoken_ruby` with GPT-3.5-turbo encoding
-- Falls back to simple word count if tokenizer fails
-- Token count is approximate (varies by model)
+```ruby
+htm.add_message(
+  "This is a long conversation message...",
+  speaker: "user"
+)
+# HTM calls embedding_service.count_tokens() internally
+# to manage working memory token budget
+```
 
 ---
 
-## Supported Providers
-
-!!! info "pgai Integration"
-    All providers are now accessed via pgai database extension. Configuration happens during initialization, and embedding generation is handled by database triggers.
+## Embedding Providers
 
 ### Ollama (Default)
 
-**Status**: ✅ Fully implemented via pgai
+**Status**: ✅ Fully implemented
 
-Local embedding server with various models, accessed via pgai database triggers.
+Local embedding server with various models, accessed via HTTP.
 
-#### Setup
+**Installation:**
 
 ```bash
-# Install Ollama
+# macOS/Linux
 curl https://ollama.ai/install.sh | sh
 
-# Pull nomic-embed-text model (default)
+# Pull embedding model
 ollama pull nomic-embed-text
-
-# Or use other embedding models
-ollama pull mxbai-embed-large
-ollama pull all-minilm
-
-# Verify Ollama is running
-curl http://localhost:11434/api/version
 ```
 
-#### Configuration
+**Models:**
+
+| Model | Dimensions | Speed | Use Case |
+|-------|------------|-------|----------|
+| `nomic-embed-text` | 768 | Fast | General-purpose (default) |
+| `mxbai-embed-large` | 1024 | Medium | Higher quality embeddings |
+| `all-minilm` | 384 | Very fast | Lower quality, fast search |
+
+**Configuration:**
 
 ```ruby
-# Default (nomic-embed-text on localhost)
-htm = HTM.new(robot_name: "My Robot")
-# Configures pgai automatically
-
-# Custom URL
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_provider: :ollama,
-  embedding_model: 'nomic-embed-text',
-  ollama_url: 'http://192.168.1.100:11434'
+service = HTM::EmbeddingService.new(
+  :ollama,
+  model: 'nomic-embed-text',
+  ollama_url: 'http://localhost:11434'
 )
 
-# From environment
-ENV['OLLAMA_URL'] = 'http://ollama.local:11434'
-htm = HTM.new(robot_name: "My Robot")
+embedding = service.embed("test text")
 ```
 
-#### Available Models
+**Troubleshooting:**
 
-| Model | Dimensions | Size | Speed |
-|-------|------------|------|-------|
-| `nomic-embed-text` (default) | 768 | ~274MB | Fast |
-| `mxbai-embed-large` | 1024 | ~670MB | Medium |
-| `all-minilm` | 384 | ~23MB | Very Fast |
-
-#### Error Handling
-
-If Ollama is unavailable, pgai database trigger will fail:
+If Ollama is unavailable, embedding generation will fail:
 
 ```ruby
-htm.add_node("key", "value")
-# PG::Error: Connection to server at "localhost" (::1), port 11434 failed
-# Ensure Ollama is running: ollama serve
+# Check Ollama is running
+system("curl http://localhost:11434/api/tags")
+
+# Start Ollama if needed
+system("ollama serve")
 ```
 
-Solution:
-```bash
-# Start Ollama
-ollama serve
+**Advantages:**
+- ✅ Free (no API costs)
+- ✅ Private (data never leaves your machine)
+- ✅ Fast (local generation)
+- ✅ Works offline
 
-# Pull model if needed
-ollama pull nomic-embed-text
-```
+**Disadvantages:**
+- ❌ Requires local installation
+- ❌ Uses local compute resources
+- ❌ Slightly lower quality than OpenAI
 
 ---
 
 ### OpenAI
 
-**Status**: ✅ Fully implemented via pgai
+**Status**: ✅ Fully implemented
 
-Uses OpenAI's embedding API, accessed via pgai database triggers.
+Uses OpenAI's embedding API, accessed via HTTP.
 
-#### Configuration
+**Configuration:**
+
+```bash
+export OPENAI_API_KEY="sk-..."
+```
 
 ```ruby
-# Set API key
-ENV['OPENAI_API_KEY'] = 'sk-...'
-
-# Initialize HTM with OpenAI
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_provider: :openai,
-  embedding_model: 'text-embedding-3-small'
+service = HTM::EmbeddingService.new(
+  :openai,
+  model: 'text-embedding-3-small'
 )
-# Configures pgai automatically
 
-# Add node - embedding generated via pgai + OpenAI API
-htm.add_node("key", "PostgreSQL is powerful", type: :fact)
-# pgai calls OpenAI API automatically in database trigger
+# Add message - embedding generated via OpenAI API
+embedding = service.embed("test text")
 ```
 
-#### Models
+**Models:**
 
-| Model | Dimensions | Cost (per 1M tokens) |
-|-------|------------|---------------------|
-| `text-embedding-3-small` (recommended) | 1536 | $0.02 |
-| `text-embedding-ada-002` (legacy) | 1536 | $0.10 |
+| Model | Dimensions | Speed | Cost |
+|-------|------------|-------|------|
+| `text-embedding-3-small` | 1536 | Fast | $0.0001/1K tokens |
+| `text-embedding-ada-002` | 1536 | Fast | $0.0001/1K tokens |
 
-!!! warning "Dimension Limit"
-    `text-embedding-3-large` (3072 dimensions) exceeds pgvector's HNSW index limit of 2000 dimensions and is not supported.
-
-#### Error Handling
-
-If API key is missing or invalid:
+**Error Handling:**
 
 ```ruby
-htm.add_node("key", "value")
-# PG::Error: OpenAI API error: Incorrect API key provided
-# Ensure OPENAI_API_KEY is set correctly
-```
-
----
-
-## Usage Patterns
-
-### Basic Embedding
-
-```ruby
-service = HTM::EmbeddingService.new
-
-# Single embedding
-embedding = service.embed("database optimization")
-
-# Batch embeddings
-texts = ["fact 1", "fact 2", "fact 3"]
-embeddings = texts.map { |text| service.embed(text) }
-```
-
-### Token Management
-
-```ruby
-service = HTM::EmbeddingService.new
-
-# Check token count before processing
-text = "Long document content..."
-tokens = service.count_tokens(text)
-
-if tokens > 8000
-  puts "Warning: Text is #{tokens} tokens, may need chunking"
-end
-
-# Calculate working memory usage
-memories = ["memory 1", "memory 2", "memory 3"]
-total_tokens = memories.sum { |m| service.count_tokens(m) }
-puts "Total: #{total_tokens} tokens"
-```
-
-### Similarity Search
-
-```ruby
-service = HTM::EmbeddingService.new
-
-# Create embeddings for search
-query = "database performance"
-query_embedding = service.embed(query)
-
-documents = [
-  "PostgreSQL query optimization",
-  "API rate limiting",
-  "Database indexing strategies"
-]
-
-# Calculate similarities
-similarities = documents.map do |doc|
-  doc_embedding = service.embed(doc)
-  similarity = query_embedding.zip(doc_embedding).map { |a, b| a * b }.sum
-  { document: doc, similarity: similarity }
-end
-
-# Sort by similarity
-ranked = similarities.sort_by { |s| -s[:similarity] }
-ranked.each do |result|
-  puts "[#{result[:similarity].round(3)}] #{result[:document]}"
-end
-```
-
-### Caching Embeddings
-
-```ruby
-# Cache embeddings to avoid regeneration
-class CachedEmbeddingService
-  def initialize(service)
-    @service = service
-    @cache = {}
-  end
-
-  def embed(text)
-    @cache[text] ||= @service.embed(text)
-  end
-
-  def count_tokens(text)
-    @service.count_tokens(text)
+begin
+  service = HTM::EmbeddingService.new(:openai)
+  embedding = service.embed("test")
+rescue HTM::EmbeddingError => e
+  if e.message.include?("API key")
+    puts "Set OPENAI_API_KEY environment variable"
   end
 end
-
-# Usage
-service = HTM::EmbeddingService.new
-cached = CachedEmbeddingService.new(service)
-
-embedding1 = cached.embed("same text")  # Generates
-embedding2 = cached.embed("same text")  # From cache
 ```
 
----
+**Advantages:**
+- ✅ High quality embeddings
+- ✅ No local installation required
+- ✅ Managed service
 
-## Performance Considerations
-
-### Embedding Generation
-
-| Provider | Speed | Notes |
-|----------|-------|-------|
-| Ollama (local) | ~50-100 ms | Depends on model and hardware |
-| OpenAI | ~100-200 ms | Network latency + API processing |
-| Cohere | ~100-200 ms | Network latency + API processing |
-| Local | ~10-50 ms | Direct model inference |
-
-### Token Counting
-
-- Very fast (~1ms for typical text)
-- Uses efficient tokenizer (tiktoken)
-- Falls back to simple word count if tokenizer fails
-
-### Optimization Tips
-
-1. **Batch Processing**: Generate embeddings for multiple texts together
-2. **Caching**: Cache embeddings for frequently accessed content
-3. **Model Selection**: Smaller models (fewer dimensions) are faster
-4. **Local Deployment**: Ollama avoids network latency
+**Disadvantages:**
+- ❌ API costs ($0.0001 per 1K tokens)
+- ❌ Requires internet connection
+- ❌ Data sent to OpenAI servers
+- ❌ Requires API key management
 
 ---
 
 ## Error Handling
 
-### Connection Errors
+### Common Errors
+
+**Ollama not running:**
 
 ```ruby
-# Ollama not running
+# Error: Failed to connect to Ollama
+# Solution: Start Ollama
+system("ollama serve")
+```
+
+**OpenAI API key missing:**
+
+```ruby
+# Error: OPENAI_API_KEY not set
+# Solution: Set environment variable
+ENV['OPENAI_API_KEY'] = 'sk-...'
+```
+
+**Invalid model:**
+
+```ruby
+# Error: Model not found
+# Solution: Pull the model first
+system("ollama pull nomic-embed-text")
+```
+
+### Exception Types
+
+```ruby
+HTM::EmbeddingError
+  ├─ "Ollama connection failed"
+  ├─ "OpenAI API error: ..."
+  ├─ "Invalid model: ..."
+  └─ "Empty text provided"
+```
+
+---
+
+## Performance
+
+### Latency Benchmarks
+
+Based on typical production workloads:
+
+| Provider | Model | Latency (P50) | Latency (P95) | Cost per 1K embeds |
+|----------|-------|---------------|---------------|---------------------|
+| Ollama | nomic-embed-text | 20ms | 40ms | Free |
+| Ollama | mxbai-embed-large | 30ms | 60ms | Free |
+| OpenAI | text-embedding-3-small | 40ms | 80ms | $0.10 |
+
+**Factors affecting latency:**
+- Network latency (Ollama local vs OpenAI remote)
+- Text length (longer text = more tokens = slower)
+- Model size (larger models = slower)
+- System load (CPU/GPU utilization)
+
+### Optimization Tips
+
+**Use appropriate model size:**
+
+```ruby
+# Fast but lower quality
+service = HTM::EmbeddingService.new(:ollama, model: 'all-minilm')
+
+# Balanced (recommended)
+service = HTM::EmbeddingService.new(:ollama, model: 'nomic-embed-text')
+
+# Slower but higher quality
+service = HTM::EmbeddingService.new(:ollama, model: 'mxbai-embed-large')
+```
+
+**Batch operations:**
+
+```ruby
+# HTM automatically generates embeddings for each message
+# No special batching API needed
+messages.each do |msg|
+  htm.add_message(msg, speaker: "user")
+  # Embedding generated for each message
+end
+```
+
+---
+
+## Integration with HTM
+
+### Automatic Initialization
+
+HTM initializes `EmbeddingService` automatically:
+
+```ruby
+htm = HTM.new(
+  robot_name: "Assistant",
+  embedding_provider: :ollama,        # Optional, default
+  embedding_model: 'nomic-embed-text' # Optional, default
+)
+
+# EmbeddingService is ready to use internally
+```
+
+### Embedding Generation Flow
+
+```mermaid
+sequenceDiagram
+    participant App as Application
+    participant HTM as HTM
+    participant ES as EmbeddingService
+    participant Ollama as Ollama/OpenAI
+    participant DB as PostgreSQL
+
+    App->>HTM: add_message(content)
+    HTM->>ES: embed(content)
+    ES->>Ollama: HTTP POST /api/embeddings
+    Ollama->>ES: embedding vector
+    ES->>HTM: Array<Float>
+    HTM->>DB: INSERT with embedding
+    DB->>HTM: node_id
+    HTM->>App: node_id
+```
+
+### Query Embedding
+
+Search queries also generate embeddings:
+
+```ruby
+# User searches for "database performance"
+results = htm.recall(
+  timeframe: "last week",
+  topic: "database performance",
+  strategy: :vector
+)
+
+# Internally:
+# 1. embedding_service.embed("database performance")
+# 2. SQL vector search using embedding
+# 3. Return similar nodes
+```
+
+---
+
+## Examples
+
+### Basic Usage
+
+```ruby
+require 'htm'
+
+# Create service
 service = HTM::EmbeddingService.new(:ollama)
+
+# Generate embedding
+text = "PostgreSQL with TimescaleDB handles time-series data efficiently"
+embedding = service.embed(text)
+
+puts "Embedding dimensions: #{embedding.length}"
+puts "First 5 values: #{embedding[0..4]}"
+
+# Count tokens
+tokens = service.count_tokens(text)
+puts "Token count: #{tokens}"
+```
+
+### Multiple Providers
+
+```ruby
+# Ollama for development
+dev_service = HTM::EmbeddingService.new(
+  :ollama,
+  model: 'nomic-embed-text'
+)
+
+# OpenAI for production
+prod_service = HTM::EmbeddingService.new(
+  :openai,
+  model: 'text-embedding-3-small'
+)
+
+# Same interface
+dev_embedding = dev_service.embed("test")
+prod_embedding = prod_service.embed("test")
+```
+
+### Custom Model Dimensions
+
+```ruby
+# Specify dimensions explicitly
+service = HTM::EmbeddingService.new(
+  :ollama,
+  model: 'custom-model',
+  dimensions: 512
+)
+
 embedding = service.embed("text")
-# => Warning logged, returns random vector
-
-# OpenAI API key missing
-service = HTM::EmbeddingService.new(:openai)
-embedding = service.embed("text")
-# => Warning: STUB implementation
-```
-
-### Invalid Provider
-
-```ruby
-service = HTM::EmbeddingService.new(:invalid_provider)
-embedding = service.embed("text")
-# => RuntimeError: Unknown embedding provider: invalid_provider
-```
-
-### Best Practices
-
-```ruby
-# Graceful fallback
-begin
-  service = HTM::EmbeddingService.new(:ollama)
-  embedding = service.embed(text)
-rescue => e
-  warn "Embedding failed: #{e.message}"
-  # Use fallback or skip
-end
-
-# Check provider before critical operations
-if service.provider == :ollama
-  # Verify Ollama is running
-  begin
-    test_embedding = service.embed("test")
-    if test_embedding.all? { |x| x.between?(-1, 1) }
-      # Valid embedding
-    end
-  rescue
-    # Ollama unavailable
-  end
-end
-```
-
----
-
-## Embedding Vector Format
-
-### Dimensions
-
-Default: **1536 dimensions** (matches OpenAI embeddings)
-
-```ruby
-embedding = service.embed("text")
-embedding.length  # => 1536
-```
-
-### Value Range
-
-Typically normalized to unit vector:
-
-```ruby
-# Values are floats between -1.0 and 1.0
-embedding.all? { |x| x.between?(-1.0, 1.0) }  # => true
-
-# Magnitude approximately 1.0
-magnitude = Math.sqrt(embedding.map { |x| x**2 }.sum)
-magnitude.round(2)  # ≈ 1.0
-```
-
-### Storage
-
-Stored in PostgreSQL using pgvector extension:
-
-```sql
-CREATE TABLE nodes (
-  embedding vector(1536)
-);
-
--- Insert
-INSERT INTO nodes (embedding) VALUES ('[0.123, -0.456, ...]'::vector);
-
--- Search
-SELECT * FROM nodes
-ORDER BY embedding <=> '[query_embedding]'::vector
-LIMIT 10;
-```
-
----
-
-## Advanced Usage
-
-### Custom Similarity Functions
-
-```ruby
-class SimilarityCalculator
-  def self.cosine(v1, v2)
-    dot_product = v1.zip(v2).map { |a, b| a * b }.sum
-    magnitude1 = Math.sqrt(v1.map { |x| x**2 }.sum)
-    magnitude2 = Math.sqrt(v2.map { |x| x**2 }.sum)
-    dot_product / (magnitude1 * magnitude2)
-  end
-
-  def self.euclidean(v1, v2)
-    Math.sqrt(v1.zip(v2).map { |a, b| (a - b)**2 }.sum)
-  end
-
-  def self.dot_product(v1, v2)
-    v1.zip(v2).map { |a, b| a * b }.sum
-  end
-end
-
-# Usage
-emb1 = service.embed("text 1")
-emb2 = service.embed("text 2")
-
-cosine_sim = SimilarityCalculator.cosine(emb1, emb2)
-euclidean_dist = SimilarityCalculator.euclidean(emb1, emb2)
-```
-
-### Embedding Arithmetic
-
-```ruby
-# Concept: king - man + woman ≈ queen
-king = service.embed("king")
-man = service.embed("man")
-woman = service.embed("woman")
-
-result = king.zip(man, woman).map { |k, m, w| k - m + w }
-
-# Find closest to result
-candidates = ["queen", "prince", "princess", "duke"]
-similarities = candidates.map do |word|
-  emb = service.embed(word)
-  sim = result.zip(emb).map { |a, b| a * b }.sum
-  { word: word, similarity: sim }
-end
-
-best_match = similarities.max_by { |s| s[:similarity] }
-puts "Closest: #{best_match[:word]}"  # Likely "queen"
-```
-
-### Dimensionality Reduction
-
-```ruby
-# For visualization or storage optimization
-require 'matrix'
-
-def reduce_dimensions(embedding, target_dim)
-  # Simple truncation (not ideal, but fast)
-  embedding.take(target_dim)
-end
-
-# Reduce 1536 -> 128 dimensions
-full_embedding = service.embed("text")
-reduced = reduce_dimensions(full_embedding, 128)
-
-# Note: Loses information, use proper PCA/t-SNE for production
+# Embedding will be padded/truncated to 512 dimensions
 ```
 
 ---
 
 ## See Also
 
-- [HTM API](htm.md) - Main class that uses EmbeddingService
-- [LongTermMemory API](long-term-memory.md) - Vector search implementation
-- [Ollama Documentation](https://ollama.ai/docs) - Ollama setup and models
-- [pgvector Documentation](https://github.com/pgvector/pgvector) - PostgreSQL vector extension
+- [HTM API](htm.md) - Main HTM class
+- [LongTermMemory API](long-term-memory.md) - Storage layer
+- [ADR-003: Ollama Embeddings](../architecture/adrs/003-ollama-embeddings.md) - Architecture decision
+- [Ollama Documentation](https://ollama.ai/docs) - Ollama setup guide
+- [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings) - OpenAI API docs

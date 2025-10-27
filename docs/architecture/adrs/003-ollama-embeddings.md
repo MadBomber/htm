@@ -1,15 +1,15 @@
 # ADR-003: Ollama as Default Embedding Provider
 
-**Status**: Superseded by ADR-011 (pgai Integration)
+**Status**: Accepted (Reinstated After ADR-011 Reversal)
 
-**Date**: 2025-10-25 (Updated: 2025-10-26)
+**Date**: 2025-10-25 (Updated: 2025-10-27)
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
 
 ---
 
-!!! info "Architectural Evolution"
-    **October 26, 2025**: This ADR has been superseded by [ADR-011: Database-Side Embedding Generation with pgai](011-pgai-integration.md). While Ollama remains the default embedding provider, embedding generation has moved from Ruby application code to database triggers via TimescaleDB's pgai extension.
+!!! success "Architecture Status (October 2025)"
+    **October 27, 2025**: This ADR is once again the current architecture. Following the reversal of ADR-011, HTM has returned to client-side embedding generation using Ollama as the default provider. Embeddings are generated in Ruby before database insertion.
 
 ## Quick Summary
 
@@ -17,7 +17,7 @@ HTM uses **Ollama with the nomic-embed-text model** as the default embedding pro
 
 **Why**: Local embeddings eliminate API costs, preserve privacy, and enable offline operation while maintaining good semantic search quality.
 
-**Impact**: Users must install Ollama locally, trading convenience for privacy and cost savings. With pgai integration, embedding generation is now 10-20% faster and fully automatic via database triggers.
+**Impact**: Users must install Ollama locally, trading convenience for privacy and cost savings. Client-side embedding generation provides reliable operation without complex database extension dependencies.
 
 ---
 

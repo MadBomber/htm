@@ -61,13 +61,13 @@ HTM implements a layered architecture with clear separation of concerns between 
 
 ##### Embedding Service
 
-- **Provider Configuration**: Configure pgai database settings
+- **Client-Side Generation**: Generate embeddings before database insertion
 - **Token Counting**: Estimate token counts for strings
 - **Model Management**: Handle different models per provider
-- **pgai Integration**: Database-side embedding generation via triggers
+- **Provider Support**: Ollama (default) and OpenAI
 
 !!! info "Architecture Change (October 2025)"
-    Embedding generation moved from Ruby application to PostgreSQL via pgai triggers. EmbeddingService now configures database settings rather than generating embeddings directly.
+    Embeddings are generated client-side in Ruby before database insertion. This provides reliable, cross-platform operation without complex database extension dependencies.
 
 ##### Database Service
 
@@ -82,7 +82,6 @@ HTM implements a layered architecture with clear separation of concerns between 
 - **TimescaleDB**: Time-series optimization and compression
 - **pgvector**: Vector similarity search with HNSW
 - **pg_trgm**: Fuzzy text matching for search
-- **pgai**: Database-side AI operations including embedding generation
 
 ## Component Diagrams
 
@@ -94,52 +93,53 @@ HTM implements a layered architecture with clear separation of concerns between 
 
 ### Memory Addition Flow
 
-This diagram shows the complete flow of adding a new memory node to HTM with **pgai automatic embedding generation**.
+This diagram shows the complete flow of adding a new memory node to HTM with **client-side embedding generation**.
 
 !!! info "Architecture Note"
-    With pgai integration (October 2025), embeddings are generated automatically by database triggers during INSERT. The application no longer calls EmbeddingService.embed().
+    With client-side generation (October 2025), embeddings are generated in Ruby before database insertion. This provides reliable, cross-platform operation.
 
 ```mermaid
 graph TD
-    A[User: add_node] -->|1. Request| B[HTM]
+    A[User: add_message] -->|1. Request| B[HTM]
     B -->|2. Count tokens| C[EmbeddingService]
     C -->|3. Return count| B
 
-    B -->|4. Persist| E[LongTermMemory]
-    E -->|5. INSERT nodes| F[PostgreSQL]
-    F -->|6. TRIGGER: generate_node_embedding| G[pgai Extension]
-    G -->|7. Call embedding API| H[Ollama/OpenAI]
-    H -->|8. Return vector| G
-    G -->|9. Set embedding column| F
+    B -->|4. Generate embedding| C
+    C -->|5. HTTP call| D[Ollama/OpenAI]
+    D -->|6. Return vector| C
+    C -->|7. Return embedding| B
+
+    B -->|8. Persist with embedding| E[LongTermMemory]
+    E -->|9. INSERT nodes with embedding| F[PostgreSQL]
     F -->|10. Return node_id| E
     E -->|11. Return node_id| B
 
-    B -->|12. Check space| I[WorkingMemory]
-    I -->|13. Space available?| J{Has Space?}
-    J -->|No| K[Evict nodes]
-    K -->|14. Mark evicted| E
-    J -->|Yes| L[Add to WM]
-    K --> L
+    B -->|12. Check space| G[WorkingMemory]
+    G -->|13. Space available?| H{Has Space?}
+    H -->|No| I[Evict nodes]
+    I -->|14. Mark evicted| E
+    H -->|Yes| J[Add to WM]
+    I --> J
 
-    L -->|15. Success| B
+    J -->|15. Success| B
     B -->|16. Log operation| E
     B -->|17. Return node_id| A
 
     style A fill:rgba(76,175,80,0.3)
     style B fill:rgba(33,150,243,0.3)
     style C fill:rgba(255,152,0,0.3)
+    style D fill:rgba(255,193,7,0.3)
     style E fill:rgba(156,39,176,0.3)
     style F fill:rgba(156,39,176,0.3)
-    style G fill:rgba(255,193,7,0.3)
-    style I fill:rgba(33,150,243,0.3)
+    style G fill:rgba(33,150,243,0.3)
 ```
 
 ### Memory Recall Flow
 
-This diagram illustrates the RAG-based retrieval process with **pgai-generated query embeddings**.
+This diagram illustrates the RAG-based retrieval process with **client-side query embeddings**.
 
 !!! info "Architecture Note"
-    With pgai integration, query embeddings are generated directly in SQL using `ai.ollama_embed()` or `ai.openai_embed()` functions. The application passes the query text, not the embedding vector.
+    With client-side generation, query embeddings are generated in Ruby before being passed to SQL for vector similarity search.
 
 ```mermaid
 graph TD
@@ -147,27 +147,27 @@ graph TD
     B -->|2. Parse timeframe| C[Parse Natural Language]
     C -->|3. Return range| B
 
-    B -->|4. Search with query text| E[LongTermMemory]
-    E -->|5. Vector similarity| F{Search Strategy}
-    F -->|:vector| G[Vector Search + pgai]
-    F -->|:fulltext| H[Full-Text Search]
-    F -->|:hybrid| I[Hybrid Search + pgai]
+    B -->|4. Generate query embedding| D[EmbeddingService]
+    D -->|5. HTTP call| E[Ollama/OpenAI]
+    E -->|6. Return vector| D
+    D -->|7. Return embedding| B
 
-    G -->|6. ai.ollama_embed in SQL| J[pgai → Ollama/OpenAI]
-    J -->|7. Query embedding| K[pgvector HNSW]
-    H -->|6. ts_rank| L[GIN Full-Text]
-    I -->|6. Both with pgai embed| M[Hybrid + RRF]
+    B -->|8. Search with embedding| F[LongTermMemory]
+    F -->|9. Vector similarity| G{Search Strategy}
+    G -->|:vector| H[Vector Search]
+    G -->|:fulltext| I[Full-Text Search]
+    G -->|:hybrid| J[Hybrid Search]
 
-    K --> N[Return results]
-    L --> N
-    M --> N
+    H -->|10. pgvector HNSW| K[Return results]
+    I -->|10. ts_rank GIN| K
+    J -->|10. Hybrid + RRF| K
 
-    N -->|8. Results| E
-    E -->|9. Results| B
+    K -->|11. Results| F
+    F -->|12. Results| B
 
-    B -->|10. For each result| O[WorkingMemory]
-    O -->|11. Add to WM| P{Has Space?}
-    P -->|No| Q[Evict old nodes]
+    B -->|13. For each result| L[WorkingMemory]
+    L -->|14. Add to WM| M{Has Space?}
+    M -->|No| N[Evict old nodes]
     P -->|Yes| R[Add node]
     Q --> R
 
@@ -406,7 +406,6 @@ Audit trail of all memory operations for debugging and replay.
 | **PostgreSQL** | 16+ | Relational database | ACID guarantees, rich extensions, production-proven |
 | **TimescaleDB** | 2.13+ | Time-series extension | Hypertable partitioning, automatic compression |
 | **pgvector** | 0.5+ | Vector similarity | HNSW indexing, PostgreSQL-native, fast approximate search |
-| **pgai** | 0.4+ | AI operations extension | Database-side embedding generation, LLM integration |
 | **pg_trgm** | - | Fuzzy text search | Built-in PostgreSQL extension for trigram matching |
 
 ### Ruby Dependencies
@@ -424,32 +423,32 @@ gem 'tiktoken_ruby', '~> 0.0.6'      # Token counting (OpenAI-compatible)
 
 ### Embedding Providers
 
-!!! info "pgai Integration"
-    All providers are now accessed via pgai database extension. Configuration sets PostgreSQL session variables, and embedding generation happens automatically via database triggers.
+!!! info "Client-Side Generation"
+    Embeddings are generated client-side in Ruby before database insertion. This provides reliable, cross-platform operation.
 
 | Provider | Models | Dimensions | Speed | Cost |
 |----------|--------|------------|-------|------|
-| **Ollama** (default) | nomic-embed-text, mxbai-embed-large, all-minilm | 384-1024 | Fast (local, via pgai) | Free |
-| **OpenAI** | text-embedding-3-small, text-embedding-ada-002 | 1536 | Fast (API, via pgai) | $0.0001/1K tokens |
+| **Ollama** (default) | nomic-embed-text, mxbai-embed-large, all-minilm | 384-1024 | Fast (local HTTP) | Free |
+| **OpenAI** | text-embedding-3-small, text-embedding-ada-002 | 1536 | Fast (API) | $0.0001/1K tokens |
 
 ## Performance Characteristics
 
 ### Latency Benchmarks
 
-Based on typical production workloads with 10,000 nodes in long-term memory (with pgai):
+Based on typical production workloads with 10,000 nodes in long-term memory (client-side embeddings):
 
-!!! success "Performance Improvement"
-    pgai integration reduced embedding-related operations by 10-20% by eliminating Ruby HTTP overhead and enabling database-side parallelization.
+!!! info "Performance Characteristics"
+    Client-side embedding generation provides reliable, debuggable operation. Latency includes HTTP call to Ollama/OpenAI for embedding generation.
 
 | Operation | Median | P95 | P99 | Notes |
 |-----------|--------|-----|-----|-------|
-| `add_node()` | 40ms | 100ms | 180ms | pgai trigger generates embedding (10-20% faster) |
-| `recall()` (vector) | 70ms | 130ms | 220ms | pgai generates query embedding in SQL |
-| `recall()` (fulltext) | 30ms | 60ms | 100ms | GIN index search (unchanged) |
-| `recall()` (hybrid) | 100ms | 180ms | 320ms | pgai embedding + hybrid search |
-| `retrieve()` | 5ms | 10ms | 20ms | Simple primary key lookup (unchanged) |
-| `create_context()` | 8ms | 15ms | 25ms | In-memory sort + join (unchanged) |
-| `forget()` | 10ms | 20ms | 40ms | DELETE with cascades (unchanged) |
+| `add_message()` | 50ms | 110ms | 190ms | Client-side embedding generation + insert |
+| `recall()` (vector) | 80ms | 140ms | 230ms | Client-side query embedding + vector search |
+| `recall()` (fulltext) | 30ms | 60ms | 100ms | GIN index search (no embedding needed) |
+| `recall()` (hybrid) | 110ms | 190ms | 330ms | Client-side embedding + hybrid search |
+| `retrieve()` | 5ms | 10ms | 20ms | Simple primary key lookup |
+| `create_context()` | 8ms | 15ms | 25ms | In-memory sort + join |
+| `forget()` | 10ms | 20ms | 40ms | DELETE with cascades |
 
 !!! tip "Performance Optimization"
     - Use connection pooling (included by default)

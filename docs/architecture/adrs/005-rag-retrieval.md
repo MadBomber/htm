@@ -1,15 +1,15 @@
 # ADR-005: RAG-Based Retrieval with Hybrid Search
 
-**Status**: Accepted (Updated for pgai Integration)
+**Status**: Accepted (Updated for Client-Side Embeddings)
 
-**Date**: 2025-10-25 (Updated: 2025-10-26)
+**Date**: 2025-10-25 (Updated: 2025-10-27)
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
 
 ---
 
 !!! info "Architecture Update (October 2025)"
-    Query embedding generation now happens via pgai database triggers using `ai.ollama_embed()` or `ai.openai_embed()` SQL functions. This eliminates Ruby-side HTTP calls for embeddings and improves performance by 10-20%.
+    Following the reversal of ADR-011, query embeddings are now generated client-side in Ruby using `EmbeddingService` before being passed to SQL for vector similarity search. This provides a reliable, cross-platform solution.
 
 ## Quick Summary
 
@@ -17,7 +17,7 @@ HTM implements **RAG-based retrieval with three search strategies**: vector sear
 
 **Why**: Different queries benefit from different approaches. Semantic search handles concepts, full-text handles precise terms, and hybrid provides the best balance for most use cases.
 
-**Impact**: Flexible retrieval with excellent recall and precision. With pgai integration, embedding generation is 10-20% faster than Ruby-side HTTP calls.
+**Impact**: Flexible retrieval with excellent recall and precision. Client-side embedding generation provides reliable, debuggable operation across all platforms.
 
 ---
 
@@ -110,27 +110,32 @@ We will implement **RAG-based retrieval with three search strategies**: vector, 
 
 ## Implementation Details
 
-!!! success "pgai Integration"
-    All embedding generation now happens in SQL via pgai functions (`ai.ollama_embed()` or `ai.openai_embed()`). No Ruby-side HTTP calls needed.
+!!! info "Client-Side Embedding Generation"
+    Query embeddings are generated client-side in Ruby via `EmbeddingService` before being passed to SQL for vector similarity search.
 
 ### Vector Search
 
 ```ruby
-def search(timeframe:, query:, limit:, embedding_service: nil)
-  # embedding_service parameter deprecated - pgai handles embeddings
+def search(timeframe:, query:, limit:, embedding_service:)
+  # Generate query embedding client-side
+  query_embedding = embedding_service.embed(query)
 
-  # pgai generates query embedding directly in SQL
-  WITH query_embedding AS (
-    SELECT ai.ollama_embed($1, $2, host => $3) as embedding
-  )
-  SELECT id, key, value, type, category, importance, created_at, robot_id, token_count,
-         1 - (nodes.embedding <=> query_embedding.embedding) as similarity
-  FROM nodes, query_embedding
-  WHERE created_at BETWEEN $4 AND $5
-  ORDER BY nodes.embedding <=> query_embedding.embedding
-  LIMIT $6
+  # Pad to 2000 dimensions if needed
+  query_embedding += Array.new(2000 - query_embedding.length, 0.0) if query_embedding.length < 2000
 
-  # Parameters: [model, query_text, ollama_url, timeframe.begin, timeframe.end, limit]
+  # Convert to PostgreSQL vector format
+  embedding_str = "[#{query_embedding.join(',')}]"
+
+  # Vector search in database
+  conn.exec_params(<<~SQL, [embedding_str, timeframe.begin, timeframe.end, limit])
+    SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
+           1 - (embedding <=> $1::vector) as similarity
+    FROM nodes
+    WHERE created_at BETWEEN $2 AND $3
+    AND embedding IS NOT NULL
+    ORDER BY embedding <=> $1::vector
+    LIMIT $4
+  SQL
 end
 ```
 
@@ -138,38 +143,43 @@ end
 
 ```ruby
 def search_fulltext(timeframe:, query:, limit:)
-  SELECT *, ts_rank(to_tsvector('english', value), plainto_tsquery('english', $1)) as rank
-  FROM nodes
-  WHERE created_at BETWEEN $2 AND $3
-  AND to_tsvector('english', value) @@ plainto_tsquery('english', $1)
-  ORDER BY rank DESC
-  LIMIT $4
+  # No embedding needed for full-text search
+  conn.exec_params(<<~SQL, [query, timeframe.begin, timeframe.end, limit])
+    SELECT *, ts_rank(to_tsvector('english', content), plainto_tsquery('english', $1)) as rank
+    FROM nodes
+    WHERE created_at BETWEEN $2 AND $3
+    AND to_tsvector('english', content) @@ plainto_tsquery('english', $1)
+    ORDER BY rank DESC
+    LIMIT $4
+  SQL
 end
 ```
 
 ### Hybrid Search
 
 ```ruby
-def search_hybrid(timeframe:, query:, limit:, embedding_service: nil, prefilter_limit: 100)
-  # embedding_service parameter deprecated - pgai handles embeddings
+def search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit: 100)
+  # Generate query embedding client-side
+  query_embedding = embedding_service.embed(query)
+  query_embedding += Array.new(2000 - query_embedding.length, 0.0) if query_embedding.length < 2000
+  embedding_str = "[#{query_embedding.join(',')}]"
 
-  # pgai generates query embedding in SQL, combines with full-text pre-filter
-  WITH query_embedding AS (
-    SELECT ai.ollama_embed($1, $2, host => $3) as embedding
-  ),
-  candidates AS (
-    SELECT *
-    FROM nodes
-    WHERE created_at BETWEEN $4 AND $5
-    AND to_tsvector('english', value) @@ plainto_tsquery('english', $2)
-    LIMIT $7  -- Pre-filter to 100 candidates
-  )
-  SELECT *, 1 - (candidates.embedding <=> query_embedding.embedding) as similarity
-  FROM candidates, query_embedding
-  ORDER BY candidates.embedding <=> query_embedding.embedding
-  LIMIT $6  -- Final top results
-
-  # Parameters: [model, query_text, ollama_url, timeframe.begin, timeframe.end, limit, prefilter_limit]
+  # Combine full-text pre-filter with vector reranking
+  conn.exec_params(<<~SQL, [embedding_str, timeframe.begin, timeframe.end, query, prefilter_limit, limit])
+    WITH candidates AS (
+      SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count, embedding
+      FROM nodes
+      WHERE created_at BETWEEN $2 AND $3
+      AND to_tsvector('english', content) @@ plainto_tsquery('english', $4)
+      AND embedding IS NOT NULL
+      LIMIT $5  -- Pre-filter to top candidates
+    )
+    SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
+           1 - (embedding <=> $1::vector) as similarity
+    FROM candidates
+    ORDER BY embedding <=> $1::vector
+    LIMIT $6  -- Final top results
+  SQL
 end
 ```
 
@@ -294,16 +304,16 @@ timeline = htm.conversation_timeline("HTM design", limit: 50)
 
 ## Performance Characteristics
 
-!!! success "pgai Performance Boost"
-    With pgai integration (October 2025), query embedding generation is 10-20% faster by eliminating Ruby HTTP overhead and leveraging PostgreSQL connection pooling.
+!!! info "Client-Side Embedding Generation"
+    Embeddings are generated client-side before SQL queries. Latency includes HTTP call to Ollama/OpenAI for embedding generation.
 
 ### Vector Search
 
-- **Latency**: ~8-40ms for pgai embedding generation + index lookup (10-20% faster than Ruby-side)
+- **Latency**: ~30-50ms for client-side embedding + index lookup
 - **Index**: HNSW (Hierarchical Navigable Small World)
 - **Scalability**: O(log n) with HNSW, sublinear
 - **Best case**: Conceptual queries, semantic relationships
-- **pgai Benefit**: Embedding generated in-database, no serialization overhead
+- **Breakdown**: ~20-30ms embedding generation, ~10-20ms vector search
 
 ### Full-Text Search
 
@@ -311,15 +321,15 @@ timeline = htm.conversation_timeline("HTM design", limit: 50)
 - **Index**: GIN (Generalized Inverted Index) on tsvector
 - **Scalability**: O(log n) with GIN index
 - **Best case**: Exact keywords, technical terms
-- **pgai Impact**: None (full-text doesn't use embeddings)
+- **Benefit**: Fastest option when embeddings not needed
 
 ### Hybrid Search
 
-- **Latency**: Full-text pre-filter + pgai vector reranking
-- **Total**: ~12-60ms (10-20% faster than Ruby-side embeddings)
-- **Optimization**: Pre-filter reduces vector search space + pgai efficiency
+- **Latency**: Full-text pre-filter + client-side embedding + vector reranking
+- **Total**: ~35-70ms
+- **Optimization**: Pre-filter reduces vector search space
 - **Best case**: Large datasets where full-text can narrow candidates
-- **pgai Benefit**: Single SQL query handles both full-text and embedding generation
+- **Breakdown**: ~20-30ms embedding, ~5-10ms full-text, ~10-30ms vector reranking
 
 ### Temporal Filtering
 
@@ -498,13 +508,12 @@ end
 
 - [RAG (Retrieval-Augmented Generation)](https://arxiv.org/abs/2005.11401)
 - [pgvector Documentation](https://github.com/pgvector/pgvector)
-- [pgai Documentation](https://github.com/timescale/pgai) - **Database-side embedding generation**
 - [PostgreSQL Full-Text Search](https://www.postgresql.org/docs/current/textsearch.html)
 - [HNSW Algorithm](https://arxiv.org/abs/1603.09320)
 - [Hybrid Search Best Practices](https://www.pinecone.io/learn/hybrid-search-intro/)
 - [ADR-001: PostgreSQL Storage](001-postgresql-timescaledb.md)
 - [ADR-003: Ollama Embeddings](003-ollama-embeddings.md) - **Superseded by ADR-011**
-- [ADR-011: Database-Side Embedding Generation with pgai](011-pgai-integration.md) - **Current architecture**
+- [ADR-011: Database-Side Embedding Generation with pgai](011-pgai-integration.md) - **Superseded (returned to client-side)**
 - [Search Strategies Guide](../../guides/search-strategies.md)
 - [PGAI_MIGRATION.md](../../../PGAI_MIGRATION.md) - Migration guide
 

@@ -17,12 +17,10 @@
 
 ## Features
 
-- **Intelligent Embeddings via [pgai](https://github.com/timescale/pgai)**
-    - Automatic embedding generation in the database
-    - No application-side HTTP calls for embeddings
+- **Client-Side Embeddings**
+    - Automatic embedding generation before database insertion
     - Supports Ollama (local, default) and OpenAI
-    - Database triggers handle INSERT/UPDATE automatically
-    - 10-20% faster than Ruby-side generation
+    - Configurable embedding providers and models
 
 - **Two-Tier Memory Architecture**
     - Working Memory: Token-limited active context for immediate LLM use
@@ -34,7 +32,7 @@
     - Working memory evicts to long-term, never deletes
 
 - **RAG-Based Retrieval**
-    - Vector similarity search (pgvector + pgai)
+    - Vector similarity search (pgvector)
     - Full-text search (PostgreSQL)
     - Hybrid search (combines both)
     - Temporal filtering ("last week", date ranges)
@@ -48,7 +46,7 @@
 - **LLM-Driven Emergent Ontology**
     - Automatic hierarchical topic extraction from content
     - Topics in colon-delimited format (e.g., `database:postgresql:performance`)
-    - LLM-powered via pgai triggers (follows embedding generation pattern)
+    - LLM-powered via database triggers
     - Enables both structured navigation and semantic discovery
     - Complements vector embeddings (symbolic + sub-symbolic retrieval)
 
@@ -102,20 +100,18 @@ export HTM_DBPORT="37807"
 
 See the [Environment Variables](#environment-variables) section below for complete details.
 
-### 2. Enable pgai Extension
+### 2. Start Ollama
 
-HTM uses [pgai](https://github.com/timescale/pgai) for intelligent embedding generation directly in the database.
+HTM uses Ollama for client-side embedding generation.
 
 ```bash
-# Enable pgai and configure for Ollama
-ruby enable_extensions.rb
+# Install Ollama
+curl https://ollama.ai/install.sh | sh
 
 # Start Ollama and pull embedding model
 ollama serve
 ollama pull nomic-embed-text
 ```
-
-**Note**: pgai is built-in on TimescaleDB Cloud. For self-hosted PostgreSQL, [install pgai](https://github.com/timescale/pgai#installation).
 
 ### 3. Initialize Database Schema
 
@@ -145,7 +141,7 @@ rake htm:db:info
 ```ruby
 require 'htm'
 
-# Run once to set up database schema with pgai triggers
+# Run once to set up database schema
 HTM::Database.setup
 ```
 
@@ -165,7 +161,7 @@ rake htm:db:test    # Using rake tasks
 ruby test_connection.rb
 ```
 
-See [SETUP.md](SETUP.md) for detailed setup instructions and [PGAI_MIGRATION.md](PGAI_MIGRATION.md) for pgai configuration.
+See [docs/setup_local_database.md](docs/setup_local_database.md) for detailed local database setup instructions.
 
 ## Usage
 
@@ -175,16 +171,15 @@ See [SETUP.md](SETUP.md) for detailed setup instructions and [PGAI_MIGRATION.md]
 require 'htm'
 
 # Initialize HTM for your robot
-# pgai handles embeddings automatically in the database
+# Embeddings are generated client-side before database insertion
 htm = HTM.new(
   robot_name: "Code Helper",
   working_memory_size: 128_000,       # tokens
-  embedding_provider: :ollama,        # Uses pgai + Ollama (default)
+  embedding_provider: :ollama,        # Uses Ollama (default)
   embedding_model: 'nomic-embed-text' # 768 dimensions (default)
 )
 
-# Add memories - pgai generates embeddings automatically in database!
-# No application-side HTTP calls needed
+# Add memories - embeddings are generated client-side
 htm.add_node(
   "decision_001",
   "We decided to use PostgreSQL for HTM storage",
@@ -447,7 +442,7 @@ If not set, HTM defaults to `http://localhost:11434`.
 
 ### Topic Extraction Configuration
 
-HTM automatically extracts hierarchical topics from node content using LLM-powered analysis via pgai. Configure the topic extraction behavior with these environment variables:
+HTM automatically extracts hierarchical topics from node content using LLM-powered analysis via database triggers. Configure the topic extraction behavior with these environment variables:
 
 #### HTM_TOPIC_PROVIDER
 

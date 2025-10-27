@@ -1,6 +1,6 @@
 # ADR-011: Database-Side Embedding Generation with pgai
 
-**Status**: Accepted
+**Status**: ~~Accepted~~ **SUPERSEDED** (2025-10-27)
 
 **Date**: 2025-10-26
 
@@ -8,7 +8,20 @@
 
 ---
 
-## Quick Summary
+## ⚠️ DECISION REVERSED (2025-10-27)
+
+**This ADR has been superseded. HTM has returned to client-side embedding generation.**
+
+See the full ADR with complete reversal details at:
+📄 [.architecture/decisions/adrs/011-database-side-embedding-generation-with-pgai.md](../../../.architecture/decisions/adrs/011-database-side-embedding-generation-with-pgai.md)
+
+**Reason for Reversal**: pgai proved impossible to install reliably on local development machines (macOS). Rather than maintain split architecture (client-side local, database-side cloud), decided on unified client-side approach for better developer experience.
+
+**Current Implementation**: Embeddings generated client-side using `EmbeddingService` class before database insertion.
+
+---
+
+## Quick Summary (Historical)
 
 HTM uses **TimescaleDB's pgai extension** for database-side embedding generation via automatic triggers, replacing Ruby application-side HTTP calls to embedding providers.
 

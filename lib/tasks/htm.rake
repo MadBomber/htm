@@ -80,14 +80,6 @@ namespace :htm do
           puts "  ⚠ Warning: pgvector extension not found"
         end
 
-        # Check pgai
-        pgai = conn.exec("SELECT extversion FROM pg_extension WHERE extname='ai'").first
-        if pgai
-          puts "  ✓ pgai version: #{pgai['extversion']}"
-        else
-          puts "  ⚠ Warning: pgai extension not found"
-        end
-
         conn.close
         puts "✓ Connection successful!"
       rescue PG::Error => e

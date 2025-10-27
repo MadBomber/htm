@@ -19,7 +19,7 @@ rake htm:db:setup            # Create schema and run migrations
 Sets up the HTM database schema and runs all migrations.
 
 **What it does:**
-- Verifies required extensions (timescaledb, pgvector, pgai)
+- Verifies required extensions (timescaledb, pgvector, pg_trgm)
 - Creates all HTM tables (nodes, tags, robots, operations_log)
 - Runs all pending migrations
 - Sets up hypertables for time-series optimization
@@ -304,7 +304,7 @@ rake htm:db:migrate       # Run new migrations only
 ### "Extension not found"
 - Ensure TimescaleDB Cloud instance has required extensions
 - Check with: `rake htm:db:info`
-- Extensions needed: timescaledb, pgvector, pgai
+- Extensions needed: timescaledb, pgvector, pg_trgm
 
 ### Migrations not running
 - Check migration files exist: `ls -la sql/migrations/`

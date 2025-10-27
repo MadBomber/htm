@@ -3,18 +3,16 @@
 #
 # This script performs a complete, automated installation of PostgreSQL 17
 # with all required extensions for the HTM (Hierarchical Temporal Memory) library:
-#   - PostgreSQL 17 with PL/Python support (from petere/postgresql tap)
+#   - PostgreSQL 17 (from Homebrew)
 #   - pgvector - vector similarity search for embeddings
 #   - pg_trgm - trigram matching for fuzzy text search
-#   - plpython3u - Python procedural language (required for pgai)
-#   - pgai - TimescaleDB's automatic embedding generation extension
+#   - TimescaleDB (optional) - time-series optimization
 #
 # This is the only script you need to run to get a fully functional
 # local database environment for HTM development.
 #
 # Requirements:
 #   - macOS with Homebrew installed
-#   - Sudo access (for pgai installation)
 #
 # Usage:
 #   bash scripts/install_local_database.sh
@@ -26,16 +24,6 @@ echo "HTM Local Database Setup"
 echo "=========================================="
 echo
 
-# Request sudo access upfront for pgai installation later
-echo "This script needs sudo access to install the pgai extension."
-echo "Please enter your password when prompted:"
-sudo -v
-# Keep sudo alive in background
-(while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null) &
-
-echo "✓ Sudo access granted"
-echo
-
 # Check for existing PostgreSQL
 if brew list postgresql@17 &>/dev/null || brew list postgresql@16 &>/dev/null; then
     echo "⚠️  Found existing PostgreSQL installation"
@@ -44,8 +32,8 @@ if brew list postgresql@17 &>/dev/null || brew list postgresql@16 &>/dev/null; t
     echo "  1. Stop current PostgreSQL services"
     echo "  2. Backup your database"
     echo "  3. Uninstall current PostgreSQL"
-    echo "  4. Install PostgreSQL with PL/Python support"
-    echo "  5. Install all required extensions (pgvector, timescaledb, pgai)"
+    echo "  4. Install PostgreSQL 17"
+    echo "  5. Install all required extensions (pgvector, pg_trgm, timescaledb)"
     echo "  6. Restore your data"
     echo "  7. Start PostgreSQL with all extensions enabled"
     echo
@@ -113,18 +101,15 @@ fi
 
 echo "✓ Uninstalled"
 
-# Step 4: Install PostgreSQL with PL/Python
+# Step 4: Install PostgreSQL
 echo
-echo "Step 4: Installing PostgreSQL with PL/Python support..."
+echo "Step 4: Installing PostgreSQL 17..."
 
-# Add the tap
-brew tap petere/postgresql 2>/dev/null || true
+# Install standard PostgreSQL 17
+echo "Installing postgresql@17..."
+brew install postgresql@17
 
-# Install PostgreSQL 17 with Python support
-echo "Installing petere/postgresql/postgresql@17..."
-brew install petere/postgresql/postgresql@17
-
-echo "✓ PostgreSQL with PL/Python installed"
+echo "✓ PostgreSQL installed"
 
 # Step 5: Initialize and configure PostgreSQL
 echo
@@ -290,7 +275,7 @@ echo "✓ Extension symlinks created"
 echo
 echo "Step 9: Enabling core extensions..."
 
-# Enable extensions in database (without TimescaleDB preload)
+# Enable extensions in database
 echo "Enabling extensions in htm_development..."
 $PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS vector;" || {
     echo "✗ Failed to enable pgvector extension"
@@ -298,7 +283,6 @@ $PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS vec
     exit 1
 }
 $PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
-$PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS plpython3u;"
 
 # Try to enable TimescaleDB (optional, may not work on macOS without preload)
 $PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;" 2>/dev/null || {
@@ -308,47 +292,9 @@ $PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS tim
 
 echo "✓ Core extensions enabled"
 
-# Step 10: Install pgai
+# Step 10: Verify installation
 echo
-echo "Step 10: Installing pgai..."
-
-# Clean up any existing pgai repo
-sudo rm -rf /tmp/pgai 2>/dev/null || true
-
-# Clone pgai
-cd /tmp
-git clone https://github.com/timescale/pgai.git --branch extension-0.8.0 --depth 1
-cd pgai
-
-# Build and install (using sudo we requested at the beginning)
-echo "Building and installing pgai (this may take a minute)..."
-sudo python3 projects/extension/build.py install
-
-# Install pgai's Python dependencies into PostgreSQL's Python environment
-echo "Installing pgai Python dependencies for PL/Python..."
-sudo python3 -m pip install --upgrade pip
-sudo python3 -m pip install pydantic pydantic-core httpx psycopg openai
-
-# Clean up
-cd /
-sudo rm -rf /tmp/pgai
-
-echo "✓ pgai installed with all Python dependencies"
-
-# Step 11: Enable pgai extension
-echo
-echo "Step 11: Enabling pgai extension..."
-$PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS ai CASCADE;" || {
-    echo "✗ Failed to enable pgai extension"
-    echo "Check that pgai was installed correctly"
-    exit 1
-}
-
-echo "✓ pgai enabled"
-
-# Step 12: Verify installation
-echo
-echo "Step 12: Verifying installation..."
+echo "Step 10: Verifying installation..."
 echo
 
 # Check all extensions
@@ -360,14 +306,17 @@ echo "=========================================="
 echo "✓ Setup Complete!"
 echo "=========================================="
 echo
-echo "PostgreSQL is running with all extensions:"
-echo "  ✓ plpython3u (for pgai)"
+echo "PostgreSQL is running with required extensions:"
 echo "  ✓ pgvector (for embeddings)"
 echo "  ✓ pg_trgm (for fuzzy search)"
-echo "  ✓ ai (pgai for automatic embeddings)"
 echo
 echo "Note: TimescaleDB was installed but may not be loaded"
 echo "      on macOS. HTM works perfectly without it."
+echo
+echo "Embeddings are generated client-side using Ollama."
+echo "Make sure Ollama is installed and running:"
+echo "  curl https://ollama.ai/install.sh | sh"
+echo "  ollama pull nomic-embed-text"
 echo
 echo "Database: htm_development"
 echo "Location: $PG_DATA"
@@ -378,10 +327,6 @@ echo "PostgreSQL commands:"
 echo "  Start:  $PG_BIN/pg_ctl -D $PG_DATA -l $PG_DATA/server.log start"
 echo "  Stop:   $PG_BIN/pg_ctl -D $PG_DATA stop"
 echo "  Status: $PG_BIN/pg_ctl -D $PG_DATA status"
-echo
-echo "Environment variables for dual-mode operation:"
-echo "  HTM_USE_PGAI=true   # Use database-side embeddings"
-echo "  HTM_USE_PGAI=false  # Use client-side embeddings (default)"
 echo
 echo "Next steps:"
 echo "  1. cd /Users/dewayne/sandbox/git_repos/madbomber/htm"

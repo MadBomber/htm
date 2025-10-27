@@ -1,14 +1,36 @@
 # ADR-011: Database-Side Embedding Generation with pgai
 
-**Status**: Accepted
+**Status**: ~~Accepted~~ **SUPERSEDED** (2025-10-27)
 
 **Date**: 2025-10-26
+
+**Superseded By**: ADR-011 Reversal (see below)
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
 
 ---
 
-## Quick Summary
+## ⚠️ DECISION REVERSAL (2025-10-27)
+
+**This ADR has been reversed. HTM has returned to client-side embedding generation.**
+
+**Reason**: The pgai extension proved impossible to install and configure reliably on local development machines (macOS). Despite extensive efforts including:
+- Installing PostgreSQL with PL/Python support (petere/postgresql tap)
+- Building pgai from source
+- Installing Python dependencies for PL/Python environment
+- Multiple configuration attempts
+
+The pgai extension consistently failed with Python environment and dependency issues on local installations.
+
+**Decision**: Since pgai cannot be used reliably on local development machines, it was decided to abandon pgai entirely rather than maintain separate code paths for local vs. cloud deployments. A unified architecture with client-side embeddings provides better developer experience and simplifies the codebase.
+
+**Current Implementation**: HTM now generates embeddings client-side using the `EmbeddingService` class before inserting into the database. The 10-20% performance advantage of database-side generation is outweighed by the operational simplicity and reliability of client-side generation.
+
+See the reversal implementation in commit history (2025-10-27).
+
+---
+
+## Original Quick Summary (Historical)
 
 HTM uses **TimescaleDB's pgai extension** for database-side embedding generation via automatic triggers, replacing Ruby application-side HTTP calls to embedding providers.
 
@@ -477,6 +499,85 @@ Updates:
 
 ---
 
+## Reversal Details (2025-10-27)
+
+### Why the Reversal?
+
+**Primary Issue**: pgai proved unreliable on local development environments
+- Complex installation requiring PostgreSQL with PL/Python support
+- Python dependency conflicts between system Python and PL/Python environment
+- Build failures and extension loading errors on macOS
+- Hours of troubleshooting without consistent success
+
+**Secondary Issues**:
+- Developer onboarding friction (local setup too complex)
+- Debugging difficulty (errors in database triggers vs. Ruby code)
+- Cloud/local split architecture complexity
+- Loss of flexibility (database-side code harder to modify)
+
+### Lessons Learned
+
+1. **Developer Experience Matters**: A 10-20% performance gain is not worth hours of setup frustration
+2. **Complexity Has Cost**: Database triggers are harder to debug than application code
+3. **Local Development First**: If it doesn't work reliably on developer machines, don't use it
+4. **Unified Architecture**: Maintaining separate paths (local vs. cloud) creates technical debt
+5. **Pragmatism Over Optimization**: Simple, reliable code beats complex, optimized code
+
+### New Architecture (Post-Reversal)
+
+**Client-Side Embedding Generation**:
+```ruby
+class EmbeddingService
+  def embed(text)
+    # Direct HTTP call to Ollama/OpenAI
+    case @provider
+    when :ollama
+      embed_with_ollama(text)
+    when :openai
+      embed_with_openai(text)
+    end
+  end
+end
+
+# Generate embedding before database insertion
+embedding = embedding_service.embed(content)
+ltm.add(content: content, embedding: embedding, ...)
+```
+
+**Vector Search**:
+```ruby
+# Generate query embedding client-side
+query_embedding = embedding_service.embed(query)
+
+# Pass to database for similarity search
+results = ltm.search(
+  timeframe: timeframe,
+  query: query,
+  embedding_service: embedding_service  # Used for query embedding
+)
+```
+
+**Benefits of Client-Side Approach**:
+- ✅ Works reliably on all platforms (macOS, Linux, Cloud)
+- ✅ Simple installation (just Ollama + Ruby)
+- ✅ Easy debugging (errors in Ruby, visible stack traces)
+- ✅ Flexible (easy to modify embedding logic)
+- ✅ Testable (mock embedding service in tests)
+- ✅ No PostgreSQL extension dependencies
+
+**Trade-offs Accepted**:
+- ❌ 10-20% slower (acceptable for developer experience)
+- ❌ Ruby HTTP overhead (minimal with connection reuse)
+- ❌ Application-side complexity (manageable, familiar to Ruby developers)
+
+### Impact on Related ADRs
+
+- **ADR-003 (Ollama Embeddings)**: Reinstated - client-side generation restored
+- **ADR-012 (Topic Extraction)**: Also impacted - database-side LLM extraction via pgai removed
+
+---
+
 ## Changelog
 
+- **2025-10-27**: **DECISION REVERSED** - Abandoned pgai due to local installation issues, returned to client-side embedding generation
 - **2025-10-26**: Initial version - full migration to pgai-based embedding generation

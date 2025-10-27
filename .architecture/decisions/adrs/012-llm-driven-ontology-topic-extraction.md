@@ -1,6 +1,6 @@
 # ADR-012: LLM-Driven Ontology Topic Extraction
 
-**Status**: Accepted
+**Status**: ~~Accepted~~ **PARTIALLY SUPERSEDED** (2025-10-27)
 
 **Date**: 2025-10-26
 
@@ -8,7 +8,25 @@
 
 ---
 
-## Quick Summary
+## ⚠️ IMPLEMENTATION STATUS (2025-10-27)
+
+**Database-side topic extraction via pgai has been removed** following the reversal of ADR-011.
+
+**What Remains**:
+- The ontology concept (hierarchical topics in `root:level1:level2` format)
+- Database schema support (tags table, ontology views)
+- Manual topic tagging capability
+
+**What Was Removed**:
+- Automatic LLM-driven topic extraction via pgai triggers
+- Database-side LLM calls using `ai.ollama_generate()`
+- Automatic topic generation on INSERT/UPDATE
+
+**Future Consideration**: Client-side LLM topic extraction may be implemented in the future, but the database-side approach proved impractical due to pgai installation issues (see ADR-011 reversal).
+
+---
+
+## Original Quick Summary (Historical)
 
 HTM uses **LLM-driven hierarchical topic extraction** via pgai database triggers to automatically generate ontological tags from node content, creating an emergent knowledge structure.
 
@@ -472,6 +490,92 @@ Future:
 
 ---
 
+## Reversal Details (2025-10-27)
+
+### Why the Partial Reversal?
+
+Following the reversal of ADR-011, the pgai-based automatic topic extraction was also removed because:
+
+1. **Dependency on pgai**: Topic extraction relied on `ai.ollama_generate()` function from pgai
+2. **Installation Issues**: Same pgai installation problems that affected embedding generation
+3. **Consistency**: Better to have a unified approach (no database-side LLM calls)
+4. **Architectural Simplicity**: Avoid split between database-side and client-side processing
+
+### What Remains
+
+The **ontology concept is still valid and valuable**:
+- Tags table supports hierarchical topic paths (`root:level1:level2`)
+- Ontology structure views provide navigation
+- Manual topic tagging works
+- Applications can still implement topic extraction client-side
+
+### Future Direction: Client-Side Topic Extraction
+
+A future implementation may add client-side LLM-driven topic extraction:
+
+```ruby
+class TopicExtractor
+  def initialize(llm_provider: :ollama, model: 'llama3')
+    @provider = llm_provider
+    @model = model
+  end
+
+  def extract_topics(content)
+    # Generate prompt
+    prompt = build_extraction_prompt(content)
+
+    # Call LLM (Ruby-side)
+    response = call_llm(prompt)
+
+    # Parse and validate topics
+    parse_topics(response)
+  end
+
+  private
+
+  def build_extraction_prompt(content)
+    <<~PROMPT
+      Extract hierarchical topic tags from this text.
+      Format: root:level1:level2 (lowercase, hyphens for spaces)
+      Maximum depth: 5 levels
+
+      Text: #{content}
+    PROMPT
+  end
+end
+
+# Usage in HTM
+topics = topic_extractor.extract_topics(content)
+htm.add_message(content, tags: topics, ...)
+```
+
+**Benefits of Client-Side Approach**:
+- ✅ No database extension dependencies
+- ✅ Easier debugging (errors in Ruby)
+- ✅ More flexible (can modify extraction logic easily)
+- ✅ Works on all platforms
+- ✅ Can provide context (existing ontology) to LLM more easily
+
+**Trade-offs**:
+- ❌ Slightly slower (HTTP call from Ruby)
+- ❌ Not automatic on UPDATE (must be called explicitly)
+- ❌ Application must manage topic extraction lifecycle
+
+### Current Recommendation
+
+**For now**: Use manual topic tagging via the `tags` parameter:
+```ruby
+htm.add_message(
+  "PostgreSQL with TimescaleDB handles time-series efficiently",
+  tags: ["database:postgresql", "database:timescaledb", "performance:time-series"]
+)
+```
+
+**Future**: Implement optional client-side topic extraction for automatic tagging
+
+---
+
 ## Changelog
 
+- **2025-10-27**: **DATABASE-SIDE EXTRACTION REMOVED** - Removed pgai-based automatic extraction following ADR-011 reversal. Ontology concept and schema remain.
 - **2025-10-26**: Initial version - LLM-driven ontology topic extraction with pgai triggers

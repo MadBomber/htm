@@ -128,9 +128,7 @@ class HTM
     # Calculate token count
     token_count = @embedding_service.count_tokens(content)
 
-    # Generate embedding client-side
-    # If pgai is available in the database, it will be overridden by the trigger
-    # If not, this embedding will be stored
+    # Generate embedding client-side before database insertion
     embedding = @embedding_service.embed(content)
 
     # Store in long-term memory with embedding
@@ -378,7 +376,7 @@ class HTM
   # Retrieve nodes by ontological topic
   #
   # Enables structured navigation of the knowledge base using hierarchical topics.
-  # Topics are extracted automatically by LLM via pgai triggers.
+  # Topics can be assigned manually via the tags parameter when adding messages.
   #
   # @param topic_path [String] Topic hierarchy path (e.g., "database:postgresql" or "ai:llm")
   # @param exact [Boolean] Exact match (false) or prefix match (true, default)

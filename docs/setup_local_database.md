@@ -10,9 +10,7 @@ This guide walks through setting up a local PostgreSQL database with all require
 
 ## Why Local Database?
 
-HTM uses PostgreSQL database triggers (via pgai) to automatically generate embeddings when nodes are inserted. These triggers run **on the database server** and need to connect to Ollama.
-
-**TimescaleDB Cloud cannot reach your localhost Ollama instance**, so you need a local database for development.
+For local development, you'll want a PostgreSQL database on your machine for faster development and testing. HTM generates embeddings client-side using Ollama before inserting into the database.
 
 ## Step 1: Install PostgreSQL
 
@@ -55,32 +53,7 @@ timescaledb-tune --quiet --yes
 brew services restart postgresql@17
 ```
 
-### 2.3 Install pgai (AI/Embedding Generation)
-
-pgai may not be available via Homebrew yet. You have two options:
-
-#### Option A: Install from source (Recommended)
-
-```bash
-# Clone pgai repository
-cd /tmp
-git clone https://github.com/timescale/pgai.git
-cd pgai
-
-# Install pgai extension
-make
-make install
-
-# Note: You may need to specify PG_CONFIG if you have multiple PostgreSQL versions
-# make PG_CONFIG=/opt/homebrew/opt/postgresql@17/bin/pg_config
-# make install PG_CONFIG=/opt/homebrew/opt/postgresql@17/bin/pg_config
-```
-
-#### Option B: Use TimescaleDB Cloud for production
-
-For production use, consider using TimescaleDB Cloud with a publicly accessible Ollama endpoint, or use client-side embedding generation.
-
-### 2.4 pg_trgm (Trigram Matching)
+### 2.3 pg_trgm (Trigram Matching)
 
 This extension is included with PostgreSQL, no installation needed.
 
@@ -97,16 +70,11 @@ export HTM_DBUSER=${USER}
 export HTM_DBPASS=
 export HTM_DBURL="postgresql://${HTM_DBUSER}@${HTM_DBHOST}:${HTM_DBPORT}/${HTM_DBNAME}?sslmode=prefer"
 
-# Embedding generation (via pgai)
+# Client-side embedding generation
 export HTM_EMBEDDINGS_PROVIDER=ollama
 export HTM_EMBEDDINGS_MODEL=embeddinggemma
 export HTM_EMBEDDINGS_BASE_URL=http://localhost:11434
 export HTM_EMBEDDINGS_DIMENSION=768
-
-# Topic extraction (via pgai)
-export HTM_TOPIC_PROVIDER=ollama
-export HTM_TOPIC_MODEL=phi4
-export HTM_TOPIC_BASE_URL=http://localhost:11434
 ```
 
 Reload environment:
@@ -133,9 +101,6 @@ psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
 
 # Enable pg_trgm (trigram matching)
 psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
-
-# Enable pgai (if installed)
-psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS ai CASCADE;"
 ```
 
 ## Step 6: Run HTM Database Setup
@@ -172,18 +137,17 @@ be rake htm:db:seed
 
 This will:
 1. Initialize HTM with real EmbeddingService
-2. Create 3 sample nodes
-3. Generate embeddings via pgai triggers calling your local Ollama
+2. Create 6 sample conversation messages
+3. Generate embeddings client-side using your local Ollama
 
 Expected output:
 
 ```
 Seeding database with sample data...
-Note: This requires Ollama to be accessible from your database server.
-      For cloud databases, ensure Ollama endpoint is publicly reachable.
+Note: This requires Ollama to be running locally for embedding generation.
 
-  Creating sample nodes...
-✓ Database seeded with 3 sample nodes
+  Creating sample conversation...
+✓ Database seeded with 6 conversation messages (3 exchanges)
 ```
 
 ## Available Rake Tasks
@@ -224,12 +188,6 @@ timescaledb-tune --quiet --yes
 brew services restart postgresql@17
 psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
 ```
-
-### Error: "extension 'ai' is not available"
-
-**Problem:** pgai not installed.
-
-**Solution:** Install pgai from source (see Step 2.3 Option A) or modify the schema to skip pgai triggers.
 
 ### Error: "Connection refused" to Ollama
 
@@ -306,7 +264,6 @@ PostgreSQL Version:
   PostgreSQL 17.6
 
 Extensions:
-  ai (X.X.X)
   pg_trgm (X.X.X)
   plpgsql (X.X.X)
   timescaledb (X.X.X)
@@ -329,7 +286,7 @@ Once your local database is set up:
 
 1. Run tests: `rake test`
 2. Start using HTM in your application
-3. All embeddings will be generated automatically via pgai triggers
+3. Embeddings will be generated client-side using Ollama
 4. Check operations_log table to see all HTM operations
 
 ## Architecture Notes
@@ -338,8 +295,8 @@ With this setup:
 
 - **PostgreSQL** runs on your localhost
 - **Ollama** runs on your localhost at port 11434
-- **pgai triggers** in PostgreSQL can reach Ollama directly
-- **Embeddings** are generated automatically on INSERT/UPDATE
-- **No application-side embedding generation needed**
+- **HTM Ruby client** connects to both PostgreSQL and Ollama
+- **Embeddings** are generated client-side before database insertion
+- **Simple, reliable architecture** that works on all platforms
 
 This is the ideal development environment for HTM.
