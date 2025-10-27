@@ -56,6 +56,215 @@ class HTM
         puts "✓ Database migrations completed"
       end
 
+      # Show migration status
+      #
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @return [void]
+      #
+      def migration_status(db_url = nil)
+        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        raise "Database configuration not found" unless config
+
+        conn = PG.connect(config)
+
+        # Get applied migrations
+        begin
+          applied = conn.exec("SELECT version, applied_at FROM schema_migrations ORDER BY applied_at").to_a
+        rescue PG::UndefinedTable
+          applied = []
+        end
+
+        # Get available migrations
+        migrations_dir = File.expand_path('../../sql/migrations', __dir__)
+        available = if Dir.exist?(migrations_dir)
+          Dir.glob(File.join(migrations_dir, '*.sql')).map { |f| File.basename(f, '.sql') }.sort
+        else
+          []
+        end
+
+        conn.close
+
+        puts "\nMigration Status"
+        puts "=" * 80
+
+        if available.empty?
+          puts "No migration files found in sql/migrations/"
+        else
+          available.each do |version|
+            status = applied.any? { |a| a['version'] == version }
+            status_mark = status ? "✓" : "✗"
+            applied_at = applied.find { |a| a['version'] == version }&.dig('applied_at')
+
+            print "#{status_mark} #{version}"
+            print " (applied: #{applied_at})" if applied_at
+            puts
+          end
+        end
+
+        puts "\nSummary: #{applied.length} applied, #{available.length - applied.length} pending"
+        puts "=" * 80
+      end
+
+      # Drop all HTM tables
+      #
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @return [void]
+      #
+      def drop(db_url = nil)
+        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        raise "Database configuration not found" unless config
+
+        conn = PG.connect(config)
+
+        tables = ['nodes', 'tags', 'robots', 'operations_log', 'schema_migrations']
+
+        puts "Dropping HTM tables..."
+        tables.each do |table|
+          begin
+            conn.exec("DROP TABLE IF EXISTS #{table} CASCADE")
+            puts "  ✓ Dropped #{table}"
+          rescue PG::Error => e
+            puts "  ✗ Error dropping #{table}: #{e.message}"
+          end
+        end
+
+        # Drop functions and triggers
+        begin
+          conn.exec("DROP FUNCTION IF EXISTS extract_ontology_topics() CASCADE")
+          puts "  ✓ Dropped ontology functions and triggers"
+        rescue PG::Error => e
+          puts "  ✗ Error dropping functions: #{e.message}"
+        end
+
+        # Drop views
+        begin
+          conn.exec("DROP VIEW IF EXISTS ontology_structure CASCADE")
+          conn.exec("DROP VIEW IF EXISTS topic_relationships CASCADE")
+          puts "  ✓ Dropped ontology views"
+        rescue PG::Error => e
+          puts "  ✗ Error dropping views: #{e.message}"
+        end
+
+        conn.close
+        puts "✓ All HTM tables dropped"
+      end
+
+      # Seed database with sample data
+      #
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @return [void]
+      #
+      def seed(db_url = nil)
+        require_relative '../htm'
+
+        puts "Seeding database with sample data..."
+
+        # Create a temporary embedding service for seeding
+        embedding_service = Object.new
+        def embedding_service.embed(text)
+          # Return simple mock embeddings for seeding
+          768.times.map { rand(-1.0..1.0) }
+        end
+        def embedding_service.dimensions
+          768
+        end
+        def embedding_service.llm_client
+          Object.new
+        end
+
+        htm = HTM.new(
+          robot_name: "Sample Robot",
+          embedding_service: embedding_service
+        )
+
+        # Add sample nodes
+        puts "  Creating sample nodes..."
+
+        htm.add_node(
+          "sample_001",
+          "PostgreSQL with TimescaleDB provides efficient time-series data storage",
+          type: :fact,
+          importance: 8.0,
+          tags: ["database", "timescaledb"]
+        )
+
+        htm.add_node(
+          "sample_002",
+          "Machine learning models require large amounts of training data",
+          type: :fact,
+          importance: 7.0,
+          tags: ["ai", "machine-learning"]
+        )
+
+        htm.add_node(
+          "sample_003",
+          "Ruby on Rails is a web framework for building database-backed applications",
+          type: :fact,
+          importance: 6.0,
+          tags: ["ruby", "web-development"]
+        )
+
+        htm.shutdown
+
+        puts "✓ Database seeded with 3 sample nodes"
+      end
+
+      # Show database info
+      #
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @return [void]
+      #
+      def info(db_url = nil)
+        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        raise "Database configuration not found" unless config
+
+        conn = PG.connect(config)
+
+        puts "\nHTM Database Information"
+        puts "=" * 80
+
+        # Connection info
+        puts "\nConnection:"
+        puts "  Host: #{config[:host]}"
+        puts "  Port: #{config[:port]}"
+        puts "  Database: #{config[:dbname]}"
+        puts "  User: #{config[:user]}"
+
+        # PostgreSQL version
+        version = conn.exec("SELECT version()").first['version']
+        puts "\nPostgreSQL Version:"
+        puts "  #{version.split(',').first}"
+
+        # Extensions
+        puts "\nExtensions:"
+        extensions = conn.exec("SELECT extname, extversion FROM pg_extension ORDER BY extname").to_a
+        extensions.each do |ext|
+          puts "  #{ext['extname']} (#{ext['extversion']})"
+        end
+
+        # Table info
+        puts "\nHTM Tables:"
+        tables = ['nodes', 'tags', 'robots', 'operations_log', 'schema_migrations']
+        tables.each do |table|
+          begin
+            count = conn.exec("SELECT COUNT(*) FROM #{table}").first['count']
+            puts "  #{table}: #{count} rows"
+          rescue PG::UndefinedTable
+            puts "  #{table}: not created"
+          end
+        end
+
+        # Database size
+        db_size = conn.exec(
+          "SELECT pg_size_pretty(pg_database_size($1)) AS size",
+          [config[:dbname]]
+        ).first['size']
+        puts "\nDatabase Size: #{db_size}"
+
+        conn.close
+        puts "=" * 80
+      end
+
       # Parse database connection URL
       #
       # @param url [String] Connection URL

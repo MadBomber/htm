@@ -385,6 +385,94 @@ class HTM
       @pool.shutdown { |conn| conn.close }
     end
 
+    # Retrieve nodes by ontological topic
+    #
+    # @param topic_path [String] Topic hierarchy path
+    # @param exact [Boolean] Exact match or prefix match
+    # @param limit [Integer] Maximum results
+    # @return [Array<Hash>] Matching nodes
+    #
+    def nodes_by_topic(topic_path, exact: false, limit: 50)
+      with_connection do |conn|
+        if exact
+          result = conn.exec_params(
+            <<~SQL,
+              SELECT DISTINCT n.*
+              FROM nodes n
+              JOIN tags t ON t.node_id = n.id
+              WHERE t.tag = $1
+              ORDER BY n.created_at DESC
+              LIMIT $2
+            SQL
+            [topic_path, limit]
+          )
+        else
+          result = conn.exec_params(
+            <<~SQL,
+              SELECT DISTINCT n.*
+              FROM nodes n
+              JOIN tags t ON t.node_id = n.id
+              WHERE t.tag LIKE $1
+              ORDER BY n.created_at DESC
+              LIMIT $2
+            SQL
+            ["#{topic_path}%", limit]
+          )
+        end
+        result.to_a
+      end
+    end
+
+    # Get ontology structure view
+    #
+    # @return [Array<Hash>] Ontology structure
+    #
+    def ontology_structure
+      with_connection do |conn|
+        result = conn.exec("SELECT * FROM ontology_structure WHERE root_topic IS NOT NULL ORDER BY root_topic, level1_topic, level2_topic")
+        result.to_a
+      end
+    end
+
+    # Get topic relationships (co-occurrence)
+    #
+    # @param min_shared_nodes [Integer] Minimum shared nodes
+    # @param limit [Integer] Maximum relationships
+    # @return [Array<Hash>] Topic relationships
+    #
+    def topic_relationships(min_shared_nodes: 2, limit: 50)
+      with_connection do |conn|
+        result = conn.exec_params(
+          <<~SQL,
+            SELECT t1.tag AS topic1, t2.tag AS topic2, COUNT(DISTINCT t1.node_id) AS shared_nodes
+            FROM tags t1
+            JOIN tags t2 ON t1.node_id = t2.node_id AND t1.tag < t2.tag
+            GROUP BY t1.tag, t2.tag
+            HAVING COUNT(DISTINCT t1.node_id) >= $1
+            ORDER BY shared_nodes DESC
+            LIMIT $2
+          SQL
+          [min_shared_nodes, limit]
+        )
+        result.to_a
+      end
+    end
+
+    # Get topics for a specific node
+    #
+    # @param node_id [Integer] Node database ID
+    # @return [Array<String>] Topic paths
+    #
+    def node_topics(node_id)
+      with_connection do |conn|
+        result = conn.exec_params(
+          "SELECT tag FROM tags WHERE node_id = $1 ORDER BY tag",
+          [node_id]
+        )
+        result.map { |row| row['tag'] }
+      end
+    end
+
     private
 
     # Generate cache key for query

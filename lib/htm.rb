@@ -95,7 +95,7 @@ class HTM
 
     # Allow dependency injection of embedding service (for testing)
     @embedding_service = if embedding_service.is_a?(Symbol)
-      HTM::EmbeddingService.new(embedding_service, model: embedding_model, cache_size: embedding_cache_size)
+      HTM::EmbeddingService.new(embedding_service, model: embedding_model, db_config: db_config)
     else
       embedding_service
     end
@@ -125,10 +125,12 @@ class HTM
     validate_array!(related_to, "related_to")
     validate_array!(tags, "tags")
 
-    # Calculate token count (embedding generated automatically by pgai trigger)
+    # Calculate token count
     token_count = @embedding_service.count_tokens(value)
 
-    # Store in long-term memory (pgai will auto-generate embedding)
+    # Store in long-term memory (pgai will auto-generate embedding via trigger)
+    # Note: For seeding or testing without Ollama access from database,
+    # embeddings will need to be generated after insertion
     node_id = @long_term_memory.add(
       key: key,
       value: value,
@@ -263,12 +265,13 @@ class HTM
     # Raise error if node not found
     raise HTM::NotFoundError, "Node not found: #{key}" unless node_id
 
-    # Log operation BEFORE deleting to avoid foreign key violation
+    # Log operation with NULL node_id since we're about to delete it
+    # This prevents foreign key violation
     @long_term_memory.log_operation(
       operation: 'forget',
-      node_id: node_id,
+      node_id: nil,  # NULL since node will be deleted
       robot_id: @robot_id,
-      details: { key: key }
+      details: { key: key, node_id: node_id }  # Store node_id in details instead
     )
 
     # Now delete the node and remove from working memory
@@ -367,6 +370,82 @@ class HTM
              content: n['value'],
              type: n['type']
            }}
+  end
+
+  # Retrieve nodes by ontological topic
+  #
+  # Enables structured navigation of the knowledge base using hierarchical topics.
+  # Topics are extracted automatically by LLM via pgai triggers.
+  #
+  # @param topic_path [String] Topic hierarchy path (e.g., "database:postgresql" or "ai:llm")
+  # @param exact [Boolean] Exact match (false) or prefix match (true, default)
+  # @param limit [Integer] Maximum results (default: 50)
+  # @return [Array<Hash>] Nodes matching the topic
+  #
+  # @example Exact topic match
+  #   nodes = htm.nodes_by_topic("database:postgresql", exact: true)
+  #
+  # @example Topic prefix match (includes all subtopics)
+  #   nodes = htm.nodes_by_topic("database:postgresql")  # includes database:postgresql:performance, etc.
+  #
+  def nodes_by_topic(topic_path, exact: false, limit: 50)
+    validate_value!(topic_path)
+    validate_positive_integer!(limit, "limit")
+
+    @long_term_memory.nodes_by_topic(topic_path, exact: exact, limit: limit)
+  end
+
+  # Get the ontology structure
+  #
+  # Returns a hierarchical view of all topics in the knowledge base,
+  # showing the emergent ontology discovered by LLM analysis.
+  #
+  # @return [Array<Hash>] Ontology structure with root topics, levels, and node counts
+  #
+  # @example View ontology
+  #   structure = htm.ontology_structure
+  #   structure.group_by { |row| row['root_topic'] }
+  #
+  def ontology_structure
+    @long_term_memory.ontology_structure
+  end
+
+  # Get topic relationships (co-occurrence)
+  #
+  # Shows which topics appear together across nodes, revealing
+  # conceptual connections in the knowledge base.
+  #
+  # @param min_shared_nodes [Integer] Minimum shared nodes to report (default: 2)
+  # @param limit [Integer] Maximum relationships to return (default: 50)
+  # @return [Array<Hash>] Topic pairs with shared node counts
+  #
+  # @example Find related topics
+  #   rels = htm.topic_relationships
+  #   rels.each { |r| puts "#{r['topic1']} <-> #{r['topic2']}: #{r['shared_nodes']} nodes" }
+  #
+  def topic_relationships(min_shared_nodes: 2, limit: 50)
+    validate_positive_integer!(min_shared_nodes, "min_shared_nodes")
+    validate_positive_integer!(limit, "limit")
+
+    @long_term_memory.topic_relationships(min_shared_nodes: min_shared_nodes, limit: limit)
+  end
+
+  # Get all topics for a specific node
+  #
+  # @param key [String] Node key
+  # @return [Array<String>] Topic paths for this node
+  #
+  # @example Get node topics
+  #   topics = htm.node_topics("memory_001")
+  #   # => ["database:postgresql:performance", "optimization:query", "timeseries"]
+  #
+  def node_topics(key)
+    validate_key!(key)
+
+    node = @long_term_memory.retrieve(key)
+    return [] unless node
+
+    @long_term_memory.node_topics(node['id'].to_i)
   end
 
   private

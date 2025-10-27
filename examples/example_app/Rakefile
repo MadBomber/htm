@@ -1,0 +1,71 @@
+# Example Application Rakefile
+#
+# This demonstrates how to integrate HTM rake tasks into your application.
+# Simply require 'htm/tasks' and all database management tasks become available.
+
+require 'bundler/setup'
+
+# Load HTM database tasks - that's it!
+require 'htm/tasks'
+
+# Your application's custom tasks
+namespace :app do
+  desc "Start the example application"
+  task :start do
+    puts "\n=== Starting Example HTM Application ==="
+    puts "Database configured: #{ENV['HTM_DBURL'] ? 'Yes' : 'No'}"
+    puts "\nRun 'rake -T' to see all available tasks"
+    puts "Run 'rake -T htm:db' to see HTM database tasks\n\n"
+
+    # Your app code here
+    require_relative 'app'
+    ExampleApp.run
+  end
+
+  desc "Bootstrap application (setup database + start)"
+  task :bootstrap => ['htm:db:setup', :start]
+end
+
+namespace :dev do
+  desc "Reset database for development (WARNING: destructive!)"
+  task :reset => ['htm:db:reset', 'htm:db:seed']
+end
+
+# Default task
+task default: 'app:start'
+
+# Show usage help
+desc "Show usage help"
+task :help do
+  puts <<~HELP
+
+    Example HTM Application - Available Commands
+    ============================================
+
+    Setup & Start:
+      rake app:bootstrap     Bootstrap app (setup DB + start)
+      rake app:start         Start the application (default)
+
+    Database Management:
+      rake htm:db:setup      Set up HTM database schema
+      rake htm:db:migrate    Run pending migrations
+      rake htm:db:status     Show migration status
+      rake htm:db:info       Show database information
+      rake htm:db:test       Test database connection
+      rake htm:db:console    Open PostgreSQL console
+      rake htm:db:seed       Seed with sample data
+
+    Development:
+      rake dev:reset         Reset database (drop/create/seed)
+
+    Destructive (Use with caution!):
+      rake htm:db:drop       Drop all HTM tables
+      rake htm:db:reset      Drop and recreate database
+
+    Environment:
+      export HTM_DBURL="postgresql://user:pass@host:port/dbname"
+
+    See docs/using_rake_tasks_in_your_app.md for more information.
+
+  HELP
+end

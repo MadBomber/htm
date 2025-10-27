@@ -119,6 +119,29 @@ ollama pull nomic-embed-text
 
 ### 3. Initialize Database Schema
 
+**Using Rake Tasks (Recommended)**:
+
+HTM provides comprehensive rake tasks for database management. Add this to your application's `Rakefile`:
+
+```ruby
+require 'htm/tasks'
+```
+
+Then use the tasks:
+
+```bash
+# Set up database schema and run migrations
+rake htm:db:setup
+
+# Verify connection
+rake htm:db:test
+
+# Check database status
+rake htm:db:info
+```
+
+**Or programmatically**:
+
 ```ruby
 require 'htm'
 
@@ -126,15 +149,19 @@ require 'htm'
 HTM::Database.setup
 ```
 
-Or from command line:
+**Or from command line**:
 
 ```bash
 ruby -r ./lib/htm -e "HTM::Database.setup"
 ```
 
+See [Using HTM Rake Tasks in Your Application](docs/using_rake_tasks_in_your_app.md) for complete integration guide.
+
 ### 4. Verify Setup
 
 ```bash
+rake htm:db:test    # Using rake tasks
+# or
 ruby test_connection.rb
 ```
 
@@ -548,11 +575,81 @@ After checking out the repo, run:
 # Install dependencies
 bundle install
 
+# Enable direnv (loads .envrc environment variables)
+direnv allow
+
 # Run tests
 rake test
 
 # Run example
 ruby examples/basic_usage.rb
+```
+
+### Database Management
+
+HTM provides comprehensive rake tasks under the `htm:db` namespace for managing the database:
+
+```bash
+# List all database tasks
+rake -T htm:db
+
+# Set up database (create schema + run migrations)
+rake htm:db:setup
+
+# Run pending migrations only
+rake htm:db:migrate
+
+# Show migration status (which migrations are applied)
+rake htm:db:status
+
+# Show database info (size, tables, extensions, row counts)
+rake htm:db:info
+
+# Test database connection
+rake htm:db:test
+
+# Open PostgreSQL console (interactive psql session)
+rake htm:db:console
+
+# Seed database with sample data
+rake htm:db:seed
+
+# Drop all HTM tables (WARNING: destructive!)
+rake htm:db:drop
+
+# Drop and recreate database (WARNING: destructive!)
+rake htm:db:reset
+```
+
+**Important**: Make sure `direnv allow` has been run once in the project directory to load database environment variables from `.envrc`. Alternatively, you can manually export the environment variables:
+
+```bash
+# Source Tiger database credentials (if using TimescaleDB Cloud)
+source ~/.bashrc__tiger
+
+# Or manually export HTM_DBURL
+export HTM_DBURL="postgresql://user:password@host:port/dbname?sslmode=require"
+```
+
+**Common Workflows**:
+
+```bash
+# Initial setup (first time)
+direnv allow
+rake htm:db:setup        # Creates schema and runs migrations
+
+# After pulling new migrations
+rake htm:db:migrate      # Run pending migrations
+
+# Check database state
+rake htm:db:status       # See migration status
+rake htm:db:info         # See database details
+
+# Reset database (development only!)
+rake htm:db:reset        # Drops and recreates everything
+
+# Open database console for debugging
+rake htm:db:console      # Opens psql
 ```
 
 ## Testing

@@ -183,10 +183,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to automatically generate embeddings on INSERT and UPDATE
+-- Trigger to automatically generate embeddings on INSERT
+-- Drop old single trigger if it exists
 DROP TRIGGER IF EXISTS nodes_generate_embedding ON nodes;
-CREATE TRIGGER nodes_generate_embedding
-  BEFORE INSERT OR UPDATE OF value ON nodes
+DROP TRIGGER IF EXISTS nodes_generate_embedding_insert ON nodes;
+CREATE TRIGGER nodes_generate_embedding_insert
+  BEFORE INSERT ON nodes
+  FOR EACH ROW
+  WHEN (NEW.embedding IS NULL)
+  EXECUTE FUNCTION generate_node_embedding();
+
+-- Trigger to automatically generate embeddings on UPDATE
+DROP TRIGGER IF EXISTS nodes_generate_embedding_update ON nodes;
+CREATE TRIGGER nodes_generate_embedding_update
+  BEFORE UPDATE OF value ON nodes
   FOR EACH ROW
   WHEN (NEW.embedding IS NULL OR NEW.value IS DISTINCT FROM OLD.value)
   EXECUTE FUNCTION generate_node_embedding();

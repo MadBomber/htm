@@ -12,16 +12,16 @@ end
 
 task default: :test
 
-desc "Run database setup"
-task :db_setup do
-  require_relative "lib/htm"
-  HTM::Database.setup
-end
+# Load HTM database tasks from lib/tasks/htm.rake
+# This uses the same loader that external applications use
+require_relative "lib/htm/tasks"
 
-desc "Test database connection"
-task :db_test do
-  ruby "test_connection.rb"
-end
+# Legacy tasks for backwards compatibility
+desc "Run database setup (deprecated: use htm:db:setup)"
+task :db_setup => "htm:db:setup"
+
+desc "Test database connection (deprecated: use htm:db:test)"
+task :db_test => "htm:db:test"
 
 desc "Run example"
 task :example do

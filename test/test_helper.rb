@@ -15,10 +15,13 @@ class MockEmbeddingService
   def initialize(provider = :ollama, model: 'gpt-oss', ollama_url: nil, dimensions: nil, cache_size: 1000)
     @provider = provider
     @model = model
+    @ollama_url = ollama_url || ENV['OLLAMA_URL'] || 'http://localhost:11434'
     # Default to 1536 for most common embedding models
     # Database now supports up to 3072 dimensions (will auto-pad)
-    @dimensions = dimensions || 1536
-    @llm_client = nil
+    # Respect HTM_EMBEDDINGS_DIMENSION if set
+    @dimensions = dimensions || ENV['HTM_EMBEDDINGS_DIMENSION']&.to_i || 1536
+    # Mock client object
+    @llm_client = Object.new
     @tokenizer = Tiktoken.encoding_for_model("gpt-3.5-turbo")
 
     # Initialize embedding cache (same as real EmbeddingService)

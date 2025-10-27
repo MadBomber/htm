@@ -23,6 +23,8 @@ class HTM
       'nomic-embed-text' => 768,
       'all-minilm' => 384,
       'mxbai-embed-large' => 1024,
+      'embeddinggemma' => 768,
+      'embeddinggemma:latest' => 768,
 
       # OpenAI models
       'text-embedding-3-small' => 1536,
