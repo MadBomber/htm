@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency "pg"
   spec.add_dependency "pgvector"
-  spec.add_dependency "connection_pool"
+  spec.add_dependency "activerecord"
   spec.add_dependency "tiktoken_ruby"
   spec.add_dependency "ruby_llm"
   spec.add_dependency "lru_redux"

@@ -9,16 +9,6 @@ class OntologyTest < Minitest::Test
       skip "Database not configured. Set HTM_DBURL to run ontology tests."
     end
 
-    # Skip if Ollama is not available (needed for topic extraction)
-    unless ollama_available?
-      skip "Ollama not available. Topic extraction requires Ollama running locally."
-    end
-
-    # Ensure topic extraction environment variables are set
-    ENV['HTM_TOPIC_PROVIDER'] ||= 'ollama'
-    ENV['HTM_TOPIC_MODEL'] ||= 'llama3'
-    ENV['HTM_TOPIC_BASE_URL'] ||= 'http://localhost:11434'
-
     @mock_service = MockEmbeddingService.new(:ollama, model: 'gpt-oss')
     @htm = HTM.new(
       robot_name: "Ontology Test Robot",
@@ -30,59 +20,42 @@ class OntologyTest < Minitest::Test
     @htm&.shutdown
   end
 
-  def test_topic_extraction_configuration_loaded
-    # Verify topic configuration was set during connection setup
-    config = @htm.long_term_memory.instance_variable_get(:@config)
-    assert config, "Database config should exist"
-
-    # Topic settings should be configured via session variables
-    # (We can't directly check session variables from Ruby, but we can verify
-    # that the configuration methods were called during initialization)
-    assert_respond_to @htm.long_term_memory, :add, "LongTermMemory should have add method"
-  end
-
-  def test_automatic_topic_extraction_on_insert
-    # Add a node with clear technical content
-    node_id = @htm.add_node(
-      "ontology_test_001",
+  def test_manual_topic_assignment
+    # Add a node with manual hierarchical tags
+    node_id = @htm.add_message(
       "PostgreSQL with TimescaleDB provides efficient time-series data storage using hypertables and compression policies",
-      type: :fact,
-      importance: 8.0
+      speaker: "user",
+      tags: ["database:postgresql:timescaledb", "storage:time-series", "performance:optimization"]
     )
 
     assert_instance_of Integer, node_id
 
-    # Give LLM time to process (topic extraction is in AFTER trigger)
-    sleep 2
-
-    # Query the tags table for extracted topics
+    # Query the tags table for assigned topics
     topics = get_node_topics(node_id)
 
-    # Verify topics were extracted
-    refute_empty topics, "Topics should have been extracted automatically"
+    # Verify topics were assigned
+    refute_empty topics, "Topics should have been assigned manually"
 
     # Verify hierarchical structure (should contain colons)
     hierarchical_topics = topics.select { |t| t.include?(':') }
     refute_empty hierarchical_topics, "Should have hierarchical topics with colon separators"
 
-    # Verify topics are related to content
-    all_topics_text = topics.join(' ')
-    assert_match(/database|postgresql|timescale/i, all_topics_text, "Topics should relate to database content")
+    # Verify expected topics
+    assert_includes topics, "database:postgresql:timescaledb"
+    assert_includes topics, "storage:time-series"
+    assert_includes topics, "performance:optimization"
 
     # Clean up
-    @htm.forget("ontology_test_001", confirm: :confirmed) rescue nil
+    delete_node(node_id)
   end
 
   def test_topic_format_validation
-    # Add a node
-    node_id = @htm.add_node(
-      "ontology_test_002",
+    # Add a node with properly formatted hierarchical tags
+    node_id = @htm.add_message(
       "Ruby on Rails is a web framework for building database-backed applications",
-      type: :fact,
-      importance: 7.0
+      speaker: "user",
+      tags: ["web:frameworks:rails", "programming:ruby", "database:orm"]
     )
-
-    sleep 2
 
     topics = get_node_topics(node_id)
 
@@ -93,77 +66,72 @@ class OntologyTest < Minitest::Test
     end
 
     # Clean up
-    @htm.forget("ontology_test_002", confirm: :confirmed) rescue nil
+    delete_node(node_id)
   end
 
   def test_multiple_classification_paths
-    # Add a node that could be classified from multiple perspectives
-    node_id = @htm.add_node(
-      "ontology_test_003",
+    # Add a node with tags from multiple perspectives
+    node_id = @htm.add_message(
       "Machine learning models for database query optimization can improve performance by 30-50%",
-      type: :fact,
-      importance: 9.0
+      speaker: "user",
+      tags: ["ai:machine-learning:optimization", "database:performance:query-optimization", "performance:improvement"]
     )
-
-    sleep 2
 
     topics = get_node_topics(node_id)
 
     # Verify multiple topic hierarchies exist
     root_topics = topics.map { |t| t.split(':').first }.uniq
 
-    # Should have topics from multiple domains (e.g., 'database', 'ai', 'performance')
+    # Should have topics from multiple domains
     assert root_topics.length >= 2,
       "Should have multiple classification paths (got: #{root_topics.join(', ')})"
 
     # Clean up
-    @htm.forget("ontology_test_003", confirm: :confirmed) rescue nil
+    delete_node(node_id)
   end
 
-  def test_topic_extraction_on_update
-    # Add a node
-    node_id = @htm.add_node(
-      "ontology_test_004",
+  def test_manual_tag_updates
+    # Add a node with initial tags
+    node_id = @htm.add_message(
       "Initial content about Ruby programming",
-      type: :fact,
-      importance: 5.0
+      speaker: "user",
+      tags: ["programming:ruby", "language:interpreted"]
     )
 
-    sleep 2
     initial_topics = get_node_topics(node_id)
+    assert_includes initial_topics, "programming:ruby"
 
-    # Update the node's content to a completely different topic
-    update_node_value(node_id, "PostgreSQL database performance tuning")
+    # Manually update tags by deleting old ones and adding new ones
+    delete_node_tags(node_id)
+    add_node_tags(node_id, ["database:postgresql:performance", "optimization:query"])
 
-    sleep 2
     updated_topics = get_node_topics(node_id)
 
     # Topics should have changed
     refute_equal initial_topics.sort, updated_topics.sort,
-      "Topics should change when content changes"
+      "Topics should change when manually updated"
 
-    # New topics should relate to databases, not Ruby
-    all_topics = updated_topics.join(' ')
-    assert_match(/database|postgresql/i, all_topics,
-      "Updated topics should relate to new content")
+    # New topics should be present
+    assert_includes updated_topics, "database:postgresql:performance"
+    assert_includes updated_topics, "optimization:query"
+
+    # Old topics should be gone
+    refute_includes updated_topics, "programming:ruby"
 
     # Clean up
-    @htm.forget("ontology_test_004", confirm: :confirmed) rescue nil
+    delete_node(node_id)
   end
 
   def test_ontology_structure_view
-    # Add several nodes with related topics
+    # Add several nodes with related hierarchical tags
     nodes = []
     3.times do |i|
-      nodes << @htm.add_node(
-        "ontology_test_structure_#{i}",
+      nodes << @htm.add_message(
         "PostgreSQL database content number #{i}",
-        type: :fact,
-        importance: 5.0
+        speaker: "user",
+        tags: ["database:postgresql", "storage:relational"]
       )
     end
-
-    sleep 3
 
     # Query the ontology_structure view
     structure = query_ontology_structure
@@ -178,89 +146,77 @@ class OntologyTest < Minitest::Test
     assert first_row.key?('node_count'), "Should have node_count column"
 
     # Clean up
-    3.times do |i|
-      @htm.forget("ontology_test_structure_#{i}", confirm: :confirmed) rescue nil
-    end
+    nodes.each { |node_id| delete_node(node_id) }
   end
 
   def test_topic_uniqueness_per_node
-    # Add a node
-    node_id = @htm.add_node(
-      "ontology_test_005",
+    # Add a node with tags (database enforces uniqueness via UNIQUE constraint)
+    node_id = @htm.add_message(
       "Ruby programming language",
-      type: :fact,
-      importance: 5.0
+      speaker: "user",
+      tags: ["programming:ruby", "language:interpreted", "programming:ruby"]  # Duplicate intentionally
     )
-
-    sleep 2
 
     topics = get_node_topics(node_id)
     unique_topics = topics.uniq
 
-    # Verify no duplicate topics for this node
+    # Verify no duplicate topics for this node (database enforces this)
     assert_equal topics.length, unique_topics.length,
       "Should not have duplicate topics for a single node"
 
     # Clean up
-    @htm.forget("ontology_test_005", confirm: :confirmed) rescue nil
+    delete_node(node_id)
   end
 
-  def test_topic_extraction_handles_errors_gracefully
-    # This test verifies that node insertion doesn't fail even if topic extraction fails
-    # We can't easily force topic extraction to fail without breaking Ollama,
-    # but we can verify that node creation succeeds
-
-    node_id = @htm.add_node(
-      "ontology_test_006",
-      "Test content for error handling",
-      type: :fact,
-      importance: 5.0
+  def test_node_creation_without_tags
+    # Verify that node creation succeeds even without tags
+    node_id = @htm.add_message(
+      "Test content without tags",
+      speaker: "user"
     )
 
-    # Node should be created successfully regardless of topic extraction
+    # Node should be created successfully
     assert_instance_of Integer, node_id
-    assert @htm.retrieve("ontology_test_006"), "Node should exist in database"
+
+    topics = get_node_topics(node_id)
+    assert_empty topics, "Should have no topics when none provided"
 
     # Clean up
-    @htm.forget("ontology_test_006", confirm: :confirmed) rescue nil
+    delete_node(node_id)
   end
 
   def test_topic_depth_limit
-    # Add a node with very specific technical content
-    node_id = @htm.add_node(
-      "ontology_test_007",
+    # Add a node with deep hierarchy tags
+    node_id = @htm.add_message(
       "TimescaleDB continuous aggregates with real-time materialization for time-series analytics",
-      type: :fact,
-      importance: 8.0
+      speaker: "user",
+      tags: [
+        "database:timescaledb:features:continuous-aggregates",
+        "analytics:time-series:real-time"
+      ]
     )
-
-    sleep 2
 
     topics = get_node_topics(node_id)
 
-    # Verify topics don't exceed reasonable depth (max 5 levels as per migration)
+    # Verify topics don't exceed reasonable depth (max 5 levels)
     topics.each do |topic|
       levels = topic.split(':').length
       assert levels <= 5, "Topic '#{topic}' exceeds maximum depth of 5 (has #{levels} levels)"
     end
 
     # Clean up
-    @htm.forget("ontology_test_007", confirm: :confirmed) rescue nil
+    delete_node(node_id)
   end
 
   def test_topic_relationships_view
-    # Add multiple nodes with overlapping topics
+    # Add multiple nodes with overlapping tags
     nodes = []
-    ["PostgreSQL basics", "PostgreSQL advanced features", "Database design"].each_with_index do |content, i|
-      nodes << @htm.add_node(
-        "ontology_test_relations_#{i}",
-        content,
-        type: :fact,
-        importance: 5.0
-      )
-    end
-
-    sleep 3
+    nodes << @htm.add_message("PostgreSQL basics", speaker: "user",
+                              tags: ["database:postgresql", "sql:basics"])
+    nodes << @htm.add_message("PostgreSQL advanced features", speaker: "user",
+                              tags: ["database:postgresql", "sql:advanced"])
+    nodes << @htm.add_message("Database design", speaker: "user",
+                              tags: ["database:design", "architecture"])
 
     # Query topic relationships view
     relationships = query_topic_relationships
@@ -271,33 +227,33 @@ class OntologyTest < Minitest::Test
       assert first_rel.key?('topic1'), "Should have topic1 column"
       assert first_rel.key?('topic2'), "Should have topic2 column"
       assert first_rel.key?('shared_nodes'), "Should have shared_nodes column"
+
+      # Should show that database:postgresql co-occurs with sql:basics and sql:advanced
+      assert relationships.any? { |r|
+        (r['topic1'] == 'database:postgresql' || r['topic2'] == 'database:postgresql') &&
+        r['shared_nodes'].to_i >= 2
+      }, "Should have relationship for database:postgresql appearing in multiple nodes"
     end
 
     # Clean up
-    3.times do |i|
-      @htm.forget("ontology_test_relations_#{i}", confirm: :confirmed) rescue nil
-    end
+    nodes.each { |node_id| delete_node(node_id) }
   end
 
-  def test_empty_content_no_topics
-    # Add a node with minimal content
-    node_id = @htm.add_node(
-      "ontology_test_008",
-      "x",
-      type: :fact,
-      importance: 1.0
+  def test_empty_tag_array_no_topics
+    # Add a node with empty tags array
+    node_id = @htm.add_message(
+      "Content with empty tags array",
+      speaker: "user",
+      tags: []
     )
-
-    sleep 2
 
     topics = get_node_topics(node_id)
 
-    # LLM might extract topics even for minimal content, or might not
-    # Either way, node creation should succeed
-    assert_instance_of Integer, node_id
+    # Should have no topics
+    assert_empty topics, "Should have no topics with empty tags array"
 
     # Clean up
-    @htm.forget("ontology_test_008", confirm: :confirmed) rescue nil
+    delete_node(node_id)
   end
 
   private
@@ -313,13 +269,29 @@ class OntologyTest < Minitest::Test
     end
   end
 
-  # Helper method to update node value (triggers topic re-extraction)
-  def update_node_value(node_id, new_value)
+  # Helper method to delete a node by ID
+  def delete_node(node_id)
     @htm.long_term_memory.send(:with_connection) do |conn|
-      conn.exec_params(
-        "UPDATE nodes SET value = $1 WHERE id = $2",
-        [new_value, node_id]
-      )
+      conn.exec_params("DELETE FROM nodes WHERE id = $1", [node_id])
+    end
+  end
+
+  # Helper method to delete all tags for a node
+  def delete_node_tags(node_id)
+    @htm.long_term_memory.send(:with_connection) do |conn|
+      conn.exec_params("DELETE FROM tags WHERE node_id = $1", [node_id])
+    end
+  end
+
+  # Helper method to add tags to a node
+  def add_node_tags(node_id, tags)
+    @htm.long_term_memory.send(:with_connection) do |conn|
+      tags.each do |tag|
+        conn.exec_params(
+          "INSERT INTO tags (node_id, tag) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+          [node_id, tag]
+        )
+      end
     end
   end
 

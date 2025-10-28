@@ -2,6 +2,7 @@
 
 require_relative "htm/version"
 require_relative "htm/errors"
+require_relative "htm/active_record_config"
 require_relative "htm/database"
 require_relative "htm/long_term_memory"
 require_relative "htm/working_memory"
@@ -9,7 +10,6 @@ require_relative "htm/embedding_service"
 
 require "pg"
 require "pgvector"
-require "connection_pool"
 require "securerandom"
 require "uri"
 
@@ -80,6 +80,9 @@ class HTM
     db_cache_ttl: 300,
     embedding_cache_size: 1000
   )
+    # Establish ActiveRecord connection if not already connected
+    HTM::ActiveRecordConfig.establish_connection! unless HTM::ActiveRecordConfig.connected?
+
     @robot_id = robot_id || SecureRandom.uuid
     @robot_name = robot_name || "robot_#{@robot_id[0..7]}"
 
@@ -332,6 +335,7 @@ class HTM
   #
   def shutdown
     @long_term_memory.shutdown
+    HTM::ActiveRecordConfig.disconnect!
   end
 
   # Which robot discussed a topic?

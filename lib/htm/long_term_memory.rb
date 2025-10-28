@@ -3,7 +3,6 @@
 require 'pg'
 require 'pgvector'
 require 'json'
-require 'connection_pool'
 require 'lru_redux'
 require 'digest'
 
@@ -16,34 +15,23 @@ class HTM
   # - Time-range queries
   # - Relationship graphs
   # - Tag system
-  # - Connection pooling for efficiency
-  # - Query timeouts for reliability
+  # - ActiveRecord ORM for data access
+  # - Query result caching for efficiency
   #
   class LongTermMemory
-    DEFAULT_POOL_SIZE = 5
-    DEFAULT_POOL_TIMEOUT = 5  # seconds to wait for a connection from the pool
     DEFAULT_QUERY_TIMEOUT = 30_000  # milliseconds (30 seconds)
     MAX_VECTOR_DIMENSION = 2000  # Maximum supported dimension with HNSW index (pgvector limitation)
     DEFAULT_CACHE_SIZE = 1000  # Number of queries to cache
     DEFAULT_CACHE_TTL = 300    # Cache lifetime in seconds (5 minutes)
 
-    attr_reader :pool_size, :query_timeout
+    attr_reader :query_timeout
 
-    def initialize(config, pool_size: DEFAULT_POOL_SIZE, query_timeout: DEFAULT_QUERY_TIMEOUT, cache_size: DEFAULT_CACHE_SIZE, cache_ttl: DEFAULT_CACHE_TTL)
+    def initialize(config, pool_size: nil, query_timeout: DEFAULT_QUERY_TIMEOUT, cache_size: DEFAULT_CACHE_SIZE, cache_ttl: DEFAULT_CACHE_TTL)
       @config = config
-      raise "Database configuration required" unless @config
-
-      @pool_size = pool_size
       @query_timeout = query_timeout  # in milliseconds
 
-      # Create connection pool
-      @pool = ConnectionPool.new(size: @pool_size, timeout: DEFAULT_POOL_TIMEOUT) do
-        conn = PG.connect(@config)
-        # Set statement timeout for all queries on this connection
-        conn.exec("SET statement_timeout = #{@query_timeout}")
-
-        conn
-      end
+      # Set statement timeout for ActiveRecord queries
+      ActiveRecord::Base.connection.execute("SET statement_timeout = #{@query_timeout}")
 
       # Initialize query result cache (disable with cache_size: 0)
       if cache_size > 0
@@ -67,44 +55,35 @@ class HTM
     # @return [Integer] Node database ID
     #
     def add(content:, speaker:, type: nil, category: nil, importance: 1.0, token_count: 0, robot_id:, embedding: nil)
-      # Insert node with optional embedding
-      node_id = with_connection do |conn|
-        if embedding
-          # Pad embedding to 2000 dimensions if needed (migration 001 sets vector(2000))
-          actual_dimension = embedding.length
-          if actual_dimension < 2000
-            padded_embedding = embedding + Array.new(2000 - actual_dimension, 0.0)
-          else
-            padded_embedding = embedding
-          end
-
-          # Convert embedding array to PostgreSQL vector format
-          embedding_str = "[#{padded_embedding.join(',')}]"
-          result = conn.exec_params(
-            <<~SQL,
-              INSERT INTO nodes (content, speaker, type, category, importance, token_count, robot_id, embedding, embedding_dimension)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8::vector, $9)
-              RETURNING id
-            SQL
-            [content, speaker, type, category, importance, token_count, robot_id, embedding_str, actual_dimension]
-          )
+      # Prepare embedding if provided
+      if embedding
+        # Pad embedding to 2000 dimensions if needed
+        actual_dimension = embedding.length
+        if actual_dimension < 2000
+          padded_embedding = embedding + Array.new(2000 - actual_dimension, 0.0)
         else
-          result = conn.exec_params(
-            <<~SQL,
-              INSERT INTO nodes (content, speaker, type, category, importance, token_count, robot_id)
-              VALUES ($1, $2, $3, $4, $5, $6, $7)
-              RETURNING id
-            SQL
-            [content, speaker, type, category, importance, token_count, robot_id]
-          )
+          padded_embedding = embedding
         end
-        result.first['id'].to_i
+        embedding_str = "[#{padded_embedding.join(',')}]"
       end
+
+      # Create node using ActiveRecord
+      node = HTM::Models::Node.create!(
+        content: content,
+        speaker: speaker,
+        type: type,
+        category: category,
+        importance: importance,
+        token_count: token_count,
+        robot_id: robot_id,
+        embedding: embedding ? embedding_str : nil,
+        embedding_dimension: embedding ? embedding.length : nil
+      )
 
       # Invalidate cache since database content changed
       invalidate_cache!
 
-      node_id
+      node.id
     end
 
     # Retrieve a node by ID
@@ -113,10 +92,10 @@ class HTM
     # @return [Hash, nil] Node data or nil
     #
     def retrieve(node_id)
-      with_connection do |conn|
-        result = conn.exec_params("SELECT * FROM nodes WHERE id = $1", [node_id])
-        result.first
-      end
+      node = HTM::Models::Node.find_by(id: node_id)
+      return nil unless node
+
+      node.attributes
     end
 
     # Update last_accessed timestamp
@@ -125,12 +104,8 @@ class HTM
     # @return [void]
     #
     def update_last_accessed(node_id)
-      with_connection do |conn|
-        conn.exec_params(
-          "UPDATE nodes SET last_accessed = CURRENT_TIMESTAMP WHERE id = $1",
-          [node_id]
-        )
-      end
+      node = HTM::Models::Node.find_by(id: node_id)
+      node&.update(last_accessed: Time.current)
     end
 
     # Delete a node
@@ -139,9 +114,8 @@ class HTM
     # @return [void]
     #
     def delete(node_id)
-      with_connection do |conn|
-        conn.exec_params("DELETE FROM nodes WHERE id = $1", [node_id])
-      end
+      node = HTM::Models::Node.find_by(id: node_id)
+      node&.destroy
 
       # Invalidate cache since database content changed
       invalidate_cache!
@@ -153,10 +127,7 @@ class HTM
     # @return [Boolean] True if node exists
     #
     def exists?(node_id)
-      with_connection do |conn|
-        result = conn.exec_params("SELECT 1 FROM nodes WHERE id = $1", [node_id])
-        !result.first.nil?
-      end
+      HTM::Models::Node.exists?(node_id)
     end
 
     # Vector similarity search
@@ -261,16 +232,14 @@ class HTM
     # @return [void]
     #
     def add_relationship(from:, to:, type: nil, strength: 1.0)
-      with_connection do |conn|
-        conn.exec_params(
-          <<~SQL,
-            INSERT INTO relationships (from_node_id, to_node_id, relationship_type, strength)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (from_node_id, to_node_id, relationship_type) DO NOTHING
-          SQL
-          [from, to, type, strength]
-        )
-      end
+      HTM::Models::Relationship.create(
+        from_node_id: from,
+        to_node_id: to,
+        relationship_type: type,
+        strength: strength
+      )
+    rescue ActiveRecord::RecordNotUnique
+      # Relationship already exists, ignore
     end
 
     # Add a tag to a node
@@ -280,12 +249,12 @@ class HTM
     # @return [void]
     #
     def add_tag(node_id:, tag:)
-      with_connection do |conn|
-        conn.exec_params(
-          "INSERT INTO tags (node_id, tag) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-          [node_id, tag]
-        )
-      end
+      HTM::Models::Tag.create(
+        node_id: node_id,
+        tag: tag
+      )
+    rescue ActiveRecord::RecordNotUnique
+      # Tag already exists, ignore
     end
 
     # Mark nodes as evicted from working memory
@@ -296,12 +265,7 @@ class HTM
     def mark_evicted(node_ids)
       return if node_ids.empty?
 
-      with_connection do |conn|
-        conn.exec_params(
-          "UPDATE nodes SET in_working_memory = FALSE WHERE id = ANY($1::bigint[])",
-          [node_ids]
-        )
-      end
+      HTM::Models::Node.where(id: node_ids).update_all(in_working_memory: false)
     end
 
     # Register a robot
@@ -311,16 +275,10 @@ class HTM
     # @return [void]
     #
     def register_robot(robot_id, robot_name)
-      with_connection do |conn|
-        conn.exec_params(
-          <<~SQL,
-            INSERT INTO robots (id, name)
-            VALUES ($1, $2)
-            ON CONFLICT (id) DO UPDATE SET name = $2, last_active = CURRENT_TIMESTAMP
-          SQL
-          [robot_id, robot_name]
-        )
-      end
+      robot = HTM::Models::Robot.find_or_initialize_by(id: robot_id)
+      robot.name = robot_name
+      robot.last_active = Time.current
+      robot.save!
     end
 
     # Update robot activity timestamp
@@ -329,12 +287,8 @@ class HTM
     # @return [void]
     #
     def update_robot_activity(robot_id)
-      with_connection do |conn|
-        conn.exec_params(
-          "UPDATE robots SET last_active = CURRENT_TIMESTAMP WHERE id = $1",
-          [robot_id]
-        )
-      end
+      robot = HTM::Models::Robot.find_by(id: robot_id)
+      robot&.update(last_active: Time.current)
     end
 
     # Log an operation
@@ -346,12 +300,12 @@ class HTM
     # @return [void]
     #
     def log_operation(operation:, node_id:, robot_id:, details:)
-      with_connection do |conn|
-        conn.exec_params(
-          "INSERT INTO operations_log (operation, node_id, robot_id, details) VALUES ($1, $2, $3, $4)",
-          [operation, node_id, robot_id, details.to_json]
-        )
-      end
+      HTM::Models::OperationLog.create(
+        operation: operation,
+        node_id: node_id,
+        robot_id: robot_id,
+        details: details.to_json
+      )
     end
 
     # Get memory statistics
@@ -359,22 +313,18 @@ class HTM
     # @return [Hash] Statistics
     #
     def stats
-      base_stats = with_connection do |conn|
-        {
-          total_nodes: conn.exec("SELECT COUNT(*) FROM nodes").first['count'].to_i,
-          nodes_by_robot: conn.exec(
-            "SELECT robot_id, COUNT(*) as count FROM nodes GROUP BY robot_id"
-          ).to_a.map { |r| [r['robot_id'], r['count'].to_i] }.to_h,
-          nodes_by_type: conn.exec("SELECT * FROM node_stats").to_a,
-          total_relationships: conn.exec("SELECT COUNT(*) FROM relationships").first['count'].to_i,
-          total_tags: conn.exec("SELECT COUNT(*) FROM tags").first['count'].to_i,
-          oldest_memory: conn.exec("SELECT MIN(created_at) FROM nodes").first['min'],
-          newest_memory: conn.exec("SELECT MAX(created_at) FROM nodes").first['max'],
-          active_robots: conn.exec("SELECT COUNT(*) FROM robots").first['count'].to_i,
-          robot_activity: conn.exec("SELECT * FROM robot_activity").to_a,
-          database_size: conn.exec("SELECT pg_database_size(current_database())").first['pg_database_size'].to_i
-        }
-      end
+      base_stats = {
+        total_nodes: HTM::Models::Node.count,
+        nodes_by_robot: HTM::Models::Node.group(:robot_id).count,
+        nodes_by_type: HTM::Models::Node.group(:type).count,
+        total_relationships: HTM::Models::Relationship.count,
+        total_tags: HTM::Models::Tag.count,
+        oldest_memory: HTM::Models::Node.minimum(:created_at),
+        newest_memory: HTM::Models::Node.maximum(:created_at),
+        active_robots: HTM::Models::Robot.count,
+        robot_activity: HTM::Models::Robot.select(:id, :name, :last_active).map(&:attributes),
+        database_size: ActiveRecord::Base.connection.select_value("SELECT pg_database_size(current_database())").to_i
+      }
 
       # Include cache statistics if cache is enabled
       if @query_cache
@@ -384,10 +334,15 @@ class HTM
       base_stats
     end
 
-    # Shutdown the connection pool
-    # Call this when shutting down the application
+    # Shutdown - no-op with ActiveRecord (connection pool managed by ActiveRecord)
     def shutdown
-      @pool.shutdown { |conn| conn.close }
+      # ActiveRecord handles connection pool shutdown
+      # This method kept for API compatibility
+    end
+
+    # For backwards compatibility with tests/code that expect pool_size
+    def pool_size
+      ActiveRecord::Base.connection_pool.size
     end
 
     # Retrieve nodes by ontological topic
@@ -398,34 +353,23 @@ class HTM
     # @return [Array<Hash>] Matching nodes
     #
     def nodes_by_topic(topic_path, exact: false, limit: 50)
-      with_connection do |conn|
-        if exact
-          result = conn.exec_params(
-            <<~SQL,
-              SELECT DISTINCT n.*
-              FROM nodes n
-              JOIN tags t ON t.node_id = n.id
-              WHERE t.tag = $1
-              ORDER BY n.created_at DESC
-              LIMIT $2
-            SQL
-            [topic_path, limit]
-          )
-        else
-          result = conn.exec_params(
-            <<~SQL,
-              SELECT DISTINCT n.*
-              FROM nodes n
-              JOIN tags t ON t.node_id = n.id
-              WHERE t.tag LIKE $1
-              ORDER BY n.created_at DESC
-              LIMIT $2
-            SQL
-            ["#{topic_path}%", limit]
-          )
-        end
-        result.to_a
+      if exact
+        nodes = HTM::Models::Node
+          .joins(:tags)
+          .where(tags: { tag: topic_path })
+          .distinct
+          .order(created_at: :desc)
+          .limit(limit)
+      else
+        nodes = HTM::Models::Node
+          .joins(:tags)
+          .where("tags.tag LIKE ?", "#{topic_path}%")
+          .distinct
+          .order(created_at: :desc)
+          .limit(limit)
       end
+
+      nodes.map(&:attributes)
     end
 
     # Get ontology structure view
@@ -433,10 +377,10 @@ class HTM
     # @return [Array<Hash>] Ontology structure
     #
     def ontology_structure
-      with_connection do |conn|
-        result = conn.exec("SELECT * FROM ontology_structure WHERE root_topic IS NOT NULL ORDER BY root_topic, level1_topic, level2_topic")
-        result.to_a
-      end
+      result = ActiveRecord::Base.connection.select_all(
+        "SELECT * FROM ontology_structure WHERE root_topic IS NOT NULL ORDER BY root_topic, level1_topic, level2_topic"
+      )
+      result.to_a
     end
 
     # Get topic relationships (co-occurrence)
@@ -446,21 +390,18 @@ class HTM
     # @return [Array<Hash>] Topic relationships
     #
     def topic_relationships(min_shared_nodes: 2, limit: 50)
-      with_connection do |conn|
-        result = conn.exec_params(
-          <<~SQL,
-            SELECT t1.tag AS topic1, t2.tag AS topic2, COUNT(DISTINCT t1.node_id) AS shared_nodes
-            FROM tags t1
-            JOIN tags t2 ON t1.node_id = t2.node_id AND t1.tag < t2.tag
-            GROUP BY t1.tag, t2.tag
-            HAVING COUNT(DISTINCT t1.node_id) >= $1
-            ORDER BY shared_nodes DESC
-            LIMIT $2
-          SQL
-          [min_shared_nodes, limit]
-        )
-        result.to_a
-      end
+      result = ActiveRecord::Base.connection.select_all(
+        <<~SQL,
+          SELECT t1.tag AS topic1, t2.tag AS topic2, COUNT(DISTINCT t1.node_id) AS shared_nodes
+          FROM tags t1
+          JOIN tags t2 ON t1.node_id = t2.node_id AND t1.tag < t2.tag
+          GROUP BY t1.tag, t2.tag
+          HAVING COUNT(DISTINCT t1.node_id) >= #{min_shared_nodes.to_i}
+          ORDER BY shared_nodes DESC
+          LIMIT #{limit.to_i}
+        SQL
+      )
+      result.to_a
     end
 
     # Get topics for a specific node
@@ -469,13 +410,7 @@ class HTM
     # @return [Array<String>] Topic paths
     #
     def node_topics(node_id)
-      with_connection do |conn|
-        result = conn.exec_params(
-          "SELECT tag FROM tags WHERE node_id = $1 ORDER BY tag",
-          [node_id]
-        )
-        result.map { |row| row['tag'] }
-      end
+      HTM::Models::Tag.where(node_id: node_id).order(:tag).pluck(:tag)
     end
 
     private
@@ -549,21 +484,18 @@ class HTM
       # Convert to PostgreSQL vector format
       embedding_str = "[#{query_embedding.join(',')}]"
 
-      with_connection do |conn|
-        result = conn.exec_params(
-          <<~SQL,
-            SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
-                   1 - (embedding <=> $1::vector) as similarity
-            FROM nodes
-            WHERE created_at BETWEEN $2 AND $3
-            AND embedding IS NOT NULL
-            ORDER BY embedding <=> $1::vector
-            LIMIT $4
-          SQL
-          [embedding_str, timeframe.begin, timeframe.end, limit]
-        )
-        result.to_a
-      end
+      result = ActiveRecord::Base.connection.select_all(
+        <<~SQL,
+          SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
+                 1 - (embedding <=> '#{embedding_str}'::vector) as similarity
+          FROM nodes
+          WHERE created_at BETWEEN '#{timeframe.begin.iso8601}' AND '#{timeframe.end.iso8601}'
+          AND embedding IS NOT NULL
+          ORDER BY embedding <=> '#{embedding_str}'::vector
+          LIMIT #{limit.to_i}
+        SQL
+      )
+      result.to_a
     end
 
     # Uncached full-text search
@@ -574,21 +506,21 @@ class HTM
     # @return [Array<Hash>] Matching nodes
     #
     def search_fulltext_uncached(timeframe:, query:, limit:)
-      with_connection do |conn|
-        result = conn.exec_params(
+      result = ActiveRecord::Base.connection.select_all(
+        ActiveRecord::Base.sanitize_sql_array([
           <<~SQL,
             SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
-                   ts_rank(to_tsvector('english', content), plainto_tsquery('english', $1)) as rank
+                   ts_rank(to_tsvector('english', content), plainto_tsquery('english', ?)) as rank
             FROM nodes
-            WHERE created_at BETWEEN $2 AND $3
-            AND to_tsvector('english', content) @@ plainto_tsquery('english', $1)
+            WHERE created_at BETWEEN ? AND ?
+            AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
             ORDER BY rank DESC
-            LIMIT $4
+            LIMIT ?
           SQL
-          [query, timeframe.begin, timeframe.end, limit]
-        )
-        result.to_a
-      end
+          query, timeframe.begin, timeframe.end, query, limit
+        ])
+      )
+      result.to_a
     end
 
     # Uncached hybrid search
@@ -615,44 +547,27 @@ class HTM
       # Convert to PostgreSQL vector format
       embedding_str = "[#{query_embedding.join(',')}]"
 
-      with_connection do |conn|
-        result = conn.exec_params(
+      result = ActiveRecord::Base.connection.select_all(
+        ActiveRecord::Base.sanitize_sql_array([
           <<~SQL,
             WITH candidates AS (
               SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count, embedding
               FROM nodes
-              WHERE created_at BETWEEN $2 AND $3
-              AND to_tsvector('english', content) @@ plainto_tsquery('english', $4)
+              WHERE created_at BETWEEN ? AND ?
+              AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
               AND embedding IS NOT NULL
-              LIMIT $5
+              LIMIT ?
             )
             SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
-                   1 - (embedding <=> $1::vector) as similarity
+                   1 - (embedding <=> '#{embedding_str}'::vector) as similarity
             FROM candidates
-            ORDER BY embedding <=> $1::vector
-            LIMIT $6
+            ORDER BY embedding <=> '#{embedding_str}'::vector
+            LIMIT ?
           SQL
-          [embedding_str, timeframe.begin, timeframe.end, query, prefilter_limit, limit]
-        )
-        result.to_a
-      end
-    end
-
-    def with_connection
-      @pool.with do |conn|
-        # Pgvector is automatically available after requiring 'pgvector'
-        # No explicit registration needed
-        yield(conn)
-      end
-    rescue PG::QueryCanceled => e
-      # Query timeout exceeded
-      raise HTM::QueryTimeoutError, "Database query exceeded timeout of #{@query_timeout}ms: #{e.message}"
-    rescue PG::ConnectionBad, PG::UnableToSend => e
-      # Connection issues
-      raise HTM::DatabaseError, "Database connection error: #{e.message}"
-    rescue PG::Error => e
-      # Other PostgreSQL errors
-      raise HTM::DatabaseError, "Database error: #{e.message}"
+          timeframe.begin, timeframe.end, query, prefilter_limit, limit
+        ])
+      )
+      result.to_a
     end
   end
 end

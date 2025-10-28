@@ -4,8 +4,19 @@ require "test_helper"
 
 # Integration tests for ontology + vector embeddings
 # Tests the complementary nature of symbolic (tags) and sub-symbolic (embeddings) retrieval
+#
+# NOTE: These tests are currently DISABLED as they expect automatic LLM-driven topic extraction,
+# which was removed in ADR-012 reversal (2025-10-27). The system now uses manual tag assignment.
+# These tests need to be rewritten to:
+# 1. Use `add_message` with explicit `tags:` parameter instead of expecting automatic extraction
+# 2. Remove all `sleep` calls waiting for LLM extraction
+# 3. Update assertions to expect manually-assigned hierarchical tags
+#
+# See test/ontology_test.rb for examples of updated tests using manual tags.
 class OntologyIntegrationTest < Minitest::Test
   def setup
+    skip "These integration tests need to be updated for manual tag assignment (ADR-012 reversal). See class comment for details."
+
     unless ENV['HTM_DBURL']
       skip "Database not configured. Set HTM_DBURL to run integration tests."
     end
