@@ -14,15 +14,15 @@ class HTM
       validates :operation, presence: true
 
       # Callbacks
-      before_create :set_created_at
+      before_create :set_timestamp
 
       # Scopes
       scope :by_robot, ->(robot_id) { where(robot_id: robot_id) }
       scope :by_operation, ->(operation) { where(operation: operation) }
-      scope :recent, -> { order(created_at: :desc) }
-      scope :in_timeframe, ->(start_time, end_time) { where(created_at: start_time..end_time) }
-      scope :today, -> { where('created_at >= ?', Time.current.beginning_of_day) }
-      scope :this_week, -> { where('created_at >= ?', Time.current.beginning_of_week) }
+      scope :recent, -> { order(timestamp: :desc) }
+      scope :in_timeframe, ->(start_time, end_time) { where(timestamp: start_time..end_time) }
+      scope :today, -> { where('timestamp >= ?', Time.current.beginning_of_day) }
+      scope :this_week, -> { where('timestamp >= ?', Time.current.beginning_of_week) }
 
       # Class methods
       def self.log_operation(robot_id:, operation:, details: {})
@@ -52,8 +52,8 @@ class HTM
 
       private
 
-      def set_created_at
-        self.created_at ||= Time.current
+      def set_timestamp
+        self.timestamp ||= Time.current
       end
     end
   end

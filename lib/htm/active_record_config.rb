@@ -69,7 +69,6 @@ class HTM
         conn = ActiveRecord::Base.connection
 
         required_extensions = {
-          'timescaledb' => 'TimescaleDB extension',
           'vector' => 'pgvector extension',
           'pg_trgm' => 'PostgreSQL trigram extension'
         }

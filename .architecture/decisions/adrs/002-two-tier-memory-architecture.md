@@ -6,6 +6,18 @@
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
 
+---
+
+## ⚠️ UPDATE (2025-10-28)
+
+**References to TimescaleDB in this ADR are now historical.**
+
+After initial struggles with database configuration, the decision was made to drop the TimescaleDB extension as it was not providing sufficient value for the current proof-of-concept applications. The two-tier architecture remains unchanged, but long-term memory now uses **standard PostgreSQL** instead of PostgreSQL + TimescaleDB.
+
+See [ADR-001](001-use-postgresql-timescaledb-storage.md) for details on the TimescaleDB removal.
+
+---
+
 ## Context
 
 LLM-based applications ("robots") face a fundamental challenge: LLMs have limited context windows (typically 128K-200K tokens) but need to maintain awareness across long conversations and sessions spanning days, weeks, or months.

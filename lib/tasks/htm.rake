@@ -64,14 +64,6 @@ namespace :htm do
         require 'pg'
         conn = PG.connect(config)
 
-        # Check TimescaleDB
-        timescale = conn.exec("SELECT extversion FROM pg_extension WHERE extname='timescaledb'").first
-        if timescale
-          puts "  ✓ TimescaleDB version: #{timescale['extversion']}"
-        else
-          puts "  ⚠ Warning: TimescaleDB extension not found"
-        end
-
         # Check pgvector
         pgvector = conn.exec("SELECT extversion FROM pg_extension WHERE extname='vector'").first
         if pgvector

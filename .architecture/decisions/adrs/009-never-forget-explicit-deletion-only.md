@@ -6,6 +6,18 @@
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
 
+---
+
+## ⚠️ UPDATE (2025-10-28)
+
+**References to TimescaleDB compression in this ADR are now historical.**
+
+After initial struggles with database configuration, the decision was made to drop the TimescaleDB extension as it was not providing sufficient value for the current proof-of-concept applications. The never-forget philosophy remains unchanged, but storage growth is now managed through standard PostgreSQL archival strategies instead of TimescaleDB compression policies.
+
+See [ADR-001](001-use-postgresql-timescaledb-storage.md) for details on the TimescaleDB removal.
+
+---
+
 ## Context
 
 Traditional memory systems for LLMs face a critical design decision: when should memories be deleted?

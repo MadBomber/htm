@@ -26,6 +26,8 @@ The pgai extension consistently failed with Python environment and dependency is
 
 **Current Implementation**: HTM now generates embeddings client-side using the `EmbeddingService` class before inserting into the database. The 10-20% performance advantage of database-side generation is outweighed by the operational simplicity and reliability of client-side generation.
 
+**Related Change (2025-10-28)**: The TimescaleDB extension was also removed from HTM as it was not providing sufficient value. See [ADR-001](001-use-postgresql-timescaledb-storage.md) for details.
+
 See the reversal implementation in commit history (2025-10-27).
 
 ---

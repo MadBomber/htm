@@ -6,6 +6,18 @@
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
 
+---
+
+## ⚠️ UPDATE (2025-10-28)
+
+**No changes to this ADR's implementation.**
+
+After initial struggles with database configuration, the decision was made to drop the TimescaleDB extension as it was not providing sufficient value for the current proof-of-concept applications. Context assembly strategies are unaffected as they operate on working memory, not the database layer.
+
+See [ADR-001](001-use-postgresql-timescaledb-storage.md) for details on the TimescaleDB removal.
+
+---
+
 ## Context
 
 When preparing context for an LLM, working memory may contain more information than can fit within token limits. HTM needs to intelligently select which memories to include in the assembled context string.

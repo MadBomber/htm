@@ -17,15 +17,12 @@ class HTM
       before_create :set_created_at
 
       # Scopes
-      scope :active, -> { where(active: true) }
       scope :recent, -> { order(created_at: :desc) }
       scope :by_name, ->(name) { where(name: name) }
 
       # Class methods
       def self.find_or_create_by_name(robot_name)
-        find_or_create_by(name: robot_name) do |robot|
-          robot.active = true
-        end
+        find_or_create_by(name: robot_name)
       end
 
       # Instance methods
@@ -50,7 +47,6 @@ class HTM
 
       def set_created_at
         self.created_at ||= Time.current
-        self.active = true if active.nil?
       end
     end
   end

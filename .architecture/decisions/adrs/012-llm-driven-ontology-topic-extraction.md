@@ -24,6 +24,8 @@
 
 **Future Consideration**: Client-side LLM topic extraction may be implemented in the future, but the database-side approach proved impractical due to pgai installation issues (see ADR-011 reversal).
 
+**Related Change (2025-10-28)**: The TimescaleDB extension was also removed from HTM as it was not providing sufficient value for proof-of-concept applications. See [ADR-001](001-use-postgresql-timescaledb-storage.md) for details.
+
 ---
 
 ## Original Quick Summary (Historical)

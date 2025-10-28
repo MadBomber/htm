@@ -6,6 +6,18 @@
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
 
+---
+
+## ⚠️ UPDATE (2025-10-28)
+
+**References to TimescaleDB optimization in this ADR are now historical.**
+
+After initial struggles with database configuration, the decision was made to drop the TimescaleDB extension as it was not providing sufficient value for the current proof-of-concept applications. The RAG-based retrieval strategies remain unchanged, but temporal filtering now uses standard PostgreSQL B-tree indexes instead of TimescaleDB hypertable partitioning.
+
+See [ADR-001](001-use-postgresql-timescaledb-storage.md) for details on the TimescaleDB removal.
+
+---
+
 ## Context
 
 Traditional memory systems for LLMs face challenges in retrieving relevant information:

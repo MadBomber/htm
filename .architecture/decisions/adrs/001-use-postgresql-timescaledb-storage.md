@@ -1,10 +1,32 @@
 # ADR-001: Use PostgreSQL with TimescaleDB for Storage
 
-**Status**: Accepted
+**Status**: ~~Accepted~~ **SUPERSEDED** (2025-10-28)
 
 **Date**: 2025-10-25
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
+
+---
+
+## ⚠️ DECISION UPDATE (2025-10-28)
+
+**TimescaleDB extension has been removed from HTM.**
+
+**Reason**: After initial struggles with database configuration and practical usage, the decision was made to drop the TimescaleDB extension as it was not providing sufficient value for the current proof-of-concept applications.
+
+**Key findings**:
+- No hypertables were actually created in the implementation (the `setup_hypertables` method was essentially a no-op)
+- Time-range queries use standard PostgreSQL B-tree indexes on timestamp columns, not TimescaleDB-specific optimizations
+- No compression policies were configured or used
+- The extension added deployment complexity without delivering measurable benefits
+
+**Current Implementation**: HTM now uses **standard PostgreSQL 12+** with only the following extensions:
+- `vector` (pgvector) - for embedding similarity search
+- `pg_trgm` - for fuzzy text matching
+
+No functionality was lost in the removal, as TimescaleDB features were never actually utilized despite being documented.
+
+---
 
 ## Context
 

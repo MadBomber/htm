@@ -6,7 +6,7 @@ require 'set'
 
 class HTM
   # Database setup and configuration for HTM
-  # Handles schema creation and TimescaleDB hypertable setup
+  # Handles schema creation and database initialization
   class Database
     class << self
       # Set up the HTM database schema
@@ -26,17 +26,6 @@ class HTM
         if run_migrations
           puts "Running ActiveRecord migrations..."
           run_activerecord_migrations
-        end
-
-        # Convert tables to hypertables for time-series optimization (if TimescaleDB available)
-        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
-        if config
-          conn = PG.connect(config)
-          begin
-            setup_hypertables(conn)
-          ensure
-            conn.close
-          end
         end
 
         puts "✓ HTM database schema created successfully"
@@ -339,14 +328,6 @@ class HTM
       private
 
       def verify_extensions(conn)
-        # Check TimescaleDB
-        timescale = conn.exec("SELECT extversion FROM pg_extension WHERE extname='timescaledb'").first
-        if timescale
-          puts "✓ TimescaleDB version: #{timescale['extversion']}"
-        else
-          puts "⚠ Warning: TimescaleDB extension not found"
-        end
-
         # Check pgvector
         pgvector = conn.exec("SELECT extversion FROM pg_extension WHERE extname='vector'").first
         if pgvector
@@ -428,13 +409,6 @@ class HTM
       # Old methods removed - now using ActiveRecord migrations
       # def run_schema(conn) - REMOVED
       # def run_migrations_if_needed(conn) - REMOVED (see run_activerecord_migrations above)
-
-      def setup_hypertables(conn)
-        # All tables use simple PRIMARY KEY (id), no hypertable conversions
-        # Time-range queries use indexed timestamp columns:
-        # - nodes: indexed created_at column
-        # - operations_log: indexed timestamp column
-      end
     end
   end
 end
