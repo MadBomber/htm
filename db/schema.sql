@@ -659,20 +659,6 @@ CREATE INDEX idx_tags_tag_pattern ON public.tags USING btree (tag text_pattern_o
 CREATE UNIQUE INDEX idx_tags_unique ON public.tags USING btree (node_id, tag);
 
 --
--- Name: relationships fk_rails_4c92229411; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.relationships
-    ADD CONSTRAINT fk_rails_4c92229411 FOREIGN KEY (from_node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
-
---
--- Name: relationships fk_rails_b2829edeb4; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.relationships
-    ADD CONSTRAINT fk_rails_b2829edeb4 FOREIGN KEY (to_node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
-
---
 -- Name: tags fk_rails_c2bba39827; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -683,4 +669,4 @@ ALTER TABLE ONLY public.tags
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JiI8S8ppMD7lqaTkW7KwT2KgCM27FnUeGIpLodtTR4G8w3d2mbiVl6AFScJO1z3
+\unrestrict 2QwzilO33ZZqvHghcWKJCqTvuby7klgtmNFggsQmpeNDXGDQabWVffeH6aqG8fp

@@ -332,6 +332,73 @@ class HTM
         puts "✓ Schema loaded successfully"
       end
 
+      # Generate database documentation using tbls
+      #
+      # Creates comprehensive database documentation in dbdoc/ directory including:
+      # - Entity-relationship diagrams
+      # - Table schemas with comments
+      # - Index information
+      # - Relationship diagrams
+      #
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @return [void]
+      #
+      def generate_docs(db_url = nil)
+        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        raise "Database configuration not found" unless config
+
+        dbdoc_dir = File.expand_path('../../dbdoc', __dir__)
+
+        puts "Generating database documentation in #{dbdoc_dir}..."
+
+        # Create dbdoc directory if it doesn't exist
+        Dir.mkdir(dbdoc_dir) unless Dir.exist?(dbdoc_dir)
+
+        # Build PostgreSQL connection string for tbls
+        pg_url = if config[:password]
+          "postgresql://#{config[:user]}:#{config[:password]}@#{config[:host]}:#{config[:port]}/#{config[:dbname]}?sslmode=#{config[:sslmode] || 'prefer'}"
+        else
+          "postgresql://#{config[:user]}@#{config[:host]}:#{config[:port]}/#{config[:dbname]}?sslmode=#{config[:sslmode] || 'prefer'}"
+        end
+
+        # Check if tbls is installed
+        unless system('which tbls > /dev/null 2>&1')
+          puts "✗ Error: 'tbls' is not installed"
+          puts ""
+          puts "Install tbls:"
+          puts "  brew install k1LoW/tap/tbls"
+          puts "  # or"
+          puts "  go install github.com/k1LoW/tbls@latest"
+          puts ""
+          puts "See: https://github.com/k1LoW/tbls"
+          exit 1
+        end
+
+        # Run tbls doc command with --force to allow updates
+        require 'open3'
+        cmd = ['tbls', 'doc', '--force', pg_url, dbdoc_dir]
+
+        stdout, stderr, status = Open3.capture3(*cmd)
+
+        unless status.success?
+          puts "✗ Error generating documentation:"
+          puts stderr
+          puts stdout
+          exit 1
+        end
+
+        puts stdout if stdout && !stdout.empty?
+        puts "✓ Database documentation generated successfully"
+        puts ""
+        puts "Documentation files:"
+        puts "  #{dbdoc_dir}/README.md       - Main documentation"
+        puts "  #{dbdoc_dir}/schema.svg      - ER diagram (if generated)"
+        puts "  #{dbdoc_dir}/*.md            - Individual table documentation"
+        puts ""
+        puts "View documentation:"
+        puts "  open #{dbdoc_dir}/README.md"
+      end
+
       # Show database info
       #
       # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)

@@ -47,7 +47,17 @@ namespace :htm do
     end
 
     desc "Drop and recreate database (WARNING: destructive!)"
-    task :reset => [:drop, :setup]
+    task :reset do
+      require 'htm'
+      print "Are you sure you want to drop all tables? This cannot be undone! (yes/no): "
+      response = STDIN.gets.chomp
+      if response.downcase == 'yes'
+        HTM::Database.drop
+        HTM::Database.setup(dump_schema: true)
+      else
+        puts "Cancelled."
+      end
+    end
 
     desc "Test database connection"
     task :test do
@@ -117,6 +127,12 @@ namespace :htm do
         require 'htm'
         HTM::Database.load_schema
       end
+    end
+
+    desc "Generate/update database documentation in dbdoc/"
+    task :doc do
+      require 'htm'
+      HTM::Database.generate_docs
     end
   end
 end
