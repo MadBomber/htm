@@ -11,14 +11,19 @@ class CreateRelationships < ActiveRecord::Migration[7.1]
         t.timestamptz :created_at, default: -> { 'CURRENT_TIMESTAMP' }, comment: 'When this relationship was created'
       end
 
-      add_foreign_key :relationships, :nodes, column: :from_node_id, on_delete: :cascade
-      add_foreign_key :relationships, :nodes, column: :to_node_id, on_delete: :cascade
-
       add_index :relationships, [:from_node_id, :to_node_id, :relationship_type],
                 unique: true,
                 name: 'idx_relationships_unique'
       add_index :relationships, :from_node_id, name: 'idx_relationships_from'
       add_index :relationships, :to_node_id, name: 'idx_relationships_to'
+    end
+
+    # Foreign keys (outside table_exists check so they get added even if table already exists)
+    unless foreign_key_exists?(:relationships, :nodes, column: :from_node_id)
+      add_foreign_key :relationships, :nodes, column: :from_node_id, on_delete: :cascade
+    end
+    unless foreign_key_exists?(:relationships, :nodes, column: :to_node_id)
+      add_foreign_key :relationships, :nodes, column: :to_node_id, on_delete: :cascade
     end
   end
 end

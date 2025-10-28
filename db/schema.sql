@@ -599,6 +599,12 @@ CREATE INDEX idx_nodes_type ON public.nodes USING btree (type);
 CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at);
 
 --
+-- Name: idx_operations_log_node_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_operations_log_node_id ON public.operations_log USING btree (node_id);
+
+--
 -- Name: idx_operations_log_operation; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -659,6 +665,34 @@ CREATE INDEX idx_tags_tag_pattern ON public.tags USING btree (tag text_pattern_o
 CREATE UNIQUE INDEX idx_tags_unique ON public.tags USING btree (node_id, tag);
 
 --
+-- Name: relationships fk_rails_4c92229411; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.relationships
+    ADD CONSTRAINT fk_rails_4c92229411 FOREIGN KEY (from_node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+
+--
+-- Name: nodes fk_rails_60162e9d3a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.nodes
+    ADD CONSTRAINT fk_rails_60162e9d3a FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
+
+--
+-- Name: operations_log fk_rails_8df7440180; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operations_log
+    ADD CONSTRAINT fk_rails_8df7440180 FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
+
+--
+-- Name: relationships fk_rails_b2829edeb4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.relationships
+    ADD CONSTRAINT fk_rails_b2829edeb4 FOREIGN KEY (to_node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+
+--
 -- Name: tags fk_rails_c2bba39827; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -666,7 +700,14 @@ ALTER TABLE ONLY public.tags
     ADD CONSTRAINT fk_rails_c2bba39827 FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
 
 --
+-- Name: operations_log fk_rails_f1b5294e6b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operations_log
+    ADD CONSTRAINT fk_rails_f1b5294e6b FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2QwzilO33ZZqvHghcWKJCqTvuby7klgtmNFggsQmpeNDXGDQabWVffeH6aqG8fp
+\unrestrict s4yPVwEU8oi7r22TivFZfa5u9WFkqqrvjXSJHOe37eZKsJMbbSG0NsOcgYIshyv

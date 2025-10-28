@@ -36,5 +36,10 @@ class CreateNodes < ActiveRecord::Migration[7.1]
           CHECK (embedding_dimension IS NULL OR (embedding_dimension > 0 AND embedding_dimension <= 2000))
       SQL
     end
+
+    # Foreign key to robots table (outside table_exists check so it gets added even if table already exists)
+    unless foreign_key_exists?(:nodes, :robots, column: :robot_id)
+      add_foreign_key :nodes, :robots, column: :robot_id, primary_key: :id, on_delete: :cascade
+    end
   end
 end

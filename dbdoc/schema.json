@@ -1,0 +1,1796 @@
+{
+  "name": "htm_development",
+  "tables": [
+    {
+      "name": "public.relationships",
+      "type": "BASE TABLE",
+      "comment": "Knowledge graph edges connecting related nodes",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('relationships_id_seq'::regclass)"
+        },
+        {
+          "name": "from_node_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "Source node ID"
+        },
+        {
+          "name": "to_node_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "Target node ID"
+        },
+        {
+          "name": "relationship_type",
+          "type": "text",
+          "nullable": true,
+          "comment": "Type of relationship: relates_to, caused_by, follows, etc."
+        },
+        {
+          "name": "strength",
+          "type": "double precision",
+          "nullable": true,
+          "default": "1.0",
+          "comment": "Relationship strength/weight (0.0-1.0)"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this relationship was created"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "relationships_pkey",
+          "def": "CREATE UNIQUE INDEX relationships_pkey ON public.relationships USING btree (id)",
+          "table": "public.relationships",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_relationships_unique",
+          "def": "CREATE UNIQUE INDEX idx_relationships_unique ON public.relationships USING btree (from_node_id, to_node_id, relationship_type)",
+          "table": "public.relationships",
+          "columns": [
+            "from_node_id",
+            "to_node_id",
+            "relationship_type"
+          ]
+        },
+        {
+          "name": "idx_relationships_from",
+          "def": "CREATE INDEX idx_relationships_from ON public.relationships USING btree (from_node_id)",
+          "table": "public.relationships",
+          "columns": [
+            "from_node_id"
+          ]
+        },
+        {
+          "name": "idx_relationships_to",
+          "def": "CREATE INDEX idx_relationships_to ON public.relationships USING btree (to_node_id)",
+          "table": "public.relationships",
+          "columns": [
+            "to_node_id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "relationships_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.relationships",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "fk_rails_4c92229411",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (from_node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.relationships",
+          "referenced_table": "nodes",
+          "columns": [
+            "from_node_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "fk_rails_b2829edeb4",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (to_node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.relationships",
+          "referenced_table": "nodes",
+          "columns": [
+            "to_node_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.schema_migrations",
+      "type": "BASE TABLE",
+      "columns": [
+        {
+          "name": "version",
+          "type": "varchar",
+          "nullable": false
+        }
+      ],
+      "indexes": [
+        {
+          "name": "schema_migrations_pkey",
+          "def": "CREATE UNIQUE INDEX schema_migrations_pkey ON public.schema_migrations USING btree (version)",
+          "table": "public.schema_migrations",
+          "columns": [
+            "version"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "schema_migrations_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (version)",
+          "table": "public.schema_migrations",
+          "referenced_table": "",
+          "columns": [
+            "version"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.robots",
+      "type": "BASE TABLE",
+      "comment": "Registry of all LLM robots using the HTM system",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "nullable": false,
+          "comment": "Unique identifier for the robot"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": true,
+          "comment": "Human-readable name for the robot"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When the robot was first registered"
+        },
+        {
+          "name": "last_active",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "Last time the robot accessed the system"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": true,
+          "comment": "Robot-specific configuration and metadata"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "robots_pkey",
+          "def": "CREATE UNIQUE INDEX robots_pkey ON public.robots USING btree (id)",
+          "table": "public.robots",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "robots_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.robots",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.nodes",
+      "type": "BASE TABLE",
+      "comment": "Core memory storage for conversation messages and context",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('nodes_id_seq'::regclass)"
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "nullable": false,
+          "comment": "The conversation message/utterance content"
+        },
+        {
+          "name": "speaker",
+          "type": "text",
+          "nullable": false,
+          "comment": "Who said it: user or robot name"
+        },
+        {
+          "name": "type",
+          "type": "text",
+          "nullable": true,
+          "comment": "Memory type: fact, context, code, preference, decision, question"
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "nullable": true,
+          "comment": "Optional category for organizing memories"
+        },
+        {
+          "name": "importance",
+          "type": "double precision",
+          "nullable": true,
+          "default": "1.0",
+          "comment": "Importance score (0.0-1.0) for prioritizing recall"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this memory was created"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this memory was last modified"
+        },
+        {
+          "name": "last_accessed",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this memory was last accessed"
+        },
+        {
+          "name": "token_count",
+          "type": "integer",
+          "nullable": true,
+          "comment": "Number of tokens in the content (for context budget management)"
+        },
+        {
+          "name": "in_working_memory",
+          "type": "boolean",
+          "nullable": true,
+          "default": "false",
+          "comment": "Whether this memory is currently in working memory"
+        },
+        {
+          "name": "robot_id",
+          "type": "text",
+          "nullable": false,
+          "comment": "ID of the robot that owns this memory"
+        },
+        {
+          "name": "embedding",
+          "type": "vector(2000)",
+          "nullable": true,
+          "comment": "Vector embedding (max 2000 dimensions) for semantic search"
+        },
+        {
+          "name": "embedding_dimension",
+          "type": "integer",
+          "nullable": true,
+          "comment": "Actual number of dimensions used in the embedding vector (max 2000)"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "nodes_pkey",
+          "def": "CREATE UNIQUE INDEX nodes_pkey ON public.nodes USING btree (id)",
+          "table": "public.nodes",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_nodes_created_at",
+          "def": "CREATE INDEX idx_nodes_created_at ON public.nodes USING btree (created_at)",
+          "table": "public.nodes",
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "idx_nodes_updated_at",
+          "def": "CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at)",
+          "table": "public.nodes",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "name": "idx_nodes_last_accessed",
+          "def": "CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed)",
+          "table": "public.nodes",
+          "columns": [
+            "last_accessed"
+          ]
+        },
+        {
+          "name": "idx_nodes_type",
+          "def": "CREATE INDEX idx_nodes_type ON public.nodes USING btree (type)",
+          "table": "public.nodes",
+          "columns": [
+            "type"
+          ]
+        },
+        {
+          "name": "idx_nodes_category",
+          "def": "CREATE INDEX idx_nodes_category ON public.nodes USING btree (category)",
+          "table": "public.nodes",
+          "columns": [
+            "category"
+          ]
+        },
+        {
+          "name": "idx_nodes_robot_id",
+          "def": "CREATE INDEX idx_nodes_robot_id ON public.nodes USING btree (robot_id)",
+          "table": "public.nodes",
+          "columns": [
+            "robot_id"
+          ]
+        },
+        {
+          "name": "idx_nodes_speaker",
+          "def": "CREATE INDEX idx_nodes_speaker ON public.nodes USING btree (speaker)",
+          "table": "public.nodes",
+          "columns": [
+            "speaker"
+          ]
+        },
+        {
+          "name": "idx_nodes_in_working_memory",
+          "def": "CREATE INDEX idx_nodes_in_working_memory ON public.nodes USING btree (in_working_memory)",
+          "table": "public.nodes",
+          "columns": [
+            "in_working_memory"
+          ]
+        },
+        {
+          "name": "idx_nodes_embedding",
+          "def": "CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')",
+          "table": "public.nodes",
+          "columns": [
+            "embedding"
+          ]
+        },
+        {
+          "name": "idx_nodes_content_gin",
+          "def": "CREATE INDEX idx_nodes_content_gin ON public.nodes USING gin (to_tsvector('english'::regconfig, content))",
+          "table": "public.nodes",
+          "columns": [
+            "to_tsvector"
+          ]
+        },
+        {
+          "name": "idx_nodes_content_trgm",
+          "def": "CREATE INDEX idx_nodes_content_trgm ON public.nodes USING gin (content gin_trgm_ops)",
+          "table": "public.nodes",
+          "columns": [
+            "content"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "check_embedding_dimension",
+          "type": "CHECK",
+          "def": "CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension \u003e 0) AND (embedding_dimension \u003c= 2000))))",
+          "table": "public.nodes",
+          "referenced_table": "",
+          "columns": [
+            "embedding_dimension"
+          ]
+        },
+        {
+          "name": "fk_rails_60162e9d3a",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
+          "table": "public.nodes",
+          "referenced_table": "robots",
+          "columns": [
+            "robot_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "nodes_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.nodes",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.tags",
+      "type": "BASE TABLE",
+      "comment": "Hierarchical topic tags for flexible categorization using colon-delimited format",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('tags_id_seq'::regclass)"
+        },
+        {
+          "name": "node_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "ID of the node being tagged"
+        },
+        {
+          "name": "tag",
+          "type": "text",
+          "nullable": false,
+          "comment": "Hierarchical tag in format: root:level1:level2 (e.g., database:postgresql:timescaledb)"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this tag was created"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "tags_pkey",
+          "def": "CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id)",
+          "table": "public.tags",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_tags_unique",
+          "def": "CREATE UNIQUE INDEX idx_tags_unique ON public.tags USING btree (node_id, tag)",
+          "table": "public.tags",
+          "columns": [
+            "node_id",
+            "tag"
+          ]
+        },
+        {
+          "name": "idx_tags_node_id",
+          "def": "CREATE INDEX idx_tags_node_id ON public.tags USING btree (node_id)",
+          "table": "public.tags",
+          "columns": [
+            "node_id"
+          ]
+        },
+        {
+          "name": "idx_tags_tag",
+          "def": "CREATE INDEX idx_tags_tag ON public.tags USING btree (tag)",
+          "table": "public.tags",
+          "columns": [
+            "tag"
+          ]
+        },
+        {
+          "name": "idx_tags_tag_pattern",
+          "def": "CREATE INDEX idx_tags_tag_pattern ON public.tags USING btree (tag text_pattern_ops)",
+          "table": "public.tags",
+          "columns": [
+            "tag"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_rails_c2bba39827",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.tags",
+          "referenced_table": "nodes",
+          "columns": [
+            "node_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "tags_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.tags",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.operations_log",
+      "type": "BASE TABLE",
+      "comment": "Audit trail of all HTM operations for debugging and replay",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('operations_log_id_seq'::regclass)"
+        },
+        {
+          "name": "timestamp",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this operation occurred"
+        },
+        {
+          "name": "operation",
+          "type": "text",
+          "nullable": false,
+          "comment": "Operation type: add, retrieve, remove, evict, recall"
+        },
+        {
+          "name": "node_id",
+          "type": "bigint",
+          "nullable": true,
+          "comment": "ID of the node affected by this operation (if applicable)"
+        },
+        {
+          "name": "robot_id",
+          "type": "text",
+          "nullable": false,
+          "comment": "ID of the robot that performed this operation"
+        },
+        {
+          "name": "details",
+          "type": "jsonb",
+          "nullable": true,
+          "comment": "Additional operation details and context"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "operations_log_pkey",
+          "def": "CREATE UNIQUE INDEX operations_log_pkey ON public.operations_log USING btree (id)",
+          "table": "public.operations_log",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_operations_log_timestamp",
+          "def": "CREATE INDEX idx_operations_log_timestamp ON public.operations_log USING btree (\"timestamp\")",
+          "table": "public.operations_log",
+          "columns": [
+            "timestamp"
+          ]
+        },
+        {
+          "name": "idx_operations_log_robot_id",
+          "def": "CREATE INDEX idx_operations_log_robot_id ON public.operations_log USING btree (robot_id)",
+          "table": "public.operations_log",
+          "columns": [
+            "robot_id"
+          ]
+        },
+        {
+          "name": "idx_operations_log_node_id",
+          "def": "CREATE INDEX idx_operations_log_node_id ON public.operations_log USING btree (node_id)",
+          "table": "public.operations_log",
+          "columns": [
+            "node_id"
+          ]
+        },
+        {
+          "name": "idx_operations_log_operation",
+          "def": "CREATE INDEX idx_operations_log_operation ON public.operations_log USING btree (operation)",
+          "table": "public.operations_log",
+          "columns": [
+            "operation"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_rails_8df7440180",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
+          "table": "public.operations_log",
+          "referenced_table": "robots",
+          "columns": [
+            "robot_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "fk_rails_f1b5294e6b",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.operations_log",
+          "referenced_table": "nodes",
+          "columns": [
+            "node_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "operations_log_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.operations_log",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.node_stats",
+      "type": "VIEW",
+      "comment": "Aggregated statistics by node type showing counts, importance, tokens, and age ranges.",
+      "columns": [
+        {
+          "name": "type",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "count",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "avg_importance",
+          "type": "double precision",
+          "nullable": true
+        },
+        {
+          "name": "total_tokens",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "oldest",
+          "type": "timestamp with time zone",
+          "nullable": true
+        },
+        {
+          "name": "newest",
+          "type": "timestamp with time zone",
+          "nullable": true
+        }
+      ],
+      "def": "CREATE VIEW node_stats AS (\n SELECT type,\n    count(*) AS count,\n    avg(importance) AS avg_importance,\n    sum(token_count) AS total_tokens,\n    min(created_at) AS oldest,\n    max(created_at) AS newest\n   FROM nodes\n  GROUP BY type\n)",
+      "referenced_tables": [
+        "public.nodes"
+      ]
+    },
+    {
+      "name": "public.robot_activity",
+      "type": "VIEW",
+      "comment": "Robot usage metrics showing total nodes created and last activity timestamp.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "total_nodes",
+          "type": "bigint",
+          "nullable": true
+        },
+        {
+          "name": "last_node_created",
+          "type": "timestamp with time zone",
+          "nullable": true
+        }
+      ],
+      "def": "CREATE VIEW robot_activity AS (\n SELECT r.id,\n    r.name,\n    count(n.id) AS total_nodes,\n    max(n.created_at) AS last_node_created\n   FROM (robots r\n     LEFT JOIN nodes n ON ((n.robot_id = r.id)))\n  GROUP BY r.id, r.name\n)",
+      "referenced_tables": [
+        "public.robots",
+        "public.nodes"
+      ]
+    },
+    {
+      "name": "public.ontology_structure",
+      "type": "VIEW",
+      "comment": "Provides a hierarchical view of all topics in the knowledge base. Topics use colon-delimited format (e.g., database:postgresql:timescaledb) and are assigned manually via tags.",
+      "columns": [
+        {
+          "name": "root_topic",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "level1_topic",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "level2_topic",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "full_path",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "node_count",
+          "type": "bigint",
+          "nullable": true
+        }
+      ],
+      "def": "CREATE VIEW ontology_structure AS (\n SELECT split_part(tag, ':'::text, 1) AS root_topic,\n    split_part(tag, ':'::text, 2) AS level1_topic,\n    split_part(tag, ':'::text, 3) AS level2_topic,\n    tag AS full_path,\n    count(DISTINCT node_id) AS node_count\n   FROM tags\n  WHERE (tag ~ '^[a-z0-9\\-]+(:[a-z0-9\\-]+)*$'::text)\n  GROUP BY tag\n  ORDER BY (split_part(tag, ':'::text, 1)), (split_part(tag, ':'::text, 2)), (split_part(tag, ':'::text, 3))\n)",
+      "referenced_tables": [
+        "public.tags"
+      ]
+    },
+    {
+      "name": "public.topic_relationships",
+      "type": "VIEW",
+      "comment": "Shows which topics co-occur on the same nodes, revealing cross-topic relationships in the knowledge base.",
+      "columns": [
+        {
+          "name": "topic1",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "topic2",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "shared_nodes",
+          "type": "bigint",
+          "nullable": true
+        }
+      ],
+      "def": "CREATE VIEW topic_relationships AS (\n SELECT t1.tag AS topic1,\n    t2.tag AS topic2,\n    count(DISTINCT t1.node_id) AS shared_nodes\n   FROM (tags t1\n     JOIN tags t2 ON (((t1.node_id = t2.node_id) AND (t1.tag \u003c t2.tag))))\n  GROUP BY t1.tag, t2.tag\n HAVING (count(DISTINCT t1.node_id) \u003e= 2)\n  ORDER BY (count(DISTINCT t1.node_id)) DESC\n)",
+      "referenced_tables": [
+        "public.tags"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "table": "public.relationships",
+      "columns": [
+        "from_node_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (from_node_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.relationships",
+      "columns": [
+        "to_node_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (to_node_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.nodes",
+      "columns": [
+        "robot_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.robots",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.tags",
+      "columns": [
+        "node_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.operations_log",
+      "columns": [
+        "robot_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.robots",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.operations_log",
+      "columns": [
+        "node_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    }
+  ],
+  "functions": [
+    {
+      "name": "public.vector_in",
+      "return_type": "vector",
+      "arguments": "cstring, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_out",
+      "return_type": "cstring",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_typmod_in",
+      "return_type": "int4",
+      "arguments": "cstring[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_recv",
+      "return_type": "vector",
+      "arguments": "internal, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_send",
+      "return_type": "bytea",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_distance",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.inner_product",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.cosine_distance",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l1_distance",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_dims",
+      "return_type": "int4",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_norm",
+      "return_type": "float8",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_normalize",
+      "return_type": "vector",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.binary_quantize",
+      "return_type": "bit",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.subvector",
+      "return_type": "vector",
+      "arguments": "vector, integer, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_add",
+      "return_type": "vector",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_sub",
+      "return_type": "vector",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_mul",
+      "return_type": "vector",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_concat",
+      "return_type": "vector",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_lt",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_le",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_eq",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_ne",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_ge",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_gt",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_cmp",
+      "return_type": "int4",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_l2_squared_distance",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_negative_inner_product",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_spherical_distance",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_accum",
+      "return_type": "_float8",
+      "arguments": "double precision[], vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_avg",
+      "return_type": "vector",
+      "arguments": "double precision[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_combine",
+      "return_type": "_float8",
+      "arguments": "double precision[], double precision[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.avg",
+      "return_type": "vector",
+      "arguments": "vector",
+      "type": "a"
+    },
+    {
+      "name": "public.sum",
+      "return_type": "vector",
+      "arguments": "vector",
+      "type": "a"
+    },
+    {
+      "name": "public.vector",
+      "return_type": "vector",
+      "arguments": "vector, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_vector",
+      "return_type": "vector",
+      "arguments": "integer[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_vector",
+      "return_type": "vector",
+      "arguments": "real[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_vector",
+      "return_type": "vector",
+      "arguments": "double precision[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_vector",
+      "return_type": "vector",
+      "arguments": "numeric[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_to_float4",
+      "return_type": "_float4",
+      "arguments": "vector, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.ivfflathandler",
+      "return_type": "index_am_handler",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.hnswhandler",
+      "return_type": "index_am_handler",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.ivfflat_halfvec_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.ivfflat_bit_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.hnsw_halfvec_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.hnsw_bit_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.hnsw_sparsevec_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_in",
+      "return_type": "halfvec",
+      "arguments": "cstring, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_out",
+      "return_type": "cstring",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_typmod_in",
+      "return_type": "int4",
+      "arguments": "cstring[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_recv",
+      "return_type": "halfvec",
+      "arguments": "internal, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_send",
+      "return_type": "bytea",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_distance",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.inner_product",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.cosine_distance",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l1_distance",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_dims",
+      "return_type": "int4",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_norm",
+      "return_type": "float8",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_normalize",
+      "return_type": "halfvec",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.binary_quantize",
+      "return_type": "bit",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.subvector",
+      "return_type": "halfvec",
+      "arguments": "halfvec, integer, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_add",
+      "return_type": "halfvec",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_sub",
+      "return_type": "halfvec",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_mul",
+      "return_type": "halfvec",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_concat",
+      "return_type": "halfvec",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_lt",
+      "return_type": "bool",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_le",
+      "return_type": "bool",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_eq",
+      "return_type": "bool",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_ne",
+      "return_type": "bool",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_ge",
+      "return_type": "bool",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_gt",
+      "return_type": "bool",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_cmp",
+      "return_type": "int4",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_l2_squared_distance",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_negative_inner_product",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_spherical_distance",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_accum",
+      "return_type": "_float8",
+      "arguments": "double precision[], halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_avg",
+      "return_type": "halfvec",
+      "arguments": "double precision[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_combine",
+      "return_type": "_float8",
+      "arguments": "double precision[], double precision[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.avg",
+      "return_type": "halfvec",
+      "arguments": "halfvec",
+      "type": "a"
+    },
+    {
+      "name": "public.sum",
+      "return_type": "halfvec",
+      "arguments": "halfvec",
+      "type": "a"
+    },
+    {
+      "name": "public.halfvec",
+      "return_type": "halfvec",
+      "arguments": "halfvec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_to_vector",
+      "return_type": "vector",
+      "arguments": "halfvec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "vector, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "integer[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "real[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "double precision[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "numeric[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_to_float4",
+      "return_type": "_float4",
+      "arguments": "halfvec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.hamming_distance",
+      "return_type": "float8",
+      "arguments": "bit, bit",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.jaccard_distance",
+      "return_type": "float8",
+      "arguments": "bit, bit",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_in",
+      "return_type": "sparsevec",
+      "arguments": "cstring, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_out",
+      "return_type": "cstring",
+      "arguments": "sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_typmod_in",
+      "return_type": "int4",
+      "arguments": "cstring[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_recv",
+      "return_type": "sparsevec",
+      "arguments": "internal, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_send",
+      "return_type": "bytea",
+      "arguments": "sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_distance",
+      "return_type": "float8",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.inner_product",
+      "return_type": "float8",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.cosine_distance",
+      "return_type": "float8",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l1_distance",
+      "return_type": "float8",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_norm",
+      "return_type": "float8",
+      "arguments": "sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_normalize",
+      "return_type": "sparsevec",
+      "arguments": "sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_lt",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_le",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_eq",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_ne",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_ge",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_gt",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_cmp",
+      "return_type": "int4",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_l2_squared_distance",
+      "return_type": "float8",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_negative_inner_product",
+      "return_type": "float8",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "sparsevec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "vector, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_to_vector",
+      "return_type": "vector",
+      "arguments": "sparsevec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "halfvec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "sparsevec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "integer[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "real[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "double precision[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "numeric[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.set_limit",
+      "return_type": "float4",
+      "arguments": "real",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.show_limit",
+      "return_type": "float4",
+      "arguments": "",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.show_trgm",
+      "return_type": "_text",
+      "arguments": "text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.similarity",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.similarity_op",
+      "return_type": "bool",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.word_similarity",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.word_similarity_op",
+      "return_type": "bool",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.word_similarity_commutator_op",
+      "return_type": "bool",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.similarity_dist",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.word_similarity_dist_op",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.word_similarity_dist_commutator_op",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_in",
+      "return_type": "gtrgm",
+      "arguments": "cstring",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_out",
+      "return_type": "cstring",
+      "arguments": "gtrgm",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_consistent",
+      "return_type": "bool",
+      "arguments": "internal, text, smallint, oid, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_distance",
+      "return_type": "float8",
+      "arguments": "internal, text, smallint, oid, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_compress",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_decompress",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_penalty",
+      "return_type": "internal",
+      "arguments": "internal, internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_picksplit",
+      "return_type": "internal",
+      "arguments": "internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_union",
+      "return_type": "gtrgm",
+      "arguments": "internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_same",
+      "return_type": "internal",
+      "arguments": "gtrgm, gtrgm, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gin_extract_value_trgm",
+      "return_type": "internal",
+      "arguments": "text, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gin_extract_query_trgm",
+      "return_type": "internal",
+      "arguments": "text, internal, smallint, internal, internal, internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gin_trgm_consistent",
+      "return_type": "bool",
+      "arguments": "internal, smallint, text, integer, internal, internal, internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gin_trgm_triconsistent",
+      "return_type": "char",
+      "arguments": "internal, smallint, text, integer, internal, internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.strict_word_similarity",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.strict_word_similarity_op",
+      "return_type": "bool",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.strict_word_similarity_commutator_op",
+      "return_type": "bool",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.strict_word_similarity_dist_op",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.strict_word_similarity_dist_commutator_op",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_options",
+      "return_type": "void",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    }
+  ],
+  "driver": {
+    "name": "postgres",
+    "database_version": "PostgreSQL 17.6 (Homebrew) on aarch64-apple-darwin25.0.0, compiled by Apple clang version 17.0.0 (clang-1700.3.19.1), 64-bit",
+    "meta": {
+      "current_schema": "public",
+      "search_paths": [
+        "dewayne",
+        "public"
+      ],
+      "dict": {
+        "Functions": "Stored procedures and functions"
+      }
+    }
+  }
+}
