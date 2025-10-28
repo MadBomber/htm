@@ -16,25 +16,29 @@ class HTM
       # @return [void]
       #
       def setup(db_url = nil, run_migrations: true)
+        require 'active_record'
+        require_relative 'active_record_config'
+
+        # Establish ActiveRecord connection
+        HTM::ActiveRecordConfig.establish_connection!
+
+        # Run migrations using ActiveRecord
+        if run_migrations
+          puts "Running ActiveRecord migrations..."
+          run_activerecord_migrations
+        end
+
+        # Convert tables to hypertables for time-series optimization (if TimescaleDB available)
         config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        if config
+          conn = PG.connect(config)
+          begin
+            setup_hypertables(conn)
+          ensure
+            conn.close
+          end
+        end
 
-        raise "Database configuration not found. Please source ~/.bashrc__tiger" unless config
-
-        conn = PG.connect(config)
-
-        # Verify TimescaleDB is available
-        verify_extensions(conn)
-
-        # Run schema
-        run_schema(conn)
-
-        # Run migrations if requested
-        run_migrations_if_needed(conn) if run_migrations
-
-        # Convert tables to hypertables for time-series optimization
-        setup_hypertables(conn)
-
-        conn.close
         puts "✓ HTM database schema created successfully"
       end
 
@@ -44,15 +48,14 @@ class HTM
       # @return [void]
       #
       def migrate(db_url = nil)
-        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        require 'active_record'
+        require_relative 'active_record_config'
 
-        raise "Database configuration not found. Please source ~/.bashrc__tiger" unless config
+        # Establish ActiveRecord connection
+        HTM::ActiveRecordConfig.establish_connection!
 
-        conn = PG.connect(config)
+        run_activerecord_migrations
 
-        run_migrations_if_needed(conn)
-
-        conn.close
         puts "✓ Database migrations completed"
       end
 
@@ -62,47 +65,48 @@ class HTM
       # @return [void]
       #
       def migration_status(db_url = nil)
-        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
-        raise "Database configuration not found" unless config
+        require 'active_record'
+        require_relative 'active_record_config'
 
-        conn = PG.connect(config)
+        # Establish ActiveRecord connection
+        HTM::ActiveRecordConfig.establish_connection!
 
-        # Get applied migrations
-        begin
-          applied = conn.exec("SELECT version, applied_at FROM schema_migrations ORDER BY applied_at").to_a
-        rescue PG::UndefinedTable
-          applied = []
-        end
+        migrations_path = File.expand_path('../../db/migrate', __dir__)
 
-        # Get available migrations
-        migrations_dir = File.expand_path('../../sql/migrations', __dir__)
-        available = if Dir.exist?(migrations_dir)
-          Dir.glob(File.join(migrations_dir, '*.sql')).map { |f| File.basename(f, '.sql') }.sort
-        else
+        # Get available migrations from files
+        available_migrations = Dir.glob(File.join(migrations_path, '*.rb')).map do |file|
+          {
+            version: File.basename(file).split('_').first,
+            name: File.basename(file, '.rb')
+          }
+        end.sort_by { |m| m[:version] }
+
+        # Get applied migrations from database
+        applied_versions = begin
+          ActiveRecord::Base.connection.select_values('SELECT version FROM schema_migrations ORDER BY version')
+        rescue ActiveRecord::StatementInvalid
           []
         end
 
-        conn.close
-
         puts "\nMigration Status"
-        puts "=" * 80
+        puts "=" * 100
 
-        if available.empty?
-          puts "No migration files found in sql/migrations/"
+        if available_migrations.empty?
+          puts "No migration files found in db/migrate/"
         else
-          available.each do |version|
-            status = applied.any? { |a| a['version'] == version }
+          available_migrations.each do |migration|
+            status = applied_versions.include?(migration[:version])
             status_mark = status ? "✓" : "✗"
-            applied_at = applied.find { |a| a['version'] == version }&.dig('applied_at')
 
-            print "#{status_mark} #{version}"
-            print " (applied: #{applied_at})" if applied_at
-            puts
+            puts "#{status_mark} #{migration[:name]}"
           end
         end
 
-        puts "\nSummary: #{applied.length} applied, #{available.length - applied.length} pending"
-        puts "=" * 80
+        applied_count = applied_versions.length
+        pending_count = available_migrations.length - applied_count
+
+        puts "\nSummary: #{applied_count} applied, #{pending_count} pending"
+        puts "=" * 100
       end
 
       # Drop all HTM tables
@@ -360,67 +364,70 @@ class HTM
         end
       end
 
-      def run_schema(conn)
-        schema_path = File.expand_path('../../sql/schema.sql', __dir__)
-        puts "Creating HTM schema (client-side embeddings)..."
+      # Run ActiveRecord migrations from db/migrate/
+      #
+      # @return [void]
+      #
+      def run_activerecord_migrations
+        migrations_path = File.expand_path('../../db/migrate', __dir__)
 
-        schema_sql = File.read(schema_path)
+        unless Dir.exist?(migrations_path)
+          puts "⚠ No migrations directory found at #{migrations_path}"
+          return
+        end
 
-        # Remove extension creation lines - extensions are already available on TimescaleDB Cloud
-        # This avoids path issues with control files
-        schema_sql_filtered = schema_sql.lines.reject { |line|
-          line.strip.start_with?('CREATE EXTENSION')
-        }.join
+        conn = ActiveRecord::Base.connection
 
-        begin
-          conn.exec(schema_sql_filtered)
-          puts "✓ Schema created"
-        rescue PG::Error => e
-          # If schema already exists, that's OK
-          if e.message.match?(/already exists/)
-            puts "✓ Schema already exists (updated if needed)"
-          else
-            raise e
+        # Create schema_migrations table if it doesn't exist
+        unless conn.table_exists?('schema_migrations')
+          conn.create_table(:schema_migrations, id: false) do |t|
+            t.string :version, null: false, primary_key: true
           end
         end
-      end
 
-      def run_migrations_if_needed(conn)
-        # Create migrations tracking table if it doesn't exist
-        conn.exec(<<~SQL)
-          CREATE TABLE IF NOT EXISTS schema_migrations (
-            version TEXT PRIMARY KEY,
-            applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-          );
-        SQL
+        # Get list of migration files
+        migration_files = Dir.glob("#{migrations_path}/*.rb").sort
+        puts "Found #{migration_files.length} migration files"
 
-        # Get list of applied migrations
-        applied = conn.exec("SELECT version FROM schema_migrations").map { |r| r['version'] }.to_set
-
-        # Get list of available migrations
-        migrations_dir = File.expand_path('../../sql/migrations', __dir__)
-        return unless Dir.exist?(migrations_dir)
-
-        migration_files = Dir.glob(File.join(migrations_dir, '*.sql')).sort
-
+        # Run each migration
         migration_files.each do |file|
-          version = File.basename(file, '.sql')
+          version = File.basename(file).split('_').first
+          name = File.basename(file, '.rb')
 
-          next if applied.include?(version)
+          # Check if already run
+          already_run = conn.select_value(
+            "SELECT COUNT(*) FROM schema_migrations WHERE version = '#{version}'"
+          ).to_i > 0
 
-          puts "Running migration: #{version}"
-          migration_sql = File.read(file)
+          if already_run
+            puts "  ✓ #{name} (already migrated)"
+          else
+            puts "  → Running #{name}..."
+            require file
 
-          begin
-            conn.exec(migration_sql)
-            conn.exec_params("INSERT INTO schema_migrations (version) VALUES ($1)", [version])
-            puts "  ✓ Migration #{version} applied"
-          rescue PG::Error => e
-            puts "  ✗ Migration #{version} failed: #{e.message}"
-            raise e
+            # Get the migration class
+            class_name = name.split('_')[1..].map(&:capitalize).join
+            migration_class = Object.const_get(class_name)
+
+            # Run the migration
+            migration = migration_class.new
+            migration.migrate(:up)
+
+            # Record in schema_migrations
+            conn.execute(
+              "INSERT INTO schema_migrations (version) VALUES ('#{version}')"
+            )
+
+            puts "    ✓ Completed"
           end
         end
+
+        puts "✓ All migrations completed"
       end
+
+      # Old methods removed - now using ActiveRecord migrations
+      # def run_schema(conn) - REMOVED
+      # def run_migrations_if_needed(conn) - REMOVED (see run_activerecord_migrations above)
 
       def setup_hypertables(conn)
         # All tables use simple PRIMARY KEY (id), no hypertable conversions

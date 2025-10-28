@@ -3,39 +3,16 @@
 require 'active_record'
 require 'pg'
 require 'pgvector'
+require 'erb'
+require 'yaml'
 
 class HTM
   # ActiveRecord database configuration and model loading
   class ActiveRecordConfig
     class << self
-      # Establish database connection from HTM_DBURL environment variable
+      # Establish database connection from config/database.yml
       def establish_connection!
-        db_url = ENV['HTM_DBURL']
-        raise "HTM_DBURL environment variable not set" unless db_url
-
-        # Parse connection URL
-        uri = URI.parse(db_url)
-
-        config = {
-          adapter: 'postgresql',
-          host: uri.host,
-          port: uri.port || 5432,
-          database: uri.path[1..-1], # Remove leading slash
-          username: uri.user,
-          password: uri.password,
-          pool: 10,
-          timeout: 5000,
-          encoding: 'unicode',
-          # PostgreSQL-specific settings
-          prepared_statements: false,
-          advisory_locks: false
-        }
-
-        # Add SSL settings if present in query string
-        if uri.query
-          params = URI.decode_www_form(uri.query).to_h
-          config[:sslmode] = params['sslmode'] if params['sslmode']
-        end
+        config = load_database_config
 
         ActiveRecord::Base.establish_connection(config)
 
@@ -46,6 +23,32 @@ class HTM
         require_models
 
         true
+      end
+
+      # Load and parse database configuration from YAML with ERB
+      def load_database_config
+        config_path = File.expand_path('../../config/database.yml', __dir__)
+
+        unless File.exist?(config_path)
+          raise "Database configuration file not found at #{config_path}"
+        end
+
+        # Read and parse ERB
+        erb_content = ERB.new(File.read(config_path)).result
+        db_config = YAML.safe_load(erb_content, aliases: true)
+
+        # Determine environment
+        env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+
+        # Get configuration for current environment
+        config = db_config[env]
+
+        unless config
+          raise "No database configuration found for environment: #{env}"
+        end
+
+        # Convert string keys to symbols for ActiveRecord
+        config.transform_keys(&:to_sym)
       end
 
       # Check if connection is established and active

@@ -1,0 +1,67 @@
+# HTM Database Configuration
+# Uses ERB to read from environment variables
+#
+# Priority:
+# 1. HTM_DBURL - Full connection URL (preferred)
+# 2. Individual HTM_DB* variables - Host, name, user, password, port
+# 3. Defaults for development/test
+#
+# Example HTM_DBURL format:
+#   postgresql://user:password@host:port/database?sslmode=require
+
+<%
+  require 'uri'
+  
+  # Parse connection from HTM_DBURL or use individual variables
+  if ENV['HTM_DBURL']
+    uri = URI.parse(ENV['HTM_DBURL'])
+    params = URI.decode_www_form(uri.query || '').to_h
+    
+    db_config = {
+      'host' => uri.host,
+      'port' => uri.port || 5432,
+      'database' => uri.path[1..-1],
+      'username' => uri.user,
+      'password' => uri.password,
+      'sslmode' => params['sslmode'] || 'prefer'
+    }
+  else
+    env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+    db_config = {
+      'host' => ENV.fetch('HTM_DBHOST', 'localhost'),
+      'port' => ENV.fetch('HTM_DBPORT', 5432).to_i,
+      'database' => ENV.fetch('HTM_DBNAME', "htm_#{env}"),
+      'username' => ENV.fetch('HTM_DBUSER', 'postgres'),
+      'password' => ENV.fetch('HTM_DBPASS', ''),
+      'sslmode' => ENV.fetch('HTM_SSLMODE', 'prefer')
+    }
+  end
+%>
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("HTM_DB_POOL_SIZE", "10").to_i %>
+  timeout: 5000
+  prepared_statements: false
+  advisory_locks: false
+  host: <%= db_config['host'] %>
+  port: <%= db_config['port'] %>
+  username: <%= db_config['username'] %>
+  password: <%= db_config['password'] %>
+  sslmode: <%= db_config['sslmode'] %>
+
+development:
+  <<: *default
+  database: <%= db_config['database'] %>
+
+test:
+  <<: *default
+  database: <%= db_config['database'] %>_test
+
+production:
+  <<: *default
+  database: <%= db_config['database'] %>
+  <% unless ENV['HTM_DBURL'] %>
+  # WARNING: Production should use HTM_DBURL with SSL
+  <% end %>
