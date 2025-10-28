@@ -361,6 +361,378 @@ stats = htm.memory_stats
 # }
 ```
 
+## Use with Rails
+
+HTM is designed to integrate seamlessly with Ruby on Rails applications. It uses ActiveRecord models and follows Rails conventions, making it easy to add AI memory capabilities to existing Rails apps.
+
+### Why HTM Works Well with Rails
+
+**1. Uses ActiveRecord**
+- HTM models are standard ActiveRecord classes with associations, validations, and scopes
+- Follows Rails naming conventions and patterns
+- Models are namespaced under `HTM::Models::` to avoid conflicts
+
+**2. Standard Rails Configuration**
+- Uses `config/database.yml` (Rails convention)
+- Respects `RAILS_ENV` environment variable
+- Supports ERB in configuration files
+
+**3. Separate Database**
+- HTM uses its own PostgreSQL database connection
+- Won't interfere with your Rails app's database
+- Configured with `prepared_statements: false` and `advisory_locks: false` for compatibility
+- Thread-safe for Rails multi-threading
+
+**4. Connection Management**
+- Separate connection pool from your Rails app
+- Configurable pool size and timeouts
+- Proper cleanup and disconnection support
+
+### Integration Steps
+
+#### 1. Add to Gemfile
+
+```ruby
+gem 'htm'
+```
+
+Then run:
+```bash
+bundle install
+```
+
+#### 2. Configure Environment Variables
+
+Add HTM database configuration to your Rails environment. You can use `.env` files (with `dotenv-rails`) or set them directly:
+
+```ruby
+# .env or config/application.rb
+HTM_DBURL=postgresql://user:pass@localhost:5432/htm_production
+```
+
+Or use individual variables:
+```ruby
+HTM_DBHOST=localhost
+HTM_DBNAME=htm_production
+HTM_DBUSER=postgres
+HTM_DBPASS=password
+HTM_DBPORT=5432
+```
+
+#### 3. Create Initializer
+
+Create `config/initializers/htm.rb`:
+
+```ruby
+# config/initializers/htm.rb
+
+# Establish HTM database connection
+HTM::ActiveRecordConfig.establish_connection!
+
+# Verify required PostgreSQL extensions are installed
+HTM::ActiveRecordConfig.verify_extensions!
+
+Rails.logger.info "HTM initialized with database: #{HTM::Database.default_config[:database]}"
+```
+
+#### 4. Set Up Database
+
+Run the HTM database setup:
+
+```bash
+# Using HTM rake tasks
+rake htm:db:setup
+
+# Or manually in Rails console
+rails c
+> HTM::Database.setup
+```
+
+#### 5. Use in Your Rails App
+
+**In Controllers:**
+
+```ruby
+class ChatsController < ApplicationController
+  before_action :initialize_memory
+
+  def create
+    # Add user message to memory
+    @memory.add_node(
+      "msg_#{Time.now.to_i}",
+      params[:message],
+      type: :context,
+      importance: 5.0,
+      tags: ["chat", "user-#{current_user.id}"]
+    )
+
+    # Recall relevant context for the conversation
+    context = @memory.create_context(strategy: :balanced)
+
+    # Use context with your LLM to generate response
+    response = generate_llm_response(context, params[:message])
+
+    # Store assistant's response
+    @memory.add_node(
+      "response_#{Time.now.to_i}",
+      response,
+      type: :context,
+      importance: 5.0,
+      tags: ["chat", "assistant"]
+    )
+
+    render json: { response: response }
+  end
+
+  private
+
+  def initialize_memory
+    @memory = HTM.new(
+      robot_name: "ChatBot-#{current_user.id}",
+      working_memory_size: 128_000
+    )
+  end
+end
+```
+
+**In Background Jobs:**
+
+```ruby
+class ProcessDocumentJob < ApplicationJob
+  queue_as :default
+
+  def perform(document_id)
+    document = Document.find(document_id)
+
+    # Initialize HTM for this job
+    memory = HTM.new(robot_name: "DocumentProcessor")
+
+    # Store document content in memory
+    memory.add_node(
+      "doc_#{document.id}",
+      document.content,
+      type: :fact,
+      importance: 8.0,
+      tags: ["document", "processed"],
+      metadata: { document_id: document.id, processed_at: Time.current }
+    )
+
+    # Recall related documents
+    related = memory.recall(
+      timeframe: "last month",
+      topic: document.category,
+      strategy: :vector
+    )
+
+    # Process with context...
+  end
+end
+```
+
+**In Models (as a concern):**
+
+```ruby
+# app/models/concerns/memorable.rb
+module Memorable
+  extend ActiveSupport::Concern
+
+  included do
+    after_create :store_in_memory
+    after_update :update_memory
+  end
+
+  def store_in_memory
+    memory = HTM.new(robot_name: "Rails-#{Rails.env}")
+
+    memory.add_node(
+      "#{self.class.name.underscore}_#{id}",
+      memory_content,
+      type: :fact,
+      importance: memory_importance,
+      tags: memory_tags,
+      metadata: memory_metadata
+    )
+  end
+
+  def update_memory
+    # Update existing memory node
+    store_in_memory
+  end
+
+  private
+
+  def memory_content
+    # Override in model to customize what gets stored
+    attributes.to_json
+  end
+
+  def memory_importance
+    # Override to set importance (0.0 - 10.0)
+    5.0
+  end
+
+  def memory_tags
+    # Override to add tags
+    [self.class.name.underscore]
+  end
+
+  def memory_metadata
+    # Override to add metadata
+    { model: self.class.name, id: id, updated_at: updated_at }
+  end
+end
+
+# Then in your model:
+class Article < ApplicationRecord
+  include Memorable
+
+  private
+
+  def memory_content
+    "#{title}\n\n#{body}"
+  end
+
+  def memory_importance
+    published? ? 8.0 : 5.0
+  end
+
+  def memory_tags
+    ["article", category].compact
+  end
+end
+```
+
+### Multi-Database Configuration (Rails 6+)
+
+If you want to use Rails' built-in multi-database support, you can configure HTM in your `config/database.yml`:
+
+```yaml
+# config/database.yml
+production:
+  primary:
+    <<: *default
+    database: myapp_production
+
+  htm:
+    adapter: postgresql
+    encoding: unicode
+    database: <%= ENV['HTM_DBNAME'] || 'htm_production' %>
+    host: <%= ENV['HTM_DBHOST'] || 'localhost' %>
+    port: <%= ENV['HTM_DBPORT'] || 5432 %>
+    username: <%= ENV['HTM_DBUSER'] || 'postgres' %>
+    password: <%= ENV['HTM_DBPASS'] %>
+    pool: <%= ENV['HTM_DB_POOL_SIZE'] || 10 %>
+```
+
+Then update your HTM initializer:
+
+```ruby
+# config/initializers/htm.rb
+HTM::ActiveRecordConfig.establish_connection!
+
+# Or use Rails' connection
+# ActiveRecord::Base.connected_to(role: :writing, shard: :htm) do
+#   HTM::ActiveRecordConfig.verify_extensions!
+# end
+```
+
+### Testing with Rails
+
+**In RSpec:**
+
+```ruby
+# spec/rails_helper.rb
+RSpec.configure do |config|
+  config.before(:suite) do
+    HTM::ActiveRecordConfig.establish_connection!
+  end
+
+  config.after(:suite) do
+    HTM::ActiveRecordConfig.disconnect!
+  end
+end
+
+# spec/features/chat_spec.rb
+RSpec.describe "Chat with memory", type: :feature do
+  let(:memory) { HTM.new(robot_name: "TestBot") }
+
+  before do
+    memory.add_node("test_context", "User prefers Ruby", type: :preference)
+  end
+
+  it "recalls user preferences" do
+    context = memory.create_context(strategy: :important)
+    expect(context).to include("Ruby")
+  end
+end
+```
+
+**In Minitest:**
+
+```ruby
+# test/test_helper.rb
+class ActiveSupport::TestCase
+  setup do
+    HTM::ActiveRecordConfig.establish_connection! unless HTM::ActiveRecordConfig.connected?
+  end
+end
+
+# test/integration/chat_test.rb
+class ChatTest < ActionDispatch::IntegrationTest
+  test "stores chat messages in memory" do
+    memory = HTM.new(robot_name: "TestBot")
+
+    post chats_path, params: { message: "Hello!" }
+
+    assert_response :success
+
+    # Verify message was stored
+    nodes = memory.recall(timeframe: "last hour", topic: "Hello")
+    assert_not_empty nodes
+  end
+end
+```
+
+### Production Considerations
+
+1. **Connection Pooling**: Set appropriate pool size based on your Rails app's concurrency:
+   ```ruby
+   ENV['HTM_DB_POOL_SIZE'] = '20'  # Match or exceed Rails pool
+   ```
+
+2. **Separate Database Server**: For production, use a dedicated PostgreSQL instance for HTM
+
+3. **Required Extensions**: Ensure `pgvector` and `pg_trgm` extensions are installed on your PostgreSQL server
+
+4. **Memory Management**: HTM's working memory is per-instance. Consider using a singleton pattern or Rails cache for shared instances
+
+5. **Background Processing**: Use Sidekiq or similar for embedding generation if processing large amounts of data
+
+### Example Rails App Structure
+
+```
+app/
+├── controllers/
+│   └── chats_controller.rb        # Uses HTM for conversation memory
+├── jobs/
+│   └── process_document_job.rb    # Background HTM processing
+├── models/
+│   ├── concerns/
+│   │   └── memorable.rb           # HTM integration concern
+│   └── article.rb                 # Includes Memorable
+└── services/
+    └── memory_service.rb          # Centralized HTM access
+
+config/
+├── initializers/
+│   └── htm.rb                     # HTM setup
+└── database.yml                   # Optional: multi-database config
+
+.env
+  HTM_DBURL=postgresql://...       # HTM database connection
+  OPENAI_API_KEY=sk-...            # If using OpenAI embeddings
+```
+
 ## Environment Variables
 
 HTM uses environment variables for database and service configuration. These can be set in your shell profile, a `.env` file, or exported directly.

@@ -30,9 +30,10 @@ class CreateNodes < ActiveRecord::Migration[7.1]
       add_index :nodes, :in_working_memory, name: 'idx_nodes_in_working_memory'
 
       # Add check constraint for embedding dimensions
+      # Only validates when embedding_dimension is provided (allows NULL for nodes without embeddings)
       execute <<-SQL
         ALTER TABLE nodes ADD CONSTRAINT check_embedding_dimension
-          CHECK (embedding_dimension IS NOT NULL AND embedding_dimension > 0 AND embedding_dimension <= 2000)
+          CHECK (embedding_dimension IS NULL OR (embedding_dimension > 0 AND embedding_dimension <= 2000))
       SQL
     end
   end

@@ -15,10 +15,11 @@ $LOAD_PATH.unshift(lib_path) unless $LOAD_PATH.include?(lib_path)
 
 namespace :htm do
   namespace :db do
-    desc "Set up HTM database schema and run migrations"
+    desc "Set up HTM database schema and run migrations (set DUMP_SCHEMA=true to auto-dump schema after)"
     task :setup do
       require 'htm'
-      HTM::Database.setup
+      dump_schema = ENV['DUMP_SCHEMA'] == 'true'
+      HTM::Database.setup(dump_schema: dump_schema)
     end
 
     desc "Run pending database migrations"
@@ -102,6 +103,20 @@ namespace :htm do
     task :info do
       require 'htm'
       HTM::Database.info
+    end
+
+    namespace :schema do
+      desc "Dump current schema to db/schema.sql"
+      task :dump do
+        require 'htm'
+        HTM::Database.dump_schema
+      end
+
+      desc "Load schema from db/schema.sql"
+      task :load do
+        require 'htm'
+        HTM::Database.load_schema
+      end
     end
   end
 end
