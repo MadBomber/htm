@@ -9,8 +9,8 @@ Knowledge graph edges connecting related nodes
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
 | id | bigint | nextval('relationships_id_seq'::regclass) | false |  |  |  |
-| from_node_id | bigint |  | false |  | [public.nodes](public.nodes.md) | Source node ID |
-| to_node_id | bigint |  | false |  | [public.nodes](public.nodes.md) | Target node ID |
+| from_node_id | bigint |  | false |  |  | Source node ID |
+| to_node_id | bigint |  | false |  |  | Target node ID |
 | relationship_type | text |  | true |  |  | Type of relationship: relates_to, caused_by, follows, etc. |
 | strength | double precision | 1.0 | true |  |  | Relationship strength/weight (0.0-1.0) |
 | created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this relationship was created |
@@ -20,8 +20,6 @@ Knowledge graph edges connecting related nodes
 | Name | Type | Definition |
 | ---- | ---- | ---------- |
 | relationships_pkey | PRIMARY KEY | PRIMARY KEY (id) |
-| fk_rails_4c92229411 | FOREIGN KEY | FOREIGN KEY (from_node_id) REFERENCES nodes(id) ON DELETE CASCADE |
-| fk_rails_b2829edeb4 | FOREIGN KEY | FOREIGN KEY (to_node_id) REFERENCES nodes(id) ON DELETE CASCADE |
 
 ## Indexes
 

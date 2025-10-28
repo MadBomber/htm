@@ -4,12 +4,10 @@
 
 | Name | Columns | Comment | Type |
 | ---- | ------- | ------- | ---- |
-| [public.relationships](public.relationships.md) | 6 | Knowledge graph edges connecting related nodes | BASE TABLE |
 | [public.schema_migrations](public.schema_migrations.md) | 1 |  | BASE TABLE |
 | [public.robots](public.robots.md) | 5 | Registry of all LLM robots using the HTM system | BASE TABLE |
 | [public.nodes](public.nodes.md) | 14 | Core memory storage for conversation messages and context | BASE TABLE |
 | [public.tags](public.tags.md) | 4 | Hierarchical topic tags for flexible categorization using colon-delimited format | BASE TABLE |
-| [public.operations_log](public.operations_log.md) | 6 | Audit trail of all HTM operations for debugging and replay | BASE TABLE |
 | [public.node_stats](public.node_stats.md) | 6 | Aggregated statistics by node type showing counts, importance, tokens, and age ranges. | VIEW |
 | [public.robot_activity](public.robot_activity.md) | 4 | Robot usage metrics showing total nodes created and last activity timestamp. | VIEW |
 | [public.ontology_structure](public.ontology_structure.md) | 5 | Provides a hierarchical view of all topics in the knowledge base. Topics use colon-delimited format (e.g., database:postgresql:timescaledb) and are assigned manually via tags. | VIEW |

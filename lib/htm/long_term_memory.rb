@@ -223,25 +223,6 @@ class HTM
       result
     end
 
-    # Add a relationship between nodes
-    #
-    # @param from [Integer] From node ID
-    # @param to [Integer] To node ID
-    # @param type [String, nil] Relationship type
-    # @param strength [Float] Relationship strength
-    # @return [void]
-    #
-    def add_relationship(from:, to:, type: nil, strength: 1.0)
-      HTM::Models::Relationship.create(
-        from_node_id: from,
-        to_node_id: to,
-        relationship_type: type,
-        strength: strength
-      )
-    rescue ActiveRecord::RecordNotUnique
-      # Relationship already exists, ignore
-    end
-
     # Add a tag to a node
     #
     # @param node_id [Integer] Node database ID
@@ -291,23 +272,6 @@ class HTM
       robot&.update(last_active: Time.current)
     end
 
-    # Log an operation
-    #
-    # @param operation [String] Operation type
-    # @param node_id [Integer, nil] Node database ID
-    # @param robot_id [String] Robot identifier
-    # @param details [Hash] Operation details
-    # @return [void]
-    #
-    def log_operation(operation:, node_id:, robot_id:, details:)
-      HTM::Models::OperationLog.create(
-        operation: operation,
-        node_id: node_id,
-        robot_id: robot_id,
-        details: details.to_json
-      )
-    end
-
     # Get memory statistics
     #
     # @return [Hash] Statistics
@@ -317,7 +281,6 @@ class HTM
         total_nodes: HTM::Models::Node.count,
         nodes_by_robot: HTM::Models::Node.group(:robot_id).count,
         nodes_by_type: HTM::Models::Node.group(:type).count,
-        total_relationships: HTM::Models::Relationship.count,
         total_tags: HTM::Models::Tag.count,
         oldest_memory: HTM::Models::Node.minimum(:created_at),
         newest_memory: HTM::Models::Node.maximum(:created_at),

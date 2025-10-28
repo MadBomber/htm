@@ -223,138 +223,6 @@ CREATE VIEW public.ontology_structure AS
 COMMENT ON VIEW public.ontology_structure IS 'Provides a hierarchical view of all topics in the knowledge base. Topics use colon-delimited format (e.g., database:postgresql:timescaledb) and are assigned manually via tags.';
 
 --
--- Name: operations_log; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.operations_log (
-    id bigint NOT NULL,
-    "timestamp" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    operation text NOT NULL,
-    node_id bigint,
-    robot_id text NOT NULL,
-    details jsonb
-);
-
---
--- Name: TABLE operations_log; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.operations_log IS 'Audit trail of all HTM operations for debugging and replay';
-
---
--- Name: COLUMN operations_log."timestamp"; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.operations_log."timestamp" IS 'When this operation occurred';
-
---
--- Name: COLUMN operations_log.operation; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.operations_log.operation IS 'Operation type: add, retrieve, remove, evict, recall';
-
---
--- Name: COLUMN operations_log.node_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.operations_log.node_id IS 'ID of the node affected by this operation (if applicable)';
-
---
--- Name: COLUMN operations_log.robot_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.operations_log.robot_id IS 'ID of the robot that performed this operation';
-
---
--- Name: COLUMN operations_log.details; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.operations_log.details IS 'Additional operation details and context';
-
---
--- Name: operations_log_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.operations_log_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
---
--- Name: operations_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.operations_log_id_seq OWNED BY public.operations_log.id;
-
---
--- Name: relationships; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.relationships (
-    id bigint NOT NULL,
-    from_node_id bigint NOT NULL,
-    to_node_id bigint NOT NULL,
-    relationship_type text,
-    strength double precision DEFAULT 1.0,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
-);
-
---
--- Name: TABLE relationships; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.relationships IS 'Knowledge graph edges connecting related nodes';
-
---
--- Name: COLUMN relationships.from_node_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.relationships.from_node_id IS 'Source node ID';
-
---
--- Name: COLUMN relationships.to_node_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.relationships.to_node_id IS 'Target node ID';
-
---
--- Name: COLUMN relationships.relationship_type; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.relationships.relationship_type IS 'Type of relationship: relates_to, caused_by, follows, etc.';
-
---
--- Name: COLUMN relationships.strength; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.relationships.strength IS 'Relationship strength/weight (0.0-1.0)';
-
---
--- Name: COLUMN relationships.created_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.relationships.created_at IS 'When this relationship was created';
-
---
--- Name: relationships_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.relationships_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
---
--- Name: relationships_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.relationships_id_seq OWNED BY public.relationships.id;
-
---
 -- Name: robots; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -473,18 +341,6 @@ COMMENT ON VIEW public.topic_relationships IS 'Shows which topics co-occur on th
 ALTER TABLE ONLY public.nodes ALTER COLUMN id SET DEFAULT nextval('public.nodes_id_seq'::regclass);
 
 --
--- Name: operations_log id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.operations_log ALTER COLUMN id SET DEFAULT nextval('public.operations_log_id_seq'::regclass);
-
---
--- Name: relationships id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.relationships ALTER COLUMN id SET DEFAULT nextval('public.relationships_id_seq'::regclass);
-
---
 -- Name: tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -496,20 +352,6 @@ ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id
 
 ALTER TABLE ONLY public.nodes
     ADD CONSTRAINT nodes_pkey PRIMARY KEY (id);
-
---
--- Name: operations_log operations_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.operations_log
-    ADD CONSTRAINT operations_log_pkey PRIMARY KEY (id);
-
---
--- Name: relationships relationships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.relationships
-    ADD CONSTRAINT relationships_pkey PRIMARY KEY (id);
 
 --
 -- Name: robots robots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -599,48 +441,6 @@ CREATE INDEX idx_nodes_type ON public.nodes USING btree (type);
 CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at);
 
 --
--- Name: idx_operations_log_node_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_operations_log_node_id ON public.operations_log USING btree (node_id);
-
---
--- Name: idx_operations_log_operation; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_operations_log_operation ON public.operations_log USING btree (operation);
-
---
--- Name: idx_operations_log_robot_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_operations_log_robot_id ON public.operations_log USING btree (robot_id);
-
---
--- Name: idx_operations_log_timestamp; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_operations_log_timestamp ON public.operations_log USING btree ("timestamp");
-
---
--- Name: idx_relationships_from; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_relationships_from ON public.relationships USING btree (from_node_id);
-
---
--- Name: idx_relationships_to; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_relationships_to ON public.relationships USING btree (to_node_id);
-
---
--- Name: idx_relationships_unique; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_relationships_unique ON public.relationships USING btree (from_node_id, to_node_id, relationship_type);
-
---
 -- Name: idx_tags_node_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -665,32 +465,11 @@ CREATE INDEX idx_tags_tag_pattern ON public.tags USING btree (tag text_pattern_o
 CREATE UNIQUE INDEX idx_tags_unique ON public.tags USING btree (node_id, tag);
 
 --
--- Name: relationships fk_rails_4c92229411; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.relationships
-    ADD CONSTRAINT fk_rails_4c92229411 FOREIGN KEY (from_node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
-
---
 -- Name: nodes fk_rails_60162e9d3a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.nodes
     ADD CONSTRAINT fk_rails_60162e9d3a FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
-
---
--- Name: operations_log fk_rails_8df7440180; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.operations_log
-    ADD CONSTRAINT fk_rails_8df7440180 FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
-
---
--- Name: relationships fk_rails_b2829edeb4; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.relationships
-    ADD CONSTRAINT fk_rails_b2829edeb4 FOREIGN KEY (to_node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
 
 --
 -- Name: tags fk_rails_c2bba39827; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -700,14 +479,7 @@ ALTER TABLE ONLY public.tags
     ADD CONSTRAINT fk_rails_c2bba39827 FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
 
 --
--- Name: operations_log fk_rails_f1b5294e6b; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.operations_log
-    ADD CONSTRAINT fk_rails_f1b5294e6b FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
-
---
 -- PostgreSQL database dump complete
 --
 
-\unrestrict s4yPVwEU8oi7r22TivFZfa5u9WFkqqrvjXSJHOe37eZKsJMbbSG0NsOcgYIshyv
+\unrestrict rTUPqxiFVDZkvco9rWnOuh8vX4HaEvCO1iTHxuKtqGRlGwwatd2Hc69Mlh3pZSj

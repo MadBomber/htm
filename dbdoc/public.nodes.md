@@ -8,7 +8,7 @@ Core memory storage for conversation messages and context
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
-| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.relationships](public.relationships.md) [public.tags](public.tags.md) [public.operations_log](public.operations_log.md) |  |  |
+| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.tags](public.tags.md) |  |  |
 | content | text |  | false |  |  | The conversation message/utterance content |
 | speaker | text |  | false |  |  | Who said it: user or robot name |
 | type | text |  | true |  |  | Memory type: fact, context, code, preference, decision, question |

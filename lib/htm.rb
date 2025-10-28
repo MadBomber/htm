@@ -146,11 +146,6 @@ class HTM
       embedding: embedding
     )
 
-    # Add relationships
-    related_to.each do |related_node_id|
-      @long_term_memory.add_relationship(from: node_id, to: related_node_id)
-    end
-
     # Add tags
     tags.each do |tag|
       @long_term_memory.add_tag(node_id: node_id, tag: tag)
@@ -158,14 +153,6 @@ class HTM
 
     # Add to working memory
     @working_memory.add(node_id, content, token_count: token_count, importance: importance)
-
-    # Log the operation
-    @long_term_memory.log_operation(
-      operation: 'add',
-      node_id: node_id,
-      robot_id: @robot_id,
-      details: { speaker: speaker, type: type, content_preview: content[0..100] }
-    )
 
     update_robot_activity
     node_id
@@ -217,14 +204,6 @@ class HTM
       add_to_working_memory(node)
     end
 
-    # Log the operation
-    @long_term_memory.log_operation(
-      operation: 'recall',
-      node_id: nil,
-      robot_id: @robot_id,
-      details: { timeframe: timeframe.to_s, topic: topic, count: nodes.length }
-    )
-
     update_robot_activity
     nodes
   end
@@ -241,12 +220,6 @@ class HTM
     node = @long_term_memory.retrieve(key)
     if node
       @long_term_memory.update_last_accessed(key)
-      @long_term_memory.log_operation(
-        operation: 'retrieve',
-        node_id: node['id'],
-        robot_id: @robot_id,
-        details: { key: key }
-      )
     end
     node
   end
@@ -269,16 +242,7 @@ class HTM
       raise HTM::NotFoundError, "Node not found: #{node_id}"
     end
 
-    # Log operation with NULL node_id since we're about to delete it
-    # This prevents foreign key violation
-    @long_term_memory.log_operation(
-      operation: 'forget',
-      node_id: nil,  # NULL since node will be deleted
-      robot_id: @robot_id,
-      details: { deleted_node_id: node_id }
-    )
-
-    # Now delete the node and remove from working memory
+    # Delete the node and remove from working memory
     @long_term_memory.delete(node_id)
     @working_memory.remove(node_id)
 
