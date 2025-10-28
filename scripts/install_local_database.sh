@@ -6,7 +6,6 @@
 #   - PostgreSQL 17 (from Homebrew)
 #   - pgvector - vector similarity search for embeddings
 #   - pg_trgm - trigram matching for fuzzy text search
-#   - TimescaleDB (optional) - time-series optimization
 #
 # This is the only script you need to run to get a fully functional
 # local database environment for HTM development.
@@ -33,7 +32,7 @@ if brew list postgresql@17 &>/dev/null || brew list postgresql@16 &>/dev/null; t
     echo "  2. Backup your database"
     echo "  3. Uninstall current PostgreSQL"
     echo "  4. Install PostgreSQL 17"
-    echo "  5. Install all required extensions (pgvector, pg_trgm, timescaledb)"
+    echo "  5. Install all required extensions (pgvector, pg_trgm)"
     echo "  6. Restore your data"
     echo "  7. Start PostgreSQL with all extensions enabled"
     echo
@@ -223,15 +222,6 @@ else
     echo "✓ pgvector already installed"
 fi
 
-# Install TimescaleDB
-if ! brew list timescaledb &>/dev/null; then
-    echo "Installing TimescaleDB..."
-    brew tap timescale/tap 2>/dev/null || true
-    brew install timescaledb
-else
-    echo "✓ TimescaleDB already installed"
-fi
-
 echo "✓ Extension dependencies installed"
 
 # Step 8: Create symlinks for extension files
@@ -259,16 +249,6 @@ if [ -f "$PG_SHARED_EXT/vector.control" ]; then
     echo "✓ pgvector symlinks created"
 fi
 
-# Symlink TimescaleDB files
-if [ -f "$PG_SHARED_EXT/timescaledb.control" ]; then
-    echo "Symlinking TimescaleDB extension files..."
-    cd "$PG_CELLAR_EXT"
-    ln -sf "$PG_SHARED_EXT"/timescaledb* .
-    cd "$PG_CELLAR_LIB"
-    ln -sf "$PG_SHARED_LIB"/timescaledb*.dylib .
-    echo "✓ TimescaleDB symlinks created"
-fi
-
 echo "✓ Extension symlinks created"
 
 # Step 9: Enable core extensions in database
@@ -283,12 +263,6 @@ $PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS vec
     exit 1
 }
 $PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
-
-# Try to enable TimescaleDB (optional, may not work on macOS without preload)
-$PG_BIN/psql -U $(whoami) htm_development -c "CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;" 2>/dev/null || {
-    echo "⚠️  Note: TimescaleDB extension not enabled (this is OK on macOS)"
-    echo "   HTM will work fine without TimescaleDB"
-}
 
 echo "✓ Core extensions enabled"
 
@@ -309,9 +283,6 @@ echo
 echo "PostgreSQL is running with required extensions:"
 echo "  ✓ pgvector (for embeddings)"
 echo "  ✓ pg_trgm (for fuzzy search)"
-echo
-echo "Note: TimescaleDB was installed but may not be loaded"
-echo "      on macOS. HTM works perfectly without it."
 echo
 echo "Embeddings are generated client-side using Ollama."
 echo "Make sure Ollama is installed and running:"
