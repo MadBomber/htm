@@ -1,0 +1,93 @@
+<svg viewBox="0 0 900 750" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">HTM Database Schema</text>
+
+  <!-- Nodes Table (Top Left - Large) -->
+  <rect x="50" y="70" width="450" height="280" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
+  <text x="275" y="95" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">nodes</text>
+  <line x1="60" y1="105" x2="490" y2="105" stroke="#2196F3" stroke-width="1"/>
+  <text x="70" y="125" fill="#FFC107" font-size="11" font-weight="bold">id: BIGSERIAL PK</text>
+  <text x="70" y="145" fill="#B0B0B0" font-size="11">key: TEXT UNIQUE</text>
+  <text x="70" y="165" fill="#B0B0B0" font-size="11">value: TEXT</text>
+  <text x="70" y="185" fill="#B0B0B0" font-size="11">type: TEXT</text>
+  <text x="70" y="205" fill="#B0B0B0" font-size="11">category: TEXT</text>
+  <text x="70" y="225" fill="#B0B0B0" font-size="11">importance: REAL</text>
+  <text x="70" y="245" fill="#B0B0B0" font-size="11">token_count: INTEGER</text>
+  <text x="70" y="265" fill="#B0B0B0" font-size="11">in_working_memory: BOOL</text>
+  <text x="70" y="285" fill="#4CAF50" font-size="11">robot_id: TEXT FK</text>
+  <text x="70" y="305" fill="#B0B0B0" font-size="11">embedding: vector(1536)</text>
+  <text x="70" y="325" fill="#B0B0B0" font-size="11">created_at, updated_at, ...</text>
+
+  <!-- Robots Table (Top Right) -->
+  <rect x="550" y="70" width="300" height="160" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="2" rx="5"/>
+  <text x="700" y="95" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">robots</text>
+  <line x1="560" y1="105" x2="840" y2="105" stroke="#4CAF50" stroke-width="1"/>
+  <text x="570" y="125" fill="#FFC107" font-size="11" font-weight="bold">id: TEXT PK (UUID)</text>
+  <text x="570" y="145" fill="#B0B0B0" font-size="11">name: TEXT</text>
+  <text x="570" y="165" fill="#B0B0B0" font-size="11">created_at: TIMESTAMP</text>
+  <text x="570" y="185" fill="#B0B0B0" font-size="11">last_active: TIMESTAMP</text>
+  <text x="570" y="205" fill="#B0B0B0" font-size="11">metadata: JSONB</text>
+
+  <!-- Relationships Table (Bottom Left) -->
+  <rect x="50" y="400" width="250" height="180" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="2" rx="5"/>
+  <text x="175" y="425" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">relationships</text>
+  <line x1="60" y1="435" x2="290" y2="435" stroke="#9C27B0" stroke-width="1"/>
+  <text x="70" y="455" fill="#FFC107" font-size="11" font-weight="bold">id: BIGSERIAL PK</text>
+  <text x="70" y="475" fill="#4CAF50" font-size="11">from_node_id: BIGINT FK</text>
+  <text x="70" y="495" fill="#4CAF50" font-size="11">to_node_id: BIGINT FK</text>
+  <text x="70" y="515" fill="#B0B0B0" font-size="11">relationship_type: TEXT</text>
+  <text x="70" y="535" fill="#B0B0B0" font-size="11">strength: REAL</text>
+  <text x="70" y="555" fill="#B0B0B0" font-size="11">created_at: TIMESTAMP</text>
+
+  <!-- Tags Table (Bottom Middle) -->
+  <rect x="340" y="400" width="200" height="160" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
+  <text x="440" y="425" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">tags</text>
+  <line x1="350" y1="435" x2="530" y2="435" stroke="#FF9800" stroke-width="1"/>
+  <text x="360" y="455" fill="#FFC107" font-size="11" font-weight="bold">id: BIGSERIAL PK</text>
+  <text x="360" y="475" fill="#4CAF50" font-size="11">node_id: BIGINT FK</text>
+  <text x="360" y="495" fill="#B0B0B0" font-size="11">tag: TEXT</text>
+  <text x="360" y="515" fill="#B0B0B0" font-size="11">created_at: TIMESTAMP</text>
+
+  <!-- Operations Log Table (Bottom Right) -->
+  <rect x="580" y="400" width="270" height="180" fill="rgba(244, 67, 54, 0.2)" stroke="#F44336" stroke-width="2" rx="5"/>
+  <text x="715" y="425" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">operations_log</text>
+  <line x1="590" y1="435" x2="840" y2="435" stroke="#F44336" stroke-width="1"/>
+  <text x="600" y="455" fill="#FFC107" font-size="11" font-weight="bold">id: BIGSERIAL PK</text>
+  <text x="600" y="475" fill="#B0B0B0" font-size="11">timestamp: TIMESTAMP</text>
+  <text x="600" y="495" fill="#B0B0B0" font-size="11">operation: TEXT</text>
+  <text x="600" y="515" fill="#4CAF50" font-size="11">node_id: BIGINT FK</text>
+  <text x="600" y="535" fill="#4CAF50" font-size="11">robot_id: TEXT FK</text>
+  <text x="600" y="555" fill="#B0B0B0" font-size="11">details: JSONB</text>
+
+  <!-- Foreign Key Relationships -->
+  <!-- nodes.robot_id -> robots.id -->
+  <line x1="500" y1="285" x2="550" y2="150" stroke="#4CAF50" stroke-width="2" marker-end="url(#fk-arrow)"/>
+  <text x="510" y="220" fill="#4CAF50" font-size="10">robot_id FK</text>
+
+  <!-- nodes -> relationships (from_node_id, to_node_id) -->
+  <line x1="175" y1="350" x2="175" y2="400" stroke="#9C27B0" stroke-width="2" marker-end="url(#fk-arrow)"/>
+  <text x="185" y="375" fill="#9C27B0" font-size="10">from/to FK</text>
+
+  <!-- nodes -> tags (node_id) -->
+  <line x1="300" y1="350" x2="440" y2="400" stroke="#FF9800" stroke-width="2" marker-end="url(#fk-arrow)"/>
+  <text x="350" y="375" fill="#FF9800" font-size="10">node_id FK</text>
+
+  <!-- nodes -> operations_log (node_id) -->
+  <line x1="500" y1="350" x2="715" y2="400" stroke="#F44336" stroke-width="2" marker-end="url(#fk-arrow)"/>
+  <text x="580" y="375" fill="#F44336" font-size="10">node_id FK</text>
+
+  <!-- robots -> operations_log (robot_id) -->
+  <line x1="700" y1="230" x2="700" y2="400" stroke="#4CAF50" stroke-width="2" marker-end="url(#fk-arrow)"/>
+  <text x="710" y="315" fill="#4CAF50" font-size="10">robot_id FK</text>
+
+  <defs>
+    <marker id="fk-arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
+    </marker>
+  </defs>
+
+  <!-- Legend -->
+  <text x="50" y="650" fill="#E0E0E0" font-size="12" font-weight="bold">Legend:</text>
+  <text x="50" y="670" fill="#FFC107" font-size="10">PK = Primary Key</text>
+  <text x="200" y="670" fill="#4CAF50" font-size="10">FK = Foreign Key</text>
+</svg>

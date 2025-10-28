@@ -1,0 +1,71 @@
+<svg viewBox="0 0 800 700" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">HTM Layered Architecture</text>
+
+  <!-- Layer 1: API Layer -->
+  <rect x="100" y="60" width="600" height="100" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="2" rx="5"/>
+  <text x="400" y="85" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">API Layer</text>
+  <text x="200" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">add_node()</text>
+  <text x="320" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">recall()</text>
+  <text x="440" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">retrieve()</text>
+  <text x="560" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">forget()</text>
+  <text x="400" y="135" text-anchor="middle" fill="#B0B0B0" font-size="12">create_context() • memory_stats() • which_robot_said()</text>
+
+  <!-- Layer 2: Coordination Layer -->
+  <rect x="100" y="180" width="600" height="100" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
+  <text x="400" y="205" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Coordination Layer (HTM)</text>
+  <text x="250" y="235" text-anchor="middle" fill="#B0B0B0" font-size="12">Robot Registration</text>
+  <text x="400" y="235" text-anchor="middle" fill="#B0B0B0" font-size="12">Embedding Generation</text>
+  <text x="550" y="235" text-anchor="middle" fill="#B0B0B0" font-size="12">Token Counting</text>
+  <text x="400" y="260" text-anchor="middle" fill="#B0B0B0" font-size="12">Memory Orchestration • Context Assembly</text>
+
+  <!-- Layer 3: Memory Management Layer -->
+  <rect x="100" y="300" width="290" height="120" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="2" rx="5"/>
+  <text x="245" y="325" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Working Memory</text>
+  <text x="245" y="350" text-anchor="middle" fill="#B0B0B0" font-size="11">Token Budget</text>
+  <text x="245" y="370" text-anchor="middle" fill="#B0B0B0" font-size="11">Eviction Strategy</text>
+  <text x="245" y="390" text-anchor="middle" fill="#B0B0B0" font-size="11">Context Assembly</text>
+  <text x="245" y="410" text-anchor="middle" fill="#B0B0B0" font-size="11">In-Memory Storage</text>
+
+  <rect x="410" y="300" width="290" height="120" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
+  <text x="555" y="325" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Long-Term Memory</text>
+  <text x="555" y="350" text-anchor="middle" fill="#B0B0B0" font-size="11">Persistence</text>
+  <text x="555" y="370" text-anchor="middle" fill="#B0B0B0" font-size="11">RAG Search</text>
+  <text x="555" y="390" text-anchor="middle" fill="#B0B0B0" font-size="11">Relationship Graphs</text>
+  <text x="555" y="410" text-anchor="middle" fill="#B0B0B0" font-size="11">Robot Registry</text>
+
+  <!-- Layer 4: Services Layer -->
+  <rect x="100" y="440" width="290" height="100" fill="rgba(244, 67, 54, 0.2)" stroke="#F44336" stroke-width="2" rx="5"/>
+  <text x="245" y="465" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Embedding Service</text>
+  <text x="245" y="490" text-anchor="middle" fill="#B0B0B0" font-size="11">Ollama • OpenAI • Cohere</text>
+  <text x="245" y="510" text-anchor="middle" fill="#B0B0B0" font-size="11">Vector Generation</text>
+  <text x="245" y="530" text-anchor="middle" fill="#B0B0B0" font-size="11">Token Counting</text>
+
+  <rect x="410" y="440" width="290" height="100" fill="rgba(255, 193, 7, 0.2)" stroke="#FFC107" stroke-width="2" rx="5"/>
+  <text x="555" y="465" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Database Service</text>
+  <text x="555" y="490" text-anchor="middle" fill="#B0B0B0" font-size="11">Connection Pool</text>
+  <text x="555" y="510" text-anchor="middle" fill="#B0B0B0" font-size="11">Query Execution</text>
+  <text x="555" y="530" text-anchor="middle" fill="#B0B0B0" font-size="11">Transaction Management</text>
+
+  <!-- Layer 5: Data Layer -->
+  <rect x="100" y="560" width="600" height="100" fill="rgba(121, 85, 72, 0.2)" stroke="#795548" stroke-width="2" rx="5"/>
+  <text x="400" y="585" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Data Layer</text>
+  <text x="250" y="615" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL 16+</text>
+  <text x="400" y="615" text-anchor="middle" fill="#B0B0B0" font-size="12">TimescaleDB</text>
+  <text x="550" y="615" text-anchor="middle" fill="#B0B0B0" font-size="12">pgvector</text>
+  <text x="400" y="640" text-anchor="middle" fill="#B0B0B0" font-size="11">Hypertables • Vector Indexes • Full-Text Search</text>
+
+  <!-- Connection arrows -->
+  <line x1="400" y1="160" x2="400" y2="180" stroke="#808080" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="400" y1="280" x2="245" y2="300" stroke="#808080" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="400" y1="280" x2="555" y2="300" stroke="#808080" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="245" y1="420" x2="245" y2="440" stroke="#808080" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="555" y1="420" x2="555" y2="440" stroke="#808080" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="400" y1="540" x2="400" y2="560" stroke="#808080" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#808080"/>
+    </marker>
+  </defs>
+</svg>
