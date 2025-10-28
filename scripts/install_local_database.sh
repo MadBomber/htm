@@ -118,10 +118,13 @@ echo "Step 5: Initializing PostgreSQL..."
 PG_BIN=/opt/homebrew/opt/postgresql@17/bin
 PG_DATA=/opt/homebrew/var/postgresql@17
 
-# Create data directory if it doesn't exist
-mkdir -p "$PG_DATA"
+# Ensure data directory is completely clean before initialization
+if [ -d "$PG_DATA" ]; then
+    echo "Removing existing data directory to start fresh..."
+    rm -rf "$PG_DATA"
+fi
 
-# Initialize database cluster
+# Initialize database cluster (initdb will create the directory)
 echo "Initializing database cluster..."
 $PG_BIN/initdb -D "$PG_DATA" --username=$(whoami) --auth=trust
 
