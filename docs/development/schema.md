@@ -1,26 +1,23 @@
 # Database Schema Documentation
 
-This document provides a comprehensive reference for HTM's PostgreSQL/TimescaleDB database schema, including all tables, indexes, views, functions, and optimization strategies.
+This document provides a comprehensive reference for HTM's PostgreSQL database schema, including all tables, indexes, and relationships.
 
 ## Schema Overview
 
-HTM uses PostgreSQL 17 with TimescaleDB extensions to provide:
+HTM uses PostgreSQL 17 with pgvector and pg_trgm extensions to provide:
 
-- **Time-series optimization** for memory operations
-- **Vector similarity search** via pgvector
-- **Full-text search** with PostgreSQL's built-in capabilities
-- **Fuzzy matching** using pg_trgm
-- **Automatic compression** for old data
-- **Audit logging** for all operations
+- **Vector similarity search** via pgvector for semantic memory retrieval
+- **Full-text search** with PostgreSQL's built-in tsvector capabilities
+- **Fuzzy matching** using pg_trgm for flexible text search
+- **Many-to-many relationships** for flexible tagging and categorization
 
 ### Required Extensions
 
 HTM requires these PostgreSQL extensions:
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS pgvector;      -- Vector similarity search
-CREATE EXTENSION IF NOT EXISTS pg_trgm;       -- Trigram fuzzy matching
-CREATE EXTENSION IF NOT EXISTS timescaledb;   -- Time-series optimization (implicit)
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 ```
 
 ## Entity-Relationship Diagram
@@ -28,7 +25,7 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;   -- Time-series optimization (impli
 Here's the complete database structure:
 
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" style="background: transparent;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" style="background: transparent;">
   <defs>
     <style>
       .table-box { fill: #1e1e1e; stroke: #4a9eff; stroke-width: 2; }
@@ -38,986 +35,562 @@ Here's the complete database structure:
       .text-type { fill: #8cb4e8; font-family: monospace; font-size: 10px; }
       .relation-line { stroke: #4a9eff; stroke-width: 1.5; fill: none; }
       .arrow { fill: #4a9eff; }
+      .join-table { fill: #1e3a1e; stroke: #4a9eff; stroke-width: 2; }
     </style>
   </defs>
 
-  <!-- Nodes Table -->
-  <rect class="table-box" x="50" y="50" width="280" height="320" rx="5"/>
+  <!-- Robots Table -->
+  <rect class="table-box" x="50" y="50" width="280" height="140" rx="5"/>
   <rect class="table-header" x="50" y="50" width="280" height="35" rx="5"/>
-  <text class="text-header" x="190" y="73" text-anchor="middle">nodes</text>
+  <text class="text-header" x="190" y="73" text-anchor="middle">robots</text>
 
   <text class="text-field" x="60" y="100">id</text>
-  <text class="text-type" x="280" y="100" text-anchor="end">BIGSERIAL PK</text>
+  <text class="text-type" x="320" y="100" text-anchor="end">BIGSERIAL PK</text>
 
-  <text class="text-field" x="60" y="120">key</text>
-  <text class="text-type" x="280" y="120" text-anchor="end">TEXT UNIQUE</text>
+  <text class="text-field" x="60" y="120">name</text>
+  <text class="text-type" x="320" y="120" text-anchor="end">TEXT</text>
 
-  <text class="text-field" x="60" y="140">value</text>
-  <text class="text-type" x="280" y="140" text-anchor="end">TEXT</text>
+  <text class="text-field" x="60" y="140">created_at</text>
+  <text class="text-type" x="320" y="140" text-anchor="end">TIMESTAMPTZ</text>
 
-  <text class="text-field" x="60" y="160">type</text>
-  <text class="text-type" x="280" y="160" text-anchor="end">TEXT</text>
+  <text class="text-field" x="60" y="160">last_active</text>
+  <text class="text-type" x="320" y="160" text-anchor="end">TIMESTAMPTZ</text>
 
-  <text class="text-field" x="60" y="180">category</text>
-  <text class="text-type" x="280" y="180" text-anchor="end">TEXT</text>
+  <text class="text-field" x="60" y="180">metadata</text>
+  <text class="text-type" x="320" y="180" text-anchor="end">JSONB</text>
 
-  <text class="text-field" x="60" y="200">importance</text>
-  <text class="text-type" x="280" y="200" text-anchor="end">REAL</text>
+  <!-- Nodes Table -->
+  <rect class="table-box" x="50" y="250" width="280" height="400" rx="5"/>
+  <rect class="table-header" x="50" y="250" width="280" height="35" rx="5"/>
+  <text class="text-header" x="190" y="273" text-anchor="middle">nodes</text>
 
-  <text class="text-field" x="60" y="220">created_at</text>
-  <text class="text-type" x="280" y="220" text-anchor="end">TIMESTAMPTZ</text>
+  <text class="text-field" x="60" y="300">id</text>
+  <text class="text-type" x="320" y="300" text-anchor="end">BIGSERIAL PK</text>
 
-  <text class="text-field" x="60" y="240">updated_at</text>
-  <text class="text-type" x="280" y="240" text-anchor="end">TIMESTAMPTZ</text>
+  <text class="text-field" x="60" y="320">content</text>
+  <text class="text-type" x="320" y="320" text-anchor="end">TEXT NOT NULL</text>
 
-  <text class="text-field" x="60" y="260">last_accessed</text>
-  <text class="text-type" x="280" y="260" text-anchor="end">TIMESTAMPTZ</text>
+  <text class="text-field" x="60" y="340">speaker</text>
+  <text class="text-type" x="320" y="340" text-anchor="end">TEXT NOT NULL</text>
 
-  <text class="text-field" x="60" y="280">token_count</text>
-  <text class="text-type" x="280" y="280" text-anchor="end">INTEGER</text>
+  <text class="text-field" x="60" y="360">type</text>
+  <text class="text-type" x="320" y="360" text-anchor="end">TEXT</text>
 
-  <text class="text-field" x="60" y="300">in_working_memory</text>
-  <text class="text-type" x="280" y="300" text-anchor="end">BOOLEAN</text>
+  <text class="text-field" x="60" y="380">category</text>
+  <text class="text-type" x="320" y="380" text-anchor="end">TEXT</text>
 
-  <text class="text-field" x="60" y="320">robot_id</text>
-  <text class="text-type" x="280" y="320" text-anchor="end">TEXT FK</text>
+  <text class="text-field" x="60" y="400">importance</text>
+  <text class="text-type" x="320" y="400" text-anchor="end">DOUBLE PRECISION</text>
 
-  <text class="text-field" x="60" y="340">embedding</text>
-  <text class="text-type" x="280" y="340" text-anchor="end">vector(1536)</text>
+  <text class="text-field" x="60" y="420">created_at</text>
+  <text class="text-type" x="320" y="420" text-anchor="end">TIMESTAMPTZ</text>
 
-  <!-- Relationships Table -->
-  <rect class="table-box" x="420" y="50" width="280" height="180" rx="5"/>
-  <rect class="table-header" x="420" y="50" width="280" height="35" rx="5"/>
-  <text class="text-header" x="560" y="73" text-anchor="middle">relationships</text>
+  <text class="text-field" x="60" y="440">updated_at</text>
+  <text class="text-type" x="320" y="440" text-anchor="end">TIMESTAMPTZ</text>
 
-  <text class="text-field" x="430" y="100">id</text>
-  <text class="text-type" x="690" y="100" text-anchor="end">BIGSERIAL PK</text>
+  <text class="text-field" x="60" y="460">last_accessed</text>
+  <text class="text-type" x="320" y="460" text-anchor="end">TIMESTAMPTZ</text>
 
-  <text class="text-field" x="430" y="120">from_node_id</text>
-  <text class="text-type" x="690" y="120" text-anchor="end">BIGINT FK</text>
+  <text class="text-field" x="60" y="480">token_count</text>
+  <text class="text-type" x="320" y="480" text-anchor="end">INTEGER</text>
 
-  <text class="text-field" x="430" y="140">to_node_id</text>
-  <text class="text-type" x="690" y="140" text-anchor="end">BIGINT FK</text>
+  <text class="text-field" x="60" y="500">in_working_memory</text>
+  <text class="text-type" x="320" y="500" text-anchor="end">BOOLEAN</text>
 
-  <text class="text-field" x="430" y="160">relationship_type</text>
-  <text class="text-type" x="690" y="160" text-anchor="end">TEXT</text>
+  <text class="text-field" x="60" y="520">robot_id</text>
+  <text class="text-type" x="320" y="520" text-anchor="end">BIGINT FK</text>
 
-  <text class="text-field" x="430" y="180">strength</text>
-  <text class="text-type" x="690" y="180" text-anchor="end">REAL</text>
+  <text class="text-field" x="60" y="540">embedding</text>
+  <text class="text-type" x="320" y="540" text-anchor="end">vector(2000)</text>
 
-  <text class="text-field" x="430" y="200">created_at</text>
-  <text class="text-type" x="690" y="200" text-anchor="end">TIMESTAMPTZ</text>
+  <text class="text-field" x="60" y="560">embedding_dimension</text>
+  <text class="text-type" x="320" y="560" text-anchor="end">INTEGER</text>
 
   <!-- Tags Table -->
-  <rect class="table-box" x="790" y="50" width="280" height="140" rx="5"/>
-  <rect class="table-header" x="790" y="50" width="280" height="35" rx="5"/>
-  <text class="text-header" x="930" y="73" text-anchor="middle">tags</text>
+  <rect class="table-box" x="850" y="250" width="280" height="120" rx="5"/>
+  <rect class="table-header" x="850" y="250" width="280" height="35" rx="5"/>
+  <text class="text-header" x="990" y="273" text-anchor="middle">tags</text>
 
-  <text class="text-field" x="800" y="100">id</text>
-  <text class="text-type" x="1060" y="100" text-anchor="end">BIGSERIAL PK</text>
+  <text class="text-field" x="860" y="300">id</text>
+  <text class="text-type" x="1120" y="300" text-anchor="end">BIGSERIAL PK</text>
 
-  <text class="text-field" x="800" y="120">node_id</text>
-  <text class="text-type" x="1060" y="120" text-anchor="end">BIGINT FK</text>
+  <text class="text-field" x="860" y="320">name</text>
+  <text class="text-type" x="1120" y="320" text-anchor="end">TEXT UNIQUE</text>
 
-  <text class="text-field" x="800" y="140">tag</text>
-  <text class="text-type" x="1060" y="140" text-anchor="end">TEXT</text>
+  <text class="text-field" x="860" y="340">created_at</text>
+  <text class="text-type" x="1120" y="340" text-anchor="end">TIMESTAMPTZ</text>
 
-  <text class="text-field" x="800" y="160">created_at</text>
-  <text class="text-type" x="1060" y="160" text-anchor="end">TIMESTAMPTZ</text>
+  <!-- nodes_tags Join Table -->
+  <rect class="join-table" x="450" y="420" width="280" height="140" rx="5"/>
+  <rect class="table-header" x="450" y="420" width="280" height="35" rx="5"/>
+  <text class="text-header" x="590" y="443" text-anchor="middle">nodes_tags</text>
 
-  <!-- Robots Table -->
-  <rect class="table-box" x="50" y="430" width="280" height="160" rx="5"/>
-  <rect class="table-header" x="50" y="430" width="280" height="35" rx="5"/>
-  <text class="text-header" x="190" y="453" text-anchor="middle">robots</text>
+  <text class="text-field" x="460" y="470">id</text>
+  <text class="text-type" x="720" y="470" text-anchor="end">BIGSERIAL PK</text>
 
-  <text class="text-field" x="60" y="480">id</text>
-  <text class="text-type" x="320" y="480" text-anchor="end">TEXT PK</text>
+  <text class="text-field" x="460" y="490">node_id</text>
+  <text class="text-type" x="720" y="490" text-anchor="end">BIGINT FK</text>
 
-  <text class="text-field" x="60" y="500">name</text>
-  <text class="text-type" x="320" y="500" text-anchor="end">TEXT</text>
+  <text class="text-field" x="460" y="510">tag_id</text>
+  <text class="text-type" x="720" y="510" text-anchor="end">BIGINT FK</text>
 
-  <text class="text-field" x="60" y="520">created_at</text>
-  <text class="text-type" x="320" y="520" text-anchor="end">TIMESTAMPTZ</text>
-
-  <text class="text-field" x="60" y="540">last_active</text>
-  <text class="text-type" x="320" y="540" text-anchor="end">TIMESTAMPTZ</text>
-
-  <text class="text-field" x="60" y="560">metadata</text>
-  <text class="text-type" x="320" y="560" text-anchor="end">JSONB</text>
-
-  <!-- Operations Log Table (Hypertable) -->
-  <rect class="table-box" x="420" y="430" width="280" height="180" rx="5"/>
-  <rect class="table-header" x="420" y="430" width="280" height="35" rx="5"/>
-  <text class="text-header" x="560" y="453" text-anchor="middle">operations_log 🕐</text>
-
-  <text class="text-field" x="430" y="480">id</text>
-  <text class="text-type" x="690" y="480" text-anchor="end">BIGSERIAL PK</text>
-
-  <text class="text-field" x="430" y="500">timestamp</text>
-  <text class="text-type" x="690" y="500" text-anchor="end">TIMESTAMPTZ</text>
-
-  <text class="text-field" x="430" y="520">operation</text>
-  <text class="text-type" x="690" y="520" text-anchor="end">TEXT</text>
-
-  <text class="text-field" x="430" y="540">node_id</text>
-  <text class="text-type" x="690" y="540" text-anchor="end">BIGINT FK</text>
-
-  <text class="text-field" x="430" y="560">robot_id</text>
-  <text class="text-type" x="690" y="560" text-anchor="end">TEXT FK</text>
-
-  <text class="text-field" x="430" y="580">details</text>
-  <text class="text-type" x="690" y="580" text-anchor="end">JSONB</text>
-
-  <!-- Relationships: nodes -> relationships -->
-  <path class="relation-line" d="M 330 120 L 420 120"/>
-  <polygon class="arrow" points="420,120 410,115 410,125"/>
-
-  <path class="relation-line" d="M 330 140 L 380 140 L 380 140 L 420 140"/>
-  <polygon class="arrow" points="420,140 410,135 410,145"/>
-
-  <!-- Relationships: nodes -> tags -->
-  <path class="relation-line" d="M 330 160 L 750 160 L 750 120 L 790 120"/>
-  <polygon class="arrow" points="790,120 780,115 780,125"/>
+  <text class="text-field" x="460" y="530">created_at</text>
+  <text class="text-type" x="720" y="530" text-anchor="end">TIMESTAMPTZ</text>
 
   <!-- Relationships: robots -> nodes -->
-  <path class="relation-line" d="M 190 430 L 190 370"/>
-  <polygon class="arrow" points="190,370 185,380 195,380"/>
+  <path class="relation-line" d="M 190 190 L 190 250"/>
+  <polygon class="arrow" points="190,250 185,240 195,240"/>
 
-  <!-- Relationships: robots -> operations_log -->
-  <path class="relation-line" d="M 330 520 L 420 520"/>
-  <polygon class="arrow" points="420,520 410,515 410,525"/>
+  <!-- Relationships: nodes -> nodes_tags -->
+  <path class="relation-line" d="M 330 490 L 450 490"/>
+  <polygon class="arrow" points="450,490 440,485 440,495"/>
 
-  <!-- Relationships: nodes -> operations_log -->
-  <path class="relation-line" d="M 190 370 L 190 400 L 560 400 L 560 430"/>
-  <polygon class="arrow" points="560,430 555,420 565,420"/>
+  <!-- Relationships: tags -> nodes_tags -->
+  <path class="relation-line" d="M 850 310 L 730 310 L 730 510 L 730 510"/>
+  <polygon class="arrow" points="730,510 725,500 735,500"/>
 
   <!-- Legend -->
   <text class="text-field" x="50" y="720" font-weight="bold">Legend:</text>
   <text class="text-field" x="50" y="740">PK = Primary Key</text>
   <text class="text-field" x="200" y="740">FK = Foreign Key</text>
-  <text class="text-field" x="350" y="740">🕐 = TimescaleDB Hypertable</text>
+  <text class="text-field" x="50" y="760">Green box = Join table (many-to-many)</text>
+
+  <!-- Annotations -->
+  <text class="text-field" x="400" y="370" font-style="italic">1:N</text>
+  <text class="text-field" x="380" y="480" font-style="italic">N:M</text>
+  <text class="text-field" x="770" y="480" font-style="italic">N:M</text>
 </svg>
 ```
 
 ## Table Definitions
 
+### robots
+
+The robots table stores registration and metadata for all LLM agents using the HTM system.
+
+**Purpose**: Registry of all robots (LLM agents) with their configuration and activity tracking.
+
+```sql
+CREATE TABLE public.robots (
+    id bigint NOT NULL,
+    name text,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    last_active timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    metadata jsonb
+);
+
+ALTER TABLE ONLY public.robots ALTER COLUMN id SET DEFAULT nextval('public.robots_id_seq'::regclass);
+ALTER TABLE ONLY public.robots ADD CONSTRAINT robots_pkey PRIMARY KEY (id);
+```
+
+**Columns**:
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | BIGINT | NO | AUTO | Unique identifier (primary key) |
+| `name` | TEXT | YES | NULL | Human-readable name for the robot |
+| `created_at` | TIMESTAMPTZ | YES | NOW() | When the robot was first registered |
+| `last_active` | TIMESTAMPTZ | YES | NOW() | Last time the robot accessed the system |
+| `metadata` | JSONB | YES | NULL | Robot-specific configuration and metadata |
+
+**Indexes**:
+- `PRIMARY KEY` on `id`
+
+**Relationships**:
+- One robot has many nodes (1:N)
+
+---
+
 ### nodes
 
-The core table storing all memory nodes with vector embeddings.
+The core table storing all memory nodes with vector embeddings for semantic search.
 
-**Purpose**: Stores all memories (facts, decisions, code, etc.) with full-text and vector search capabilities.
+**Purpose**: Stores all memories (conversation messages, facts, decisions, code, etc.) with full-text and vector search capabilities.
 
 ```sql
-CREATE TABLE IF NOT EXISTS nodes (
-  id BIGSERIAL PRIMARY KEY,
-  key TEXT UNIQUE NOT NULL,
-  value TEXT NOT NULL,
-  type TEXT,
-  category TEXT,
-  importance REAL DEFAULT 1.0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  last_accessed TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  token_count INTEGER,
-  in_working_memory BOOLEAN DEFAULT FALSE,
-  robot_id TEXT NOT NULL,
-  embedding vector(1536)
+CREATE TABLE public.nodes (
+    id bigint NOT NULL,
+    content text NOT NULL,
+    speaker text NOT NULL,
+    type text,
+    category text,
+    importance double precision DEFAULT 1.0,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    last_accessed timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    token_count integer,
+    in_working_memory boolean DEFAULT false,
+    robot_id bigint NOT NULL,
+    embedding public.vector(2000),
+    embedding_dimension integer,
+    CONSTRAINT check_embedding_dimension CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension > 0) AND (embedding_dimension <= 2000))))
 );
+
+ALTER TABLE ONLY public.nodes ALTER COLUMN id SET DEFAULT nextval('public.nodes_id_seq'::regclass);
+ALTER TABLE ONLY public.nodes ADD CONSTRAINT nodes_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.nodes
+    ADD CONSTRAINT fk_rails_60162e9d3a FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
 ```
 
 **Columns**:
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
-| `id` | BIGSERIAL | NO | AUTO | Unique identifier (primary key) |
-| `key` | TEXT | NO | - | Unique string key for retrieval |
-| `value` | TEXT | NO | - | The actual memory content |
+| `id` | BIGINT | NO | AUTO | Unique identifier (primary key) |
+| `content` | TEXT | NO | - | The conversation message/utterance content |
+| `speaker` | TEXT | NO | - | Who said it: user or robot name |
 | `type` | TEXT | YES | NULL | Memory type: fact, context, code, preference, decision, question |
-| `category` | TEXT | YES | NULL | Custom categorization |
-| `importance` | REAL | YES | 1.0 | Importance score (0-10) |
-| `created_at` | TIMESTAMPTZ | NO | NOW() | Creation timestamp |
-| `updated_at` | TIMESTAMPTZ | NO | NOW() | Last update timestamp (auto-updated) |
-| `last_accessed` | TIMESTAMPTZ | NO | NOW() | Last retrieval timestamp |
-| `token_count` | INTEGER | YES | NULL | Number of tokens (for working memory) |
-| `in_working_memory` | BOOLEAN | NO | FALSE | Currently in working memory? |
-| `robot_id` | TEXT | NO | - | Robot that created this memory |
-| `embedding` | vector(1536) | YES | NULL | Vector embedding for semantic search |
+| `category` | TEXT | YES | NULL | Optional category for organizing memories |
+| `importance` | DOUBLE PRECISION | YES | 1.0 | Importance score (0.0-1.0) for prioritizing recall |
+| `created_at` | TIMESTAMPTZ | YES | NOW() | When this memory was created |
+| `updated_at` | TIMESTAMPTZ | YES | NOW() | When this memory was last modified |
+| `last_accessed` | TIMESTAMPTZ | YES | NOW() | When this memory was last accessed |
+| `token_count` | INTEGER | YES | NULL | Number of tokens in the content (for context budget management) |
+| `in_working_memory` | BOOLEAN | YES | FALSE | Whether this memory is currently in working memory |
+| `robot_id` | BIGINT | NO | - | ID of the robot that owns this memory |
+| `embedding` | vector(2000) | YES | NULL | Vector embedding (max 2000 dimensions) for semantic search |
+| `embedding_dimension` | INTEGER | YES | NULL | Actual number of dimensions used in the embedding vector (max 2000) |
 
 **Indexes**:
 
 - `PRIMARY KEY` on `id`
-- `UNIQUE` constraint on `key`
-- B-tree indexes on: `created_at`, `updated_at`, `last_accessed`, `type`, `category`, `robot_id`, `in_working_memory`
-- HNSW index on `embedding` for vector similarity search
-- GIN indexes on `value` and `key` for full-text search
-- GIN trigram index on `value` for fuzzy matching
-
-**Triggers**:
-
-- `update_nodes_updated_at`: Automatically updates `updated_at` on row modification
-
-### relationships
-
-Tracks relationships between memory nodes for knowledge graph functionality.
-
-**Purpose**: Enables building a knowledge graph by connecting related memories.
-
-```sql
-CREATE TABLE IF NOT EXISTS relationships (
-  id BIGSERIAL PRIMARY KEY,
-  from_node_id BIGINT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  to_node_id BIGINT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  relationship_type TEXT,
-  strength REAL DEFAULT 1.0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(from_node_id, to_node_id, relationship_type)
-);
-```
-
-**Columns**:
-
-| Column | Type | Nullable | Default | Description |
-|--------|------|----------|---------|-------------|
-| `id` | BIGSERIAL | NO | AUTO | Unique identifier |
-| `from_node_id` | BIGINT | NO | - | Source node (foreign key to nodes.id) |
-| `to_node_id` | BIGINT | NO | - | Target node (foreign key to nodes.id) |
-| `relationship_type` | TEXT | YES | NULL | Type of relationship (e.g., "related_to", "depends_on") |
-| `strength` | REAL | YES | 1.0 | Relationship strength (0-1) |
-| `created_at` | TIMESTAMPTZ | NO | NOW() | When relationship was created |
-
-**Indexes**:
-
-- `PRIMARY KEY` on `id`
-- `UNIQUE` constraint on `(from_node_id, to_node_id, relationship_type)`
-- B-tree index on `from_node_id`
-- B-tree index on `to_node_id`
+- `idx_nodes_robot_id` BTREE on `robot_id`
+- `idx_nodes_speaker` BTREE on `speaker`
+- `idx_nodes_type` BTREE on `type`
+- `idx_nodes_category` BTREE on `category`
+- `idx_nodes_created_at` BTREE on `created_at`
+- `idx_nodes_updated_at` BTREE on `updated_at`
+- `idx_nodes_last_accessed` BTREE on `last_accessed`
+- `idx_nodes_in_working_memory` BTREE on `in_working_memory`
+- `idx_nodes_embedding` HNSW on `embedding` using `vector_cosine_ops` (m=16, ef_construction=64)
+- `idx_nodes_content_gin` GIN on `to_tsvector('english', content)` for full-text search
+- `idx_nodes_content_trgm` GIN on `content` using `gin_trgm_ops` for fuzzy matching
 
 **Foreign Keys**:
+- `robot_id` references `robots(id)` ON DELETE CASCADE
 
-- `from_node_id` references `nodes(id)` with `ON DELETE CASCADE`
-- `to_node_id` references `nodes(id)` with `ON DELETE CASCADE`
+**Relationships**:
+- Many nodes belong to one robot (N:1)
+- Many nodes have many tags through nodes_tags (N:M)
+
+**Check Constraints**:
+- `check_embedding_dimension`: Ensures embedding_dimension is NULL or between 1 and 2000
+
+---
 
 ### tags
 
-Flexible tagging system for categorizing memories.
+The tags table stores unique hierarchical tag names for categorization.
 
-**Purpose**: Allows multiple tags per memory for flexible categorization and filtering.
+**Purpose**: Provides flexible, hierarchical categorization using colon-separated namespaces (e.g., `database:postgresql:timescaledb`).
 
 ```sql
-CREATE TABLE IF NOT EXISTS tags (
-  id BIGSERIAL PRIMARY KEY,
-  node_id BIGINT NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  tag TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(node_id, tag)
+CREATE TABLE public.tags (
+    id bigint NOT NULL,
+    name text NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
+ALTER TABLE ONLY public.tags ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
 ```
 
 **Columns**:
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
-| `id` | BIGSERIAL | NO | AUTO | Unique identifier |
-| `node_id` | BIGINT | NO | - | Node being tagged (foreign key to nodes.id) |
-| `tag` | TEXT | NO | - | Tag value (e.g., "architecture", "important") |
-| `created_at` | TIMESTAMPTZ | NO | NOW() | When tag was added |
+| `id` | BIGINT | NO | AUTO | Unique identifier (primary key) |
+| `name` | TEXT | NO | - | Hierarchical tag in format: root:level1:level2 (e.g., database:postgresql:timescaledb) |
+| `created_at` | TIMESTAMPTZ | YES | NOW() | When this tag was created |
 
 **Indexes**:
-
 - `PRIMARY KEY` on `id`
-- `UNIQUE` constraint on `(node_id, tag)`
-- B-tree index on `node_id`
-- B-tree index on `tag`
+- `idx_tags_name_unique` UNIQUE BTREE on `name`
+- `idx_tags_name_pattern` BTREE on `name` with `text_pattern_ops` for pattern matching
+
+**Relationships**:
+- Many tags belong to many nodes through nodes_tags (N:M)
+
+**Tag Hierarchy**:
+
+Tags use colon-separated hierarchies for organization:
+- `programming:ruby:gems` - Programming > Ruby > Gems
+- `database:postgresql:extensions` - Database > PostgreSQL > Extensions
+- `ai:llm:embeddings` - AI > LLM > Embeddings
+
+This allows querying by prefix to find all related tags:
+```sql
+SELECT * FROM tags WHERE name LIKE 'database:%';  -- All database-related tags
+SELECT * FROM tags WHERE name LIKE 'ai:llm:%';    -- All LLM-related tags
+```
+
+---
+
+### nodes_tags
+
+The nodes_tags join table implements the many-to-many relationship between nodes and tags.
+
+**Purpose**: Links nodes to tags, allowing each node to have multiple tags and each tag to be applied to multiple nodes.
+
+```sql
+CREATE TABLE public.nodes_tags (
+    id bigint NOT NULL,
+    node_id bigint NOT NULL,
+    tag_id bigint NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE ONLY public.nodes_tags ALTER COLUMN id SET DEFAULT nextval('public.node_tags_id_seq'::regclass);
+ALTER TABLE ONLY public.nodes_tags ADD CONSTRAINT node_tags_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.nodes_tags
+    ADD CONSTRAINT fk_rails_b0b726ecf8 FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.nodes_tags
+    ADD CONSTRAINT fk_rails_eccc99cec5 FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE;
+```
+
+**Columns**:
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | BIGINT | NO | AUTO | Unique identifier (primary key) |
+| `node_id` | BIGINT | NO | - | ID of the node being tagged |
+| `tag_id` | BIGINT | NO | - | ID of the tag being applied |
+| `created_at` | TIMESTAMPTZ | YES | NOW() | When this association was created |
+
+**Indexes**:
+- `PRIMARY KEY` on `id`
+- `idx_node_tags_unique` UNIQUE BTREE on `(node_id, tag_id)` - Prevents duplicate associations
+- `idx_node_tags_node_id` BTREE on `node_id` - Fast lookups of tags for a node
+- `idx_node_tags_tag_id` BTREE on `tag_id` - Fast lookups of nodes for a tag
 
 **Foreign Keys**:
+- `node_id` references `nodes(id)` ON DELETE CASCADE
+- `tag_id` references `tags(id)` ON DELETE CASCADE
 
-- `node_id` references `nodes(id)` with `ON DELETE CASCADE`
+**Cascade Behavior**:
+- When a node is deleted, all its tag associations are automatically removed
+- When a tag is deleted, all associations to that tag are automatically removed
+- The join table ensures referential integrity between nodes and tags
 
-### robots
+---
 
-Registry of all robots using the HTM system.
+## Common Query Patterns
 
-**Purpose**: Tracks robot metadata for the "hive mind" multi-robot functionality.
+### Finding Tags for a Node
 
 ```sql
-CREATE TABLE IF NOT EXISTS robots (
-  id TEXT PRIMARY KEY,
-  name TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  last_active TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  metadata JSONB
-);
+SELECT t.name
+FROM tags t
+JOIN nodes_tags nt ON t.id = nt.tag_id
+WHERE nt.node_id = $1
+ORDER BY t.name;
 ```
 
-**Columns**:
-
-| Column | Type | Nullable | Default | Description |
-|--------|------|----------|---------|-------------|
-| `id` | TEXT | NO | - | Unique robot identifier (primary key) |
-| `name` | TEXT | YES | NULL | Human-readable robot name |
-| `created_at` | TIMESTAMPTZ | NO | NOW() | When robot was first registered |
-| `last_active` | TIMESTAMPTZ | NO | NOW() | Last activity timestamp |
-| `metadata` | JSONB | YES | NULL | Robot-specific configuration (JSON) |
-
-**Indexes**:
-
-- `PRIMARY KEY` on `id`
-
-### operations_log (TimescaleDB Hypertable)
-
-Audit log of all memory operations for debugging and replay.
-
-**Purpose**: Provides complete audit trail and enables debugging and operation replay.
+### Finding Nodes with a Specific Tag
 
 ```sql
-CREATE TABLE IF NOT EXISTS operations_log (
-  id BIGSERIAL PRIMARY KEY,
-  timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  operation TEXT NOT NULL,
-  node_id BIGINT REFERENCES nodes(id) ON DELETE SET NULL,
-  robot_id TEXT NOT NULL,
-  details JSONB
-);
-
--- Convert to hypertable (TimescaleDB)
-SELECT create_hypertable('operations_log', 'timestamp', if_not_exists => TRUE);
-```
-
-**Columns**:
-
-| Column | Type | Nullable | Default | Description |
-|--------|------|----------|---------|-------------|
-| `id` | BIGSERIAL | NO | AUTO | Unique identifier |
-| `timestamp` | TIMESTAMPTZ | NO | NOW() | Operation timestamp (partitioning key) |
-| `operation` | TEXT | NO | - | Operation type: add, retrieve, remove, evict, recall |
-| `node_id` | BIGINT | YES | NULL | Related node (foreign key, nullable) |
-| `robot_id` | TEXT | NO | - | Robot performing operation |
-| `details` | JSONB | YES | NULL | Additional operation metadata |
-
-**Indexes**:
-
-- `PRIMARY KEY` on `id`
-- B-tree index on `timestamp` (automatically created by TimescaleDB)
-- B-tree index on `robot_id`
-- B-tree index on `operation`
-
-**Foreign Keys**:
-
-- `node_id` references `nodes(id)` with `ON DELETE SET NULL`
-
-**TimescaleDB Optimization**:
-
-This table is converted to a hypertable, automatically partitioning data by time for efficient queries and compression.
-
-## Indexes and Constraints
-
-### Primary Keys
-
-| Table | Column | Type |
-|-------|--------|------|
-| `nodes` | `id` | BIGSERIAL |
-| `relationships` | `id` | BIGSERIAL |
-| `tags` | `id` | BIGSERIAL |
-| `robots` | `id` | TEXT |
-| `operations_log` | `id` | BIGSERIAL |
-
-### Unique Constraints
-
-| Table | Columns | Purpose |
-|-------|---------|---------|
-| `nodes` | `key` | Ensure unique memory keys |
-| `relationships` | `(from_node_id, to_node_id, relationship_type)` | Prevent duplicate relationships |
-| `tags` | `(node_id, tag)` | Prevent duplicate tags per node |
-
-### Foreign Keys
-
-| Table | Column | References | On Delete |
-|-------|--------|------------|-----------|
-| `relationships` | `from_node_id` | `nodes(id)` | CASCADE |
-| `relationships` | `to_node_id` | `nodes(id)` | CASCADE |
-| `tags` | `node_id` | `nodes(id)` | CASCADE |
-| `operations_log` | `node_id` | `nodes(id)` | SET NULL |
-
-### Vector Similarity Index (HNSW)
-
-High-performance vector similarity search:
-
-```sql
-CREATE INDEX IF NOT EXISTS idx_nodes_embedding ON nodes
-  USING hnsw (embedding vector_cosine_ops)
-  WITH (m = 16, ef_construction = 64);
-```
-
-**Parameters**:
-
-- `m = 16`: Controls index size/quality tradeoff (higher = more accurate, larger index)
-- `ef_construction = 64`: Build-time search depth (higher = better index quality, slower build)
-- `vector_cosine_ops`: Use cosine similarity for comparisons
-
-### Full-Text Search Indexes (GIN)
-
-PostgreSQL full-text search:
-
-```sql
-CREATE INDEX IF NOT EXISTS idx_nodes_value_gin
-  ON nodes USING gin(to_tsvector('english', value));
-
-CREATE INDEX IF NOT EXISTS idx_nodes_key_gin
-  ON nodes USING gin(to_tsvector('english', key));
-```
-
-These enable fast keyword searches on memory content.
-
-### Trigram Fuzzy Search (GIN)
-
-Fuzzy/similarity matching:
-
-```sql
-CREATE INDEX IF NOT EXISTS idx_nodes_value_trgm
-  ON nodes USING gin(value gin_trgm_ops);
-```
-
-Enables queries like:
-
-```sql
-SELECT * FROM nodes WHERE value % 'search term';  -- Similarity search
-SELECT * FROM nodes WHERE value ILIKE '%fuzzy%';  -- Fast ILIKE
-```
-
-## Views
-
-### node_stats
-
-Aggregated statistics by memory type.
-
-```sql
-CREATE OR REPLACE VIEW node_stats AS
-SELECT
-  type,
-  COUNT(*) as count,
-  AVG(importance) as avg_importance,
-  SUM(token_count) as total_tokens,
-  MIN(created_at) as oldest,
-  MAX(created_at) as newest
-FROM nodes
-GROUP BY type;
-```
-
-**Usage**:
-
-```sql
-SELECT * FROM node_stats;
-```
-
-**Returns**:
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `type` | TEXT | Memory type |
-| `count` | BIGINT | Number of memories of this type |
-| `avg_importance` | REAL | Average importance score |
-| `total_tokens` | BIGINT | Total tokens across all memories |
-| `oldest` | TIMESTAMPTZ | Oldest memory creation time |
-| `newest` | TIMESTAMPTZ | Newest memory creation time |
-
-### robot_activity
-
-Per-robot activity summary.
-
-```sql
-CREATE OR REPLACE VIEW robot_activity AS
-SELECT
-  r.id,
-  r.name,
-  COUNT(n.id) as total_nodes,
-  MAX(n.created_at) as last_node_created
-FROM robots r
-LEFT JOIN nodes n ON n.robot_id = r.id
-GROUP BY r.id, r.name;
-```
-
-**Usage**:
-
-```sql
-SELECT * FROM robot_activity ORDER BY total_nodes DESC;
-```
-
-**Returns**:
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | TEXT | Robot ID |
-| `name` | TEXT | Robot name |
-| `total_nodes` | BIGINT | Total memories created by robot |
-| `last_node_created` | TIMESTAMPTZ | Most recent memory creation |
-
-## Functions and Triggers
-
-### update_updated_at_column()
-
-Automatically updates the `updated_at` timestamp when a row is modified.
-
-```sql
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = CURRENT_TIMESTAMP;
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
-```
-
-**Trigger**:
-
-```sql
-DROP TRIGGER IF EXISTS update_nodes_updated_at ON nodes;
-CREATE TRIGGER update_nodes_updated_at
-  BEFORE UPDATE ON nodes
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-```
-
-This ensures `nodes.updated_at` is always current without application code.
-
-## TimescaleDB Hypertables
-
-### operations_log Hypertable
-
-The `operations_log` table is converted to a TimescaleDB hypertable for time-series optimization.
-
-**Creation**:
-
-```sql
-SELECT create_hypertable('operations_log', 'timestamp', if_not_exists => TRUE);
-```
-
-**Benefits**:
-
-- Automatic time-based partitioning (chunks)
-- Fast time-range queries
-- Automatic compression for old data
-- Efficient retention policies
-
-**Chunk Size**: Default ~7 days per chunk (adjustable)
-
-### Compression Policy (Future)
-
-Compress old operation logs to save space:
-
-```sql
--- Enable compression
-ALTER TABLE operations_log SET (
-  timescaledb.compress,
-  timescaledb.compress_segmentby = 'robot_id',
-  timescaledb.compress_orderby = 'timestamp DESC'
-);
-
--- Automatically compress chunks older than 30 days
-SELECT add_compression_policy('operations_log', INTERVAL '30 days');
-```
-
-### Retention Policy (Future)
-
-Automatically drop very old operation logs:
-
-```sql
--- Drop chunks older than 1 year
-SELECT add_retention_policy('operations_log', INTERVAL '1 year');
-```
-
-## Query Examples
-
-### Vector Similarity Search
-
-Find semantically similar memories:
-
-```sql
-SELECT
-  key,
-  value,
-  importance,
-  embedding <=> $1 AS distance
-FROM nodes
-WHERE embedding IS NOT NULL
-ORDER BY embedding <=> $1
-LIMIT 10;
-```
-
-**Note**: `$1` is the query embedding vector. `<=>` is cosine distance operator.
-
-### Full-Text Search
-
-Find memories matching keywords:
-
-```sql
-SELECT
-  key,
-  value,
-  ts_rank(to_tsvector('english', value), query) AS rank
-FROM nodes,
-     to_tsquery('english', 'database & architecture') AS query
-WHERE to_tsvector('english', value) @@ query
-ORDER BY rank DESC
-LIMIT 10;
-```
-
-### Hybrid Search
-
-Combine vector and full-text search:
-
-```sql
-WITH vector_results AS (
-  SELECT
-    id,
-    embedding <=> $1 AS vector_score
-  FROM nodes
-  WHERE embedding IS NOT NULL
-  ORDER BY embedding <=> $1
-  LIMIT 50
-),
-fulltext_results AS (
-  SELECT
-    id,
-    ts_rank(to_tsvector('english', value), query) AS text_score
-  FROM nodes,
-       to_tsquery('english', $2) AS query
-  WHERE to_tsvector('english', value) @@ query
-  ORDER BY text_score DESC
-  LIMIT 50
-)
-SELECT
-  n.*,
-  COALESCE(v.vector_score, 1.0) * 0.6 +
-  COALESCE(f.text_score, 0.0) * 0.4 AS combined_score
+SELECT n.*
 FROM nodes n
-LEFT JOIN vector_results v ON v.id = n.id
-LEFT JOIN fulltext_results f ON f.id = n.id
-WHERE v.id IS NOT NULL OR f.id IS NOT NULL
-ORDER BY combined_score DESC
-LIMIT 10;
+JOIN nodes_tags nt ON n.id = nt.node_id
+JOIN tags t ON nt.tag_id = t.id
+WHERE t.name = 'database:postgresql'
+ORDER BY n.created_at DESC;
 ```
 
-### Time-Range Query
-
-Find memories from specific time period:
+### Finding Nodes with Hierarchical Tag Prefix
 
 ```sql
-SELECT *
-FROM nodes
-WHERE created_at >= NOW() - INTERVAL '7 days'
-  AND created_at <= NOW()
-ORDER BY created_at DESC;
+SELECT n.*
+FROM nodes n
+JOIN nodes_tags nt ON n.id = nt.node_id
+JOIN tags t ON nt.tag_id = t.id
+WHERE t.name LIKE 'ai:llm:%'
+ORDER BY n.created_at DESC;
 ```
 
-### Robot Activity
-
-Which robot created the most memories?
+### Finding Related Topics by Shared Nodes
 
 ```sql
 SELECT
-  robot_id,
-  COUNT(*) as memory_count,
-  AVG(importance) as avg_importance
-FROM nodes
-GROUP BY robot_id
-ORDER BY memory_count DESC;
+    t1.name AS topic1,
+    t2.name AS topic2,
+    COUNT(DISTINCT nt1.node_id) AS shared_nodes
+FROM tags t1
+JOIN nodes_tags nt1 ON t1.id = nt1.tag_id
+JOIN nodes_tags nt2 ON nt1.node_id = nt2.node_id
+JOIN tags t2 ON nt2.tag_id = t2.id
+WHERE t1.name < t2.name
+GROUP BY t1.name, t2.name
+HAVING COUNT(DISTINCT nt1.node_id) >= 2
+ORDER BY shared_nodes DESC;
 ```
 
-### Knowledge Graph Traversal
-
-Find all nodes related to a specific node:
+### Vector Similarity Search with Tag Filter
 
 ```sql
-WITH RECURSIVE related AS (
-  -- Start node
-  SELECT id, key, value, 1 as depth
-  FROM nodes
-  WHERE key = 'decision_001'
-
-  UNION
-
-  -- Traverse relationships
-  SELECT n.id, n.key, n.value, r.depth + 1
-  FROM nodes n
-  JOIN relationships rel ON (rel.to_node_id = n.id)
-  JOIN related r ON (rel.from_node_id = r.id)
-  WHERE r.depth < 3  -- Max depth
-)
-SELECT * FROM related;
+SELECT n.*, n.embedding <=> $1::vector AS distance
+FROM nodes n
+JOIN nodes_tags nt ON n.id = nt.node_id
+JOIN tags t ON nt.tag_id = t.id
+WHERE t.name = 'programming:ruby'
+  AND n.embedding IS NOT NULL
+ORDER BY distance
+LIMIT 10;
 ```
 
-## Schema Migration Strategy
-
-### Initial Setup
-
-Run the complete schema once:
+### Full-Text Search with Tag Filter
 
 ```sql
--- Load from file
-psql $HTM_DBURL -f sql/schema.sql
-
--- Or via Ruby
-ruby -r ./lib/htm -e "HTM::Database.setup"
+SELECT n.*, ts_rank(to_tsvector('english', n.content), query) AS rank
+FROM nodes n
+JOIN nodes_tags nt ON n.id = nt.node_id
+JOIN tags t ON nt.tag_id = t.id,
+     to_tsquery('english', 'database & optimization') query
+WHERE to_tsvector('english', n.content) @@ query
+  AND t.name LIKE 'database:%'
+ORDER BY rank DESC
+LIMIT 20;
 ```
 
-### Adding Columns
+---
 
-When adding new columns, use `ALTER TABLE`:
+## Database Optimization
+
+### Vector Search Performance
+
+The `idx_nodes_embedding` index uses HNSW (Hierarchical Navigable Small World) algorithm for fast approximate nearest neighbor search:
+
+- **m=16**: Number of bi-directional links per node (higher = better recall, more memory)
+- **ef_construction=64**: Size of dynamic candidate list during index construction (higher = better quality, slower build)
+
+For queries, you can adjust `ef_search` (defaults to 40):
+```sql
+SET hnsw.ef_search = 100;  -- Better recall, slower queries
+```
+
+### Full-Text Search Performance
+
+The `idx_nodes_content_gin` index enables fast full-text search using PostgreSQL's tsvector:
 
 ```sql
--- Add new column with default
-ALTER TABLE nodes
-  ADD COLUMN access_count INTEGER DEFAULT 0;
-
--- Add index if needed
-CREATE INDEX idx_nodes_access_count ON nodes(access_count);
+-- Query optimization with explicit tsvector
+SELECT * FROM nodes
+WHERE to_tsvector('english', content) @@ to_tsquery('english', 'memory & retrieval');
 ```
 
-### Changing Columns
+### Fuzzy Matching Performance
 
-Be careful with type changes on large tables:
+The `idx_nodes_content_trgm` index enables similarity search and pattern matching:
 
 ```sql
--- Safe: Add new column, migrate data, drop old
-ALTER TABLE nodes ADD COLUMN new_importance NUMERIC(5,2);
-UPDATE nodes SET new_importance = importance::NUMERIC(5,2);
-ALTER TABLE nodes DROP COLUMN importance;
-ALTER TABLE nodes RENAME COLUMN new_importance TO importance;
-```
+-- Similarity search
+SELECT * FROM nodes
+WHERE content % 'semantic retreval';  -- Handles typos
 
-### Dropping Columns
-
-```sql
--- Drop column (cascades to dependencies)
-ALTER TABLE nodes DROP COLUMN old_column CASCADE;
-```
-
-### Version Control
-
-Track schema changes in `sql/migrations/`:
-
-```
-sql/
-├── schema.sql              # Current complete schema
-└── migrations/
-    ├── 001_initial.sql
-    ├── 002_add_access_count.sql
-    └── 003_add_compression.sql
-```
-
-Each migration file should be idempotent and include:
-
-```sql
--- Migration: Add access_count column
--- Date: 2024-10-25
--- Description: Track how many times each node is accessed
-
--- Check if column exists
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name='nodes' AND column_name='access_count'
-  ) THEN
-    ALTER TABLE nodes ADD COLUMN access_count INTEGER DEFAULT 0;
-    CREATE INDEX idx_nodes_access_count ON nodes(access_count);
-  END IF;
-END $$;
-```
-
-## Performance Optimization
-
-### Analyze and Vacuum
-
-Keep statistics up-to-date:
-
-```sql
--- Update statistics for query planner
-ANALYZE nodes;
-
--- Reclaim space and update statistics
-VACUUM ANALYZE nodes;
-
--- Full vacuum (locks table)
-VACUUM FULL nodes;
+-- Pattern matching
+SELECT * FROM nodes
+WHERE content ILIKE '%memry%';  -- Uses trigram index
 ```
 
 ### Index Maintenance
 
-Monitor index usage:
+Monitor and maintain indexes for optimal performance:
 
 ```sql
 -- Check index usage
-SELECT
-  schemaname,
-  tablename,
-  indexname,
-  idx_scan,
-  idx_tup_read,
-  idx_tup_fetch
+SELECT schemaname, tablename, indexname, idx_scan, idx_tup_read, idx_tup_fetch
 FROM pg_stat_user_indexes
-WHERE tablename = 'nodes'
+WHERE schemaname = 'public'
 ORDER BY idx_scan DESC;
+
+-- Reindex if needed
+REINDEX INDEX CONCURRENTLY idx_nodes_embedding;
+REINDEX INDEX CONCURRENTLY idx_nodes_content_gin;
 ```
-
-Drop unused indexes:
-
-```sql
--- Indexes with zero scans are unused
-DROP INDEX IF EXISTS unused_index_name;
-```
-
-### Query Performance
-
-Use `EXPLAIN ANALYZE` to understand query performance:
-
-```sql
-EXPLAIN ANALYZE
-SELECT * FROM nodes
-WHERE created_at >= NOW() - INTERVAL '7 days'
-ORDER BY importance DESC
-LIMIT 10;
-```
-
-### Connection Pooling
-
-HTM uses `connection_pool` gem for efficient connection management:
-
-```ruby
-pool = ConnectionPool.new(size: 5, timeout: 5) do
-  PG.connect(ENV['HTM_DBURL'])
-end
-```
-
-## Security Considerations
-
-### SQL Injection Prevention
-
-Always use parameterized queries:
-
-```ruby
-# Good: Parameterized query
-conn.exec_params(
-  "SELECT * FROM nodes WHERE key = $1",
-  [user_input]
-)
-
-# Bad: String interpolation
-conn.exec("SELECT * FROM nodes WHERE key = '#{user_input}'")
-```
-
-### Access Control
-
-Use PostgreSQL roles for access control:
-
-```sql
--- Read-only role
-CREATE ROLE htm_readonly;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO htm_readonly;
-
--- Application role
-CREATE ROLE htm_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO htm_app;
-```
-
-### Encryption
-
-- Use SSL/TLS for connections (`sslmode=require`)
-- Consider column-level encryption for sensitive data
-- TimescaleDB Cloud provides encryption at rest
-
-## Monitoring and Maintenance
-
-### Database Size
-
-```sql
-SELECT
-  pg_size_pretty(pg_database_size(current_database())) AS db_size,
-  pg_size_pretty(pg_total_relation_size('nodes')) AS nodes_size,
-  pg_size_pretty(pg_total_relation_size('operations_log')) AS log_size;
-```
-
-### Table Statistics
-
-```sql
-SELECT
-  schemaname,
-  tablename,
-  n_tup_ins AS inserts,
-  n_tup_upd AS updates,
-  n_tup_del AS deletes,
-  n_live_tup AS live_rows,
-  n_dead_tup AS dead_rows
-FROM pg_stat_user_tables
-ORDER BY n_live_tup DESC;
-```
-
-### Long-Running Queries
-
-```sql
-SELECT
-  pid,
-  now() - query_start AS duration,
-  state,
-  query
-FROM pg_stat_activity
-WHERE state != 'idle'
-  AND query NOT LIKE '%pg_stat_activity%'
-ORDER BY duration DESC;
-```
-
-## Troubleshooting
-
-### Slow Queries
-
-1. Run `EXPLAIN ANALYZE` on the query
-2. Check if indexes are being used
-3. Update statistics with `ANALYZE`
-4. Consider adding indexes
-5. Check for bloat with `VACUUM`
-
-### High Disk Usage
-
-1. Check database size (query above)
-2. Run `VACUUM FULL` to reclaim space
-3. Enable compression for `operations_log`
-4. Add retention policies for old data
-
-### Connection Issues
-
-1. Check connection pool size
-2. Monitor active connections
-3. Increase pool size if needed
-4. Check for connection leaks
-
-## Resources
-
-### PostgreSQL Documentation
-
-- **PostgreSQL 17 Docs**: [https://www.postgresql.org/docs/17/](https://www.postgresql.org/docs/17/)
-- **pgvector**: [https://github.com/pgvector/pgvector](https://github.com/pgvector/pgvector)
-- **pg_trgm**: [https://www.postgresql.org/docs/17/pgtrgm.html](https://www.postgresql.org/docs/17/pgtrgm.html)
-
-### TimescaleDB Documentation
-
-- **TimescaleDB Docs**: [https://docs.timescale.com/](https://docs.timescale.com/)
-- **Hypertables**: [https://docs.timescale.com/use-timescale/latest/hypertables/](https://docs.timescale.com/use-timescale/latest/hypertables/)
-- **Compression**: [https://docs.timescale.com/use-timescale/latest/compression/](https://docs.timescale.com/use-timescale/latest/compression/)
-
-### Vector Search
-
-- **HNSW Algorithm**: [https://arxiv.org/abs/1603.09320](https://arxiv.org/abs/1603.09320)
-- **pgvector Performance**: [https://github.com/pgvector/pgvector#performance](https://github.com/pgvector/pgvector#performance)
-
-## Next Steps
-
-- **[Setup Guide](setup.md)**: Initialize the database
-- **[Testing Guide](testing.md)**: Write database tests
-- **[Contributing Guide](contributing.md)**: Submit schema improvements
-- **[Architecture Overview](../architecture/overview.md)**: Understand the system design
 
 ---
 
-**Schema Version**: 1.0.0 (Initial Release)
+## Schema Migration
 
-**Last Updated**: 2024-10-25
+The schema is managed through ActiveRecord migrations located in `db/migrate/`:
+
+1. `20250101000001_create_robots.rb` - Creates robots table
+2. `20250101000002_create_nodes.rb` - Creates nodes table with all indexes
+3. `20250101000005_create_tags.rb` - Creates tags and nodes_tags tables
+
+To apply migrations:
+```bash
+bundle exec rake htm:db:migrate
+```
+
+To generate the current schema dump:
+```bash
+bundle exec rake htm:db:schema:dump
+```
+
+The canonical schema is maintained in `db/schema.sql`.
+
+---
+
+## Database Extensions
+
+### pgvector
+
+Provides vector similarity search capabilities:
+
+```sql
+-- Install extension
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+
+-- Vector operations
+SELECT embedding <=> $1::vector AS cosine_distance FROM nodes;  -- Cosine distance
+SELECT embedding <-> $1::vector AS l2_distance FROM nodes;      -- L2 distance
+SELECT embedding <#> $1::vector AS inner_product FROM nodes;    -- Inner product
+```
+
+### pg_trgm
+
+Provides trigram-based fuzzy text matching:
+
+```sql
+-- Install extension
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+
+-- Trigram operations
+SELECT content % 'search term' FROM nodes;           -- Similarity operator
+SELECT similarity(content, 'search term') FROM nodes; -- Similarity score
+SELECT content ILIKE '%pattern%' FROM nodes;          -- Pattern matching (uses trigram index)
+```
+
+---
+
+## Best Practices
+
+### Tagging Strategy
+
+1. **Use hierarchical namespaces**: `category:subcategory:detail`
+2. **Be consistent with naming**: Use lowercase, singular nouns
+3. **Limit depth**: 2-3 levels is optimal (e.g., `ai:llm:embeddings`)
+4. **Avoid redundancy**: Don't duplicate information already in node fields
+
+### Node Management
+
+1. **Set appropriate importance**: Use 0.0-1.0 scale for priority-based retrieval
+2. **Update last_accessed**: Touch timestamp when retrieving for LRU eviction
+3. **Manage token_count**: Update when content changes for working memory budget
+4. **Use appropriate types**: fact, context, code, preference, decision, question
+
+### Search Strategy
+
+1. **Vector search**: Best for semantic similarity ("concepts like X")
+2. **Full-text search**: Best for keyword matching ("documents containing Y")
+3. **Fuzzy search**: Best for typo tolerance and pattern matching
+4. **Hybrid search**: Combine vector + full-text with weighted scores
+
+### Performance Tuning
+
+1. **Monitor index usage**: Use pg_stat_user_indexes
+2. **Vacuum regularly**: Especially after bulk deletes
+3. **Adjust HNSW parameters**: Balance recall vs speed based on dataset size
+4. **Use connection pooling**: Managed by HTM::LongTermMemory

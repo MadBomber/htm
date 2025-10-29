@@ -1045,11 +1045,10 @@ See [htm_teamwork.md](htm_teamwork.md) for detailed design documentation and pla
 
 ### Database Schema
 
-- `nodes`: Main memory storage with vector embeddings
-- `relationships`: Knowledge graph connections
-- `tags`: Flexible categorization
-- `operations_log`: Audit trail (hypertable)
-- `robots`: Robot registry
+- `robots`: Robot registry for all LLM agents using HTM
+- `nodes`: Main memory storage with vector embeddings, partitioned by robot
+- `tags`: Hierarchical tag system for flexible categorization (format: `root:level1:level2`)
+- `nodes_tags`: Join table implementing many-to-many relationship between nodes and tags
 
 ## Roadmap
 
