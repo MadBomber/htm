@@ -17,7 +17,6 @@ require "pgvector"
 require "securerandom"
 require "uri"
 require "async/job"
-require "tiktoken_ruby"
 
 # HTM (Hierarchical Temporary Memory) - Intelligent memory management for LLM robots
 #
@@ -96,9 +95,6 @@ class HTM
       cache_ttl: db_cache_ttl
     )
 
-    # Initialize tokenizer for token counting
-    @tokenizer = Tiktoken.encoding_for_model("gpt-3.5-turbo")
-
     # Register this robot in the database
     register_robot
   end
@@ -124,8 +120,8 @@ class HTM
     validate_array!(related_to, "related_to")
     validate_array!(tags, "tags")
 
-    # Calculate token count
-    token_count = @tokenizer.encode(content).length
+    # Calculate token count using configured counter
+    token_count = HTM.count_tokens(content)
 
     # Store in long-term memory immediately (without embedding)
     # Embedding and tags will be generated asynchronously
@@ -139,6 +135,8 @@ class HTM
       robot_id: @robot_id,
       embedding: nil  # Will be generated in background
     )
+
+    HTM.logger.info "Node #{node_id} created for robot #{@robot_name} (#{token_count} tokens)"
 
     # Enqueue background jobs for embedding and tag generation
     # Both jobs run in parallel with equal priority
@@ -425,15 +423,19 @@ class HTM
       :perform,
       node_id: node_id
     )
+    HTM.logger.debug "Enqueued embedding job for node #{node_id}"
   rescue StandardError => e
-    warn "Failed to enqueue embedding job for node #{node_id}: #{e.message}"
+    HTM.logger.error "Failed to enqueue embedding job for node #{node_id}: #{e.message}"
   end
 
   def enqueue_tags_job(node_id, manual_tags: [])
     # Add manual tags immediately if provided
-    manual_tags.each do |tag_name|
-      tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
-      HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+    if manual_tags.any?
+      manual_tags.each do |tag_name|
+        tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
+        HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+      end
+      HTM.logger.debug "Added #{manual_tags.length} manual tags to node #{node_id}"
     end
 
     # Enqueue job for LLM-generated tags
@@ -443,8 +445,9 @@ class HTM
       :perform,
       node_id: node_id
     )
+    HTM.logger.debug "Enqueued tags job for node #{node_id}"
   rescue StandardError => e
-    warn "Failed to enqueue tags job for node #{node_id}: #{e.message}"
+    HTM.logger.error "Failed to enqueue tags job for node #{node_id}: #{e.message}"
   end
 
   def add_to_working_memory(node)

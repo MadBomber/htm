@@ -29,22 +29,24 @@ class HTM
         node = HTM::Models::Node.find_by(id: node_id)
 
         unless node
-          warn "GenerateTagsJob: Node #{node_id} not found"
+          HTM.logger.warn "GenerateTagsJob: Node #{node_id} not found"
           return
         end
 
         begin
+          HTM.logger.debug "GenerateTagsJob: Extracting tags for node #{node_id}"
+
           # Get existing ontology for context (sample of recent tags)
           existing_ontology = HTM::Models::Tag
             .order(created_at: :desc)
             .limit(100)
             .pluck(:name)
 
-          # Extract tags using configured extractor
-          tag_names = HTM.extract_tags(node.content, existing_ontology: existing_ontology)
+          # Extract and validate tags using TagService
+          tag_names = HTM::TagService.extract(node.content, existing_ontology: existing_ontology)
 
           if tag_names.empty?
-            debug_me "GenerateTagsJob: No tags extracted for node #{node_id}"
+            HTM.logger.debug "GenerateTagsJob: No tags extracted for node #{node_id}"
             return
           end
 
@@ -59,20 +61,20 @@ class HTM
             )
           end
 
-          debug_me "GenerateTagsJob: Successfully generated #{tag_names.length} tags for node #{node_id}: #{tag_names.join(', ')}"
+          HTM.logger.info "GenerateTagsJob: Successfully generated #{tag_names.length} tags for node #{node_id}: #{tag_names.join(', ')}"
 
         rescue HTM::TagError => e
           # Log tag-specific errors
-          warn "GenerateTagsJob: Tag generation failed for node #{node_id}: #{e.message}"
+          HTM.logger.error "GenerateTagsJob: Tag generation failed for node #{node_id}: #{e.message}"
 
         rescue ActiveRecord::RecordInvalid => e
           # Log validation errors
-          warn "GenerateTagsJob: Database validation failed for node #{node_id}: #{e.message}"
+          HTM.logger.error "GenerateTagsJob: Database validation failed for node #{node_id}: #{e.message}"
 
         rescue StandardError => e
           # Log unexpected errors
-          warn "GenerateTagsJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
-          warn e.backtrace.first(5).join("\n")
+          HTM.logger.error "GenerateTagsJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
+          HTM.logger.debug e.backtrace.first(5).join("\n")
         end
       end
     end

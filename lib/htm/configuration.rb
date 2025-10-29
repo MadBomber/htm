@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'errors'
+require 'logger'
 
 class HTM
   # HTM Configuration
@@ -8,6 +9,7 @@ class HTM
   # Applications using HTM should configure LLM access by providing two methods:
   # 1. embedding_generator - Converts text to vector embeddings
   # 2. tag_extractor - Extracts hierarchical tags from text
+  # 3. logger - Logger instance for HTM operations
   #
   # @example Configure with custom methods
   #   HTM.configure do |config|
@@ -17,16 +19,18 @@ class HTM
   #     config.tag_extractor = ->(text, ontology) {
   #       MyApp::LLMService.extract_tags(text, ontology)  # Returns Array<String>
   #     }
+  #     config.logger = Rails.logger  # Use Rails logger
   #   end
   #
   # @example Use defaults (RubyLLM with Ollama)
   #   HTM.configure  # Uses default implementations
   #
   class Configuration
-    attr_accessor :embedding_generator, :tag_extractor
+    attr_accessor :embedding_generator, :tag_extractor, :token_counter
     attr_accessor :embedding_model, :embedding_provider, :embedding_dimensions
     attr_accessor :tag_model, :tag_provider
     attr_accessor :ollama_url
+    attr_accessor :logger
 
     def initialize
       # Default configuration
@@ -39,6 +43,9 @@ class HTM
 
       @ollama_url = ENV['OLLAMA_URL'] || 'http://localhost:11434'
 
+      # Default logger (STDOUT with INFO level)
+      @logger = default_logger
+
       # Set default implementations
       reset_to_defaults
     end
@@ -47,6 +54,7 @@ class HTM
     def reset_to_defaults
       @embedding_generator = default_embedding_generator
       @tag_extractor = default_tag_extractor
+      @token_counter = default_token_counter
     end
 
     # Validate configuration
@@ -58,9 +66,36 @@ class HTM
       unless @tag_extractor.respond_to?(:call)
         raise HTM::ValidationError, "tag_extractor must be callable (proc, lambda, or object responding to :call)"
       end
+
+      unless @token_counter.respond_to?(:call)
+        raise HTM::ValidationError, "token_counter must be callable (proc, lambda, or object responding to :call)"
+      end
+
+      unless @logger.respond_to?(:info) && @logger.respond_to?(:warn) && @logger.respond_to?(:error)
+        raise HTM::ValidationError, "logger must respond to :info, :warn, and :error"
+      end
     end
 
     private
+
+    # Default logger configuration
+    def default_logger
+      logger = Logger.new($stdout)
+      logger.level = ENV.fetch('HTM_LOG_LEVEL', 'INFO').upcase.to_sym
+      logger.formatter = proc do |severity, datetime, progname, msg|
+        "[#{datetime.strftime('%Y-%m-%d %H:%M:%S')}] #{severity} -- HTM: #{msg}\n"
+      end
+      logger
+    end
+
+    # Default token counter using Tiktoken
+    def default_token_counter
+      lambda do |text|
+        require 'tiktoken_ruby' unless defined?(Tiktoken)
+        encoder = Tiktoken.encoding_for_model("gpt-3.5-turbo")
+        encoder.encode(text).length
+      end
+    end
 
     # Default embedding generator using RubyLLM
     #
@@ -203,27 +238,43 @@ class HTM
       @configuration = Configuration.new
     end
 
-    # Generate embedding using configured generator
+    # Generate embedding using EmbeddingService
     #
     # @param text [String] Text to embed
-    # @return [Array<Float>] Embedding vector
+    # @return [Array<Float>] Embedding vector (original, not padded)
     #
     def embed(text)
-      configuration.embedding_generator.call(text)
-    rescue StandardError => e
-      raise HTM::EmbeddingError, "Embedding generation failed: #{e.message}"
+      result = HTM::EmbeddingService.generate(text)
+      result[:embedding]
     end
 
-    # Extract tags using configured extractor
+    # Extract tags using TagService
     #
     # @param text [String] Text to analyze
     # @param existing_ontology [Array<String>] Sample of existing tags for context
-    # @return [Array<String>] Extracted tag names
+    # @return [Array<String>] Extracted and validated tag names
     #
     def extract_tags(text, existing_ontology: [])
-      configuration.tag_extractor.call(text, existing_ontology)
+      HTM::TagService.extract(text, existing_ontology: existing_ontology)
+    end
+
+    # Count tokens using configured counter
+    #
+    # @param text [String] Text to count tokens for
+    # @return [Integer] Token count
+    #
+    def count_tokens(text)
+      configuration.token_counter.call(text)
     rescue StandardError => e
-      raise HTM::TagError, "Tag extraction failed: #{e.message}"
+      raise HTM::ValidationError, "Token counting failed: #{e.message}"
+    end
+
+    # Get configured logger
+    #
+    # @return [Logger] Configured logger instance
+    #
+    def logger
+      configuration.logger
     end
   end
 end

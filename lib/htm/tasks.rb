@@ -7,6 +7,8 @@
 #   require 'htm/tasks'
 #
 # This will make the following tasks available:
+#
+# Database tasks:
 #   rake htm:db:setup      # Set up HTM database schema and run migrations
 #   rake htm:db:migrate    # Run pending database migrations
 #   rake htm:db:status     # Show migration status
@@ -17,10 +19,20 @@
 #   rake htm:db:drop       # Drop all HTM tables (destructive!)
 #   rake htm:db:reset      # Drop and recreate database (destructive!)
 #
+# Async job tasks:
+#   rake htm:jobs:stats              # Show async job statistics
+#   rake htm:jobs:process_embeddings # Process pending embedding jobs
+#   rake htm:jobs:process_tags       # Process pending tag extraction jobs
+#   rake htm:jobs:process_all        # Process all pending jobs
+#   rake htm:jobs:reprocess_embeddings # Force regenerate all embeddings
+#   rake htm:jobs:failed             # Show nodes with processing issues
+#   rake htm:jobs:clear_all          # Clear all embeddings and tags (testing)
+#
 
 if defined?(Rake)
   # Load the rake tasks
   load File.expand_path('../tasks/htm.rake', __dir__)
+  load File.expand_path('../tasks/jobs.rake', __dir__)
 else
   warn "HTM tasks not loaded: Rake is not available"
 end

@@ -3,190 +3,133 @@
 require_relative 'errors'
 
 class HTM
-  # Tag Service - LLM-based hierarchical tag extraction
+  # Tag Service - Processes and validates hierarchical tags
   #
-  # HTM uses this service to automatically extract hierarchical topic tags
-  # from node content. Tags are extracted in the format root:level1:level2.
+  # This service wraps the configured tag extractor and provides:
+  # - Response parsing (string or array)
+  # - Format validation (lowercase, alphanumeric, hyphens, colons)
+  # - Depth validation (max 5 levels)
+  # - Ontology consistency
   #
-  # Supported providers:
-  # - :ollama - Ollama with configurable model (default: llama3)
-  # - :openai - OpenAI (requires OPENAI_API_KEY)
+  # The actual LLM call is delegated to HTM.configuration.tag_extractor
   #
   class TagService
-    # Default models for tag extraction
-    DEFAULT_MODELS = {
-      ollama: 'llama3',
-      openai: 'gpt-4o-mini'
-    }.freeze
+    MAX_DEPTH = 5  # Maximum hierarchy depth (4 colons)
+    TAG_FORMAT = /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/  # Validation regex
 
-    attr_reader :provider, :model
-
-    # Initialize tag extraction service
-    #
-    # @param provider [Symbol] LLM provider (:ollama, :openai)
-    # @param model [String] Model name
-    # @param base_url [String] Base URL for Ollama
-    #
-    def initialize(provider = :ollama, model: nil, base_url: nil)
-      @provider = provider
-      @model = model || DEFAULT_MODELS[provider]
-      @base_url = base_url || ENV['OLLAMA_URL'] || 'http://localhost:11434'
-    end
-
-    # Extract hierarchical tags from content
+    # Extract tags with validation and processing
     #
     # @param content [String] Text to analyze
     # @param existing_ontology [Array<String>] Sample of existing tags for context
-    # @return [Array<String>] Extracted tag names in format root:level1:level2
+    # @return [Array<String>] Validated tag names
     #
-    def extract_tags(content, existing_ontology: [])
-      prompt = build_extraction_prompt(content, existing_ontology)
-      response = call_llm(prompt)
-      parse_and_validate_tags(response)
+    def self.extract(content, existing_ontology: [])
+      HTM.logger.debug "TagService: Extracting tags from #{content.length} chars"
+      HTM.logger.debug "TagService: Using ontology with #{existing_ontology.size} existing tags"
+
+      # Call configured tag extractor
+      raw_tags = HTM.configuration.tag_extractor.call(content, existing_ontology)
+
+      # Parse response (may be string or array)
+      parsed_tags = parse_tags(raw_tags)
+
+      # Validate and filter tags
+      valid_tags = validate_and_filter_tags(parsed_tags)
+
+      HTM.logger.debug "TagService: Extracted #{valid_tags.length} valid tags: #{valid_tags.join(', ')}"
+
+      valid_tags
+
+    rescue HTM::TagError
+      raise
+    rescue StandardError => e
+      HTM.logger.error "TagService: Failed to extract tags: #{e.message}"
+      raise HTM::TagError, "Tag extraction failed: #{e.message}"
     end
 
-    private
-
-    def build_extraction_prompt(content, ontology_sample)
-      ontology_context = if ontology_sample.any?
-        sample_tags = ontology_sample.sample([ontology_sample.size, 20].min)
-        "Existing ontology includes: #{sample_tags.join(', ')}\n"
+    # Parse tag response (handles string or array input)
+    #
+    # @param raw_tags [String, Array] Raw response from extractor
+    # @return [Array<String>] Parsed tag strings
+    #
+    def self.parse_tags(raw_tags)
+      case raw_tags
+      when Array
+        # Already an array, return as-is
+        raw_tags.map(&:to_s).map(&:strip).reject(&:empty?)
+      when String
+        # String response - split by newlines
+        raw_tags.split("\n").map(&:strip).reject(&:empty?)
       else
-        "This is a new ontology - create appropriate hierarchical tags.\n"
-      end
-
-      <<~PROMPT
-        Extract hierarchical topic tags from the following text.
-
-        #{ontology_context}
-        Format: root:level1:level2:level3 (use colons to separate levels)
-
-        Rules:
-        - Use lowercase letters, numbers, and hyphens only
-        - Maximum depth: 5 levels
-        - Return 2-5 tags per text
-        - Tags should be reusable and consistent
-        - Prefer existing ontology tags when applicable
-        - Use hyphens for multi-word terms (e.g., natural-language-processing)
-
-        Text: #{content}
-
-        Return ONLY the topic tags, one per line, no explanations.
-      PROMPT
-    end
-
-    def call_llm(prompt)
-      case @provider
-      when :ollama
-        call_ollama(prompt)
-      when :openai
-        call_openai(prompt)
-      else
-        raise HTM::TagError, "Unknown provider: #{@provider}"
+        raise HTM::TagError, "Tag response must be Array or String, got #{raw_tags.class}"
       end
     end
 
-    def call_ollama(prompt)
-      require 'net/http'
-      require 'json'
+    # Validate and filter tags
+    #
+    # @param tags [Array<String>] Parsed tags
+    # @return [Array<String>] Valid tags only
+    #
+    def self.validate_and_filter_tags(tags)
+      valid_tags = []
 
-      uri = URI("#{@base_url}/api/generate")
-      request = Net::HTTP::Post.new(uri)
-      request['Content-Type'] = 'application/json'
-      request.body = JSON.generate({
-        model: @model,
-        prompt: prompt,
-        stream: false,
-        system: 'You are a precise topic extraction system. Output only topic tags in hierarchical format: root:subtopic:detail',
-        options: {
-          temperature: 0  # Deterministic output
-        }
-      })
-
-      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == 'https') do |http|
-        http.request(request)
-      end
-
-      unless response.is_a?(Net::HTTPSuccess)
-        error_details = "#{response.code} #{response.message}"
-        begin
-          error_body = JSON.parse(response.body)
-          error_details += " - #{error_body['error']}" if error_body['error']
-        rescue
-          error_details += " - #{response.body[0..200]}" unless response.body.empty?
+      tags.each do |tag|
+        # Check format
+        unless tag.match?(TAG_FORMAT)
+          HTM.logger.warn "TagService: Invalid tag format, skipping: #{tag}"
+          next
         end
-        raise HTM::TagError, "Ollama API error: #{error_details}"
+
+        # Check depth
+        depth = tag.count(':')
+        if depth >= MAX_DEPTH
+          HTM.logger.warn "TagService: Tag depth #{depth + 1} exceeds max #{MAX_DEPTH}, skipping: #{tag}"
+          next
+        end
+
+        # Tag is valid
+        valid_tags << tag
       end
 
-      result = JSON.parse(response.body)
-      result['response']
-    rescue JSON::ParserError => e
-      raise HTM::TagError, "Failed to parse Ollama response: #{e.message}"
-    rescue HTM::TagError
-      raise
-    rescue StandardError => e
-      raise HTM::TagError, "Failed to call Ollama: #{e.message}"
+      valid_tags.uniq
     end
 
-    def call_openai(prompt)
-      require 'net/http'
-      require 'json'
+    # Validate single tag format
+    #
+    # @param tag [String] Tag to validate
+    # @return [Boolean] True if valid
+    #
+    def self.valid_tag?(tag)
+      return false unless tag.is_a?(String)
+      return false if tag.empty?
+      return false unless tag.match?(TAG_FORMAT)
+      return false if tag.count(':') >= MAX_DEPTH
 
-      api_key = ENV['OPENAI_API_KEY']
-      unless api_key
-        raise HTM::TagError, "OPENAI_API_KEY environment variable not set"
-      end
-
-      uri = URI('https://api.openai.com/v1/chat/completions')
-      request = Net::HTTP::Post.new(uri)
-      request['Content-Type'] = 'application/json'
-      request['Authorization'] = "Bearer #{api_key}"
-      request.body = JSON.generate({
-        model: @model,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a precise topic extraction system. Output only topic tags in hierarchical format: root:subtopic:detail'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0
-      })
-
-      response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
-        http.request(request)
-      end
-
-      unless response.is_a?(Net::HTTPSuccess)
-        raise HTM::TagError, "OpenAI API error: #{response.code} #{response.message}"
-      end
-
-      result = JSON.parse(response.body)
-      result.dig('choices', 0, 'message', 'content')
-    rescue JSON::ParserError => e
-      raise HTM::TagError, "Failed to parse OpenAI response: #{e.message}"
-    rescue HTM::TagError
-      raise
-    rescue StandardError => e
-      raise HTM::TagError, "Failed to call OpenAI: #{e.message}"
+      true
     end
 
-    def parse_and_validate_tags(response)
-      return [] if response.nil? || response.strip.empty?
+    # Parse hierarchical structure of a tag
+    #
+    # @param tag [String] Hierarchical tag (e.g., "ai:llm:embedding")
+    # @return [Hash] Hierarchy structure
+    #   {
+    #     full: "ai:llm:embedding",
+    #     root: "ai",
+    #     parent: "ai:llm",
+    #     levels: ["ai", "llm", "embedding"],
+    #     depth: 3
+    #   }
+    #
+    def self.parse_hierarchy(tag)
+      levels = tag.split(':')
 
-      # Parse response (one tag per line)
-      tags = response.split("\n").map(&:strip).reject(&:empty?)
-
-      # Validate format: lowercase alphanumeric + hyphens + colons
-      valid_tags = tags.select do |tag|
-        tag =~ /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/
-      end
-
-      # Limit depth to 5 levels (4 colons maximum)
-      valid_tags.select { |tag| tag.count(':') < 5 }
+      {
+        full: tag,
+        root: levels.first,
+        parent: levels.size > 1 ? levels[0..-2].join(':') : nil,
+        levels: levels,
+        depth: levels.size
+      }
     end
   end
 end

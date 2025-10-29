@@ -26,45 +26,38 @@ class HTM
         node = HTM::Models::Node.find_by(id: node_id)
 
         unless node
-          warn "GenerateEmbeddingJob: Node #{node_id} not found"
+          HTM.logger.warn "GenerateEmbeddingJob: Node #{node_id} not found"
           return
         end
 
         # Skip if already has embedding
         if node.embedding.present?
-          debug_me "GenerateEmbeddingJob: Node #{node_id} already has embedding, skipping"
+          HTM.logger.debug "GenerateEmbeddingJob: Node #{node_id} already has embedding, skipping"
           return
         end
 
         begin
-          # Generate embedding using configured generator
-          embedding = HTM.embed(node.content)
+          HTM.logger.debug "GenerateEmbeddingJob: Generating embedding for node #{node_id}"
 
-          # Prepare embedding for storage (pad to 2000 dimensions)
-          actual_dimension = embedding.length
-          if actual_dimension < 2000
-            padded_embedding = embedding + Array.new(2000 - actual_dimension, 0.0)
-          else
-            padded_embedding = embedding
-          end
-          embedding_str = "[#{padded_embedding.join(',')}]"
+          # Generate and process embedding using EmbeddingService
+          result = HTM::EmbeddingService.generate(node.content)
 
-          # Update node with embedding
+          # Update node with processed embedding
           node.update!(
-            embedding: embedding_str,
-            embedding_dimension: actual_dimension
+            embedding: result[:storage_embedding],
+            embedding_dimension: result[:dimension]
           )
 
-          debug_me "GenerateEmbeddingJob: Successfully generated embedding for node #{node_id} (#{actual_dimension} dimensions)"
+          HTM.logger.info "GenerateEmbeddingJob: Successfully generated embedding for node #{node_id} (#{result[:dimension]} dimensions)"
 
         rescue HTM::EmbeddingError => e
           # Log embedding-specific errors
-          warn "GenerateEmbeddingJob: Embedding generation failed for node #{node_id}: #{e.message}"
+          HTM.logger.error "GenerateEmbeddingJob: Embedding generation failed for node #{node_id}: #{e.message}"
 
         rescue StandardError => e
           # Log unexpected errors
-          warn "GenerateEmbeddingJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
-          warn e.backtrace.first(5).join("\n")
+          HTM.logger.error "GenerateEmbeddingJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
+          HTM.logger.debug e.backtrace.first(5).join("\n")
         end
       end
     end
