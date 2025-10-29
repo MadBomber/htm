@@ -17,6 +17,9 @@ class HTM
   # Embedding service errors
   class EmbeddingError < Error; end
 
+  # Tag service errors
+  class TagError < Error; end
+
   # Database operation errors
   class DatabaseError < Error; end
 

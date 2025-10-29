@@ -2,16 +2,22 @@
 
 require_relative "htm/version"
 require_relative "htm/errors"
+require_relative "htm/configuration"
 require_relative "htm/active_record_config"
 require_relative "htm/database"
 require_relative "htm/long_term_memory"
 require_relative "htm/working_memory"
 require_relative "htm/embedding_service"
+require_relative "htm/tag_service"
+require_relative "htm/jobs/generate_embedding_job"
+require_relative "htm/jobs/generate_tags_job"
 
 require "pg"
 require "pgvector"
 require "securerandom"
 require "uri"
+require "async/job"
+require "tiktoken_ruby"
 
 # HTM (Hierarchical Temporary Memory) - Intelligent memory management for LLM robots
 #
@@ -59,26 +65,20 @@ class HTM
   # @param robot_id [String] Unique identifier for this robot (auto-generated if not provided)
   # @param robot_name [String] Human-readable name for this robot
   # @param db_config [Hash] Database configuration (uses ENV['HTM_DBURL'] if not provided)
-  # @param embedding_service [Symbol, Object] Embedding service to use (:ollama, :openai, :cohere, :local) or a service object (default: :ollama)
-  # @param embedding_model [String] Model name for embedding service (default: 'gpt-oss' for ollama)
   # @param db_pool_size [Integer] Database connection pool size (default: 5)
   # @param db_query_timeout [Integer] Database query timeout in milliseconds (default: 30000)
   # @param db_cache_size [Integer] Number of database query results to cache (default: 1000, use 0 to disable)
   # @param db_cache_ttl [Integer] Database cache TTL in seconds (default: 300)
-  # @param embedding_cache_size [Integer] Number of embeddings to cache (default: 1000, use 0 to disable)
   #
   def initialize(
     working_memory_size: 128_000,
     robot_id: nil,
     robot_name: nil,
     db_config: nil,
-    embedding_service: :ollama,
-    embedding_model: 'embeddinggemma:latest',
     db_pool_size: 5,
     db_query_timeout: 30_000,
     db_cache_size: 1000,
-    db_cache_ttl: 300,
-    embedding_cache_size: 1000
+    db_cache_ttl: 300
   )
     # Establish ActiveRecord connection if not already connected
     HTM::ActiveRecordConfig.establish_connection! unless HTM::ActiveRecordConfig.connected?
@@ -96,12 +96,8 @@ class HTM
       cache_ttl: db_cache_ttl
     )
 
-    # Allow dependency injection of embedding service (for testing)
-    @embedding_service = if embedding_service.is_a?(Symbol)
-      HTM::EmbeddingService.new(embedding_service, model: embedding_model, db_config: db_config)
-    else
-      embedding_service
-    end
+    # Initialize tokenizer for token counting
+    @tokenizer = Tiktoken.encoding_for_model("gpt-3.5-turbo")
 
     # Register this robot in the database
     register_robot
@@ -129,12 +125,10 @@ class HTM
     validate_array!(tags, "tags")
 
     # Calculate token count
-    token_count = @embedding_service.count_tokens(content)
+    token_count = @tokenizer.encode(content).length
 
-    # Generate embedding client-side before database insertion
-    embedding = @embedding_service.embed(content)
-
-    # Store in long-term memory with embedding
+    # Store in long-term memory immediately (without embedding)
+    # Embedding and tags will be generated asynchronously
     node_id = @long_term_memory.add(
       content: content,
       speaker: speaker,
@@ -143,13 +137,13 @@ class HTM
       importance: importance,
       token_count: token_count,
       robot_id: @robot_id,
-      embedding: embedding
+      embedding: nil  # Will be generated in background
     )
 
-    # Add tags
-    tags.each do |tag|
-      @long_term_memory.add_tag(node_id: node_id, tag: tag)
-    end
+    # Enqueue background jobs for embedding and tag generation
+    # Both jobs run in parallel with equal priority
+    enqueue_embedding_job(node_id)
+    enqueue_tags_job(node_id, manual_tags: tags)
 
     # Add to working memory
     @working_memory.add(node_id, content, token_count: token_count, importance: importance)
@@ -178,11 +172,12 @@ class HTM
     # Perform RAG-based retrieval
     nodes = case strategy
     when :vector
-      @long_term_memory.search(
+      # Generate query embedding using configured generator
+      query_embedding = HTM.embed(topic)
+      @long_term_memory.search_vector(
         timeframe: parsed_timeframe,
-        query: topic,
-        limit: limit,
-        embedding_service: @embedding_service
+        query_embedding: query_embedding,
+        limit: limit
       )
     when :fulltext
       @long_term_memory.search_fulltext(
@@ -191,11 +186,13 @@ class HTM
         limit: limit
       )
     when :hybrid
+      # Generate query embedding for hybrid search
+      query_embedding = HTM.embed(topic)
       @long_term_memory.search_hybrid(
         timeframe: parsed_timeframe,
         query: topic,
-        limit: limit,
-        embedding_service: @embedding_service
+        query_embedding: query_embedding,
+        limit: limit
       )
     end
 
@@ -269,7 +266,7 @@ class HTM
   # @return [Hash] Statistics about memory usage
   #
   def memory_stats
-    stats = @long_term_memory.stats.merge({
+    @long_term_memory.stats.merge({
       robot_id: @robot_id,
       robot_name: @robot_name,
       working_memory: {
@@ -283,13 +280,6 @@ class HTM
         query_timeout_ms: @long_term_memory.query_timeout
       }
     })
-
-    # Add embedding cache stats if available
-    if @embedding_service.respond_to?(:cache_stats) && @embedding_service.cache_stats
-      stats[:embedding_cache] = @embedding_service.cache_stats
-    end
-
-    stats
   end
 
   # Shutdown HTM and release resources
@@ -425,6 +415,36 @@ class HTM
 
   def update_robot_activity
     @long_term_memory.update_robot_activity(@robot_id)
+  end
+
+  def enqueue_embedding_job(node_id)
+    # Enqueue job using async-job
+    # Job will use HTM.embed which delegates to configured embedding_generator
+    Async::Job.enqueue(
+      HTM::Jobs::GenerateEmbeddingJob,
+      :perform,
+      node_id: node_id
+    )
+  rescue StandardError => e
+    warn "Failed to enqueue embedding job for node #{node_id}: #{e.message}"
+  end
+
+  def enqueue_tags_job(node_id, manual_tags: [])
+    # Add manual tags immediately if provided
+    manual_tags.each do |tag_name|
+      tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
+      HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+    end
+
+    # Enqueue job for LLM-generated tags
+    # Job will use HTM.extract_tags which delegates to configured tag_extractor
+    Async::Job.enqueue(
+      HTM::Jobs::GenerateTagsJob,
+      :perform,
+      node_id: node_id
+    )
+  rescue StandardError => e
+    warn "Failed to enqueue tags job for node #{node_id}: #{e.message}"
   end
 
   def add_to_working_memory(node)

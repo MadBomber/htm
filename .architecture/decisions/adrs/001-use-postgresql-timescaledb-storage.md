@@ -20,9 +20,11 @@
 - No compression policies were configured or used
 - The extension added deployment complexity without delivering measurable benefits
 
-**Current Implementation**: HTM now uses **standard PostgreSQL 12+** with only the following extensions:
-- `vector` (pgvector) - for embedding similarity search
+**Current Implementation**: HTM now uses **standard PostgreSQL 17** with only the following extensions:
+- `vector` (pgvector) - for embedding similarity search with up to 2000 dimensions
 - `pg_trgm` - for fuzzy text matching
+
+**Migration to ActiveRecord** (2025-10-29): The database layer has been migrated to use ActiveRecord ORM with proper models and migrations. See ADR-013 for details.
 
 No functionality was lost in the removal, as TimescaleDB features were never actually utilized despite being documented.
 
