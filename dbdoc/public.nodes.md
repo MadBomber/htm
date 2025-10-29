@@ -8,7 +8,7 @@ Core memory storage for conversation messages and context
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
-| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.tags](public.tags.md) |  |  |
+| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.nodes_tags](public.nodes_tags.md) |  |  |
 | content | text |  | false |  |  | The conversation message/utterance content |
 | speaker | text |  | false |  |  | Who said it: user or robot name |
 | type | text |  | true |  |  | Memory type: fact, context, code, preference, decision, question |
@@ -19,7 +19,7 @@ Core memory storage for conversation messages and context
 | last_accessed | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was last accessed |
 | token_count | integer |  | true |  |  | Number of tokens in the content (for context budget management) |
 | in_working_memory | boolean | false | true |  |  | Whether this memory is currently in working memory |
-| robot_id | text |  | false |  | [public.robots](public.robots.md) | ID of the robot that owns this memory |
+| robot_id | bigint |  | false |  | [public.robots](public.robots.md) | ID of the robot that owns this memory |
 | embedding | vector(2000) |  | true |  |  | Vector embedding (max 2000 dimensions) for semantic search |
 | embedding_dimension | integer |  | true |  |  | Actual number of dimensions used in the embedding vector (max 2000) |
 

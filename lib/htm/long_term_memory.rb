@@ -230,12 +230,13 @@ class HTM
     # @return [void]
     #
     def add_tag(node_id:, tag:)
-      HTM::Models::Tag.create(
+      tag_record = HTM::Models::Tag.find_or_create_by(name: tag)
+      HTM::Models::NodeTag.create(
         node_id: node_id,
-        tag: tag
+        tag_id: tag_record.id
       )
     rescue ActiveRecord::RecordNotUnique
-      # Tag already exists, ignore
+      # Tag association already exists, ignore
     end
 
     # Mark nodes as evicted from working memory
@@ -319,14 +320,14 @@ class HTM
       if exact
         nodes = HTM::Models::Node
           .joins(:tags)
-          .where(tags: { tag: topic_path })
+          .where(tags: { name: topic_path })
           .distinct
           .order(created_at: :desc)
           .limit(limit)
       else
         nodes = HTM::Models::Node
           .joins(:tags)
-          .where("tags.tag LIKE ?", "#{topic_path}%")
+          .where("tags.name LIKE ?", "#{topic_path}%")
           .distinct
           .order(created_at: :desc)
           .limit(limit)
@@ -355,11 +356,14 @@ class HTM
     def topic_relationships(min_shared_nodes: 2, limit: 50)
       result = ActiveRecord::Base.connection.select_all(
         <<~SQL,
-          SELECT t1.tag AS topic1, t2.tag AS topic2, COUNT(DISTINCT t1.node_id) AS shared_nodes
+          SELECT t1.name AS topic1, t2.name AS topic2, COUNT(DISTINCT nt1.node_id) AS shared_nodes
           FROM tags t1
-          JOIN tags t2 ON t1.node_id = t2.node_id AND t1.tag < t2.tag
-          GROUP BY t1.tag, t2.tag
-          HAVING COUNT(DISTINCT t1.node_id) >= #{min_shared_nodes.to_i}
+          JOIN nodes_tags nt1 ON t1.id = nt1.tag_id
+          JOIN nodes_tags nt2 ON nt1.node_id = nt2.node_id
+          JOIN tags t2 ON nt2.tag_id = t2.id
+          WHERE t1.name < t2.name
+          GROUP BY t1.name, t2.name
+          HAVING COUNT(DISTINCT nt1.node_id) >= #{min_shared_nodes.to_i}
           ORDER BY shared_nodes DESC
           LIMIT #{limit.to_i}
         SQL
@@ -373,7 +377,11 @@ class HTM
     # @return [Array<String>] Topic paths
     #
     def node_topics(node_id)
-      HTM::Models::Tag.where(node_id: node_id).order(:tag).pluck(:tag)
+      HTM::Models::Tag
+        .joins(:node_tags)
+        .where(nodes_tags: { node_id: node_id })
+        .order(:name)
+        .pluck(:name)
     end
 
     private

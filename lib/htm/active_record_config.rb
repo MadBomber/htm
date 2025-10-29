@@ -106,6 +106,7 @@ class HTM
         require_relative 'models/robot'
         require_relative 'models/node'
         require_relative 'models/tag'
+        require_relative 'models/node_tag'
       end
     end
   end

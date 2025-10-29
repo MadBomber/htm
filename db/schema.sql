@@ -24,6 +24,58 @@ CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 --
 
 --
+-- Name: nodes_tags; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.nodes_tags (
+    id bigint NOT NULL,
+    node_id bigint NOT NULL,
+    tag_id bigint NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+--
+-- Name: TABLE nodes_tags; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.nodes_tags IS 'Join table connecting nodes to tags (many-to-many)';
+
+--
+-- Name: COLUMN nodes_tags.node_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.nodes_tags.node_id IS 'ID of the node being tagged';
+
+--
+-- Name: COLUMN nodes_tags.tag_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.nodes_tags.tag_id IS 'ID of the tag being applied';
+
+--
+-- Name: COLUMN nodes_tags.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.nodes_tags.created_at IS 'When this association was created';
+
+--
+-- Name: node_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.node_tags_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+--
+-- Name: node_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.node_tags_id_seq OWNED BY public.nodes_tags.id;
+
+--
 -- Name: nodes; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -39,7 +91,7 @@ CREATE TABLE public.nodes (
     last_accessed timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     token_count integer,
     in_working_memory boolean DEFAULT false,
-    robot_id text NOT NULL,
+    robot_id bigint NOT NULL,
     embedding public.vector(2000),
     embedding_dimension integer,
     CONSTRAINT check_embedding_dimension CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension > 0) AND (embedding_dimension <= 2000))))
@@ -130,26 +182,6 @@ COMMENT ON COLUMN public.nodes.embedding IS 'Vector embedding (max 2000 dimensio
 COMMENT ON COLUMN public.nodes.embedding_dimension IS 'Actual number of dimensions used in the embedding vector (max 2000)';
 
 --
--- Name: node_stats; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.node_stats AS
- SELECT type,
-    count(*) AS count,
-    avg(importance) AS avg_importance,
-    sum(token_count) AS total_tokens,
-    min(created_at) AS oldest,
-    max(created_at) AS newest
-   FROM public.nodes
-  GROUP BY type;
-
---
--- Name: VIEW node_stats; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON VIEW public.node_stats IS 'Aggregated statistics by node type showing counts, importance, tokens, and age ranges.';
-
---
 -- Name: nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -167,67 +199,11 @@ CREATE SEQUENCE public.nodes_id_seq
 ALTER SEQUENCE public.nodes_id_seq OWNED BY public.nodes.id;
 
 --
--- Name: tags; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.tags (
-    id bigint NOT NULL,
-    node_id bigint NOT NULL,
-    tag text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
-);
-
---
--- Name: TABLE tags; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.tags IS 'Hierarchical topic tags for flexible categorization using colon-delimited format';
-
---
--- Name: COLUMN tags.node_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.tags.node_id IS 'ID of the node being tagged';
-
---
--- Name: COLUMN tags.tag; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.tags.tag IS 'Hierarchical tag in format: root:level1:level2 (e.g., database:postgresql:timescaledb)';
-
---
--- Name: COLUMN tags.created_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.tags.created_at IS 'When this tag was created';
-
---
--- Name: ontology_structure; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.ontology_structure AS
- SELECT split_part(tag, ':'::text, 1) AS root_topic,
-    split_part(tag, ':'::text, 2) AS level1_topic,
-    split_part(tag, ':'::text, 3) AS level2_topic,
-    tag AS full_path,
-    count(DISTINCT node_id) AS node_count
-   FROM public.tags
-  WHERE (tag ~ '^[a-z0-9\-]+(:[a-z0-9\-]+)*$'::text)
-  GROUP BY tag
-  ORDER BY (split_part(tag, ':'::text, 1)), (split_part(tag, ':'::text, 2)), (split_part(tag, ':'::text, 3));
-
---
--- Name: VIEW ontology_structure; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON VIEW public.ontology_structure IS 'Provides a hierarchical view of all topics in the knowledge base. Topics use colon-delimited format (e.g., database:postgresql:timescaledb) and are assigned manually via tags.';
-
---
 -- Name: robots; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.robots (
-    id text NOT NULL,
+    id bigint NOT NULL,
     name text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     last_active timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
@@ -239,12 +215,6 @@ CREATE TABLE public.robots (
 --
 
 COMMENT ON TABLE public.robots IS 'Registry of all LLM robots using the HTM system';
-
---
--- Name: COLUMN robots.id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.robots.id IS 'Unique identifier for the robot';
 
 --
 -- Name: COLUMN robots.name; Type: COMMENT; Schema: public; Owner: -
@@ -271,23 +241,21 @@ COMMENT ON COLUMN public.robots.last_active IS 'Last time the robot accessed the
 COMMENT ON COLUMN public.robots.metadata IS 'Robot-specific configuration and metadata';
 
 --
--- Name: robot_activity; Type: VIEW; Schema: public; Owner: -
+-- Name: robots_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE VIEW public.robot_activity AS
- SELECT r.id,
-    r.name,
-    count(n.id) AS total_nodes,
-    max(n.created_at) AS last_node_created
-   FROM (public.robots r
-     LEFT JOIN public.nodes n ON ((n.robot_id = r.id)))
-  GROUP BY r.id, r.name;
+CREATE SEQUENCE public.robots_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 --
--- Name: VIEW robot_activity; Type: COMMENT; Schema: public; Owner: -
+-- Name: robots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.robot_activity IS 'Robot usage metrics showing total nodes created and last activity timestamp.';
+ALTER SEQUENCE public.robots_id_seq OWNED BY public.robots.id;
 
 --
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
@@ -296,6 +264,34 @@ COMMENT ON VIEW public.robot_activity IS 'Robot usage metrics showing total node
 CREATE TABLE public.schema_migrations (
     version character varying NOT NULL
 );
+
+--
+-- Name: tags; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tags (
+    id bigint NOT NULL,
+    name text NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+--
+-- Name: TABLE tags; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.tags IS 'Unique tag names for categorization';
+
+--
+-- Name: COLUMN tags.name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tags.name IS 'Hierarchical tag in format: root:level1:level2 (e.g., database:postgresql:timescaledb)';
+
+--
+-- Name: COLUMN tags.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tags.created_at IS 'When this tag was created';
 
 --
 -- Name: tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -315,36 +311,35 @@ CREATE SEQUENCE public.tags_id_seq
 ALTER SEQUENCE public.tags_id_seq OWNED BY public.tags.id;
 
 --
--- Name: topic_relationships; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.topic_relationships AS
- SELECT t1.tag AS topic1,
-    t2.tag AS topic2,
-    count(DISTINCT t1.node_id) AS shared_nodes
-   FROM (public.tags t1
-     JOIN public.tags t2 ON (((t1.node_id = t2.node_id) AND (t1.tag < t2.tag))))
-  GROUP BY t1.tag, t2.tag
- HAVING (count(DISTINCT t1.node_id) >= 2)
-  ORDER BY (count(DISTINCT t1.node_id)) DESC;
-
---
--- Name: VIEW topic_relationships; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON VIEW public.topic_relationships IS 'Shows which topics co-occur on the same nodes, revealing cross-topic relationships in the knowledge base.';
-
---
 -- Name: nodes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.nodes ALTER COLUMN id SET DEFAULT nextval('public.nodes_id_seq'::regclass);
 
 --
+-- Name: nodes_tags id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.nodes_tags ALTER COLUMN id SET DEFAULT nextval('public.node_tags_id_seq'::regclass);
+
+--
+-- Name: robots id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.robots ALTER COLUMN id SET DEFAULT nextval('public.robots_id_seq'::regclass);
+
+--
 -- Name: tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
+
+--
+-- Name: nodes_tags node_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.nodes_tags
+    ADD CONSTRAINT node_tags_pkey PRIMARY KEY (id);
 
 --
 -- Name: nodes nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -373,6 +368,24 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.tags
     ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
+
+--
+-- Name: idx_node_tags_node_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_node_tags_node_id ON public.nodes_tags USING btree (node_id);
+
+--
+-- Name: idx_node_tags_tag_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_node_tags_tag_id ON public.nodes_tags USING btree (tag_id);
+
+--
+-- Name: idx_node_tags_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_node_tags_unique ON public.nodes_tags USING btree (node_id, tag_id);
 
 --
 -- Name: idx_nodes_category; Type: INDEX; Schema: public; Owner: -
@@ -441,28 +454,16 @@ CREATE INDEX idx_nodes_type ON public.nodes USING btree (type);
 CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at);
 
 --
--- Name: idx_tags_node_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_tags_name_pattern; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_tags_node_id ON public.tags USING btree (node_id);
+CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern_ops);
 
 --
--- Name: idx_tags_tag; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_tags_name_unique; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_tags_tag ON public.tags USING btree (tag);
-
---
--- Name: idx_tags_tag_pattern; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_tags_tag_pattern ON public.tags USING btree (tag text_pattern_ops);
-
---
--- Name: idx_tags_unique; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_tags_unique ON public.tags USING btree (node_id, tag);
+CREATE UNIQUE INDEX idx_tags_name_unique ON public.tags USING btree (name);
 
 --
 -- Name: nodes fk_rails_60162e9d3a; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -472,14 +473,21 @@ ALTER TABLE ONLY public.nodes
     ADD CONSTRAINT fk_rails_60162e9d3a FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
 
 --
--- Name: tags fk_rails_c2bba39827; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: nodes_tags fk_rails_b0b726ecf8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.tags
-    ADD CONSTRAINT fk_rails_c2bba39827 FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.nodes_tags
+    ADD CONSTRAINT fk_rails_b0b726ecf8 FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+
+--
+-- Name: nodes_tags fk_rails_eccc99cec5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.nodes_tags
+    ADD CONSTRAINT fk_rails_eccc99cec5 FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE;
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict rTUPqxiFVDZkvco9rWnOuh8vX4HaEvCO1iTHxuKtqGRlGwwatd2Hc69Mlh3pZSj
+\unrestrict aTUE7tRPerAY5DDFsbdi5fJ82pMSfgcpqwRIvAqzqGBgvhFeRL9YBW3YgvN05yl

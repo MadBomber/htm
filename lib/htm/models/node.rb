@@ -9,15 +9,8 @@ class HTM
 
       # Associations
       belongs_to :robot, class_name: 'HTM::Models::Robot', foreign_key: 'robot_id', primary_key: 'id'
-      has_many :tags, class_name: 'HTM::Models::Tag', dependent: :destroy
-      has_many :outgoing_relationships,
-               class_name: 'HTM::Models::Relationship',
-               foreign_key: 'from_node_id',
-               dependent: :destroy
-      has_many :incoming_relationships,
-               class_name: 'HTM::Models::Relationship',
-               foreign_key: 'to_node_id',
-               dependent: :destroy
+      has_many :node_tags, class_name: 'HTM::Models::NodeTag', dependent: :destroy
+      has_many :tags, through: :node_tags, class_name: 'HTM::Models::Tag'
 
       # Validations
       validates :content, presence: true
@@ -55,13 +48,21 @@ class HTM
       end
 
       def tag_names
-        tags.pluck(:tag)
+        tags.pluck(:name)
       end
 
       def add_tags(tag_names)
         Array(tag_names).each do |tag_name|
-          tags.find_or_create_by(tag: tag_name)
+          tag = HTM::Models::Tag.find_or_create_by(name: tag_name)
+          node_tags.find_or_create_by(tag_id: tag.id)
         end
+      end
+
+      def remove_tag(tag_name)
+        tag = HTM::Models::Tag.find_by(name: tag_name)
+        return unless tag
+
+        node_tags.where(tag_id: tag.id).destroy_all
       end
 
       private

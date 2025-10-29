@@ -34,28 +34,37 @@ namespace :htm do
       HTM::Database.migration_status
     end
 
-    desc "Drop all HTM tables (WARNING: destructive!)"
+    desc "Drop all HTM tables (WARNING: destructive! Set CONFIRM=yes to skip prompt)"
     task :drop do
       require 'htm'
-      print "Are you sure you want to drop all tables? This cannot be undone! (yes/no): "
-      response = STDIN.gets.chomp
-      if response.downcase == 'yes'
+      if ENV['CONFIRM'] == 'yes'
         HTM::Database.drop
       else
-        puts "Cancelled."
+        print "Are you sure you want to drop all tables? This cannot be undone! (yes/no): "
+        response = STDIN.gets&.chomp
+        if response&.downcase == 'yes'
+          HTM::Database.drop
+        else
+          puts "Cancelled."
+        end
       end
     end
 
-    desc "Drop and recreate database (WARNING: destructive!)"
+    desc "Drop and recreate database (WARNING: destructive! Set CONFIRM=yes to skip prompt)"
     task :reset do
       require 'htm'
-      print "Are you sure you want to drop all tables? This cannot be undone! (yes/no): "
-      response = STDIN.gets.chomp
-      if response.downcase == 'yes'
+      if ENV['CONFIRM'] == 'yes'
         HTM::Database.drop
         HTM::Database.setup(dump_schema: true)
       else
-        puts "Cancelled."
+        print "Are you sure you want to drop all tables? This cannot be undone! (yes/no): "
+        response = STDIN.gets&.chomp
+        if response&.downcase == 'yes'
+          HTM::Database.drop
+          HTM::Database.setup(dump_schema: true)
+        else
+          puts "Cancelled."
+        end
       end
     end
 

@@ -19,7 +19,7 @@
 <text text-anchor="start" x="195.48" y="-213.6" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
 <polygon fill="none" stroke="black" points="54.48,-169.4 54.48,-200.2 304.25,-200.2 304.25,-169.4 54.48,-169.4"/>
 <text text-anchor="start" x="61.48" y="-181.6" font-family="Arial" font-size="14.00">id </text>
-<text text-anchor="start" x="76.27" y="-181.6" font-family="Arial" font-size="14.00" fill="#666666">[text]</text>
+<text text-anchor="start" x="76.27" y="-181.6" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
 <polygon fill="none" stroke="black" points="54.48,-138.6 54.48,-169.4 304.25,-169.4 304.25,-138.6 54.48,-138.6"/>
 <text text-anchor="start" x="61.48" y="-150.8" font-family="Arial" font-size="14.00">name </text>
 <text text-anchor="start" x="100.39" y="-150.8" font-family="Arial" font-size="14.00" fill="#666666">[text]</text>
@@ -77,7 +77,7 @@
 <text text-anchor="start" x="179.36" y="-465.8" font-family="Arial" font-size="14.00" fill="#666666">[boolean]</text>
 <polygon fill="none" stroke="black" points="43.2,-422.8 43.2,-453.6 315.53,-453.6 315.53,-422.8 43.2,-422.8"/>
 <text text-anchor="start" x="50.2" y="-435" font-family="Arial" font-size="14.00">robot_id </text>
-<text text-anchor="start" x="104.68" y="-435" font-family="Arial" font-size="14.00" fill="#666666">[text]</text>
+<text text-anchor="start" x="104.68" y="-435" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
 <polygon fill="none" stroke="black" points="43.2,-392 43.2,-422.8 315.53,-422.8 315.53,-392 43.2,-392"/>
 <text text-anchor="start" x="50.2" y="-404.2" font-family="Arial" font-size="14.00">embedding </text>
 <text text-anchor="start" x="123.37" y="-404.2" font-family="Arial" font-size="14.00" fill="#666666">[vector(2000)]</text>
