@@ -2,7 +2,7 @@
 
 require 'active_record'
 require 'pg'
-require 'pgvector'
+require 'neighbor'
 require 'erb'
 require 'yaml'
 
@@ -16,7 +16,7 @@ class HTM
 
         ActiveRecord::Base.establish_connection(config)
 
-        # Register pgvector type
+        # Set search path
         ActiveRecord::Base.connection.execute("SET search_path TO public")
 
         # Load models after connection is established

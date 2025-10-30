@@ -41,6 +41,24 @@ CREATE TABLE public.node_tags (
 COMMENT ON TABLE public.node_tags IS 'Join table connecting nodes to tags (many-to-many)';
 
 --
+-- Name: COLUMN node_tags.node_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.node_tags.node_id IS 'ID of the node being tagged';
+
+--
+-- Name: COLUMN node_tags.tag_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.node_tags.tag_id IS 'ID of the tag being applied';
+
+--
+-- Name: COLUMN node_tags.created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.node_tags.created_at IS 'When this association was created';
+
+--
 -- Name: node_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -303,13 +321,6 @@ ALTER TABLE ONLY public.robots ALTER COLUMN id SET DEFAULT nextval('public.robot
 ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
 
 --
--- Name: node_tags idx_node_tags_unique; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.node_tags
-    ADD CONSTRAINT idx_node_tags_unique UNIQUE (node_id, tag_id);
-
---
 -- Name: node_tags node_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -355,6 +366,12 @@ CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id);
 --
 
 CREATE INDEX idx_node_tags_tag_id ON public.node_tags USING btree (tag_id);
+
+--
+-- Name: idx_node_tags_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_node_tags_unique ON public.node_tags USING btree (node_id, tag_id);
 
 --
 -- Name: idx_nodes_access_count; Type: INDEX; Schema: public; Owner: -
@@ -453,4 +470,4 @@ ALTER TABLE ONLY public.node_tags
 -- PostgreSQL database dump complete
 --
 
-\unrestrict h6IdTBiPc0Oy30ChMzIdVNv8VcrpeBkmF39t2pahf0ggF6QY7t8vM4VDZYYTgHd
+\unrestrict hXyRlXqf7pLYXVPOEiB6uaLUuIXKSvWXapduqV94PGOdCN4CBvL9T0fMcg5ro1T

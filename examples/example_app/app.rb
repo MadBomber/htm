@@ -1,13 +1,15 @@
 #!/usr/bin/env ruby
 # Example HTM Application
 #
-# This demonstrates a simple application using the HTM gem.
+# This demonstrates a simple application using the HTM gem with full RubyLLM integration.
 
 require_relative '../../lib/htm'
+require 'ruby_llm'
+require 'logger'
 
 class ExampleApp
   def self.run
-    puts "\n=== HTM Example Application ==="
+    puts "\n=== HTM Full-Featured Example Application ==="
     puts "\nChecking database connection..."
 
     # Check if database is configured
@@ -21,6 +23,45 @@ class ExampleApp
     end
 
     puts "✓ Database configured: #{config[:dbname]} @ #{config[:host]}"
+
+    # Configure HTM with RubyLLM for embeddings and tag generation
+    puts "\nConfiguring HTM with RubyLLM..."
+    HTM.configure do |c|
+      # Configure logger
+      c.logger = Logger.new($stdout)
+      c.logger.level = Logger::INFO
+
+      # Configure embedding generation (using Ollama)
+      c.embedding_provider = :ollama
+      c.embedding_model = 'nomic-embed-text'
+      c.embedding_dimensions = 768
+      c.ollama_url = ENV['OLLAMA_URL'] || 'http://localhost:11434'
+
+      # Configure tag extraction (using Ollama - using smaller/faster model)
+      c.tag_provider = :ollama
+      c.tag_model = 'gemma3'  # Smaller model (3.3GB) for faster tag generation
+
+      # Apply default implementations
+      c.reset_to_defaults
+    end
+
+    puts "✓ Configured with Ollama:"
+    puts "  - Embeddings: #{HTM.configuration.embedding_model}"
+    puts "  - Tags: #{HTM.configuration.tag_model}"
+    puts "  - Ollama URL: #{HTM.configuration.ollama_url}"
+
+    # Check if Ollama is running
+    puts "\nChecking Ollama connection..."
+    begin
+      require 'net/http'
+      uri = URI(HTM.configuration.ollama_url)
+      response = Net::HTTP.get_response(uri)
+      puts "✓ Ollama is running"
+    rescue StandardError => e
+      puts "⚠ Warning: Cannot connect to Ollama (#{e.message})"
+      puts "  Embeddings and tags will not be generated."
+      puts "  Install Ollama: https://ollama.ai"
+    end
 
     # Create HTM instance
     puts "\nInitializing HTM..."
@@ -48,34 +89,110 @@ class ExampleApp
     puts "✓ Remembered 3 conversation messages (nodes #{node_1}, #{node_2}, #{node_3})"
     puts "  Embeddings and tags are being generated asynchronously..."
 
-    # Recall memories
-    puts "\nRecalling memories about 'memory'..."
-    memories = htm.recall(
+    # Wait for background jobs to complete
+    # Note: Tag generation with LLM can take 10-15 seconds depending on model size
+    puts "\nWaiting for background jobs to complete (15 seconds)..."
+    puts "(Embeddings are fast, but tag generation requires LLM inference)"
+    sleep 15
+
+    # Check what was generated
+    puts "\n--- Generated Tags ---"
+    [node_1, node_2, node_3].each do |node_id|
+      node = HTM::Models::Node.includes(:tags).find(node_id)
+      if node.tags.any?
+        puts "Node #{node_id}:"
+        node.tags.each { |tag| puts "  - #{tag.name}" }
+      else
+        puts "Node #{node_id}: (no tags yet)"
+      end
+    end
+
+    # Check embeddings
+    puts "\n--- Embedding Status ---"
+    [node_1, node_2, node_3].each do |node_id|
+      node = HTM::Models::Node.find(node_id)
+      if node.embedding
+        status = "✓ Generated (#{node.embedding.size} dimensions)"
+      else
+        status = "⏳ Pending"
+      end
+      puts "Node #{node_id}: #{status}"
+    end
+
+    # Demonstrate different recall strategies
+    puts "\n--- Recall Strategies Comparison ---"
+
+    # 1. Full-text search (doesn't require embeddings)
+    puts "\n1. Full-text Search for 'memory':"
+    fulltext_memories = htm.recall(
       timeframe: (Time.now - 3600)..Time.now,
       topic: "memory",
-      limit: 5
+      strategy: :fulltext,
+      limit: 3
     )
-
-    puts "Found #{memories.length} memories:"
-    memories.each do |memory|
+    puts "Found #{fulltext_memories.length} memories:"
+    fulltext_memories.each do |memory|
       puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
     end
 
-    # Show statistics
-    puts "\nMemory Statistics:"
-    stats = htm.memory_stats
-    puts "  Working Memory: #{stats[:working_memory][:node_count]} nodes, #{stats[:working_memory][:current_tokens]} tokens"
-    puts "  Long-term Memory: #{stats[:long_term_memory][:total_nodes]} nodes"
-    puts "  Robot: #{stats[:robot_name]} (#{stats[:robot_id]})"
+    # 2. Vector search (requires embeddings)
+    puts "\n2. Vector Search for 'intelligent memory system':"
+    begin
+      vector_memories = htm.recall(
+        timeframe: (Time.now - 3600)..Time.now,
+        topic: "intelligent memory system",
+        strategy: :vector,
+        limit: 3
+      )
+      puts "Found #{vector_memories.length} memories:"
+      vector_memories.each do |memory|
+        puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
+      end
+    rescue StandardError => e
+      puts "  ⚠ Vector search not available yet (embeddings still generating)"
+    end
 
-    # Shutdown
-    htm.shutdown
+    # 3. Hybrid search (combines both)
+    puts "\n3. Hybrid Search for 'working memory architecture':"
+    begin
+      hybrid_memories = htm.recall(
+        timeframe: (Time.now - 3600)..Time.now,
+        topic: "working memory architecture",
+        strategy: :hybrid,
+        limit: 3
+      )
+      puts "Found #{hybrid_memories.length} memories:"
+      hybrid_memories.each do |memory|
+        puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
+      end
+    rescue StandardError => e
+      puts "  ⚠ Hybrid search not available yet (embeddings still generating)"
+    end
 
-    puts "\n✓ Example complete!"
-    puts "\nNext steps:"
-    puts "  - Run 'rake htm:db:info' to see database details"
-    puts "  - Run 'rake htm:db:console' to explore the database"
-    puts "  - See examples/basic_usage.rb for more examples"
+    # Summary
+    puts "\n" + "="*60
+    puts "✓ Demo Complete!"
+    puts "="*60
+    puts "\nThe HTM API provides 3 core methods:"
+    puts "  1. htm.remember(content, source:)"
+    puts "     - Stores information in long-term memory"
+    puts "     - Adds to working memory for immediate use"
+    puts "     - Generates embeddings and tags in background"
+    puts ""
+    puts "  2. htm.recall(timeframe:, topic:, strategy:, limit:)"
+    puts "     - Retrieves relevant memories"
+    puts "     - Strategies: :fulltext, :vector, :hybrid"
+    puts "     - Results added to working memory"
+    puts ""
+    puts "  3. htm.forget(node_id, confirm: :confirmed)"
+    puts "     - Permanently deletes a memory node"
+    puts "     - Requires explicit confirmation"
+    puts ""
+    puts "Background Features:"
+    puts "  - Automatic embedding generation (#{HTM.configuration.embedding_model})"
+    puts "  - Automatic hierarchical tag extraction (#{HTM.configuration.tag_model})"
+    puts "  - Token counting for context management"
+    puts "  - Multi-robot shared memory (hive mind)"
     puts ""
   end
 end

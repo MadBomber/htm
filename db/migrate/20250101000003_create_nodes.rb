@@ -13,7 +13,7 @@ class CreateNodes < ActiveRecord::Migration[7.1]
         t.integer :token_count, comment: 'Number of tokens in the content (for context budget management)'
         t.boolean :in_working_memory, default: false, comment: 'Whether this memory is currently in working memory'
         t.bigint :robot_id, null: false, comment: 'ID of the robot that owns this memory'
-        t.column :embedding, 'vector(2000)', comment: 'Vector embedding (max 2000 dimensions) for semantic search'
+        t.vector :embedding, limit: 2000, comment: 'Vector embedding (max 2000 dimensions) for semantic search'
         t.integer :embedding_dimension, comment: 'Actual number of dimensions used in the embedding vector (max 2000)'
       end
 

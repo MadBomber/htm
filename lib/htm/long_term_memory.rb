@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'pg'
-require 'pgvector'
 require 'json'
 require 'lru_redux'
 require 'digest'

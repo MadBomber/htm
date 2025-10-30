@@ -13,7 +13,6 @@ require_relative "htm/jobs/generate_embedding_job"
 require_relative "htm/jobs/generate_tags_job"
 
 require "pg"
-require "pgvector"
 require "securerandom"
 require "uri"
 require "async/job"

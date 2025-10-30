@@ -5,8 +5,8 @@ PATH
       activerecord
       async-job
       lru_redux
-      pg
-      pgvector
+      neighbor
+      pg (>= 1.5.0)
       ruby_llm
       tiktoken_ruby
 
@@ -93,15 +93,11 @@ GEM
       minitest (>= 5.0)
       ruby-progressbar
     multipart-post (2.4.1)
+    neighbor (0.6.0)
+      activerecord (>= 7.1)
     net-http (0.6.0)
       uri
-    pg (1.6.2-aarch64-linux)
-    pg (1.6.2-aarch64-linux-musl)
     pg (1.6.2-arm64-darwin)
-    pg (1.6.2-x86_64-darwin)
-    pg (1.6.2-x86_64-linux)
-    pg (1.6.2-x86_64-linux-musl)
-    pgvector (0.3.2)
     pry (0.15.2)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -129,11 +125,7 @@ GEM
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
     string-format (0.2.0)
-    tiktoken_ruby (0.0.12-aarch64-linux)
     tiktoken_ruby (0.0.12-arm64-darwin)
-    tiktoken_ruby (0.0.12-x86_64-darwin)
-    tiktoken_ruby (0.0.12-x86_64-linux)
-    tiktoken_ruby (0.0.12-x86_64-linux-musl)
     timeout (0.4.3)
     traces (0.18.2)
     tzinfo (2.0.6)
@@ -146,12 +138,7 @@ GEM
     zeitwerk (2.7.3)
 
 PLATFORMS
-  aarch64-linux
-  aarch64-linux-musl
   arm64-darwin
-  x86_64-darwin
-  x86_64-linux
-  x86_64-linux-musl
 
 DEPENDENCIES
   debug_me (~> 1.0, >= 0)

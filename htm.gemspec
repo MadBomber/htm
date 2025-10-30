@@ -36,8 +36,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "pg"
-  spec.add_dependency "pgvector"
+  spec.add_dependency "pg", ">= 1.5.0"
+  spec.add_dependency "neighbor"
   spec.add_dependency "activerecord"
   spec.add_dependency "tiktoken_ruby"
   spec.add_dependency "ruby_llm"

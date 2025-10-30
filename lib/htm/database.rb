@@ -116,7 +116,7 @@ class HTM
 
         conn = PG.connect(config)
 
-        tables = ['nodes', 'tags', 'robots', 'operations_log', 'schema_migrations']
+        tables = ['nodes', 'node_tags', 'tags', 'robots', 'operations_log', 'schema_migrations']
 
         puts "Dropping HTM tables..."
         tables.each do |table|
