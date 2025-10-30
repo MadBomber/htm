@@ -24,15 +24,17 @@ class HTM
     # @param key [String] Node identifier
     # @param value [String] Node content
     # @param token_count [Integer] Number of tokens in this node
-    # @param importance [Float] Importance score (0.0-10.0)
+    # @param access_count [Integer] Access count from long-term memory (default: 0)
+    # @param last_accessed [Time, nil] Last access time from long-term memory
     # @param from_recall [Boolean] Whether this node was recalled from long-term memory
     # @return [void]
     #
-    def add(key, value, token_count:, importance: 1.0, from_recall: false)
+    def add(key, value, token_count:, access_count: 0, last_accessed: nil, from_recall: false)
       @nodes[key] = {
         value: value,
         token_count: token_count,
-        importance: importance,
+        access_count: access_count,
+        last_accessed: last_accessed || Time.now,
         added_at: Time.now,
         from_recall: from_recall
       }
@@ -60,6 +62,9 @@ class HTM
 
     # Evict nodes to make space
     #
+    # Uses LFU + LRU strategy: Least Frequently Used + Least Recently Used
+    # Nodes with low access count and old timestamps are evicted first
+    #
     # @param needed_tokens [Integer] Number of tokens needed
     # @return [Array<Hash>] Evicted nodes
     #
@@ -67,10 +72,18 @@ class HTM
       evicted = []
       tokens_freed = 0
 
-      # Sort by importance and recency (lower importance and older first)
+      # Sort by access frequency + recency (lower score = more evictable)
       candidates = @nodes.sort_by do |key, node|
-        recency = Time.now - node[:added_at]
-        [node[:importance], -recency]
+        access_frequency = node[:access_count] || 0
+        time_since_accessed = Time.now - (node[:last_accessed] || node[:added_at])
+
+        # Combined score: lower is more evictable
+        # Frequently accessed = higher score (keep)
+        # Recently accessed = higher score (keep)
+        access_score = Math.log(1 + access_frequency)
+        recency_score = 1.0 / (1 + time_since_accessed / 3600.0)
+
+        -(access_score + recency_score)  # Negative for ascending sort
       end
 
       candidates.each do |key, node|
@@ -87,7 +100,10 @@ class HTM
 
     # Assemble context string for LLM
     #
-    # @param strategy [Symbol] Assembly strategy (:recent, :important, :balanced)
+    # @param strategy [Symbol] Assembly strategy (:recent, :frequent, :balanced)
+    #   - :recent - Most recently accessed (LRU)
+    #   - :frequent - Most frequently accessed (LFU)
+    #   - :balanced - Combines frequency × recency
     # @param max_tokens [Integer, nil] Optional token limit
     # @return [String] Assembled context
     #
@@ -96,16 +112,23 @@ class HTM
 
       nodes = case strategy
       when :recent
+        # Most recently accessed (LRU)
         @access_order.reverse.map { |k| @nodes[k] }
-      when :important
-        @nodes.sort_by { |k, v| -v[:importance] }.map(&:last)
+      when :frequent
+        # Most frequently accessed (LFU)
+        @nodes.sort_by { |k, v| -(v[:access_count] || 0) }.map(&:last)
       when :balanced
+        # Combined frequency × recency
         @nodes.sort_by { |k, v|
-          recency = Time.now - v[:added_at]
-          -(v[:importance] * (1.0 / (1 + recency / 3600.0)))
+          access_frequency = v[:access_count] || 0
+          time_since_accessed = Time.now - (v[:last_accessed] || v[:added_at])
+          recency_factor = 1.0 / (1 + time_since_accessed / 3600.0)
+
+          # Higher score = more relevant
+          -(Math.log(1 + access_frequency) * recency_factor)
         }.map(&:last)
       else
-        raise ArgumentError, "Unknown strategy: #{strategy}"
+        raise ArgumentError, "Unknown strategy: #{strategy}. Use :recent, :frequent, or :balanced"
       end
 
       # Build context up to token limit

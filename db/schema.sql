@@ -82,10 +82,8 @@ ALTER SEQUENCE public.node_tags_id_seq OWNED BY public.nodes_tags.id;
 CREATE TABLE public.nodes (
     id bigint NOT NULL,
     content text NOT NULL,
-    speaker text NOT NULL,
-    type text,
-    category text,
-    importance double precision DEFAULT 1.0,
+    source text NOT NULL,
+    access_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     last_accessed timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
@@ -110,28 +108,16 @@ COMMENT ON TABLE public.nodes IS 'Core memory storage for conversation messages 
 COMMENT ON COLUMN public.nodes.content IS 'The conversation message/utterance content';
 
 --
--- Name: COLUMN nodes.speaker; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN nodes.source; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.nodes.speaker IS 'Who said it: user or robot name';
+COMMENT ON COLUMN public.nodes.source IS 'From where the content came';
 
 --
--- Name: COLUMN nodes.type; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN nodes.access_count; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.nodes.type IS 'Memory type: fact, context, code, preference, decision, question';
-
---
--- Name: COLUMN nodes.category; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.nodes.category IS 'Optional category for organizing memories';
-
---
--- Name: COLUMN nodes.importance; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.nodes.importance IS 'Importance score (0.0-1.0) for prioritizing recall';
+COMMENT ON COLUMN public.nodes.access_count IS 'Number of times this node has been accessed/retrieved';
 
 --
 -- Name: COLUMN nodes.created_at; Type: COMMENT; Schema: public; Owner: -
@@ -388,10 +374,10 @@ CREATE INDEX idx_node_tags_tag_id ON public.nodes_tags USING btree (tag_id);
 CREATE UNIQUE INDEX idx_node_tags_unique ON public.nodes_tags USING btree (node_id, tag_id);
 
 --
--- Name: idx_nodes_category; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_nodes_access_count; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_nodes_category ON public.nodes USING btree (category);
+CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count);
 
 --
 -- Name: idx_nodes_content_gin; Type: INDEX; Schema: public; Owner: -
@@ -436,16 +422,10 @@ CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed)
 CREATE INDEX idx_nodes_robot_id ON public.nodes USING btree (robot_id);
 
 --
--- Name: idx_nodes_speaker; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_nodes_source; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_nodes_speaker ON public.nodes USING btree (speaker);
-
---
--- Name: idx_nodes_type; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_nodes_type ON public.nodes USING btree (type);
+CREATE INDEX idx_nodes_source ON public.nodes USING btree (source);
 
 --
 -- Name: idx_nodes_updated_at; Type: INDEX; Schema: public; Owner: -
@@ -490,4 +470,4 @@ ALTER TABLE ONLY public.nodes_tags
 -- PostgreSQL database dump complete
 --
 
-\unrestrict aTUE7tRPerAY5DDFsbdi5fJ82pMSfgcpqwRIvAqzqGBgvhFeRL9YBW3YgvN05yl
+\unrestrict 7odrdMxPwIPozbQUFv7aO0vcEt3U4fMducNfCSzaqBGg5BXqWnxZHHBsnfoBd5v

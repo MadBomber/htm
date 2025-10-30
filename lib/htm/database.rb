@@ -173,49 +173,37 @@ class HTM
         htm.add_message(
           "What is TimescaleDB good for?",
           speaker: "user",
-          type: :question,
-          importance: 5.0,
-          tags: ["database", "timescaledb"]
+          tags: ["type:question", "database", "timescaledb"]
         )
 
         htm.add_message(
           "PostgreSQL with TimescaleDB provides efficient time-series data storage and querying capabilities.",
           speaker: "Sample Robot",
-          type: :fact,
-          importance: 8.0,
-          tags: ["database", "timescaledb"]
+          tags: ["type:fact", "database", "timescaledb"]
         )
 
         htm.add_message(
           "How much training data do ML models need?",
           speaker: "user",
-          type: :question,
-          importance: 6.0,
-          tags: ["ai", "machine-learning"]
+          tags: ["type:question", "ai", "machine-learning"]
         )
 
         htm.add_message(
           "Machine learning models require large amounts of training data to achieve good performance.",
           speaker: "Sample Robot",
-          type: :fact,
-          importance: 7.0,
-          tags: ["ai", "machine-learning"]
+          tags: ["type:fact", "ai", "machine-learning"]
         )
 
         htm.add_message(
           "Tell me about Ruby on Rails",
           speaker: "user",
-          type: :question,
-          importance: 5.0,
-          tags: ["ruby", "web-development"]
+          tags: ["type:question", "ruby", "web-development"]
         )
 
         htm.add_message(
           "Ruby on Rails is a web framework for building database-backed applications.",
           speaker: "Sample Robot",
-          type: :fact,
-          importance: 6.0,
-          tags: ["ruby", "web-development"]
+          tags: ["type:fact", "ruby", "web-development"]
         )
 
         htm.shutdown

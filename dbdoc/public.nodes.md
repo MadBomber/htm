@@ -10,10 +10,8 @@ Core memory storage for conversation messages and context
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
 | id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.nodes_tags](public.nodes_tags.md) |  |  |
 | content | text |  | false |  |  | The conversation message/utterance content |
-| speaker | text |  | false |  |  | Who said it: user or robot name |
-| type | text |  | true |  |  | Memory type: fact, context, code, preference, decision, question |
-| category | text |  | true |  |  | Optional category for organizing memories |
-| importance | double precision | 1.0 | true |  |  | Importance score (0.0-1.0) for prioritizing recall |
+| source | text |  | false |  |  | From where the content came |
+| access_count | integer | 0 | false |  |  | Number of times this node has been accessed/retrieved |
 | created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was created |
 | updated_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was last modified |
 | last_accessed | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was last accessed |
@@ -39,10 +37,9 @@ Core memory storage for conversation messages and context
 | idx_nodes_created_at | CREATE INDEX idx_nodes_created_at ON public.nodes USING btree (created_at) |
 | idx_nodes_updated_at | CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at) |
 | idx_nodes_last_accessed | CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed) |
-| idx_nodes_type | CREATE INDEX idx_nodes_type ON public.nodes USING btree (type) |
-| idx_nodes_category | CREATE INDEX idx_nodes_category ON public.nodes USING btree (category) |
+| idx_nodes_access_count | CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count) |
 | idx_nodes_robot_id | CREATE INDEX idx_nodes_robot_id ON public.nodes USING btree (robot_id) |
-| idx_nodes_speaker | CREATE INDEX idx_nodes_speaker ON public.nodes USING btree (speaker) |
+| idx_nodes_source | CREATE INDEX idx_nodes_source ON public.nodes USING btree (source) |
 | idx_nodes_in_working_memory | CREATE INDEX idx_nodes_in_working_memory ON public.nodes USING btree (in_working_memory) |
 | idx_nodes_embedding | CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64') |
 | idx_nodes_content_gin | CREATE INDEX idx_nodes_content_gin ON public.nodes USING gin (to_tsvector('english'::regconfig, content)) |

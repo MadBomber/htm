@@ -38,8 +38,7 @@ class HTM
         {
           total_nodes: nodes.count,
           in_working_memory: nodes.in_working_memory.count,
-          with_embeddings: nodes.with_embeddings.count,
-          by_type: nodes.group(:type).count
+          with_embeddings: nodes.with_embeddings.count
         }
       end
 

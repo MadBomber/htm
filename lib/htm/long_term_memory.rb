@@ -46,15 +46,12 @@ class HTM
     #
     # @param content [String] Conversation message/utterance
     # @param speaker [String] Who said it: 'user' or robot name
-    # @param type [String, nil] Node type
-    # @param category [String, nil] Node category
-    # @param importance [Float] Importance score
     # @param token_count [Integer] Token count
     # @param robot_id [String] Robot identifier
     # @param embedding [Array<Float>, nil] Pre-generated embedding vector
     # @return [Integer] Node database ID
     #
-    def add(content:, speaker:, type: nil, category: nil, importance: 1.0, token_count: 0, robot_id:, embedding: nil)
+    def add(content:, speaker:, token_count: 0, robot_id:, embedding: nil)
       # Prepare embedding if provided
       if embedding
         # Pad embedding to 2000 dimensions if needed
@@ -71,9 +68,6 @@ class HTM
       node = HTM::Models::Node.create!(
         content: content,
         speaker: speaker,
-        type: type,
-        category: category,
-        importance: importance,
         token_count: token_count,
         robot_id: robot_id,
         embedding: embedding ? embedding_str : nil,
@@ -88,12 +82,18 @@ class HTM
 
     # Retrieve a node by ID
     #
+    # Automatically tracks access by incrementing access_count and updating last_accessed
+    #
     # @param node_id [Integer] Node database ID
     # @return [Hash, nil] Node data or nil
     #
     def retrieve(node_id)
       node = HTM::Models::Node.find_by(id: node_id)
       return nil unless node
+
+      # Track access (atomic increment)
+      node.increment!(:access_count)
+      node.touch(:last_accessed)
 
       node.attributes
     end
@@ -250,6 +250,22 @@ class HTM
       HTM::Models::Node.where(id: node_ids).update_all(in_working_memory: false)
     end
 
+    # Track access for multiple nodes (bulk operation)
+    #
+    # Updates access_count and last_accessed for all nodes in the array
+    #
+    # @param node_ids [Array<Integer>] Node IDs that were accessed
+    # @return [void]
+    #
+    def track_access(node_ids)
+      return if node_ids.empty?
+
+      # Atomic batch update
+      HTM::Models::Node.where(id: node_ids).update_all(
+        "access_count = access_count + 1, last_accessed = NOW()"
+      )
+    end
+
     # Register a robot
     #
     # @param robot_id [String] Robot identifier
@@ -281,7 +297,6 @@ class HTM
       base_stats = {
         total_nodes: HTM::Models::Node.count,
         nodes_by_robot: HTM::Models::Node.group(:robot_id).count,
-        nodes_by_type: HTM::Models::Node.group(:type).count,
         total_tags: HTM::Models::Tag.count,
         oldest_memory: HTM::Models::Node.minimum(:created_at),
         newest_memory: HTM::Models::Node.maximum(:created_at),
@@ -384,6 +399,183 @@ class HTM
         .pluck(:name)
     end
 
+    # Calculate dynamic relevance score for a node given query context
+    #
+    # Combines multiple signals:
+    # - Vector similarity (semantic match)
+    # - Tag overlap (categorical match)
+    # - Recency (freshness)
+    # - Access frequency (popularity/utility)
+    #
+    # @param node [Hash] Node data with similarity, tags, created_at, access_count
+    # @param query_tags [Array<String>] Tags associated with the query
+    # @param vector_similarity [Float, nil] Pre-computed vector similarity (0-1)
+    # @return [Float] Composite relevance score (0-10)
+    #
+    def calculate_relevance(node:, query_tags: [], vector_similarity: nil)
+      # 1. Vector similarity (semantic match) - weight: 0.5
+      semantic_score = if vector_similarity
+        vector_similarity
+      elsif node['similarity']
+        node['similarity'].to_f
+      else
+        0.5  # Neutral if no embedding
+      end
+
+      # 2. Tag overlap (categorical relevance) - weight: 0.3
+      node_tags = get_node_tags(node['id'])
+      tag_score = if query_tags.any? && node_tags.any?
+        jaccard_similarity(query_tags, node_tags)
+      else
+        0.5  # Neutral if no tags
+      end
+
+      # 3. Recency (temporal relevance) - weight: 0.1
+      age_hours = (Time.now - Time.parse(node['created_at'].to_s)) / 3600.0
+      recency_score = Math.exp(-age_hours / 168.0)  # 1-week half-life
+
+      # 4. Access frequency (behavioral signal) - weight: 0.1
+      access_count = node['access_count'] || 0
+      access_score = Math.log(1 + access_count) / 10.0  # Normalize to 0-1
+
+      # Weighted composite (scale to 0-10)
+      relevance = (
+        (semantic_score * 0.5) +
+        (tag_score * 0.3) +
+        (recency_score * 0.1) +
+        (access_score * 0.1)
+      ) * 10.0
+
+      relevance.clamp(0.0, 10.0)
+    end
+
+    # Search with dynamic relevance scoring
+    #
+    # Returns nodes with calculated relevance scores based on query context
+    #
+    # @param timeframe [Range] Time range to search
+    # @param query [String, nil] Search query
+    # @param query_tags [Array<String>] Tags to match
+    # @param limit [Integer] Maximum results
+    # @param embedding_service [Object, nil] Service to generate embeddings
+    # @return [Array<Hash>] Nodes with relevance scores
+    #
+    def search_with_relevance(timeframe:, query: nil, query_tags: [], limit: 20, embedding_service: nil)
+      # Get candidates from appropriate search method
+      candidates = if query && embedding_service
+        # Vector search
+        search_uncached(timeframe: timeframe, query: query, limit: limit * 2, embedding_service: embedding_service)
+      elsif query
+        # Full-text search
+        search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 2)
+      else
+        # Time-range only
+        HTM::Models::Node
+          .where(created_at: timeframe)
+          .order(created_at: :desc)
+          .limit(limit * 2)
+          .map(&:attributes)
+      end
+
+      # Calculate relevance for each candidate
+      scored_nodes = candidates.map do |node|
+        relevance = calculate_relevance(
+          node: node,
+          query_tags: query_tags,
+          vector_similarity: node['similarity']&.to_f
+        )
+
+        node.merge({
+          'relevance' => relevance,
+          'tags' => get_node_tags(node['id'])
+        })
+      end
+
+      # Sort by relevance and return top K
+      scored_nodes
+        .sort_by { |n| -n['relevance'] }
+        .take(limit)
+    end
+
+    # Get tags for a specific node
+    #
+    # @param node_id [Integer] Node database ID
+    # @return [Array<String>] Tag names
+    #
+    def get_node_tags(node_id)
+      HTM::Models::Tag
+        .joins(:node_tags)
+        .where(node_tags: { node_id: node_id })
+        .pluck(:name)
+    rescue
+      []
+    end
+
+    # Search nodes by tags
+    #
+    # @param tags [Array<String>] Tags to search for
+    # @param match_all [Boolean] If true, match ALL tags; if false, match ANY tag
+    # @param timeframe [Range, nil] Optional time range filter
+    # @param limit [Integer] Maximum results
+    # @return [Array<Hash>] Matching nodes with relevance scores
+    #
+    def search_by_tags(tags:, match_all: false, timeframe: nil, limit: 20)
+      return [] if tags.empty?
+
+      # Build base query
+      query = HTM::Models::Node
+        .joins(:tags)
+        .where(tags: { name: tags })
+        .distinct
+
+      # Apply timeframe filter if provided
+      query = query.where(created_at: timeframe) if timeframe
+
+      if match_all
+        # Match ALL tags (intersection)
+        query = query
+          .group('nodes.id')
+          .having('COUNT(DISTINCT tags.name) = ?', tags.size)
+      end
+
+      # Get results
+      nodes = query.limit(limit).map(&:attributes)
+
+      # Calculate relevance and enrich with tags
+      nodes.map do |node|
+        relevance = calculate_relevance(
+          node: node,
+          query_tags: tags
+        )
+
+        node.merge({
+          'relevance' => relevance,
+          'tags' => get_node_tags(node['id'])
+        })
+      end.sort_by { |n| -n['relevance'] }
+    end
+
+    # Get most popular tags
+    #
+    # @param limit [Integer] Number of tags to return
+    # @param timeframe [Range, nil] Optional time range filter
+    # @return [Array<Hash>] Tags with usage counts
+    #
+    def popular_tags(limit: 20, timeframe: nil)
+      query = HTM::Models::Tag
+        .joins(:node_tags)
+        .joins('INNER JOIN nodes ON nodes.id = node_tags.node_id')
+        .group('tags.id', 'tags.name')
+        .select('tags.name, COUNT(node_tags.id) as usage_count')
+
+      query = query.where('nodes.created_at >= ? AND nodes.created_at <= ?', timeframe.begin, timeframe.end) if timeframe
+
+      query
+        .order('usage_count DESC')
+        .limit(limit)
+        .map { |tag| { name: tag.name, usage_count: tag.usage_count } }
+    end
+
     private
 
     # Generate cache key for query
@@ -425,6 +617,22 @@ class HTM
       }
     end
 
+    # Calculate Jaccard similarity between two sets
+    #
+    # @param set_a [Array] First set
+    # @param set_b [Array] Second set
+    # @return [Float] Jaccard similarity (0.0-1.0)
+    #
+    def jaccard_similarity(set_a, set_b)
+      return 0.0 if set_a.empty? && set_b.empty?
+      return 0.0 if set_a.empty? || set_b.empty?
+
+      intersection = (set_a & set_b).size
+      union = (set_a | set_b).size
+
+      intersection.to_f / union
+    end
+
     # Invalidate (clear) the query cache
     #
     # @return [void]
@@ -457,7 +665,7 @@ class HTM
 
       result = ActiveRecord::Base.connection.select_all(
         <<~SQL,
-          SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
+          SELECT id, content, source, access_count, created_at, robot_id, token_count,
                  1 - (embedding <=> '#{embedding_str}'::vector) as similarity
           FROM nodes
           WHERE created_at BETWEEN '#{timeframe.begin.iso8601}' AND '#{timeframe.end.iso8601}'
@@ -466,6 +674,11 @@ class HTM
           LIMIT #{limit.to_i}
         SQL
       )
+
+      # Track access for retrieved nodes
+      node_ids = result.map { |r| r['id'] }
+      track_access(node_ids)
+
       result.to_a
     end
 
@@ -480,7 +693,7 @@ class HTM
       result = ActiveRecord::Base.connection.select_all(
         ActiveRecord::Base.sanitize_sql_array([
           <<~SQL,
-            SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
+            SELECT id, content, source, access_count, created_at, robot_id, token_count,
                    ts_rank(to_tsvector('english', content), plainto_tsquery('english', ?)) as rank
             FROM nodes
             WHERE created_at BETWEEN ? AND ?
@@ -491,6 +704,11 @@ class HTM
           query, timeframe.begin, timeframe.end, query, limit
         ])
       )
+
+      # Track access for retrieved nodes
+      node_ids = result.map { |r| r['id'] }
+      track_access(node_ids)
+
       result.to_a
     end
 
@@ -522,14 +740,14 @@ class HTM
         ActiveRecord::Base.sanitize_sql_array([
           <<~SQL,
             WITH candidates AS (
-              SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count, embedding
+              SELECT id, content, source, access_count, created_at, robot_id, token_count, embedding
               FROM nodes
               WHERE created_at BETWEEN ? AND ?
               AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
               AND embedding IS NOT NULL
               LIMIT ?
             )
-            SELECT id, content, speaker, type, category, importance, created_at, robot_id, token_count,
+            SELECT id, content, source, access_count, created_at, robot_id, token_count,
                    1 - (embedding <=> '#{embedding_str}'::vector) as similarity
             FROM candidates
             ORDER BY embedding <=> '#{embedding_str}'::vector
@@ -538,6 +756,11 @@ class HTM
           timeframe.begin, timeframe.end, query, prefilter_limit, limit
         ])
       )
+
+      # Track access for retrieved nodes
+      node_ids = result.map { |r| r['id'] }
+      track_access(node_ids)
+
       result.to_a
     end
   end

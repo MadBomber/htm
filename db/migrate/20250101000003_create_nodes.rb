@@ -5,10 +5,8 @@ class CreateNodes < ActiveRecord::Migration[7.1]
     unless table_exists?(:nodes)
       create_table :nodes, comment: 'Core memory storage for conversation messages and context' do |t|
         t.text :content, null: false, comment: 'The conversation message/utterance content'
-        t.text :speaker, null: false, comment: 'Who said it: user or robot name'
-        t.text :type, comment: 'Memory type: fact, context, code, preference, decision, question'
-        t.text :category, comment: 'Optional category for organizing memories'
-        t.float :importance, default: 1.0, comment: 'Importance score (0.0-1.0) for prioritizing recall'
+        t.text :source, null: false, comment: 'From where the content came'
+        t.integer :access_count, default: 0, null: false, comment: 'Number of times this node has been accessed/retrieved'
         t.timestamptz :created_at, default: -> { 'CURRENT_TIMESTAMP' }, comment: 'When this memory was created'
         t.timestamptz :updated_at, default: -> { 'CURRENT_TIMESTAMP' }, comment: 'When this memory was last modified'
         t.timestamptz :last_accessed, default: -> { 'CURRENT_TIMESTAMP' }, comment: 'When this memory was last accessed'
@@ -23,10 +21,9 @@ class CreateNodes < ActiveRecord::Migration[7.1]
       add_index :nodes, :created_at, name: 'idx_nodes_created_at'
       add_index :nodes, :updated_at, name: 'idx_nodes_updated_at'
       add_index :nodes, :last_accessed, name: 'idx_nodes_last_accessed'
-      add_index :nodes, :type, name: 'idx_nodes_type'
-      add_index :nodes, :category, name: 'idx_nodes_category'
+      add_index :nodes, :access_count, name: 'idx_nodes_access_count'
       add_index :nodes, :robot_id, name: 'idx_nodes_robot_id'
-      add_index :nodes, :speaker, name: 'idx_nodes_speaker'
+      add_index :nodes, :source, name: 'idx_nodes_source'
       add_index :nodes, :in_working_memory, name: 'idx_nodes_in_working_memory'
 
       # Add check constraint for embedding dimensions

@@ -218,29 +218,17 @@
           "comment": "The conversation message/utterance content"
         },
         {
-          "name": "speaker",
+          "name": "source",
           "type": "text",
           "nullable": false,
-          "comment": "Who said it: user or robot name"
+          "comment": "From where the content came"
         },
         {
-          "name": "type",
-          "type": "text",
-          "nullable": true,
-          "comment": "Memory type: fact, context, code, preference, decision, question"
-        },
-        {
-          "name": "category",
-          "type": "text",
-          "nullable": true,
-          "comment": "Optional category for organizing memories"
-        },
-        {
-          "name": "importance",
-          "type": "double precision",
-          "nullable": true,
-          "default": "1.0",
-          "comment": "Importance score (0.0-1.0) for prioritizing recall"
+          "name": "access_count",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "comment": "Number of times this node has been accessed/retrieved"
         },
         {
           "name": "created_at",
@@ -329,19 +317,11 @@
           ]
         },
         {
-          "name": "idx_nodes_type",
-          "def": "CREATE INDEX idx_nodes_type ON public.nodes USING btree (type)",
+          "name": "idx_nodes_access_count",
+          "def": "CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count)",
           "table": "public.nodes",
           "columns": [
-            "type"
-          ]
-        },
-        {
-          "name": "idx_nodes_category",
-          "def": "CREATE INDEX idx_nodes_category ON public.nodes USING btree (category)",
-          "table": "public.nodes",
-          "columns": [
-            "category"
+            "access_count"
           ]
         },
         {
@@ -353,11 +333,11 @@
           ]
         },
         {
-          "name": "idx_nodes_speaker",
-          "def": "CREATE INDEX idx_nodes_speaker ON public.nodes USING btree (speaker)",
+          "name": "idx_nodes_source",
+          "def": "CREATE INDEX idx_nodes_source ON public.nodes USING btree (source)",
           "table": "public.nodes",
           "columns": [
-            "speaker"
+            "source"
           ]
         },
         {

@@ -35,8 +35,8 @@ require "async/job"
 #   htm = HTM.new(robot_name: "Code Helper")
 #
 #   # Add memories
-#   htm.add_node("decision_001", "We decided to use PostgreSQL for HTM",
-#                type: :decision, importance: 8.0, tags: ["architecture"])
+#   htm.add_message("We decided to use PostgreSQL for HTM",
+#                   speaker: "architect", tags: ["type:decision", "architecture"])
 #
 #   # Recall from the past
 #   memories = htm.recall(timeframe: "last week", topic: "PostgreSQL")
@@ -52,11 +52,8 @@ class HTM
   MAX_VALUE_LENGTH = 1_000_000  # 1MB
   MAX_ARRAY_SIZE = 1000
 
-  VALID_TYPES = [:fact, :context, :code, :preference, :decision, :question].freeze
-  IMPORTANCE_RANGE = (0.0..10.0).freeze
-
   VALID_RECALL_STRATEGIES = [:vector, :fulltext, :hybrid].freeze
-  VALID_CONTEXT_STRATEGIES = [:recent, :important, :balanced].freeze
+  VALID_CONTEXT_STRATEGIES = [:recent, :frequent, :balanced].freeze
 
   # Initialize a new HTM instance
   #
@@ -101,22 +98,16 @@ class HTM
 
   # Add a new memory node
   #
-  # @param key [String] Unique identifier for this node
-  # @param value [String] Content of the memory
-  # @param type [Symbol] Type of memory (:fact, :context, :code, :preference, :decision, :question)
-  # @param category [String] Optional category for organization
-  # @param importance [Float] Importance score (0.0-10.0, default: 1.0)
+  # @param content [String] Content of the memory
+  # @param speaker [String] Who created this memory (e.g., "user", "assistant", robot name)
   # @param related_to [Array<String>] Keys of related nodes
-  # @param tags [Array<String>] Tags for categorization
+  # @param tags [Array<String>] Manual tags to add (hierarchical tags will be auto-extracted)
   # @return [Integer] Database ID of the created node
   #
-  def add_message(content, speaker:, type: nil, category: nil, importance: 1.0, related_to: [], tags: [])
+  def add_message(content, speaker:, related_to: [], tags: [])
     # Validate all inputs
     validate_content!(content)
     validate_speaker!(speaker)
-    validate_type!(type)
-    validate_category!(category)
-    validate_importance!(importance)
     validate_array!(related_to, "related_to")
     validate_array!(tags, "tags")
 
@@ -128,9 +119,6 @@ class HTM
     node_id = @long_term_memory.add(
       content: content,
       speaker: speaker,
-      type: type,
-      category: category,
-      importance: importance,
       token_count: token_count,
       robot_id: @robot_id,
       embedding: nil  # Will be generated in background
@@ -143,8 +131,8 @@ class HTM
     enqueue_embedding_job(node_id)
     enqueue_tags_job(node_id, manual_tags: tags)
 
-    # Add to working memory
-    @working_memory.add(node_id, content, token_count: token_count, importance: importance)
+    # Add to working memory (access_count starts at 0)
+    @working_memory.add(node_id, content, token_count: token_count, access_count: 0)
 
     update_robot_activity
     node_id
@@ -156,42 +144,56 @@ class HTM
   # @param topic [String] Topic to search for
   # @param limit [Integer] Maximum number of nodes to retrieve (default: 20)
   # @param strategy [Symbol] Search strategy (:vector, :fulltext, :hybrid)
-  # @return [Array<Hash>] Retrieved memory nodes
+  # @param with_relevance [Boolean] Include dynamic relevance scores (default: false)
+  # @param query_tags [Array<String>] Tags to boost relevance (optional)
+  # @return [Array<Hash>] Retrieved memory nodes (with 'relevance' key if with_relevance: true)
   #
-  def recall(timeframe:, topic:, limit: 20, strategy: :vector)
+  def recall(timeframe:, topic:, limit: 20, strategy: :vector, with_relevance: false, query_tags: [])
     # Validate inputs
     validate_timeframe!(timeframe)
     validate_value!(topic)
     validate_positive_integer!(limit, "limit")
     validate_recall_strategy!(strategy)
+    validate_array!(query_tags, "query_tags")
 
     parsed_timeframe = parse_timeframe(timeframe)
 
-    # Perform RAG-based retrieval
-    nodes = case strategy
-    when :vector
-      # Generate query embedding using configured generator
-      query_embedding = HTM.embed(topic)
-      @long_term_memory.search_vector(
-        timeframe: parsed_timeframe,
-        query_embedding: query_embedding,
-        limit: limit
-      )
-    when :fulltext
-      @long_term_memory.search_fulltext(
+    # Use relevance-based search if requested
+    if with_relevance
+      nodes = @long_term_memory.search_with_relevance(
         timeframe: parsed_timeframe,
         query: topic,
-        limit: limit
+        query_tags: query_tags,
+        limit: limit,
+        embedding_service: (strategy == :vector || strategy == :hybrid) ? HTM : nil
       )
-    when :hybrid
-      # Generate query embedding for hybrid search
-      query_embedding = HTM.embed(topic)
-      @long_term_memory.search_hybrid(
-        timeframe: parsed_timeframe,
-        query: topic,
-        query_embedding: query_embedding,
-        limit: limit
-      )
+    else
+      # Perform standard RAG-based retrieval
+      nodes = case strategy
+      when :vector
+        # Generate query embedding using configured generator
+        query_embedding = HTM.embed(topic)
+        @long_term_memory.search_vector(
+          timeframe: parsed_timeframe,
+          query_embedding: query_embedding,
+          limit: limit
+        )
+      when :fulltext
+        @long_term_memory.search_fulltext(
+          timeframe: parsed_timeframe,
+          query: topic,
+          limit: limit
+        )
+      when :hybrid
+        # Generate query embedding for hybrid search
+        query_embedding = HTM.embed(topic)
+        @long_term_memory.search_hybrid(
+          timeframe: parsed_timeframe,
+          query: topic,
+          query_embedding: query_embedding,
+          limit: limit
+        )
+      end
     end
 
     # Add to working memory (evict if needed)
@@ -201,6 +203,74 @@ class HTM
 
     update_robot_activity
     nodes
+  end
+
+  # Recall memories by tags
+  #
+  # Search for nodes matching specific tags with dynamic relevance scoring.
+  # Tags use hierarchical format (e.g., "type:decision", "architecture:database").
+  #
+  # @param tags [Array<String>] Tags to search for
+  # @param match_all [Boolean] Require all tags (AND) vs. any tag (OR) (default: false)
+  # @param timeframe [String, Range, nil] Optional time range filter
+  # @param limit [Integer] Maximum number of nodes to retrieve (default: 20)
+  # @return [Array<Hash>] Retrieved nodes with relevance scores and tags
+  #
+  # @example Find all database decisions
+  #   nodes = htm.recall_by_tags(["type:decision", "architecture:database"], match_all: true)
+  #
+  # @example Find any architecture or performance related nodes
+  #   nodes = htm.recall_by_tags(["architecture", "performance"])
+  #
+  def recall_by_tags(tags, match_all: false, timeframe: nil, limit: 20)
+    # Validate inputs
+    validate_array!(tags, "tags")
+    raise ValidationError, "tags cannot be empty" if tags.empty?
+    validate_timeframe!(timeframe) if timeframe
+    validate_positive_integer!(limit, "limit")
+
+    parsed_timeframe = timeframe ? parse_timeframe(timeframe) : nil
+
+    nodes = @long_term_memory.search_by_tags(
+      tags: tags,
+      match_all: match_all,
+      timeframe: parsed_timeframe,
+      limit: limit
+    )
+
+    # Add to working memory (evict if needed)
+    nodes.each do |node|
+      add_to_working_memory(node)
+    end
+
+    update_robot_activity
+    nodes
+  end
+
+  # Get most popular tags
+  #
+  # Returns the most frequently used tags across all nodes,
+  # useful for understanding the knowledge base structure.
+  #
+  # @param limit [Integer] Maximum number of tags to return (default: 20)
+  # @param timeframe [String, Range, nil] Optional time range filter
+  # @return [Array<Hash>] Tag names with usage counts (keys: :name, :usage_count)
+  #
+  # @example Get top 10 tags
+  #   tags = htm.popular_tags(limit: 10)
+  #   tags.each { |t| puts "#{t[:name]}: #{t[:usage_count]} uses" }
+  #
+  # @example Get popular tags from last month
+  #   tags = htm.popular_tags(timeframe: "last month", limit: 20)
+  #
+  def popular_tags(limit: 20, timeframe: nil)
+    # Validate inputs
+    validate_positive_integer!(limit, "limit")
+    validate_timeframe!(timeframe) if timeframe
+
+    parsed_timeframe = timeframe ? parse_timeframe(timeframe) : nil
+
+    @long_term_memory.popular_tags(limit: limit, timeframe: parsed_timeframe)
   end
 
   # Retrieve a specific memory node
@@ -325,7 +395,7 @@ class HTM
              timestamp: n['created_at'],
              robot: n['robot_id'],
              content: n['value'],
-             type: n['type']
+             speaker: n['speaker']
            }}
   end
 
@@ -453,14 +523,16 @@ class HTM
   def add_to_working_memory(node)
     # Convert token_count to integer (may be String from database/cache)
     token_count = node['token_count'].to_i
-    importance = node['importance'].to_f
+    access_count = (node['access_count'] || 0).to_i
+    last_accessed = node['last_accessed'] ? Time.parse(node['last_accessed'].to_s) : nil
 
     if @working_memory.has_space?(token_count)
       @working_memory.add(
-        node['key'],
-        node['value'],
+        node['id'],
+        node['content'],
         token_count: token_count,
-        importance: importance,
+        access_count: access_count,
+        last_accessed: last_accessed,
         from_recall: true
       )
     else
@@ -471,10 +543,11 @@ class HTM
 
       # Now add the recalled node
       @working_memory.add(
-        node['key'],
-        node['value'],
+        node['id'],
+        node['content'],
         token_count: token_count,
-        importance: importance,
+        access_count: access_count,
+        last_accessed: last_accessed,
         from_recall: true
       )
     end
@@ -496,27 +569,6 @@ class HTM
     raise ValidationError, "Speaker must be a String" unless speaker.is_a?(String)
     raise ValidationError, "Speaker cannot be empty" if speaker.empty?
     raise ValidationError, "Speaker too long (max 255 characters)" if speaker.length > 255
-  end
-
-  def validate_type!(type)
-    return if type.nil?  # Optional parameter
-    raise ValidationError, "Type must be a Symbol" unless type.is_a?(Symbol)
-    unless VALID_TYPES.include?(type)
-      raise ValidationError, "Invalid type: #{type}. Must be one of #{VALID_TYPES.join(', ')}"
-    end
-  end
-
-  def validate_category!(category)
-    return if category.nil?  # Optional parameter
-    raise ValidationError, "Category must be a String" unless category.is_a?(String)
-    raise ValidationError, "Category too long (max 100 characters)" if category.length > 100
-  end
-
-  def validate_importance!(importance)
-    raise ValidationError, "Importance must be a Numeric" unless importance.is_a?(Numeric)
-    unless IMPORTANCE_RANGE.cover?(importance)
-      raise ValidationError, "Importance must be between #{IMPORTANCE_RANGE.min} and #{IMPORTANCE_RANGE.max}"
-    end
   end
 
   def validate_array!(array, name, max_size: MAX_ARRAY_SIZE)
@@ -545,6 +597,19 @@ class HTM
 
   def validate_positive_integer!(value, name)
     raise ValidationError, "#{name} must be a positive Integer" unless value.is_a?(Integer) && value > 0
+  end
+
+  def validate_key!(key)
+    raise ValidationError, "Key cannot be nil" if key.nil?
+    raise ValidationError, "Key must be a String" unless key.is_a?(String)
+    raise ValidationError, "Key cannot be empty" if key.empty?
+    raise ValidationError, "Key too long (max #{MAX_KEY_LENGTH} characters)" if key.length > MAX_KEY_LENGTH
+  end
+
+  def validate_value!(value)
+    raise ValidationError, "Value cannot be nil" if value.nil?
+    raise ValidationError, "Value must be a String" unless value.is_a?(String)
+    raise ValidationError, "Value cannot be empty" if value.empty?
   end
 
   # Timeframe parsing methods

@@ -100,18 +100,65 @@ export HTM_DBPORT="37807"
 
 See the [Environment Variables](#environment-variables) section below for complete details.
 
-### 2. Start Ollama
+### 2. Configure LLM Providers
 
-HTM uses Ollama for client-side embedding generation.
+HTM uses LLM providers for embedding generation and tag extraction. By default, it uses Ollama (local).
 
+**Start Ollama (Default Configuration)**:
 ```bash
 # Install Ollama
 curl https://ollama.ai/install.sh | sh
 
-# Start Ollama and pull embedding model
+# Start Ollama and pull models
 ollama serve
-ollama pull nomic-embed-text
+ollama pull nomic-embed-text  # For embeddings (768 dimensions)
+ollama pull llama3           # For tag extraction
 ```
+
+**Configure HTM** (optional - uses defaults if not configured):
+```ruby
+require 'htm'
+
+# Use defaults (Ollama with nomic-embed-text and llama3)
+HTM.configure
+
+# Or customize providers
+HTM.configure do |config|
+  # Embedding configuration
+  config.embedding_provider = :ollama  # or :openai
+  config.embedding_model = 'nomic-embed-text'
+  config.embedding_dimensions = 768
+  config.ollama_url = 'http://localhost:11434'
+
+  # Tag extraction configuration
+  config.tag_provider = :ollama  # or :openai
+  config.tag_model = 'llama3'
+
+  # Logger configuration (optional)
+  config.logger = Logger.new($stdout)
+  config.logger.level = Logger::INFO
+
+  # Custom embedding generator (advanced)
+  config.embedding_generator = ->(text) {
+    # Your custom implementation
+    # Must return Array<Float>
+  }
+
+  # Custom tag extractor (advanced)
+  config.tag_extractor = ->(text, ontology) {
+    # Your custom implementation
+    # Must return Array<String>
+  }
+
+  # Token counter (optional, defaults to Tiktoken)
+  config.token_counter = ->(text) {
+    # Your custom implementation
+    # Must return Integer
+  }
+end
+```
+
+See the [Configuration](#configuration) section below for complete details.
 
 ### 3. Initialize Database Schema
 
@@ -170,29 +217,33 @@ See [docs/setup_local_database.md](docs/setup_local_database.md) for detailed lo
 ```ruby
 require 'htm'
 
+# Configure HTM (uses defaults if not called)
+HTM.configure do |config|
+  config.embedding_provider = :ollama
+  config.embedding_model = 'nomic-embed-text'
+  config.tag_provider = :ollama
+  config.tag_model = 'llama3'
+end
+
 # Initialize HTM for your robot
-# Embeddings are generated client-side before database insertion
 htm = HTM.new(
   robot_name: "Code Helper",
-  working_memory_size: 128_000,       # tokens
-  embedding_provider: :ollama,        # Uses Ollama (default)
-  embedding_model: 'nomic-embed-text' # 768 dimensions (default)
+  working_memory_size: 128_000  # tokens
 )
 
-# Add memories - embeddings are generated client-side
-htm.add_node(
-  "decision_001",
+# Add memories - embeddings and tags generated asynchronously
+node_id = htm.add_message(
   "We decided to use PostgreSQL for HTM storage",
-  type: :decision,
-  category: "architecture",
+  speaker: "architect",
   importance: 9.0,
-  tags: ["database", "architecture"]
+  tags: ["type:decision", "database", "architecture"]  # Manual tags + auto-extracted tags
 )
 
-# Recall from the past
+# Recall from the past (uses semantic search with embeddings)
 memories = htm.recall(
   timeframe: "last week",
-  topic: "database decisions"
+  topic: "database decisions",
+  strategy: :hybrid  # Combines vector + full-text search
 )
 
 # Create context for LLM
@@ -202,40 +253,121 @@ context = htm.create_context(strategy: :balanced)
 htm.forget("old_decision", confirm: :confirmed)
 ```
 
-### Memory Types
+### Memory Types (via Tags)
 
-HTM supports different memory types:
+HTM supports different memory types using reserved tags. Use the `type:*` tag prefix to categorize memories:
 
-- `:fact` - Immutable facts ("User's name is Dewayne")
-- `:context` - Conversation state
-- `:code` - Code snippets and patterns
-- `:preference` - User preferences
-- `:decision` - Architectural/design decisions
-- `:question` - Unresolved questions
+- `type:fact` - Immutable facts ("User's name is Dewayne")
+- `type:context` - Conversation state
+- `type:code` - Code snippets and patterns
+- `type:preference` - User preferences
+- `type:decision` - Architectural/design decisions
+- `type:question` - Unresolved questions
 
-### Embedding Configuration
+**Example**:
+```ruby
+htm.add_message(
+  "User prefers dark mode",
+  speaker: "user",
+  importance: 5.0,
+  tags: ["type:preference", "ui", "settings"]
+)
+```
 
-HTM supports multiple embedding providers. By default, it uses Ollama with the gpt-oss model:
+### Async Job Processing
 
-#### Ollama (Default)
+HTM automatically generates embeddings and extracts tags asynchronously in background jobs. This avoids blocking the main request path.
+
+**Monitor job processing:**
+```bash
+# Show statistics for nodes and async processing
+rake htm:jobs:stats
+
+# Output:
+# Total nodes: 150
+# Nodes with embeddings: 145 (96.7%)
+# Nodes without embeddings: 5 (3.3%)
+# Nodes with tags: 140 (93.3%)
+# Total tags in ontology: 42
+```
+
+**Process pending jobs manually:**
+```bash
+# Process all pending embedding jobs
+rake htm:jobs:process_embeddings
+
+# Process all pending tag extraction jobs
+rake htm:jobs:process_tags
+
+# Process both embeddings and tags
+rake htm:jobs:process_all
+```
+
+**Reprocess all nodes (force regeneration):**
+```bash
+# Regenerate embeddings for ALL nodes
+rake htm:jobs:reprocess_embeddings
+
+# WARNING: Prompts for confirmation
+```
+
+**Show failed/stuck jobs:**
+```bash
+# Show nodes that failed async processing (>1 hour old without embeddings/tags)
+rake htm:jobs:failed
+```
+
+**Clear all for testing:**
+```bash
+# Clear ALL embeddings and tags (development/testing only)
+rake htm:jobs:clear_all
+
+# WARNING: Prompts for confirmation
+```
+
+See `rake -T htm:jobs` for complete list of job management tasks.
+
+## Configuration
+
+HTM uses dependency injection for LLM access, allowing you to configure embedding generation, tag extraction, logging, and token counting.
+
+### Default Configuration
+
+By default, HTM uses:
+- **Embedding Provider**: Ollama (local) with `nomic-embed-text` model (768 dimensions)
+- **Tag Provider**: Ollama (local) with `llama3` model
+- **Logger**: Ruby's standard Logger to STDOUT at INFO level
+- **Token Counter**: Tiktoken with GPT-3.5-turbo encoding
 
 ```ruby
-# Default: Ollama with gpt-oss model (768 dimensions)
-htm = HTM.new(robot_name: "My Robot")
+require 'htm'
 
-# Explicit Ollama configuration
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_service: :ollama,
-  embedding_model: 'gpt-oss'
-)
+# Use defaults
+HTM.configure  # or omit this - configuration is lazy-loaded
+```
 
-# Use different Ollama model
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_service: :ollama,
-  embedding_model: 'nomic-embed-text'  # 768 dimensions
-)
+### Custom Configuration
+
+Configure HTM before creating instances:
+
+#### Using Ollama (Default)
+
+```ruby
+HTM.configure do |config|
+  # Embedding configuration
+  config.embedding_provider = :ollama
+  config.embedding_model = 'nomic-embed-text'  # 768 dimensions
+  config.embedding_dimensions = 768
+  config.ollama_url = 'http://localhost:11434'
+
+  # Tag extraction configuration
+  config.tag_provider = :ollama
+  config.tag_model = 'llama3'
+
+  # Logger configuration
+  config.logger = Logger.new($stdout)
+  config.logger.level = Logger::INFO
+end
 ```
 
 **Ollama Setup:**
@@ -243,33 +375,30 @@ htm = HTM.new(
 # Install Ollama
 curl https://ollama.ai/install.sh | sh
 
-# Pull gpt-oss model
-ollama pull gpt-oss
+# Pull models
+ollama pull nomic-embed-text  # For embeddings
+ollama pull llama3           # For tag extraction
 
 # Verify Ollama is running
 curl http://localhost:11434/api/version
 ```
 
-#### OpenAI
+#### Using OpenAI
 
 ```ruby
-# OpenAI text-embedding-3-small (1536 dimensions)
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_service: :openai,
-  embedding_model: 'text-embedding-3-small'
-)
+HTM.configure do |config|
+  # Embedding configuration (OpenAI)
+  config.embedding_provider = :openai
+  config.embedding_model = 'text-embedding-3-small'  # 1536 dimensions
+  config.embedding_dimensions = 1536
 
-# OpenAI text-embedding-3-large (3072 dimensions - exceeds HNSW limit)
-# Note: text-embedding-3-large exceeds the 2000 dimension HNSW index limit
-# and will raise a validation error
+  # Tag extraction (can mix providers)
+  config.tag_provider = :openai
+  config.tag_model = 'gpt-4'
 
-# OpenAI ada-002 (1536 dimensions)
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_service: :openai,
-  embedding_model: 'text-embedding-ada-002'
-)
+  # Logger
+  config.logger = Rails.logger  # Use Rails logger
+end
 ```
 
 **OpenAI Setup:**
@@ -278,47 +407,106 @@ htm = HTM.new(
 export OPENAI_API_KEY='sk-your-api-key-here'
 ```
 
-#### Supported Models and Dimensions
+**Important:** The database uses pgvector with HNSW indexing, which has a maximum dimension limit of 2000. Embeddings exceeding this limit will be automatically truncated with a warning.
 
-HTM automatically detects embedding dimensions for known models:
+#### Custom Providers
 
-| Provider | Model | Dimensions |
-|----------|-------|------------|
-| Ollama | gpt-oss | 768 |
-| Ollama | nomic-embed-text | 768 |
-| Ollama | all-minilm | 384 |
-| Ollama | mxbai-embed-large | 1024 |
-| OpenAI | text-embedding-3-small | 1536 |
-| OpenAI | text-embedding-ada-002 | 1536 |
-| Cohere | embed-english-v3.0 | 1024 (stub) |
-| Local | all-MiniLM-L6-v2 | 384 (stub) |
-
-**Important:** The database uses pgvector's HNSW index which has a maximum limit of 2000 dimensions. OpenAI's text-embedding-3-large (3072 dimensions) exceeds this limit and will raise a `HTM::ValidationError`.
-
-#### Custom Dimensions
+Provide your own LLM implementations:
 
 ```ruby
-# For custom or unknown models, specify dimensions explicitly
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_service: :ollama,
-  embedding_model: 'my-custom-model',
-  embedding_dimensions: 1024
-)
+HTM.configure do |config|
+  # Custom embedding generator
+  config.embedding_generator = ->(text) {
+    # Call your custom LLM service
+    response = MyEmbeddingService.generate(text)
+
+    # Must return Array<Float>
+    response[:embedding]  # e.g., [0.123, -0.456, ...]
+  }
+
+  # Custom tag extractor
+  config.tag_extractor = ->(text, existing_ontology) {
+    # Call your custom LLM service for tag extraction
+    # existing_ontology is Array<String> of recent tags for context
+    response = MyTagService.extract(text, context: existing_ontology)
+
+    # Must return Array<String> in hierarchical format
+    # e.g., ["ai:llm:embeddings", "database:postgresql"]
+    response[:tags]
+  }
+
+  # Custom token counter (optional)
+  config.token_counter = ->(text) {
+    # Your token counting implementation
+    # Must return Integer
+    MyTokenizer.count(text)
+  }
+end
 ```
+
+#### Logger Configuration
+
+Customize logging behavior:
+
+```ruby
+HTM.configure do |config|
+  # Use custom logger
+  config.logger = Logger.new('log/htm.log')
+  config.logger.level = Logger::DEBUG
+
+  # Or use Rails logger
+  config.logger = Rails.logger
+
+  # Or disable logging
+  config.logger = Logger.new(IO::NULL)
+  config.logger.level = Logger::FATAL
+end
+
+# Control log level via environment variable
+ENV['HTM_LOG_LEVEL'] = 'DEBUG'  # or INFO, WARN, ERROR
+HTM.configure  # Respects HTM_LOG_LEVEL
+```
+
+#### Service Layer Architecture
+
+HTM uses a service layer to process LLM responses:
+
+- **EmbeddingService**: Calls your configured `embedding_generator`, validates responses, handles padding/truncation, and formats for storage
+- **TagService**: Calls your configured `tag_extractor`, parses responses (String or Array), validates format, and filters invalid tags
+
+This separation allows you to provide raw LLM access while HTM handles response processing, validation, and storage formatting.
 
 ### Recall Strategies
 
-```ruby
-# Vector similarity search (semantic) - uses Ollama embeddings
-htm.recall(timeframe: "last week", topic: "HTM", strategy: :vector)
+HTM supports three retrieval strategies:
 
-# Full-text search (keyword matching) - PostgreSQL full-text search
-htm.recall(timeframe: "last month", topic: "database", strategy: :fulltext)
+```ruby
+# Vector similarity search (semantic) - uses configured embedding provider
+memories = htm.recall(
+  timeframe: "last week",
+  topic: "HTM architecture",
+  strategy: :vector  # Semantic similarity using embeddings
+)
+
+# Full-text search (keyword matching) - PostgreSQL full-text search with trigrams
+memories = htm.recall(
+  timeframe: "last month",
+  topic: "database performance",
+  strategy: :fulltext  # Keyword-based matching
+)
 
 # Hybrid (combines both) - best of both worlds
-htm.recall(timeframe: "yesterday", topic: "testing", strategy: :hybrid)
+memories = htm.recall(
+  timeframe: "yesterday",
+  topic: "testing strategies",
+  strategy: :hybrid  # Weighted combination of vector + full-text
+)
 ```
+
+**Strategy Details:**
+- `:vector` - Semantic search using pgvector cosine similarity (requires embeddings)
+- `:fulltext` - PostgreSQL tsvector with pg_trgm fuzzy matching
+- `:hybrid` - Combines both with weighted scoring (default: 70% vector, 30% full-text)
 
 ### Context Assembly
 
@@ -345,7 +533,7 @@ breakdown = htm.which_robot_said("PostgreSQL")
 
 # Get conversation timeline
 timeline = htm.conversation_timeline("HTM design", limit: 50)
-# => [{ timestamp: ..., robot: "...", content: "...", type: :decision }, ...]
+# => [{ timestamp: ..., robot: "...", content: "...", speaker: "..." }, ...]
 ```
 
 ### Memory Statistics
@@ -426,6 +614,24 @@ Create `config/initializers/htm.rb`:
 ```ruby
 # config/initializers/htm.rb
 
+# Configure HTM
+HTM.configure do |config|
+  # Use Rails logger
+  config.logger = Rails.logger
+
+  # Embedding configuration (optional - uses Ollama defaults if not set)
+  config.embedding_provider = :ollama
+  config.embedding_model = 'nomic-embed-text'
+
+  # Tag extraction configuration (optional - uses Ollama defaults if not set)
+  config.tag_provider = :ollama
+  config.tag_model = 'llama3'
+
+  # Custom providers (optional)
+  # config.embedding_generator = ->(text) { YourEmbeddingService.call(text) }
+  # config.tag_extractor = ->(text, ontology) { YourTagService.call(text, ontology) }
+end
+
 # Establish HTM database connection
 HTM::ActiveRecordConfig.establish_connection!
 
@@ -457,13 +663,12 @@ class ChatsController < ApplicationController
   before_action :initialize_memory
 
   def create
-    # Add user message to memory
-    @memory.add_node(
-      "msg_#{Time.now.to_i}",
+    # Add user message to memory (embeddings + tags generated async)
+    @memory.add_message(
       params[:message],
-      type: :context,
+      speaker: "user-#{current_user.id}",
       importance: 5.0,
-      tags: ["chat", "user-#{current_user.id}"]
+      tags: ["type:context", "chat", "user"]  # Manual tags + auto-extracted tags
     )
 
     # Recall relevant context for the conversation
@@ -473,12 +678,11 @@ class ChatsController < ApplicationController
     response = generate_llm_response(context, params[:message])
 
     # Store assistant's response
-    @memory.add_node(
-      "response_#{Time.now.to_i}",
+    @memory.add_message(
       response,
-      type: :context,
+      speaker: "assistant",
       importance: 5.0,
-      tags: ["chat", "assistant"]
+      tags: ["type:context", "chat", "assistant"]
     )
 
     render json: { response: response }
@@ -507,17 +711,16 @@ class ProcessDocumentJob < ApplicationJob
     # Initialize HTM for this job
     memory = HTM.new(robot_name: "DocumentProcessor")
 
-    # Store document content in memory
-    memory.add_node(
-      "doc_#{document.id}",
+    # Store document content in memory (async embeddings + tags)
+    memory.add_message(
       document.content,
-      type: :fact,
+      speaker: "document-processor",
       importance: 8.0,
-      tags: ["document", "processed"],
+      tags: ["type:fact", "document", "processed"],
       metadata: { document_id: document.id, processed_at: Time.current }
     )
 
-    # Recall related documents
+    # Recall related documents (uses vector similarity)
     related = memory.recall(
       timeframe: "last month",
       topic: document.category,
@@ -544,12 +747,11 @@ module Memorable
   def store_in_memory
     memory = HTM.new(robot_name: "Rails-#{Rails.env}")
 
-    memory.add_node(
-      "#{self.class.name.underscore}_#{id}",
+    memory.add_message(
       memory_content,
-      type: :fact,
+      speaker: "#{self.class.name}-#{id}",
       importance: memory_importance,
-      tags: memory_tags,
+      tags: memory_tags,  # Should include "type:fact" in the tags
       metadata: memory_metadata
     )
   end
@@ -657,7 +859,7 @@ RSpec.describe "Chat with memory", type: :feature do
   let(:memory) { HTM.new(robot_name: "TestBot") }
 
   before do
-    memory.add_node("test_context", "User prefers Ruby", type: :preference)
+    memory.add_message("User prefers Ruby", speaker: "user", tags: ["type:preference"])
   end
 
   it "recalls user preferences" do
@@ -787,19 +989,26 @@ export HTM_SERVICE_NAME="production-db"
 2. Individual parameters (`HTM_DBNAME`, `HTM_DBUSER`, etc.)
 3. Direct configuration passed to `HTM.new(db_config: {...})`
 
-### Embedding Service Configuration
+### LLM Provider Configuration
+
+HTM configuration is done programmatically via `HTM.configure` (see [Configuration](#configuration) section). However, a few environment variables are still used:
 
 #### OPENAI_API_KEY
 
-Required when using OpenAI as your embedding provider:
+Required when using OpenAI as your embedding or tag extraction provider:
 
 ```bash
 export OPENAI_API_KEY="sk-proj-your-api-key-here"
 ```
 
-This is required for:
-- `embedding_service: :openai`
-- Models: `text-embedding-3-small`, `text-embedding-ada-002`
+This is required when you configure:
+```ruby
+HTM.configure do |config|
+  config.embedding_provider = :openai
+  # or
+  config.tag_provider = :openai
+end
+```
 
 #### OLLAMA_URL
 
@@ -810,53 +1019,18 @@ export OLLAMA_URL="http://localhost:11434"  # Default
 export OLLAMA_URL="http://ollama-server:11434"  # Custom
 ```
 
-If not set, HTM defaults to `http://localhost:11434`.
+HTM defaults to `http://localhost:11434` if not set.
 
-### Topic Extraction Configuration
+#### HTM_LOG_LEVEL
 
-HTM automatically extracts hierarchical topics from node content using LLM-powered analysis via database triggers. Configure the topic extraction behavior with these environment variables:
-
-#### HTM_TOPIC_PROVIDER
-
-Which LLM provider to use for topic extraction:
+Control logging verbosity:
 
 ```bash
-export HTM_TOPIC_PROVIDER="ollama"  # Default (local, recommended)
-export HTM_TOPIC_PROVIDER="openai"  # Cloud-based (requires API key)
+export HTM_LOG_LEVEL="DEBUG"  # DEBUG, INFO, WARN, ERROR, FATAL
+export HTM_LOG_LEVEL="INFO"   # Default
 ```
 
-#### HTM_TOPIC_MODEL
-
-Which model to use for topic extraction:
-
-```bash
-# For Ollama (default)
-export HTM_TOPIC_MODEL="llama3"
-
-# For OpenAI
-export HTM_TOPIC_MODEL="gpt-4-turbo"
-```
-
-#### HTM_TOPIC_BASE_URL
-
-LLM service endpoint:
-
-```bash
-export HTM_TOPIC_BASE_URL="http://localhost:11434"  # Default Ollama
-export HTM_TOPIC_BASE_URL="http://ollama-server:11434"  # Custom Ollama server
-```
-
-#### Embedding Configuration
-
-Similarly, configure embedding generation:
-
-```bash
-# Embedding provider and model
-export HTM_EMBEDDINGS_PROVIDER="ollama"  # Default
-export HTM_EMBEDDINGS_MODEL="nomic-embed-text"  # Default
-export HTM_EMBEDDINGS_BASE_URL="http://localhost:11434"
-export HTM_EMBEDDINGS_DIMENSION="768"  # Optional, auto-detected
-```
+This is used by the default logger when `HTM.configure` is called without a custom logger.
 
 ### Quick Setup Examples
 
@@ -1019,6 +1193,50 @@ rake htm:db:reset        # Drops and recreates everything
 rake htm:db:console      # Opens psql
 ```
 
+### Async Job Management
+
+HTM provides rake tasks under the `htm:jobs` namespace for managing async embedding and tag extraction jobs:
+
+```bash
+# List all job management tasks
+rake -T htm:jobs
+
+# Show statistics for async processing
+rake htm:jobs:stats
+
+# Process pending jobs
+rake htm:jobs:process_embeddings    # Process nodes without embeddings
+rake htm:jobs:process_tags          # Process nodes without tags
+rake htm:jobs:process_all           # Process both
+
+# Reprocess all nodes (force regeneration)
+rake htm:jobs:reprocess_embeddings  # WARNING: Prompts for confirmation
+
+# Debugging and maintenance
+rake htm:jobs:failed                # Show stuck jobs (>1 hour old)
+rake htm:jobs:clear_all            # Clear all embeddings/tags (testing only)
+```
+
+**Common Workflows**:
+
+```bash
+# Monitor async processing
+rake htm:jobs:stats
+
+# Manually process pending jobs (if async job runner is not running)
+rake htm:jobs:process_all
+
+# Debug stuck jobs
+rake htm:jobs:failed
+rake htm:jobs:process_embeddings    # Retry failed embeddings
+
+# Development/testing: force regeneration
+rake htm:jobs:reprocess_embeddings  # Regenerate all embeddings
+rake htm:jobs:clear_all             # Clear everything and start fresh
+```
+
+See the [Async Job Processing](#async-job-processing) section for more details.
+
 ## Testing
 
 HTM uses Minitest:
@@ -1037,18 +1255,31 @@ See [htm_teamwork.md](htm_teamwork.md) for detailed design documentation and pla
 
 ### Key Components
 
-- **HTM**: Main API, coordinates all components
-- **WorkingMemory**: In-memory, token-limited active context
+- **HTM**: Main API class that coordinates all components and provides the primary interface
+- **Configuration**: Dependency injection for LLM providers (embedding_generator, tag_extractor, token_counter, logger)
+- **WorkingMemory**: In-memory, token-limited active context for immediate LLM use
 - **LongTermMemory**: PostgreSQL-backed permanent storage with connection pooling
-- **EmbeddingService**: Vector embedding generation (Ollama, OpenAI, Cohere, Local)
+- **EmbeddingService**: Processing and validation layer for vector embeddings (calls configured `embedding_generator`)
+- **TagService**: Processing and validation layer for hierarchical tags (calls configured `tag_extractor`)
 - **Database**: Schema setup, migrations, and management
+- **Background Jobs**: Async processing for embedding generation and tag extraction
 
 ### Database Schema
 
 - `robots`: Robot registry for all LLM agents using HTM
-- `nodes`: Main memory storage with vector embeddings, partitioned by robot
-- `tags`: Hierarchical tag system for flexible categorization (format: `root:level1:level2`)
-- `nodes_tags`: Join table implementing many-to-many relationship between nodes and tags
+- `nodes`: Main memory storage with vector embeddings (pgvector), full-text search (tsvector), metadata
+- `tags`: Hierarchical tag ontology (format: `root:level1:level2:level3`)
+- `node_tags`: Join table implementing many-to-many relationship between nodes and tags
+
+### Service Architecture
+
+HTM uses a layered architecture for LLM integration:
+
+1. **Configuration Layer** (`HTM.configure`): Provides raw LLM access via `embedding_generator` and `tag_extractor` callables
+2. **Service Layer** (`EmbeddingService`, `TagService`): Processes and validates LLM responses, handles padding/truncation, formats for storage
+3. **Consumer Layer** (`GenerateEmbeddingJob`, `GenerateTagsJob`, rake tasks): Uses services for async or synchronous processing
+
+This separation allows you to provide any LLM implementation while HTM handles response processing, validation, and storage.
 
 ## Roadmap
 

@@ -5,7 +5,6 @@ class HTM
     # Node model - represents a memory node (conversation message)
     class Node < ActiveRecord::Base
       self.table_name = 'nodes'
-      self.inheritance_column = nil  # Disable STI - 'type' column is for memory type, not class inheritance
 
       # Associations
       belongs_to :robot, class_name: 'HTM::Models::Robot', foreign_key: 'robot_id', primary_key: 'id'
@@ -26,7 +25,6 @@ class HTM
       # Scopes
       scope :by_robot, ->(robot_id) { where(robot_id: robot_id) }
       scope :by_speaker, ->(speaker) { where(speaker: speaker) }
-      scope :by_type, ->(type) { where(type: type) }
       scope :in_working_memory, -> { where(in_working_memory: true) }
       scope :recent, -> { order(created_at: :desc) }
       scope :important, -> { order(importance: :desc) }
