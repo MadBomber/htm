@@ -97,47 +97,48 @@ class HTM
       end
     end
 
-    # Default embedding generator using RubyLLM
+    # Default embedding generator using Ollama HTTP API
     #
     # @return [Proc] Callable that takes text and returns embedding vector
     #
     def default_embedding_generator
       lambda do |text|
-        require 'ruby_llm'
+        require 'net/http'
+        require 'json'
 
-        client = RubyLLM::Client.new(
-          provider: @embedding_provider,
-          model: @embedding_model,
-          url: (@embedding_provider == :ollama ? @ollama_url : nil)
-        )
-
-        response = client.embed(text)
-
-        # RubyLLM returns different structures depending on provider
-        embedding = case @embedding_provider
+        case @embedding_provider
         when :ollama
-          response['embedding']
-        when :openai
-          response.dig('data', 0, 'embedding')
+          uri = URI("#{@ollama_url}/api/embeddings")
+          request = Net::HTTP::Post.new(uri)
+          request['Content-Type'] = 'application/json'
+          request.body = { model: @embedding_model, prompt: text }.to_json
+
+          response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+            http.request(request)
+          end
+
+          data = JSON.parse(response.body)
+          embedding = data['embedding']
+
+          unless embedding.is_a?(Array)
+            raise HTM::EmbeddingError, "Invalid embedding response format"
+          end
+
+          embedding
         else
-          raise HTM::EmbeddingError, "Unsupported embedding provider: #{@embedding_provider}"
+          raise HTM::EmbeddingError, "Unsupported embedding provider: #{@embedding_provider}. Only :ollama is currently supported."
         end
-
-        unless embedding.is_a?(Array)
-          raise HTM::EmbeddingError, "Invalid embedding response format"
-        end
-
-        embedding
       end
     end
 
-    # Default tag extractor using RubyLLM
+    # Default tag extractor using Ollama HTTP API
     #
     # @return [Proc] Callable that takes text and ontology, returns array of tags
     #
     def default_tag_extractor
       lambda do |text, existing_ontology = []|
-        require 'ruby_llm'
+        require 'net/http'
+        require 'json'
 
         # Build prompt
         ontology_context = if existing_ontology.any?
@@ -166,38 +167,39 @@ class HTM
           Return ONLY the topic tags, one per line, no explanations.
         PROMPT
 
-        client = RubyLLM::Client.new(
-          provider: @tag_provider,
-          model: @tag_model,
-          url: (@tag_provider == :ollama ? @ollama_url : nil)
-        )
-
-        response = client.generate(
-          prompt: prompt,
-          system: 'You are a precise topic extraction system. Output only topic tags in hierarchical format: root:subtopic:detail',
-          temperature: 0
-        )
-
-        # Extract response text
-        response_text = case @tag_provider
+        case @tag_provider
         when :ollama
-          response['response']
-        when :openai
-          response.dig('choices', 0, 'message', 'content')
+          uri = URI("#{@ollama_url}/api/generate")
+          request = Net::HTTP::Post.new(uri)
+          request['Content-Type'] = 'application/json'
+          request.body = {
+            model: @tag_model,
+            prompt: prompt,
+            system: 'You are a precise topic extraction system. Output only topic tags in hierarchical format: root:subtopic:detail',
+            stream: false,
+            options: { temperature: 0 }
+          }.to_json
+
+          response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+            http.request(request)
+          end
+
+          data = JSON.parse(response.body)
+          response_text = data['response']
+
+          # Parse and validate tags
+          tags = response_text.to_s.split("\n").map(&:strip).reject(&:empty?)
+
+          # Validate format: lowercase alphanumeric + hyphens + colons
+          valid_tags = tags.select do |tag|
+            tag =~ /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/
+          end
+
+          # Limit depth to 5 levels (4 colons maximum)
+          valid_tags.select { |tag| tag.count(':') < 5 }
         else
-          raise HTM::TagError, "Unsupported tag provider: #{@tag_provider}"
+          raise HTM::TagError, "Unsupported tag provider: #{@tag_provider}. Only :ollama is currently supported."
         end
-
-        # Parse and validate tags
-        tags = response_text.to_s.split("\n").map(&:strip).reject(&:empty?)
-
-        # Validate format: lowercase alphanumeric + hyphens + colons
-        valid_tags = tags.select do |tag|
-          tag =~ /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/
-        end
-
-        # Limit depth to 5 levels (4 colons maximum)
-        valid_tags.select { |tag| tag.count(':') < 5 }
       end
     end
   end

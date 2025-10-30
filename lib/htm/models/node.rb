@@ -14,7 +14,6 @@ class HTM
       # Validations
       validates :content, presence: true
       validates :robot_id, presence: true
-      validates :importance, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 10 }, allow_nil: true
       validates :embedding_dimension, numericality: { greater_than: 0, less_than_or_equal_to: 2000 }, allow_nil: true
 
       # Callbacks
@@ -26,7 +25,6 @@ class HTM
       scope :by_source, ->(source) { where(source: source) }
       scope :in_working_memory, -> { where(in_working_memory: true) }
       scope :recent, -> { order(created_at: :desc) }
-      scope :important, -> { order(importance: :desc) }
       scope :in_timeframe, ->(start_time, end_time) { where(created_at: start_time..end_time) }
       scope :with_embeddings, -> { where.not(embedding: nil) }
 
@@ -65,7 +63,6 @@ class HTM
       private
 
       def set_defaults
-        self.importance ||= 1.0
         self.in_working_memory ||= false
         self.created_at ||= Time.current
         self.updated_at ||= Time.current

@@ -272,11 +272,10 @@ class HTM
     # @param robot_name [String] Robot name
     # @return [void]
     #
-    def register_robot(robot_id, robot_name)
-      robot = HTM::Models::Robot.find_or_initialize_by(id: robot_id)
-      robot.name = robot_name
-      robot.last_active = Time.current
-      robot.save!
+    def register_robot(robot_name)
+      robot = HTM::Models::Robot.find_or_create_by(name: robot_name)
+      robot.update(last_active: Time.current)
+      robot.id
     end
 
     # Update robot activity timestamp
@@ -373,8 +372,8 @@ class HTM
         <<~SQL,
           SELECT t1.name AS topic1, t2.name AS topic2, COUNT(DISTINCT nt1.node_id) AS shared_nodes
           FROM tags t1
-          JOIN nodes_tags nt1 ON t1.id = nt1.tag_id
-          JOIN nodes_tags nt2 ON nt1.node_id = nt2.node_id
+          JOIN node_tags nt1 ON t1.id = nt1.tag_id
+          JOIN node_tags nt2 ON nt1.node_id = nt2.node_id
           JOIN tags t2 ON nt2.tag_id = t2.id
           WHERE t1.name < t2.name
           GROUP BY t1.name, t2.name
@@ -394,7 +393,7 @@ class HTM
     def node_topics(node_id)
       HTM::Models::Tag
         .joins(:node_tags)
-        .where(nodes_tags: { node_id: node_id })
+        .where(node_tags: { node_id: node_id })
         .order(:name)
         .pluck(:name)
     end

@@ -86,33 +86,33 @@
 <polygon fill="black" stroke="black" points="329.84,-434.47 319.54,-430.69 324.52,-434.84 320.2,-435.15 320.2,-435.15 320.2,-435.15 324.52,-434.84 320.18,-439.66 329.84,-434.47"/>
 <text text-anchor="start" x="326.53" y="-445.2" font-family="Arial" font-size="10.00">FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE</text>
 </g>
-<!-- public.nodes_tags -->
+<!-- public.node_tags -->
 <g id="node2" class="node">
-<title>public.nodes_tags</title>
-<polygon fill="#efefef" stroke="none" points="48.38,-1012 48.38,-1047.6 316.35,-1047.6 316.35,-1012 48.38,-1012"/>
-<polygon fill="none" stroke="black" points="48.38,-1012 48.38,-1047.6 316.35,-1047.6 316.35,-1012 48.38,-1012"/>
-<text text-anchor="start" x="55.38" y="-1025.4" font-family="Arial Bold" font-size="18.00">public.nodes_tags</text>
-<text text-anchor="start" x="184.86" y="-1025.4" font-family="Arial" font-size="14.00">    </text>
-<text text-anchor="start" x="215.98" y="-1025.4" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
-<polygon fill="none" stroke="black" points="48.38,-981.2 48.38,-1012 316.35,-1012 316.35,-981.2 48.38,-981.2"/>
-<text text-anchor="start" x="55.38" y="-993.4" font-family="Arial" font-size="14.00">id </text>
-<text text-anchor="start" x="70.17" y="-993.4" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="48.38,-950.4 48.38,-981.2 316.35,-981.2 316.35,-950.4 48.38,-950.4"/>
-<text text-anchor="start" x="55.38" y="-962.6" font-family="Arial" font-size="14.00">node_id </text>
-<text text-anchor="start" x="109.1" y="-962.6" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="48.38,-919.6 48.38,-950.4 316.35,-950.4 316.35,-919.6 48.38,-919.6"/>
-<text text-anchor="start" x="55.38" y="-931.8" font-family="Arial" font-size="14.00">tag_id </text>
-<text text-anchor="start" x="97.41" y="-931.8" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
-<polygon fill="none" stroke="black" points="48.38,-888.8 48.38,-919.6 316.35,-919.6 316.35,-888.8 48.38,-888.8"/>
-<text text-anchor="start" x="55.38" y="-901" font-family="Arial" font-size="14.00">created_at </text>
-<text text-anchor="start" x="125.43" y="-901" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
+<title>public.node_tags</title>
+<polygon fill="#efefef" stroke="none" points="51.88,-1012 51.88,-1047.6 312.85,-1047.6 312.85,-1012 51.88,-1012"/>
+<polygon fill="none" stroke="black" points="51.88,-1012 51.88,-1047.6 312.85,-1047.6 312.85,-1012 51.88,-1012"/>
+<text text-anchor="start" x="58.88" y="-1025.4" font-family="Arial Bold" font-size="18.00">public.node_tags</text>
+<text text-anchor="start" x="181.36" y="-1025.4" font-family="Arial" font-size="14.00">    </text>
+<text text-anchor="start" x="212.48" y="-1025.4" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
+<polygon fill="none" stroke="black" points="51.88,-981.2 51.88,-1012 312.85,-1012 312.85,-981.2 51.88,-981.2"/>
+<text text-anchor="start" x="58.88" y="-993.4" font-family="Arial" font-size="14.00">id </text>
+<text text-anchor="start" x="73.67" y="-993.4" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="51.88,-950.4 51.88,-981.2 312.85,-981.2 312.85,-950.4 51.88,-950.4"/>
+<text text-anchor="start" x="58.88" y="-962.6" font-family="Arial" font-size="14.00">node_id </text>
+<text text-anchor="start" x="112.6" y="-962.6" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="51.88,-919.6 51.88,-950.4 312.85,-950.4 312.85,-919.6 51.88,-919.6"/>
+<text text-anchor="start" x="58.88" y="-931.8" font-family="Arial" font-size="14.00">tag_id </text>
+<text text-anchor="start" x="100.92" y="-931.8" font-family="Arial" font-size="14.00" fill="#666666">[bigint]</text>
+<polygon fill="none" stroke="black" points="51.88,-888.8 51.88,-919.6 312.85,-919.6 312.85,-888.8 51.88,-888.8"/>
+<text text-anchor="start" x="58.88" y="-901" font-family="Arial" font-size="14.00">created_at </text>
+<text text-anchor="start" x="128.93" y="-901" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
 </g>
-<!-- public.nodes_tags&#45;&gt;public.nodes -->
+<!-- public.node_tags&#45;&gt;public.nodes -->
 <g id="edge1" class="edge">
-<title>public.nodes_tags:node_id&#45;&gt;public.nodes:id</title>
-<path fill="none" stroke="black" d="M327.58,-965.07C430,-950.21 428.64,-712.4 319.53,-712.4"/>
-<polygon fill="black" stroke="black" points="327.66,-965.07 317.36,-961.29 322.34,-965.45 318.02,-965.75 318.02,-965.75 318.02,-965.75 322.34,-965.45 318,-970.26 327.66,-965.07"/>
-<text text-anchor="start" x="324.35" y="-975.8" font-family="Arial" font-size="10.00">FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE</text>
+<title>public.node_tags:node_id&#45;&gt;public.nodes:id</title>
+<path fill="none" stroke="black" d="M324.09,-965.07C426.74,-950.21 428.66,-712.4 319.53,-712.4"/>
+<polygon fill="black" stroke="black" points="324.16,-965.07 313.86,-961.29 318.83,-965.45 314.51,-965.75 314.51,-965.75 314.51,-965.75 318.83,-965.45 314.5,-970.27 324.16,-965.07"/>
+<text text-anchor="start" x="320.85" y="-975.8" font-family="Arial" font-size="10.00">FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE</text>
 </g>
 </g>
 </svg>

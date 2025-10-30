@@ -24,10 +24,10 @@ CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 --
 
 --
--- Name: nodes_tags; Type: TABLE; Schema: public; Owner: -
+-- Name: node_tags; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.nodes_tags (
+CREATE TABLE public.node_tags (
     id bigint NOT NULL,
     node_id bigint NOT NULL,
     tag_id bigint NOT NULL,
@@ -35,28 +35,10 @@ CREATE TABLE public.nodes_tags (
 );
 
 --
--- Name: TABLE nodes_tags; Type: COMMENT; Schema: public; Owner: -
+-- Name: TABLE node_tags; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TABLE public.nodes_tags IS 'Join table connecting nodes to tags (many-to-many)';
-
---
--- Name: COLUMN nodes_tags.node_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.nodes_tags.node_id IS 'ID of the node being tagged';
-
---
--- Name: COLUMN nodes_tags.tag_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.nodes_tags.tag_id IS 'ID of the tag being applied';
-
---
--- Name: COLUMN nodes_tags.created_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.nodes_tags.created_at IS 'When this association was created';
+COMMENT ON TABLE public.node_tags IS 'Join table connecting nodes to tags (many-to-many)';
 
 --
 -- Name: node_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -73,7 +55,7 @@ CREATE SEQUENCE public.node_tags_id_seq
 -- Name: node_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.node_tags_id_seq OWNED BY public.nodes_tags.id;
+ALTER SEQUENCE public.node_tags_id_seq OWNED BY public.node_tags.id;
 
 --
 -- Name: nodes; Type: TABLE; Schema: public; Owner: -
@@ -82,7 +64,7 @@ ALTER SEQUENCE public.node_tags_id_seq OWNED BY public.nodes_tags.id;
 CREATE TABLE public.nodes (
     id bigint NOT NULL,
     content text NOT NULL,
-    source text NOT NULL,
+    source text DEFAULT ''::text,
     access_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
@@ -111,7 +93,7 @@ COMMENT ON COLUMN public.nodes.content IS 'The conversation message/utterance co
 -- Name: COLUMN nodes.source; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.nodes.source IS 'From where the content came';
+COMMENT ON COLUMN public.nodes.source IS 'From where the content came (empty string if unknown)';
 
 --
 -- Name: COLUMN nodes.access_count; Type: COMMENT; Schema: public; Owner: -
@@ -297,16 +279,16 @@ CREATE SEQUENCE public.tags_id_seq
 ALTER SEQUENCE public.tags_id_seq OWNED BY public.tags.id;
 
 --
+-- Name: node_tags id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.node_tags ALTER COLUMN id SET DEFAULT nextval('public.node_tags_id_seq'::regclass);
+
+--
 -- Name: nodes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.nodes ALTER COLUMN id SET DEFAULT nextval('public.nodes_id_seq'::regclass);
-
---
--- Name: nodes_tags id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.nodes_tags ALTER COLUMN id SET DEFAULT nextval('public.node_tags_id_seq'::regclass);
 
 --
 -- Name: robots id; Type: DEFAULT; Schema: public; Owner: -
@@ -321,10 +303,17 @@ ALTER TABLE ONLY public.robots ALTER COLUMN id SET DEFAULT nextval('public.robot
 ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
 
 --
--- Name: nodes_tags node_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: node_tags idx_node_tags_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.nodes_tags
+ALTER TABLE ONLY public.node_tags
+    ADD CONSTRAINT idx_node_tags_unique UNIQUE (node_id, tag_id);
+
+--
+-- Name: node_tags node_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.node_tags
     ADD CONSTRAINT node_tags_pkey PRIMARY KEY (id);
 
 --
@@ -359,19 +348,13 @@ ALTER TABLE ONLY public.tags
 -- Name: idx_node_tags_node_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_node_tags_node_id ON public.nodes_tags USING btree (node_id);
+CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id);
 
 --
 -- Name: idx_node_tags_tag_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_node_tags_tag_id ON public.nodes_tags USING btree (tag_id);
-
---
--- Name: idx_node_tags_unique; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_node_tags_unique ON public.nodes_tags USING btree (node_id, tag_id);
+CREATE INDEX idx_node_tags_tag_id ON public.node_tags USING btree (tag_id);
 
 --
 -- Name: idx_nodes_access_count; Type: INDEX; Schema: public; Owner: -
@@ -453,21 +436,21 @@ ALTER TABLE ONLY public.nodes
     ADD CONSTRAINT fk_rails_60162e9d3a FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
 
 --
--- Name: nodes_tags fk_rails_b0b726ecf8; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: node_tags fk_rails_b51cdcc57f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.nodes_tags
-    ADD CONSTRAINT fk_rails_b0b726ecf8 FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.node_tags
+    ADD CONSTRAINT fk_rails_b51cdcc57f FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE;
 
 --
--- Name: nodes_tags fk_rails_eccc99cec5; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: node_tags fk_rails_ebc9aafd9f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.nodes_tags
-    ADD CONSTRAINT fk_rails_eccc99cec5 FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.node_tags
+    ADD CONSTRAINT fk_rails_ebc9aafd9f FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7odrdMxPwIPozbQUFv7aO0vcEt3U4fMducNfCSzaqBGg5BXqWnxZHHBsnfoBd5v
+\unrestrict h6IdTBiPc0Oy30ChMzIdVNv8VcrpeBkmF39t2pahf0ggF6QY7t8vM4VDZYYTgHd

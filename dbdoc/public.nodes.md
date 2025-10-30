@@ -8,9 +8,9 @@ Core memory storage for conversation messages and context
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
-| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.nodes_tags](public.nodes_tags.md) |  |  |
+| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.node_tags](public.node_tags.md) |  |  |
 | content | text |  | false |  |  | The conversation message/utterance content |
-| source | text |  | false |  |  | From where the content came |
+| source | text | ''::text | true |  |  | From where the content came (empty string if unknown) |
 | access_count | integer | 0 | false |  |  | Number of times this node has been accessed/retrieved |
 | created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was created |
 | updated_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was last modified |

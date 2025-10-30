@@ -4,7 +4,7 @@
 
 | Name | Columns | Comment | Type |
 | ---- | ------- | ------- | ---- |
-| [public.nodes_tags](public.nodes_tags.md) | 4 | Join table connecting nodes to tags (many-to-many) | BASE TABLE |
+| [public.node_tags](public.node_tags.md) | 4 | Join table connecting nodes to tags (many-to-many) | BASE TABLE |
 | [public.schema_migrations](public.schema_migrations.md) | 1 |  | BASE TABLE |
 | [public.robots](public.robots.md) | 5 | Registry of all LLM robots using the HTM system | BASE TABLE |
 | [public.nodes](public.nodes.md) | 12 | Core memory storage for conversation messages and context | BASE TABLE |

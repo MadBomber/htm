@@ -56,8 +56,7 @@ class HTM
   # Initialize a new HTM instance
   #
   # @param working_memory_size [Integer] Maximum tokens for working memory (default: 128,000)
-  # @param robot_id [String] Unique identifier for this robot (auto-generated if not provided)
-  # @param robot_name [String] Human-readable name for this robot
+  # @param robot_name [String] Human-readable name for this robot (auto-generated if not provided)
   # @param db_config [Hash] Database configuration (uses ENV['HTM_DBURL'] if not provided)
   # @param db_pool_size [Integer] Database connection pool size (default: 5)
   # @param db_query_timeout [Integer] Database query timeout in milliseconds (default: 30000)
@@ -66,7 +65,6 @@ class HTM
   #
   def initialize(
     working_memory_size: 128_000,
-    robot_id: nil,
     robot_name: nil,
     db_config: nil,
     db_pool_size: 5,
@@ -77,8 +75,7 @@ class HTM
     # Establish ActiveRecord connection if not already connected
     HTM::ActiveRecordConfig.establish_connection! unless HTM::ActiveRecordConfig.connected?
 
-    @robot_id = robot_id || SecureRandom.uuid
-    @robot_name = robot_name || "robot_#{@robot_id[0..7]}"
+    @robot_name = robot_name || "robot_#{SecureRandom.uuid[0..7]}"
 
     # Initialize components
     @working_memory = HTM::WorkingMemory.new(max_tokens: working_memory_size)
@@ -90,8 +87,8 @@ class HTM
       cache_ttl: db_cache_ttl
     )
 
-    # Register this robot in the database
-    register_robot
+    # Register this robot in the database and get its integer ID
+    @robot_id = register_robot
   end
 
   # Remember new information
@@ -163,7 +160,6 @@ class HTM
   def recall(timeframe:, topic:, limit: 20, strategy: :vector, with_relevance: false, query_tags: [])
     # Validate inputs
     validate_timeframe!(timeframe)
-    validate_value!(topic)
     validate_positive_integer!(limit, "limit")
     validate_recall_strategy!(strategy)
     validate_array!(query_tags, "query_tags")
@@ -246,7 +242,7 @@ class HTM
   private
 
   def register_robot
-    @long_term_memory.register_robot(@robot_id, @robot_name)
+    @long_term_memory.register_robot(@robot_name)
   end
 
   def update_robot_activity
@@ -254,16 +250,14 @@ class HTM
   end
 
   def enqueue_embedding_job(node_id)
-    # Enqueue job using async-job
+    # Run embedding generation in background thread
     # Job will use HTM.embed which delegates to configured embedding_generator
-    Async::Job.enqueue(
-      HTM::Jobs::GenerateEmbeddingJob,
-      :perform,
-      node_id: node_id
-    )
-    HTM.logger.debug "Enqueued embedding job for node #{node_id}"
+    Thread.new do
+      HTM::Jobs::GenerateEmbeddingJob.perform(node_id: node_id)
+    end
+    HTM.logger.debug "Started embedding job for node #{node_id}"
   rescue StandardError => e
-    HTM.logger.error "Failed to enqueue embedding job for node #{node_id}: #{e.message}"
+    HTM.logger.error "Failed to start embedding job for node #{node_id}: #{e.message}"
   end
 
   def enqueue_tags_job(node_id, manual_tags: [])
@@ -276,16 +270,14 @@ class HTM
       HTM.logger.debug "Added #{manual_tags.length} manual tags to node #{node_id}"
     end
 
-    # Enqueue job for LLM-generated tags
+    # Run tag generation in background thread
     # Job will use HTM.extract_tags which delegates to configured tag_extractor
-    Async::Job.enqueue(
-      HTM::Jobs::GenerateTagsJob,
-      :perform,
-      node_id: node_id
-    )
-    HTM.logger.debug "Enqueued tags job for node #{node_id}"
+    Thread.new do
+      HTM::Jobs::GenerateTagsJob.perform(node_id: node_id)
+    end
+    HTM.logger.debug "Started tags job for node #{node_id}"
   rescue StandardError => e
-    HTM.logger.error "Failed to enqueue tags job for node #{node_id}: #{e.message}"
+    HTM.logger.error "Failed to start tags job for node #{node_id}: #{e.message}"
   end
 
   def add_to_working_memory(node)

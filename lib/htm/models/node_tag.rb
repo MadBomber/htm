@@ -4,7 +4,7 @@ class HTM
   module Models
     # NodeTag model - join table for many-to-many relationship between nodes and tags
     class NodeTag < ActiveRecord::Base
-      self.table_name = 'nodes_tags'
+      self.table_name = 'node_tags'
 
       # Associations
       belongs_to :node, class_name: 'HTM::Models::Node'

@@ -8,7 +8,7 @@ Unique tag names for categorization
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
-| id | bigint | nextval('tags_id_seq'::regclass) | false | [public.nodes_tags](public.nodes_tags.md) |  |  |
+| id | bigint | nextval('tags_id_seq'::regclass) | false | [public.node_tags](public.node_tags.md) |  |  |
 | name | text |  | false |  |  | Hierarchical tag in format: root:level1:level2 (e.g., database:postgresql:timescaledb) |
 | created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this tag was created |
 
