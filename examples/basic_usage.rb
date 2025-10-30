@@ -8,8 +8,7 @@
 # 2. Initialize database schema: ruby -r ./lib/htm -e "HTM::Database.setup"
 # 3. Install dependencies: bundle install
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
-require "htm"
+require_relative '../lib/htm'
 
 puts "HTM Basic Usage Example"
 puts "=" * 60
@@ -21,94 +20,71 @@ unless ENV['HTM_DBURL']
 end
 
 begin
-  # Initialize HTM with Ollama embedding service
-  puts "\n1. Initializing HTM for 'Code Helper' robot..."
-  puts "   Using RubyLLM with Ollama provider and gpt-oss model for embeddings"
+  # Configure HTM globally (uses RubyLLM with Ollama by default)
+  puts "\n1. Configuring HTM with Ollama provider..."
+  HTM.configure do |config|
+    config.embedding_provider = :ollama
+    config.embedding_model = 'nomic-embed-text'
+    config.embedding_dimensions = 768
+    config.tag_provider = :ollama
+    config.tag_model = 'llama3'
+    config.reset_to_defaults  # Apply settings
+  end
+  puts "✓ HTM configured with Ollama provider"
+
+  # Initialize HTM for 'Code Helper' robot
+  puts "\n2. Initializing HTM for 'Code Helper' robot..."
   htm = HTM.new(
     robot_name: "Code Helper",
-    working_memory_size: 128_000,
-    embedding_service: :ollama,       # Use Ollama via RubyLLM
-    embedding_model: 'gpt-oss'        # gpt-oss model for embeddings
+    working_memory_size: 128_000
   )
   puts "✓ HTM initialized"
   puts "  Robot ID: #{htm.robot_id}"
   puts "  Robot Name: #{htm.robot_name}"
-  puts "  Embedding Service: Ollama (gpt-oss via RubyLLM)"
+  puts "  Embedding Service: Ollama (#{HTM.configuration.embedding_model})"
 
-  # Add some memory nodes
-  puts "\n2. Adding memory nodes..."
+  # Remember some information
+  puts "\n3. Remembering information..."
 
-  htm.add_node(
-    "decision_001",
-    "We decided to use PostgreSQL with TimescaleDB for HTM storage because it provides excellent time-series optimization and native vector search with pgvector.",
-    type: :decision,
-    category: "architecture",
-    importance: 9.0,
-    tags: ["architecture", "database", "HTM"]
+  node_id_1 = htm.remember(
+    "We decided to use PostgreSQL for HTM storage because it provides excellent time-series optimization and native vector search with pgvector.",
+    source: "architect"
   )
-  puts "✓ Added decision about database choice"
+  puts "✓ Remembered decision about database choice (node #{node_id_1})"
 
-  htm.add_node(
-    "decision_002",
+  node_id_2 = htm.remember(
     "We chose RAG (Retrieval-Augmented Generation) for memory recall, combining temporal filtering with semantic vector search.",
-    type: :decision,
-    category: "architecture",
-    importance: 8.5,
-    tags: ["architecture", "RAG", "search"],
-    related_to: ["decision_001"]
+    source: "architect"
   )
-  puts "✓ Added decision about RAG approach"
+  puts "✓ Remembered decision about RAG approach (node #{node_id_2})"
 
-  htm.add_node(
-    "fact_001",
+  node_id_3 = htm.remember(
     "The user's name is Dewayne and they prefer using debug_me for debugging instead of puts.",
-    type: :fact,
-    category: "preferences",
-    importance: 7.0,
-    tags: ["user", "preferences"]
+    source: "system"
   )
-  puts "✓ Added fact about user preferences"
+  puts "✓ Remembered fact about user preferences (node #{node_id_3})"
 
-  # Check working memory stats
-  puts "\n3. Working Memory Status:"
-  puts "  Total nodes: #{htm.working_memory.node_count}"
-  puts "  Total tokens: #{htm.working_memory.token_count}"
-  puts "  Utilization: #{htm.working_memory.utilization_percentage}%"
+  # Sleep briefly to allow async embedding/tag jobs to start
+  sleep 0.5
 
-  # Retrieve a specific node
-  puts "\n4. Retrieving specific memory..."
-  node = htm.retrieve("decision_001")
-  if node
-    puts "✓ Found: #{node['value'][0..100]}..."
+  # Demonstrate recall
+  puts "\n4. Recalling memories about 'database'..."
+  memories = htm.recall(
+    timeframe: (Time.now - 3600)..Time.now,  # Last hour
+    topic: "database",
+    limit: 5
+  )
+  puts "✓ Found #{memories.length} memories"
+  memories.each do |memory|
+    puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
   end
-
-  # Get memory statistics
-  puts "\n5. Memory Statistics:"
-  stats = htm.memory_stats
-  puts "  Total nodes in long-term memory: #{stats[:total_nodes]}"
-  puts "  Active robots: #{stats[:active_robots]}"
-  puts "  Database size: #{(stats[:database_size] / (1024.0 * 1024.0)).round(2)} MB"
-
-  # Simulate time passing and recall
-  puts "\n6. Simulating recall from 'last week'..."
-  puts "  (Note: Since we just added these, timeframe search won't find them)"
-  puts "  In production, you would do:"
-  puts "    memories = htm.recall(timeframe: 'last week', topic: 'database')"
-
-  # Create context for LLM
-  puts "\n7. Creating context for LLM (balanced strategy)..."
-  context = htm.create_context(strategy: :balanced, max_tokens: 10_000)
-  puts "✓ Context created (#{context.length} characters)"
-  puts "\nContext preview:"
-  puts context[0..200] + "..."
 
   puts "\n" + "=" * 60
   puts "✓ Example completed successfully!"
-  puts "\nNext steps:"
-  puts "  - Try adding more nodes with different types"
-  puts "  - Experiment with recall using different timeframes"
-  puts "  - Test the relationship graph with get_related_nodes"
-  puts "  - Check which_robot_said to see hive mind in action"
+  puts "\nThe HTM API provides 3 core methods:"
+  puts "  - htm.remember(content, source:) - Store information"
+  puts "  - htm.recall(timeframe:, topic:, ...) - Retrieve memories"
+  puts "  - htm.forget(node_id, confirm:) - Delete a memory"
 
 rescue => e
   puts "\n✗ Error: #{e.message}"

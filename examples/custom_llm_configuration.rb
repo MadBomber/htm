@@ -157,15 +157,14 @@ end
 
 htm = HTM.new(robot_name: "IntegrationBot")
 
-# Add a message - will use custom LLM configuration
-puts "\nAdding message to HTM..."
-node_id = htm.add_message(
+# Remember information - will use custom LLM configuration
+puts "\nRemembering information in HTM..."
+node_id = htm.remember(
   "PostgreSQL with pgvector enables efficient vector similarity search",
-  speaker: 'user',
-  tags: ['manual:tag']  # Manual tags added immediately
+  source: 'user'
 )
 
-puts "✓ Message added with node_id: #{node_id}"
+puts "✓ Information remembered with node_id: #{node_id}"
 puts "  Note: Embedding and LLM-generated tags will be processed asynchronously"
 
 # The async jobs will call:

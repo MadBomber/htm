@@ -13,7 +13,6 @@ class HTM
 
       # Validations
       validates :content, presence: true
-      validates :speaker, presence: true
       validates :robot_id, presence: true
       validates :importance, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 10 }, allow_nil: true
       validates :embedding_dimension, numericality: { greater_than: 0, less_than_or_equal_to: 2000 }, allow_nil: true
@@ -24,7 +23,7 @@ class HTM
 
       # Scopes
       scope :by_robot, ->(robot_id) { where(robot_id: robot_id) }
-      scope :by_speaker, ->(speaker) { where(speaker: speaker) }
+      scope :by_source, ->(source) { where(source: source) }
       scope :in_working_memory, -> { where(in_working_memory: true) }
       scope :recent, -> { order(created_at: :desc) }
       scope :important, -> { order(importance: :desc) }

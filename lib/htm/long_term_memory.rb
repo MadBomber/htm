@@ -51,7 +51,7 @@ class HTM
     # @param embedding [Array<Float>, nil] Pre-generated embedding vector
     # @return [Integer] Node database ID
     #
-    def add(content:, speaker:, token_count: 0, robot_id:, embedding: nil)
+    def add(content:, source:, token_count: 0, robot_id:, embedding: nil)
       # Prepare embedding if provided
       if embedding
         # Pad embedding to 2000 dimensions if needed
@@ -67,7 +67,7 @@ class HTM
       # Create node using ActiveRecord
       node = HTM::Models::Node.create!(
         content: content,
-        speaker: speaker,
+        source: source,
         token_count: token_count,
         robot_id: robot_id,
         embedding: embedding ? embedding_str : nil,

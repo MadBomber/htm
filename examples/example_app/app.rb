@@ -1,8 +1,9 @@
+#!/usr/bin/env ruby
 # Example HTM Application
 #
 # This demonstrates a simple application using the HTM gem.
 
-require 'htm'
+require_relative '../../lib/htm'
 
 class ExampleApp
   def self.run
@@ -25,26 +26,27 @@ class ExampleApp
     puts "\nInitializing HTM..."
     htm = HTM.new(robot_name: "Example App Robot")
 
-    # Add some example memories
-    puts "\nAdding example memories..."
+    # Remember some conversation (simulating a conversation)
+    puts "\nRemembering example conversation..."
+    puts "(Tags will be auto-extracted by LLM in background)"
 
-    htm.add_node(
-      "example_001",
+    node_1 = htm.remember(
       "HTM provides intelligent memory management for LLM-based applications",
-      type: :fact,
-      importance: 8.0,
-      tags: ["memory", "llm", "ai"]
+      source: "assistant"
     )
 
-    htm.add_node(
-      "example_002",
+    node_2 = htm.remember(
       "The two-tier architecture includes working memory and long-term storage",
-      type: :fact,
-      importance: 7.0,
-      tags: ["architecture", "design"]
+      source: "assistant"
     )
 
-    puts "✓ Added 2 example memories"
+    node_3 = htm.remember(
+      "Can you explain how the working memory eviction algorithm works?",
+      source: "user"
+    )
+
+    puts "✓ Remembered 3 conversation messages (nodes #{node_1}, #{node_2}, #{node_3})"
+    puts "  Embeddings and tags are being generated asynchronously..."
 
     # Recall memories
     puts "\nRecalling memories about 'memory'..."
@@ -56,15 +58,15 @@ class ExampleApp
 
     puts "Found #{memories.length} memories:"
     memories.each do |memory|
-      puts "  - #{memory['key']}: #{memory['value'][0..60]}..."
+      puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
     end
 
     # Show statistics
     puts "\nMemory Statistics:"
     stats = htm.memory_stats
-    puts "  Working Memory: #{stats[:working_memory_count]} nodes"
-    puts "  Long-term Memory: #{stats[:long_term_memory_count]} nodes"
-    puts "  Total: #{stats[:total_count]} nodes"
+    puts "  Working Memory: #{stats[:working_memory][:node_count]} nodes, #{stats[:working_memory][:current_tokens]} tokens"
+    puts "  Long-term Memory: #{stats[:long_term_memory][:total_nodes]} nodes"
+    puts "  Robot: #{stats[:robot_name]} (#{stats[:robot_id]})"
 
     # Shutdown
     htm.shutdown

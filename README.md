@@ -24,7 +24,7 @@
 
 - **Two-Tier Memory Architecture**
     - Working Memory: Token-limited active context for immediate LLM use
-    - Long-term Memory: Durable PostgreSQL/TimescaleDB storage
+    - Long-term Memory: Durable PostgreSQL storage
 
 - **Never Forgets (Unless Told)**
     - All memories persist in long-term storage
@@ -43,22 +43,16 @@
     - Cross-robot context awareness
     - Track which robot said what
 
-- **LLM-Driven Emergent Ontology**
-    - Automatic hierarchical topic extraction from content
-    - Topics in colon-delimited format (e.g., `database:postgresql:performance`)
-    - LLM-powered via database triggers
+- **LLM-Driven Tag Extraction**
+    - Automatic hierarchical tag extraction from content
+    - Tags in colon-delimited format (e.g., `database:postgresql:performance`)
+    - LLM-powered asynchronous processing
     - Enables both structured navigation and semantic discovery
     - Complements vector embeddings (symbolic + sub-symbolic retrieval)
 
 - **Knowledge Graph**
-    - Relationship tracking between nodes
     - Tag-based categorization
-    - Importance scoring
-
-- **Time-Series Optimized**
-    - TimescaleDB hypertables
-    - Automatic compression for old data
-    - Fast time-range queries
+    - Hierarchical tag structures
 
 ## Installation
 
@@ -84,18 +78,18 @@ gem install htm
 
 ### 1. Database Configuration
 
-HTM uses TimescaleDB (PostgreSQL with time-series and AI extensions). Set up your database connection via environment variables:
+HTM uses PostgreSQL for durable long-term memory storage. Set up your database connection via environment variables:
 
 ```bash
 # Preferred: Full connection URL
 export HTM_DBURL="postgresql://user:password@host:port/dbname?sslmode=require"
 
 # Alternative: Individual parameters
-export HTM_DBNAME="tsdb"
-export HTM_DBUSER="tsdbadmin"
+export HTM_DBNAME="htm_production"
+export HTM_DBUSER="postgres"
 export HTM_DBPASS="your_password"
-export HTM_DBHOST="your-host.tsdb.cloud.timescale.com"
-export HTM_DBPORT="37807"
+export HTM_DBHOST="localhost"
+export HTM_DBPORT="5432"
 ```
 
 See the [Environment Variables](#environment-variables) section below for complete details.
@@ -216,13 +210,27 @@ See [docs/setup_local_database.md](docs/setup_local_database.md) for detailed lo
 
 ```ruby
 require 'htm'
+require 'ruby_llm'
+require 'logger'
 
-# Configure HTM (uses defaults if not called)
+# Configure HTM with RubyLLM for embeddings and tag extraction
 HTM.configure do |config|
+  # Configure logger (optional - uses STDOUT at INFO level if not provided)
+  config.logger = Logger.new($stdout)
+  config.logger.level = Logger::INFO
+
+  # Configure embedding generation using RubyLLM with Ollama
   config.embedding_provider = :ollama
   config.embedding_model = 'nomic-embed-text'
+  config.embedding_dimensions = 768
+  config.ollama_url = ENV['OLLAMA_URL'] || 'http://localhost:11434'
+
+  # Configure tag extraction using RubyLLM with Ollama
   config.tag_provider = :ollama
   config.tag_model = 'llama3'
+
+  # Apply configuration (sets up default RubyLLM implementations)
+  config.reset_to_defaults
 end
 
 # Initialize HTM for your robot
@@ -231,12 +239,10 @@ htm = HTM.new(
   working_memory_size: 128_000  # tokens
 )
 
-# Add memories - embeddings and tags generated asynchronously
-node_id = htm.add_message(
+# Remember information - embeddings and tags generated asynchronously
+node_id = htm.remember(
   "We decided to use PostgreSQL for HTM storage",
-  speaker: "architect",
-  importance: 9.0,
-  tags: ["type:decision", "database", "architecture"]  # Manual tags + auto-extracted tags
+  source: "architect"
 )
 
 # Recall from the past (uses semantic search with embeddings)
@@ -246,32 +252,22 @@ memories = htm.recall(
   strategy: :hybrid  # Combines vector + full-text search
 )
 
-# Create context for LLM
-context = htm.create_context(strategy: :balanced)
-
 # Forget (explicit deletion only)
-htm.forget("old_decision", confirm: :confirmed)
+htm.forget(node_id, confirm: :confirmed)
 ```
 
-### Memory Types (via Tags)
+### Automatic Tag Extraction
 
-HTM supports different memory types using reserved tags. Use the `type:*` tag prefix to categorize memories:
+HTM automatically extracts hierarchical tags from content using LLM analysis. Tags are inferred from the content itself - you never specify them manually.
 
-- `type:fact` - Immutable facts ("User's name is Dewayne")
-- `type:context` - Conversation state
-- `type:code` - Code snippets and patterns
-- `type:preference` - User preferences
-- `type:decision` - Architectural/design decisions
-- `type:question` - Unresolved questions
-
-**Example**:
+**Example:**
 ```ruby
-htm.add_message(
-  "User prefers dark mode",
-  speaker: "user",
-  importance: 5.0,
-  tags: ["type:preference", "ui", "settings"]
+htm.remember(
+  "User prefers dark mode for all interfaces",
+  source: "user"
 )
+# Tags like "preference", "ui", "dark-mode" may be auto-extracted by the LLM
+# The specific tags depend on the LLM's analysis of the content
 ```
 
 ### Async Job Processing
@@ -508,45 +504,142 @@ memories = htm.recall(
 - `:fulltext` - PostgreSQL tsvector with pg_trgm fuzzy matching
 - `:hybrid` - Combines both with weighted scoring (default: 70% vector, 30% full-text)
 
-### Context Assembly
+## API Reference
 
+HTM provides a minimal, focused API with only 3 core instance methods for memory operations:
+
+### Core Memory Operations
+
+#### `remember(content, source: "")`
+
+Store information in memory. Embeddings and tags are automatically generated asynchronously.
+
+**Parameters:**
+- `content` (String, required) - The information to remember. Converted to string if nil. Returns ID of last node if empty.
+- `source` (String, optional) - Where the content came from (e.g., "user", "assistant", "system"). Defaults to empty string.
+
+**Returns:** Integer - The node ID of the stored memory
+
+**Example:**
 ```ruby
-# Recent memories first
-context = htm.create_context(strategy: :recent)
+# Store with source
+node_id = htm.remember("PostgreSQL is excellent for vector search with pgvector", source: "architect")
 
-# Most important memories
-context = htm.create_context(strategy: :important)
+# Store without source (uses default empty string)
+node_id = htm.remember("HTM uses two-tier memory architecture")
 
-# Balanced (importance × recency)
-context = htm.create_context(strategy: :balanced)
-
-# With token limit
-context = htm.create_context(strategy: :balanced, max_tokens: 50_000)
+# Nil/empty handling
+node_id = htm.remember(nil)  # Returns ID of last node without creating duplicate
+node_id = htm.remember("")   # Returns ID of last node without creating duplicate
 ```
 
-### Hive Mind Queries
+---
 
+#### `recall(timeframe:, topic:, limit: 20, strategy: :vector, with_relevance: false, query_tags: [])`
+
+Retrieve memories using temporal filtering and semantic/keyword search.
+
+**Parameters:**
+- `timeframe` (Range, String, required) - Time range to search within
+  - Range: `(Time.now - 3600)..Time.now`
+  - String: `"last hour"`, `"last week"`, `"yesterday"`
+- `topic` (String, required) - Query text for semantic/keyword matching
+- `limit` (Integer, optional) - Maximum number of results. Default: 20
+- `strategy` (Symbol, optional) - Search strategy. Default: `:vector`
+  - `:vector` - Semantic search using embeddings (cosine similarity)
+  - `:fulltext` - Keyword search using PostgreSQL full-text + trigrams
+  - `:hybrid` - Weighted combination (70% vector, 30% full-text)
+- `with_relevance` (Boolean, optional) - Include dynamic relevance scores. Default: false
+- `query_tags` (Array<String>, optional) - Filter results by tags. Default: []
+
+**Returns:** Array<Hash> - Matching memories with fields: `id`, `content`, `source`, `created_at`, `access_count`, (optionally `relevance`)
+
+**Example:**
 ```ruby
-# Which robot discussed a topic?
-breakdown = htm.which_robot_said("PostgreSQL")
-# => { "robot-123" => 15, "robot-456" => 8 }
+# Basic recall with time range
+memories = htm.recall(
+  timeframe: (Time.now - 86400)..Time.now,
+  topic: "database architecture"
+)
 
-# Get conversation timeline
-timeline = htm.conversation_timeline("HTM design", limit: 50)
-# => [{ timestamp: ..., robot: "...", content: "...", speaker: "..." }, ...]
+# Using human-readable timeframe
+memories = htm.recall(
+  timeframe: "last week",
+  topic: "PostgreSQL performance",
+  strategy: :hybrid,
+  limit: 10
+)
+
+# With relevance scoring
+memories = htm.recall(
+  timeframe: "last month",
+  topic: "HTM design decisions",
+  with_relevance: true,
+  query_tags: ["architecture"]
+)
+# => [{ "id" => 123, "content" => "...", "relevance" => 0.92, ... }, ...]
 ```
 
-### Memory Statistics
+---
+
+#### `forget(node_id, confirm: false)`
+
+Permanently delete a memory from both working memory and long-term storage.
+
+**Parameters:**
+- `node_id` (Integer, required) - The ID of the node to delete
+- `confirm` (Symbol, Boolean, required) - Must be `:confirmed` or `true` to proceed
+
+**Returns:** Boolean - `true` if deleted, `false` if not found
+
+**Safety:** This is the ONLY way to delete memories. Requires explicit confirmation to prevent accidental deletion.
+
+**Example:**
+```ruby
+# Delete with symbol confirmation (recommended)
+htm.forget(node_id, confirm: :confirmed)
+
+# Delete with boolean confirmation
+htm.forget(node_id, confirm: true)
+
+# Will raise error - confirmation required
+htm.forget(node_id)  # ArgumentError: Must confirm deletion
+htm.forget(node_id, confirm: false)  # ArgumentError: Must confirm deletion
+```
+
+---
+
+### Complete Usage Example
 
 ```ruby
-stats = htm.memory_stats
-# => {
-#   total_nodes: 1234,
-#   nodes_by_robot: { "robot-1" => 800, "robot-2" => 434 },
-#   working_memory: { current_tokens: 45000, max_tokens: 128000, utilization: 35.16 },
-#   database_size: 52428800,  # bytes
-#   ...
-# }
+require 'htm'
+
+# Configure once globally (optional - uses defaults if not called)
+HTM.configure do |config|
+  config.embedding_provider = :ollama
+  config.embedding_model = 'nomic-embed-text'
+  config.tag_provider = :ollama
+  config.tag_model = 'llama3'
+end
+
+# Initialize for your robot
+htm = HTM.new(robot_name: "Assistant", working_memory_size: 128_000)
+
+# Store information
+htm.remember("PostgreSQL with pgvector for vector search", source: "architect")
+htm.remember("User prefers dark mode", source: "user")
+htm.remember("Use debug_me for debugging, not puts", source: "system")
+
+# Retrieve by time + topic
+recent = htm.recall(
+  timeframe: "last week",
+  topic: "PostgreSQL",
+  strategy: :hybrid,
+  limit: 5
+)
+
+# Delete if needed (requires node ID from remember or recall)
+htm.forget(node_id, confirm: :confirmed)
 ```
 
 ## Use with Rails
@@ -663,12 +756,10 @@ class ChatsController < ApplicationController
   before_action :initialize_memory
 
   def create
-    # Add user message to memory (embeddings + tags generated async)
-    @memory.add_message(
+    # Add user message to memory (embeddings + tags auto-extracted asynchronously)
+    @memory.remember(
       params[:message],
-      speaker: "user-#{current_user.id}",
-      importance: 5.0,
-      tags: ["type:context", "chat", "user"]  # Manual tags + auto-extracted tags
+      source: "user-#{current_user.id}"
     )
 
     # Recall relevant context for the conversation
@@ -678,11 +769,9 @@ class ChatsController < ApplicationController
     response = generate_llm_response(context, params[:message])
 
     # Store assistant's response
-    @memory.add_message(
+    @memory.remember(
       response,
-      speaker: "assistant",
-      importance: 5.0,
-      tags: ["type:context", "chat", "assistant"]
+      source: "assistant"
     )
 
     render json: { response: response }
@@ -711,13 +800,10 @@ class ProcessDocumentJob < ApplicationJob
     # Initialize HTM for this job
     memory = HTM.new(robot_name: "DocumentProcessor")
 
-    # Store document content in memory (async embeddings + tags)
-    memory.add_message(
+    # Store document content in memory (embeddings + tags auto-extracted asynchronously)
+    memory.remember(
       document.content,
-      speaker: "document-processor",
-      importance: 8.0,
-      tags: ["type:fact", "document", "processed"],
-      metadata: { document_id: document.id, processed_at: Time.current }
+      source: "document-#{document.id}"
     )
 
     # Recall related documents (uses vector similarity)
@@ -747,12 +833,9 @@ module Memorable
   def store_in_memory
     memory = HTM.new(robot_name: "Rails-#{Rails.env}")
 
-    memory.add_message(
+    memory.remember(
       memory_content,
-      speaker: "#{self.class.name}-#{id}",
-      importance: memory_importance,
-      tags: memory_tags,  # Should include "type:fact" in the tags
-      metadata: memory_metadata
+      source: "#{self.class.name}-#{id}"
     )
   end
 
@@ -767,21 +850,6 @@ module Memorable
     # Override in model to customize what gets stored
     attributes.to_json
   end
-
-  def memory_importance
-    # Override to set importance (0.0 - 10.0)
-    5.0
-  end
-
-  def memory_tags
-    # Override to add tags
-    [self.class.name.underscore]
-  end
-
-  def memory_metadata
-    # Override to add metadata
-    { model: self.class.name, id: id, updated_at: updated_at }
-  end
 end
 
 # Then in your model:
@@ -791,15 +859,7 @@ class Article < ApplicationRecord
   private
 
   def memory_content
-    "#{title}\n\n#{body}"
-  end
-
-  def memory_importance
-    published? ? 8.0 : 5.0
-  end
-
-  def memory_tags
-    ["article", category].compact
+    "Article: #{title}\n\n#{body}\n\nCategory: #{category}"
   end
 end
 ```
@@ -859,11 +919,11 @@ RSpec.describe "Chat with memory", type: :feature do
   let(:memory) { HTM.new(robot_name: "TestBot") }
 
   before do
-    memory.add_message("User prefers Ruby", speaker: "user", tags: ["type:preference"])
+    memory.remember("User prefers Ruby over Python", source: "user")
   end
 
   it "recalls user preferences" do
-    context = memory.create_context(strategy: :important)
+    context = memory.create_context(strategy: :balanced)
     expect(context).to include("Ruby")
   end
 end
@@ -951,11 +1011,6 @@ export HTM_DBURL="postgresql://username:password@host:port/dbname?sslmode=requir
 
 **Format:** `postgresql://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=MODE`
 
-**Example for TimescaleDB Cloud:**
-```bash
-export HTM_DBURL="postgresql://tsdbadmin:mypassword@abc123.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require"
-```
-
 **Example for Local PostgreSQL:**
 ```bash
 export HTM_DBURL="postgresql://postgres:postgres@localhost:5432/htm_dev?sslmode=disable"
@@ -970,17 +1025,17 @@ If `HTM_DBURL` is not set, HTM will use individual parameters:
 | `HTM_DBNAME` | Database name | None | Yes |
 | `HTM_DBUSER` | Database username | None | Yes |
 | `HTM_DBPASS` | Database password | None | Yes |
-| `HTM_DBHOST` | Database hostname or IP | `cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com` | No |
-| `HTM_DBPORT` | Database port | `37807` | No |
+| `HTM_DBHOST` | Database hostname or IP | `localhost` | No |
+| `HTM_DBPORT` | Database port | `5432` | No |
 | `HTM_SERVICE_NAME` | Service identifier (informational only) | None | No |
 
 **Example:**
 ```bash
-export HTM_DBNAME="tsdb"
-export HTM_DBUSER="tsdbadmin"
+export HTM_DBNAME="htm_production"
+export HTM_DBUSER="postgres"
 export HTM_DBPASS="secure_password_here"
-export HTM_DBHOST="myservice.tsdb.cloud.timescale.com"
-export HTM_DBPORT="37807"
+export HTM_DBHOST="localhost"
+export HTM_DBPORT="5432"
 export HTM_SERVICE_NAME="production-db"
 ```
 
@@ -1034,22 +1089,7 @@ This is used by the default logger when `HTM.configure` is called without a cust
 
 ### Quick Setup Examples
 
-#### TimescaleDB Cloud
-
-```bash
-# Option 1: Single URL (recommended)
-export HTM_DBURL="postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require"
-
-# Option 2: Individual parameters
-export HTM_SERVICE_NAME="my-service"
-export HTM_DBNAME="tsdb"
-export HTM_DBUSER="tsdbadmin"
-export HTM_DBPASS="your_password"
-export HTM_DBHOST="abc123.tsdb.cloud.timescale.com"
-export HTM_DBPORT="37807"
-```
-
-#### Local Development (PostgreSQL/TimescaleDB)
+#### Local Development (PostgreSQL)
 
 ```bash
 # Simple local setup
@@ -1165,10 +1205,7 @@ rake htm:db:reset
 **Important**: Make sure `direnv allow` has been run once in the project directory to load database environment variables from `.envrc`. Alternatively, you can manually export the environment variables:
 
 ```bash
-# Source Tiger database credentials (if using TimescaleDB Cloud)
-source ~/.bashrc__tiger
-
-# Or manually export HTM_DBURL
+# Manually export HTM_DBURL
 export HTM_DBURL="postgresql://user:password@host:port/dbname?sslmode=require"
 ```
 

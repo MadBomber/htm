@@ -5,7 +5,7 @@ class CreateNodes < ActiveRecord::Migration[7.1]
     unless table_exists?(:nodes)
       create_table :nodes, comment: 'Core memory storage for conversation messages and context' do |t|
         t.text :content, null: false, comment: 'The conversation message/utterance content'
-        t.text :source, null: false, comment: 'From where the content came'
+        t.text :source, default: '', comment: 'From where the content came (empty string if unknown)'
         t.integer :access_count, default: 0, null: false, comment: 'Number of times this node has been accessed/retrieved'
         t.timestamptz :created_at, default: -> { 'CURRENT_TIMESTAMP' }, comment: 'When this memory was created'
         t.timestamptz :updated_at, default: -> { 'CURRENT_TIMESTAMP' }, comment: 'When this memory was last modified'
