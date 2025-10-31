@@ -151,64 +151,24 @@ class HTM
 
       # Seed database with sample data
       #
+      # Loads and executes db/seeds.rb file following Rails conventions.
+      # All seeding logic is contained in db/seeds.rb and reads data
+      # from markdown files in db/seed_data/ directory.
+      #
       # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
       # @return [void]
       #
       def seed(db_url = nil)
-        require_relative '../htm'
+        seeds_file = File.expand_path('../../db/seeds.rb', __dir__)
 
-        puts "Seeding database with sample data..."
-        puts "Note: This requires Ollama to be running locally for embedding generation."
-        puts
+        unless File.exist?(seeds_file)
+          puts "✗ Error: Seeds file not found at #{seeds_file}"
+          puts "  Please create db/seeds.rb with your seeding logic"
+          exit 1
+        end
 
-        # Use real HTM initialization with actual EmbeddingService
-        # Embeddings will be generated client-side via EmbeddingService
-        htm = HTM.new(
-          robot_name: "Sample Robot"
-        )
-
-        # Add sample conversation messages
-        puts "  Creating sample conversation..."
-
-        htm.add_message(
-          "What is TimescaleDB good for?",
-          speaker: "user",
-          tags: ["type:question", "database", "timescaledb"]
-        )
-
-        htm.add_message(
-          "PostgreSQL with TimescaleDB provides efficient time-series data storage and querying capabilities.",
-          speaker: "Sample Robot",
-          tags: ["type:fact", "database", "timescaledb"]
-        )
-
-        htm.add_message(
-          "How much training data do ML models need?",
-          speaker: "user",
-          tags: ["type:question", "ai", "machine-learning"]
-        )
-
-        htm.add_message(
-          "Machine learning models require large amounts of training data to achieve good performance.",
-          speaker: "Sample Robot",
-          tags: ["type:fact", "ai", "machine-learning"]
-        )
-
-        htm.add_message(
-          "Tell me about Ruby on Rails",
-          speaker: "user",
-          tags: ["type:question", "ruby", "web-development"]
-        )
-
-        htm.add_message(
-          "Ruby on Rails is a web framework for building database-backed applications.",
-          speaker: "Sample Robot",
-          tags: ["type:fact", "ruby", "web-development"]
-        )
-
-        htm.shutdown
-
-        puts "✓ Database seeded with 6 conversation messages (3 exchanges)"
+        # Load and execute seeds.rb
+        load seeds_file
       end
 
       # Dump current database schema to db/schema.sql
