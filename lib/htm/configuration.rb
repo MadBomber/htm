@@ -113,7 +113,9 @@ class HTM
           request['Content-Type'] = 'application/json'
           request.body = { model: @embedding_model, prompt: text }.to_json
 
-          response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+          response = Net::HTTP.start(uri.hostname, uri.port,
+            read_timeout: 120,    # 2 minutes for embedding generation
+            open_timeout: 30) do |http|
             http.request(request)
           end
 
@@ -180,7 +182,9 @@ class HTM
             options: { temperature: 0 }
           }.to_json
 
-          response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+          response = Net::HTTP.start(uri.hostname, uri.port,
+            read_timeout: 180,    # 3 minutes for tag generation (LLM inference takes longer)
+            open_timeout: 30) do |http|
             http.request(request)
           end
 

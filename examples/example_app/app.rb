@@ -112,7 +112,8 @@ class ExampleApp
     [node_1, node_2, node_3].each do |node_id|
       node = HTM::Models::Node.find(node_id)
       if node.embedding
-        status = "✓ Generated (#{node.embedding.size} dimensions)"
+        dimensions = node.embedding.is_a?(Array) ? node.embedding.size : node.embedding_dimension
+        status = "✓ Generated (#{dimensions} dimensions)"
       else
         status = "⏳ Pending"
       end
@@ -149,7 +150,8 @@ class ExampleApp
         puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
       end
     rescue StandardError => e
-      puts "  ⚠ Vector search not available yet (embeddings still generating)"
+      puts "  ⚠ Vector search error: #{e.message}"
+      puts "     #{e.class}: #{e.backtrace.first}"
     end
 
     # 3. Hybrid search (combines both)
@@ -166,7 +168,8 @@ class ExampleApp
         puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
       end
     rescue StandardError => e
-      puts "  ⚠ Hybrid search not available yet (embeddings still generating)"
+      puts "  ⚠ Hybrid search error: #{e.message}"
+      puts "     #{e.class}: #{e.backtrace.first}"
     end
 
     # Summary

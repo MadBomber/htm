@@ -178,12 +178,12 @@ class HTM
       # Perform standard RAG-based retrieval
       nodes = case strategy
       when :vector
-        # Generate query embedding using configured generator
-        query_embedding = HTM.embed(topic)
-        @long_term_memory.search_vector(
+        # Vector search using query embedding
+        @long_term_memory.search(
           timeframe: parsed_timeframe,
-          query_embedding: query_embedding,
-          limit: limit
+          query: topic,
+          limit: limit,
+          embedding_service: HTM
         )
       when :fulltext
         @long_term_memory.search_fulltext(
@@ -192,13 +192,12 @@ class HTM
           limit: limit
         )
       when :hybrid
-        # Generate query embedding for hybrid search
-        query_embedding = HTM.embed(topic)
+        # Hybrid search combining vector + fulltext
         @long_term_memory.search_hybrid(
           timeframe: parsed_timeframe,
           query: topic,
-          query_embedding: query_embedding,
-          limit: limit
+          limit: limit,
+          embedding_service: HTM
         )
       end
     end
