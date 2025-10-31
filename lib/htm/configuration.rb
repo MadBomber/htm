@@ -22,7 +22,15 @@ class HTM
   #     config.logger = Rails.logger  # Use Rails logger
   #   end
   #
-  # @example Use defaults (RubyLLM with Ollama)
+  # @example Use defaults with custom timeouts
+  #   HTM.configure do |config|
+  #     config.embedding_timeout = 60      # 1 minute for faster models
+  #     config.tag_timeout = 300           # 5 minutes for larger models
+  #     config.connection_timeout = 10     # 10 seconds connection timeout
+  #     config.reset_to_defaults  # Apply default implementations with new timeouts
+  #   end
+  #
+  # @example Use defaults
   #   HTM.configure  # Uses default implementations
   #
   class Configuration
@@ -30,6 +38,7 @@ class HTM
     attr_accessor :embedding_model, :embedding_provider, :embedding_dimensions
     attr_accessor :tag_model, :tag_provider
     attr_accessor :ollama_url
+    attr_accessor :embedding_timeout, :tag_timeout, :connection_timeout
     attr_accessor :logger
 
     def initialize
@@ -42,6 +51,11 @@ class HTM
       @tag_model = 'llama3'
 
       @ollama_url = ENV['OLLAMA_URL'] || 'http://localhost:11434'
+
+      # Timeout settings (in seconds) - apply to all LLM providers
+      @embedding_timeout = 120      # 2 minutes for embedding generation
+      @tag_timeout = 180            # 3 minutes for tag generation (LLM inference)
+      @connection_timeout = 30      # 30 seconds for initial connection
 
       # Default logger (STDOUT with INFO level)
       @logger = default_logger
@@ -114,8 +128,8 @@ class HTM
           request.body = { model: @embedding_model, prompt: text }.to_json
 
           response = Net::HTTP.start(uri.hostname, uri.port,
-            read_timeout: 120,    # 2 minutes for embedding generation
-            open_timeout: 30) do |http|
+            read_timeout: @embedding_timeout,
+            open_timeout: @connection_timeout) do |http|
             http.request(request)
           end
 
@@ -183,8 +197,8 @@ class HTM
           }.to_json
 
           response = Net::HTTP.start(uri.hostname, uri.port,
-            read_timeout: 180,    # 3 minutes for tag generation (LLM inference takes longer)
-            open_timeout: 30) do |http|
+            read_timeout: @tag_timeout,
+            open_timeout: @connection_timeout) do |http|
             http.request(request)
           end
 
