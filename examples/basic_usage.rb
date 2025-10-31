@@ -70,8 +70,8 @@ begin
   # Demonstrate recall
   puts "\n4. Recalling memories about 'database'..."
   memories = htm.recall(
+    "database",
     timeframe: (Time.now - 3600)..Time.now,  # Last hour
-    topic: "database",
     limit: 5
   )
   puts "✓ Found #{memories.length} memories"

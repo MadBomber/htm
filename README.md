@@ -247,8 +247,8 @@ node_id = htm.remember(
 
 # Recall from the past (uses semantic search with embeddings)
 memories = htm.recall(
+  "database decisions",
   timeframe: "last week",
-  topic: "database decisions",
   strategy: :hybrid  # Combines vector + full-text search
 )
 
@@ -479,22 +479,22 @@ HTM supports three retrieval strategies:
 ```ruby
 # Vector similarity search (semantic) - uses configured embedding provider
 memories = htm.recall(
+  "HTM architecture",
   timeframe: "last week",
-  topic: "HTM architecture",
   strategy: :vector  # Semantic similarity using embeddings
 )
 
 # Full-text search (keyword matching) - PostgreSQL full-text search with trigrams
 memories = htm.recall(
+  "database performance",
   timeframe: "last month",
-  topic: "database performance",
   strategy: :fulltext  # Keyword-based matching
 )
 
 # Hybrid (combines both) - best of both worlds
 memories = htm.recall(
+  "testing strategies",
   timeframe: "yesterday",
-  topic: "testing strategies",
   strategy: :hybrid  # Weighted combination of vector + full-text
 )
 ```
@@ -535,15 +535,15 @@ node_id = htm.remember("")   # Returns ID of last node without creating duplicat
 
 ---
 
-#### `recall(timeframe:, topic:, limit: 20, strategy: :vector, with_relevance: false, query_tags: [])`
+#### `recall(topic, timeframe: nil, limit: 20, strategy: :vector, with_relevance: false, query_tags: [])`
 
 Retrieve memories using temporal filtering and semantic/keyword search.
 
 **Parameters:**
-- `timeframe` (Range, String, required) - Time range to search within
+- `topic` (String, required) - Query text for semantic/keyword matching (first positional argument)
+- `timeframe` (Range, String, optional) - Time range to search within. Default: "last 7 days"
   - Range: `(Time.now - 3600)..Time.now`
   - String: `"last hour"`, `"last week"`, `"yesterday"`
-- `topic` (String, required) - Query text for semantic/keyword matching
 - `limit` (Integer, optional) - Maximum number of results. Default: 20
 - `strategy` (Symbol, optional) - Search strategy. Default: `:vector`
   - `:vector` - Semantic search using embeddings (cosine similarity)
@@ -558,22 +558,22 @@ Retrieve memories using temporal filtering and semantic/keyword search.
 ```ruby
 # Basic recall with time range
 memories = htm.recall(
-  timeframe: (Time.now - 86400)..Time.now,
-  topic: "database architecture"
+  "database architecture",
+  timeframe: (Time.now - 86400)..Time.now
 )
 
 # Using human-readable timeframe
 memories = htm.recall(
+  "PostgreSQL performance",
   timeframe: "last week",
-  topic: "PostgreSQL performance",
   strategy: :hybrid,
   limit: 10
 )
 
 # With relevance scoring
 memories = htm.recall(
+  "HTM design decisions",
   timeframe: "last month",
-  topic: "HTM design decisions",
   with_relevance: true,
   query_tags: ["architecture"]
 )
@@ -632,8 +632,8 @@ htm.remember("Use debug_me for debugging, not puts", source: "system")
 
 # Retrieve by time + topic
 recent = htm.recall(
+  "PostgreSQL",
   timeframe: "last week",
-  topic: "PostgreSQL",
   strategy: :hybrid,
   limit: 5
 )
@@ -808,8 +808,8 @@ class ProcessDocumentJob < ApplicationJob
 
     # Recall related documents (uses vector similarity)
     related = memory.recall(
+      document.category,
       timeframe: "last month",
-      topic: document.category,
       strategy: :vector
     )
 
@@ -949,7 +949,7 @@ class ChatTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     # Verify message was stored
-    nodes = memory.recall(timeframe: "last hour", topic: "Hello")
+    nodes = memory.recall("Hello", timeframe: "last hour")
     assert_not_empty nodes
   end
 end

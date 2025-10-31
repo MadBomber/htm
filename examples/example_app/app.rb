@@ -126,8 +126,8 @@ class ExampleApp
     # 1. Full-text search (doesn't require embeddings)
     puts "\n1. Full-text Search for 'memory':"
     fulltext_memories = htm.recall(
+      "memory",
       timeframe: (Time.now - 3600)..Time.now,
-      topic: "memory",
       strategy: :fulltext,
       limit: 3
     )
@@ -140,8 +140,8 @@ class ExampleApp
     puts "\n2. Vector Search for 'intelligent memory system':"
     begin
       vector_memories = htm.recall(
+        "intelligent memory system",
         timeframe: (Time.now - 3600)..Time.now,
-        topic: "intelligent memory system",
         strategy: :vector,
         limit: 3
       )
@@ -158,8 +158,8 @@ class ExampleApp
     puts "\n3. Hybrid Search for 'working memory architecture':"
     begin
       hybrid_memories = htm.recall(
+        "working memory architecture",
         timeframe: (Time.now - 3600)..Time.now,
-        topic: "working memory architecture",
         strategy: :hybrid,
         limit: 3
       )

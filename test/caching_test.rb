@@ -122,7 +122,7 @@ class CachingTest < Minitest::Test
     @htm.add_node("cache_test_1", "test content", type: :fact)
 
     # Perform a search to populate cache
-    @htm.recall(timeframe: "last week", topic: "test")
+    @htm.recall("test", timeframe: "last week")
 
     stats = @htm.long_term_memory.stats[:cache]
     assert_instance_of Hash, stats
@@ -142,14 +142,14 @@ class CachingTest < Minitest::Test
     topic = "PostgreSQL"
 
     # First query: cache miss
-    result1 = @htm.recall(timeframe: timeframe, topic: topic, strategy: :fulltext)
+    result1 = @htm.recall(topic, timeframe: timeframe, strategy: :fulltext)
     cache_stats1 = @htm.long_term_memory.stats[:cache]
 
     # Cache should have 1 miss (first query)
     assert cache_stats1[:misses] >= 1
 
     # Second identical query: cache hit
-    result2 = @htm.recall(timeframe: timeframe, topic: topic, strategy: :fulltext)
+    result2 = @htm.recall(topic, timeframe: timeframe, strategy: :fulltext)
     cache_stats2 = @htm.long_term_memory.stats[:cache]
 
     # Cache should have at least 1 hit
@@ -164,8 +164,8 @@ class CachingTest < Minitest::Test
     @htm.add_node("cache_test_1", "test content", type: :fact)
 
     # Different queries should not hit cache
-    @htm.recall(timeframe: "last week", topic: "test1", strategy: :fulltext)
-    @htm.recall(timeframe: "last week", topic: "test2", strategy: :fulltext)
+    @htm.recall("test1", timeframe: "last week", strategy: :fulltext)
+    @htm.recall("test2", timeframe: "last week", strategy: :fulltext)
 
     cache_stats = @htm.long_term_memory.stats[:cache]
 
@@ -181,10 +181,10 @@ class CachingTest < Minitest::Test
     topic = "test"
 
     # Query with vector strategy
-    @htm.recall(timeframe: timeframe, topic: topic, strategy: :vector)
+    @htm.recall(topic, timeframe: timeframe, strategy: :vector)
 
     # Query with fulltext strategy (same timeframe/topic but different strategy)
-    @htm.recall(timeframe: timeframe, topic: topic, strategy: :fulltext)
+    @htm.recall(topic, timeframe: timeframe, strategy: :fulltext)
 
     cache_stats = @htm.long_term_memory.stats[:cache]
 
@@ -197,7 +197,7 @@ class CachingTest < Minitest::Test
     @htm.add_node("cache_test_1", "initial content", type: :fact)
 
     # Query and cache result
-    result1 = @htm.recall(timeframe: "last week", topic: "content", strategy: :fulltext)
+    result1 = @htm.recall("content", timeframe: "last week", strategy: :fulltext)
     initial_size = result1.length
 
     # Get initial cache stats
@@ -212,7 +212,7 @@ class CachingTest < Minitest::Test
     assert_equal 0, cache_stats2[:size], "Cache should be empty after adding node"
 
     # Query again - should be cache miss
-    result2 = @htm.recall(timeframe: "last week", topic: "content", strategy: :fulltext)
+    result2 = @htm.recall("content", timeframe: "last week", strategy: :fulltext)
 
     # Results may differ (new node included)
     assert result2.length >= initial_size
@@ -224,7 +224,7 @@ class CachingTest < Minitest::Test
     @htm.add_node("cache_test_3", "content to delete", type: :fact)
 
     # Query and cache
-    @htm.recall(timeframe: "last week", topic: "content", strategy: :fulltext)
+    @htm.recall("content", timeframe: "last week", strategy: :fulltext)
 
     # Delete node - should invalidate cache
     @htm.forget("cache_test_3", confirm: :confirmed)
@@ -253,7 +253,7 @@ class CachingTest < Minitest::Test
       refute_includes stats, :cache
 
       # Should still work without caching
-      result = htm_no_cache.recall(timeframe: "last week", topic: "test", strategy: :fulltext)
+      result = htm_no_cache.recall("test", timeframe: "last week", strategy: :fulltext)
       assert_instance_of Array, result
     ensure
       htm_no_cache.forget("cache_test_1", confirm: :confirmed) rescue nil
@@ -268,7 +268,7 @@ class CachingTest < Minitest::Test
     @htm.add_node("cache_test_1", "test content", type: :fact)
 
     # Perform queries to populate caches
-    @htm.recall(timeframe: "last week", topic: "test")
+    @htm.recall("test", timeframe: "last week")
 
     # Get memory stats
     stats = @htm.memory_stats
@@ -288,7 +288,7 @@ class CachingTest < Minitest::Test
 
     # Query 3 times (1 miss + 2 hits)
     3.times do
-      @htm.recall(timeframe: "last week", topic: "test", strategy: :fulltext)
+      @htm.recall("test", timeframe: "last week", strategy: :fulltext)
     end
 
     cache_stats = @htm.long_term_memory.stats[:cache]
@@ -310,10 +310,10 @@ class CachingTest < Minitest::Test
 
     strategies.each do |strategy|
       # First query: miss
-      result1 = @htm.recall(timeframe: timeframe, topic: "strategies", strategy: strategy)
+      result1 = @htm.recall("strategies", timeframe: timeframe, strategy: strategy)
 
       # Second query: hit
-      result2 = @htm.recall(timeframe: timeframe, topic: "strategies", strategy: strategy)
+      result2 = @htm.recall("strategies", timeframe: timeframe, strategy: strategy)
 
       # Results should be identical
       assert_equal result1.length, result2.length
@@ -357,7 +357,7 @@ class CachingTest < Minitest::Test
 
     # Query with different topics to populate cache
     10.times do |i|
-      @htm.recall(timeframe: "last week", topic: "content #{i}", strategy: :fulltext)
+      @htm.recall("content #{i}", timeframe: "last week", strategy: :fulltext)
     end
 
     cache_stats = @htm.long_term_memory.stats[:cache]

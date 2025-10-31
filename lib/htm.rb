@@ -148,15 +148,38 @@ class HTM
 
   # Recall memories from a timeframe and topic
   #
-  # @param timeframe [String, Range] Time range ("last week", 7.days.ago..Time.now)
-  # @param topic [String] Topic to search for
+  # @param topic [String] Topic to search for (required)
+  # @param timeframe [String, Range, nil] Time range (default: last 7 days). Examples: "last week", 7.days.ago..Time.now
   # @param limit [Integer] Maximum number of nodes to retrieve (default: 20)
-  # @param strategy [Symbol] Search strategy (:vector, :fulltext, :hybrid)
+  # @param strategy [Symbol] Search strategy (:vector, :fulltext, :hybrid) (default: :vector)
   # @param with_relevance [Boolean] Include dynamic relevance scores (default: false)
-  # @param query_tags [Array<String>] Tags to boost relevance (optional)
-  # @return [Array<Hash>] Retrieved memory nodes (with 'relevance' key if with_relevance: true)
+  # @param query_tags [Array<String>] Tags to boost relevance (default: [])
+  # @param raw [Boolean] Return full node hashes (true) or just content strings (false) (default: false)
+  # @return [Array<String>, Array<Hash>] Content strings (raw: false) or full node hashes (raw: true)
   #
-  def recall(timeframe:, topic:, limit: 20, strategy: :vector, with_relevance: false, query_tags: [])
+  # @example Basic usage (returns content strings)
+  #   memories = htm.recall("PostgreSQL")
+  #   # => ["PostgreSQL is great for time-series data", "PostgreSQL with TimescaleDB..."]
+  #
+  # @example Get full node hashes
+  #   nodes = htm.recall("PostgreSQL", raw: true)
+  #   # => [{"id" => 1, "content" => "...", "created_at" => "...", ...}, ...]
+  #
+  # @example With timeframe
+  #   memories = htm.recall("PostgreSQL", timeframe: "last week")
+  #
+  # @example With all options
+  #   memories = htm.recall("PostgreSQL",
+  #     timeframe: "last month",
+  #     limit: 50,
+  #     strategy: :hybrid,
+  #     with_relevance: true,
+  #     query_tags: ["database", "timeseries"])
+  #
+  def recall(topic, timeframe: nil, limit: 20, strategy: :vector, with_relevance: false, query_tags: [], raw: false)
+    # Use default timeframe if not provided (last 7 days)
+    timeframe ||= "last 7 days"
+
     # Validate inputs
     validate_timeframe!(timeframe)
     validate_positive_integer!(limit, "limit")
@@ -208,7 +231,9 @@ class HTM
     end
 
     update_robot_activity
-    nodes
+
+    # Return full nodes or just content based on raw parameter
+    raw ? nodes : nodes.map { |node| node['content'] }
   end
 
   # Forget a memory node (explicit deletion)

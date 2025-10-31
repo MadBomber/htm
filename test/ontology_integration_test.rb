@@ -74,8 +74,8 @@ class OntologyIntegrationTest < Minitest::Test
 
     # Use vector search to find nodes similar to "performance optimization"
     similar_nodes = @htm.recall(
+      "performance optimization techniques",
       timeframe: (Time.now - 3600)..Time.now,
-      topic: "performance optimization techniques",
       limit: 10,
       strategy: :vector
     )
@@ -150,8 +150,8 @@ class OntologyIntegrationTest < Minitest::Test
 
     # Fuzzy vector search: find nodes similar to "PostgreSQL"
     similar_nodes = @htm.recall(
+      "PostgreSQL database",
       timeframe: (Time.now - 3600)..Time.now,
-      topic: "PostgreSQL database",
       limit: 10,
       strategy: :vector
     )

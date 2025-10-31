@@ -202,35 +202,35 @@ class InputValidationTest < Minitest::Test
   # Recall method validation tests
   def test_recall_rejects_invalid_timeframe
     error = assert_raises(HTM::ValidationError) do
-      @htm.recall(timeframe: 123, topic: "test")
+      @htm.recall("test", timeframe: 123)
     end
     assert_match(/Timeframe must be a Range or String/, error.message)
   end
 
   def test_recall_rejects_empty_topic
     error = assert_raises(HTM::ValidationError) do
-      @htm.recall(timeframe: "last week", topic: "")
+      @htm.recall("", timeframe: "last week")
     end
     assert_match(/Value cannot be empty/, error.message)
   end
 
   def test_recall_rejects_invalid_limit
     error = assert_raises(HTM::ValidationError) do
-      @htm.recall(timeframe: "last week", topic: "test", limit: -5)
+      @htm.recall("test", timeframe: "last week", limit: -5)
     end
     assert_match(/limit must be a positive Integer/, error.message)
   end
 
   def test_recall_rejects_non_integer_limit
     error = assert_raises(HTM::ValidationError) do
-      @htm.recall(timeframe: "last week", topic: "test", limit: "ten")
+      @htm.recall("test", timeframe: "last week", limit: "ten")
     end
     assert_match(/limit must be a positive Integer/, error.message)
   end
 
   def test_recall_rejects_invalid_strategy
     error = assert_raises(HTM::ValidationError) do
-      @htm.recall(timeframe: "last week", topic: "test", strategy: :invalid)
+      @htm.recall("test", timeframe: "last week", strategy: :invalid)
     end
     assert_match(/Invalid strategy/, error.message)
   end
@@ -243,7 +243,7 @@ class InputValidationTest < Minitest::Test
     @htm.add_node("recall_test", "test content", type: :fact)
 
     HTM::VALID_RECALL_STRATEGIES.each do |strategy|
-      result = @htm.recall(timeframe: "last week", topic: "test", strategy: strategy)
+      result = @htm.recall("test", timeframe: "last week", strategy: strategy)
       assert_instance_of Array, result
     end
 
