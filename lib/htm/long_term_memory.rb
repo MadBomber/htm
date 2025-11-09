@@ -423,7 +423,7 @@ class HTM
       # 2. Tag overlap (categorical relevance) - weight: 0.3
       node_tags = get_node_tags(node['id'])
       tag_score = if query_tags.any? && node_tags.any?
-        jaccard_similarity(query_tags, node_tags)
+        weighted_hierarchical_jaccard(query_tags, node_tags)
       else
         0.5  # Neutral if no tags
       end
@@ -631,6 +631,25 @@ class HTM
       intersection.to_f / union
     end
 
+    def weighted_hierarchical_jaccard(set_a, set_b)
+      return 0.0 if set_a.empty? || set_b.empty?
+
+      total_weighted_similarity = 0.0
+      total_weights = 0.0
+
+      set_a.each do |tag_a|
+        set_b.each do |tag_b|
+          similarity, weight = calculate_hierarchical_similarity(tag_a, tag_b)
+          total_weighted_similarity += similarity * weight
+          total_weights += weight
+        end
+      end
+
+      total_weights > 0 ? total_weighted_similarity / total_weights : 0.0
+    end
+
+
+
     # Invalidate (clear) the query cache
     #
     # @return [void]
@@ -761,5 +780,186 @@ class HTM
 
       result.to_a
     end
+
+
+    def calculate_hierarchical_similarity(tag_a, tag_b)
+      parts_a = tag_a.split(':')
+      parts_b = tag_b.split(':')
+
+      # Calculate overlap at each level
+      common_levels = 0
+      max_depth = [parts_a.length, parts_b.length].max
+
+      (0...max_depth).each do |i|
+        if i < parts_a.length && i < parts_b.length && parts_a[i] == parts_b[i]
+          common_levels += 1
+        else
+          break
+        end
+      end
+
+      # Calculate weight based on hierarchy depth (higher levels = more weight)
+      depth_weight = 1.0 / max_depth
+
+      # Calculate normalized similarity (0-1)
+      similarity = max_depth > 0 ? (common_levels.to_f / max_depth) : 0.0
+
+      [similarity, depth_weight]
+    end
+
+#######################################
+=begin
+
+# Enhanced hierarchical similarity (with term_bonus for deep term matches like "country-music")
+# Replaces your private calculate_hierarchical_similarity
+def calculate_hierarchical_similarity(tag_a, tag_b, max_depth: 5)
+  return [0.0, 1.0] if tag_a.empty? || tag_b.empty?  # [similarity, weight]
+
+  parts_a = tag_a.split(':').reject(&:empty?)
+  parts_b = tag_b.split(':').reject(&:empty?)
+  return [0.0, 1.0] if parts_a.empty? || parts_b.empty?
+
+  # Prefix similarity
+  local_max = [parts_a.length, parts_b.length].max
+  common_levels = 0
+  (0...local_max).each do |i|
+    if i < parts_a.length && i < parts_b.length && parts_a[i] == parts_b[i]
+      common_levels += 1
+    else
+      break
+    end
+  end
+  prefix_sim = local_max > 0 ? common_levels.to_f / local_max : 0.0
+
+  # Term bonus: Shared terms weighted by avg depth
+  common_terms = parts_a.to_set & parts_b.to_set
+  term_bonus = 0.0
+  common_terms.each do |term|
+    depth_a = parts_a.index(term) + 1
+    depth_b = parts_b.index(term) + 1
+    avg_depth = (depth_a + depth_b) / 2.0
+    depth_weight = avg_depth / max_depth.to_f
+    term_bonus += depth_weight * 0.8  # Increased from 0.5 for more aggression
+  end
+  term_bonus = [1.0, term_bonus].min
+
+  # Combined similarity (your weight now favors deeper via local_max)
+  sim = (prefix_sim + term_bonus) / 2.0
+  weight = local_max.to_f / max_depth  # Deeper = higher weight (flipped from your 1/max)
+
+  [sim, weight]
+end
+
+# Enhanced weighted_hierarchical_jaccard (uses new similarity; adds max_pairs fallback)
+# Replaces your private weighted_hierarchical_jaccard
+def weighted_hierarchical_jaccard(set_a, set_b, max_depth: 5, max_pairs: 1000)
+  return 0.0 if set_a.empty? || set_b.empty?
+
+  # Fallback to flat Jaccard for large sets (your jaccard_similarity)
+  if set_a.size * set_b.size > max_pairs
+    terms_a = set_a.flat_map { |tag| tag.split(':').reject(&:empty?) }.to_set
+    terms_b = set_b.flat_map { |tag| tag.split(':').reject(&:empty?) }.to_set
+    return jaccard_similarity(terms_a.to_a, terms_b.to_a)
+  end
+
+  total_weighted_similarity = 0.0
+  total_weights = 0.0
+  set_a.each do |tag_a|
+    set_b.each do |tag_b|
+      similarity, weight = calculate_hierarchical_similarity(tag_a, tag_b, max_depth: max_depth)
+      total_weighted_similarity += similarity * weight
+      total_weights += weight
+    end
+  end
+  total_weights > 0 ? total_weighted_similarity / total_weights : 0.0
+end
+
+# Updated calculate_relevance (adds ont_weight param; scales to 0-100 option)
+# Enhances your existing method
+def calculate_relevance(node:, query_tags: [], vector_similarity: nil, ont_weight: 1.0, scale_to_100: false)
+  # 1. Vector similarity (semantic) - weight: 0.5
+  semantic_score = if vector_similarity
+    vector_similarity
+  elsif node['similarity']
+    node['similarity'].to_f
+  else
+    0.5
+  end
+
+  # 2. Tag overlap (ontology) - weight: 0.3, boosted by ont_weight
+  node_tags = get_node_tags(node['id'])
+  tag_score = if query_tags.any? && node_tags.any?
+    weighted_hierarchical_jaccard(query_tags, node_tags) * ont_weight
+  else
+    0.5
+  end
+  tag_score = [tag_score, 1.0].min  # Cap boosted score
+
+  # 3. Recency - weight: 0.1
+  age_hours = (Time.current - Time.parse(node['created_at'].to_s)) / 3600.0
+  recency_score = Math.exp(-age_hours / 168.0)
+
+  # 4. Access frequency - weight: 0.1
+  access_count = node['access_count'] || 0
+  access_score = Math.log(1 + access_count) / 10.0
+
+  # Weighted composite (0-10 base)
+  relevance_0_10 = (
+    (semantic_score * 0.5) +
+    (tag_score * 0.3) +
+    (recency_score * 0.1) +
+    (access_score * 0.1)
+  ).clamp(0.0, 10.0)
+
+  # Scale to 0-100 if requested
+  final_relevance = scale_to_100 ? (relevance_0_10 * 10.0).round(2) : relevance_0_10
+
+  final_relevance
+end
+
+# Updated search_with_relevance (adds threshold: for 0-100 filtering; ont_weight)
+# Enhances your existing method
+def search_with_relevance(timeframe:, query: nil, query_tags: [], limit: 20, embedding_service: nil, threshold: nil, ont_weight: 1.0, scale_to_100: true)
+  # Get candidates (your logic)
+  candidates = if query && embedding_service
+    search_uncached(timeframe: timeframe, query: query, limit: limit * 3, embedding_service: embedding_service)  # Oversample more for thresholds
+  elsif query
+    search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 3)
+  else
+    HTM::Models::Node
+      .where(created_at: timeframe)
+      .order(created_at: :desc)
+      .limit(limit * 3)
+      .map(&:attributes)
+  end
+
+  # Score and enrich
+  scored_nodes = candidates.map do |node|
+    relevance = calculate_relevance(
+      node: node,
+      query_tags: query_tags,
+      vector_similarity: node['similarity']&.to_f,
+      ont_weight: ont_weight,
+      scale_to_100: scale_to_100
+    )
+    node.merge({
+      'relevance' => relevance,
+      'tags' => get_node_tags(node['id'])
+    })
+  end
+
+  # Filter by threshold if provided (e.g., >=80 for 0-100 scale)
+  scored_nodes = scored_nodes.select { |n| threshold.nil? || n['relevance'] >= threshold }
+
+  # Sort by relevance DESC, take limit (or all if threshold used)
+  scored_nodes
+    .sort_by { |n| -n['relevance'] }
+    .take(limit)
+end
+
+=end
+
+
+
   end
 end

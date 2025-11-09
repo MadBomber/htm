@@ -5,6 +5,7 @@ require "htm"
 
 require "minitest/autorun"
 require "minitest/reporters"
+require "tiktoken_ruby"
 
 Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new]
 
@@ -100,3 +101,50 @@ def ollama_available?
 
   @ollama_available
 end
+
+# Configure HTM with mock services for testing
+#
+# @param dimensions [Integer] Embedding dimensions (default: 768)
+# @return [MockEmbeddingService] The mock service instance
+#
+def configure_htm_with_mocks(dimensions: 768)
+  mock_service = MockEmbeddingService.new(dimensions: dimensions)
+
+  HTM.configure do |config|
+    # Use inline backend for synchronous test execution
+    config.job_backend = :inline
+
+    # Mock embedding generator
+    config.embedding_generator = ->(text) {
+      seed = text.hash.abs
+      dimensions.times.map { |i| Random.new(seed + i).rand(-1.0..1.0) }
+    }
+
+    # Mock tag extractor (returns empty tags to speed up tests)
+    config.tag_extractor = ->(text, ontology) { [] }
+
+    # Mock token counter
+    config.token_counter = ->(text) {
+      begin
+        Tiktoken.encoding_for_model("gpt-3.5-turbo").encode(text.to_s).length
+      rescue
+        text.to_s.split.size
+      end
+    }
+
+    # Set embedding dimensions
+    config.embedding_dimensions = dimensions
+  end
+
+  mock_service
+end
+
+# Reset HTM configuration to defaults
+def reset_htm_configuration
+  HTM.reset_configuration!
+  # Set inline backend for tests
+  HTM.configuration.job_backend = :inline
+end
+
+# Setup default test configuration
+configure_htm_with_mocks

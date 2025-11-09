@@ -9,13 +9,16 @@ require_relative "htm/long_term_memory"
 require_relative "htm/working_memory"
 require_relative "htm/embedding_service"
 require_relative "htm/tag_service"
+require_relative "htm/job_adapter"
 require_relative "htm/jobs/generate_embedding_job"
 require_relative "htm/jobs/generate_tags_job"
 
 require "pg"
 require "securerandom"
 require "uri"
-require "async/job"
+
+# Load Rails integration if Rails is defined
+require_relative "htm/railtie" if defined?(Rails::Railtie)
 
 # HTM (Hierarchical Temporary Memory) - Intelligent memory management for LLM robots
 #
@@ -100,15 +103,16 @@ class HTM
   #
   # @param content [String, nil] The information to remember
   # @param source [String, nil] Where this content came from (defaults to empty string if not provided)
+  # @param tags [Array<String>] Manual tags to assign (optional, in addition to auto-extracted tags)
   # @return [Integer] Database ID of the memory node
   #
   # @example Remember with source
   #   node_id = htm.remember("PostgreSQL is great for HTM", source: "user")
   #
-  # @example Remember without source (defaults to empty string)
-  #   node_id = htm.remember("We chose RAG for retrieval")
+  # @example Remember with manual tags
+  #   node_id = htm.remember("Time-series data", source: "user", tags: ["database:timescaledb"])
   #
-  def remember(content, source: "")
+  def remember(content, source: "", tags: [])
     # Convert nil to empty string
     content = content.to_s
     source = source.to_s
@@ -137,7 +141,7 @@ class HTM
     # Enqueue background jobs for embedding and tag generation
     # Both jobs run in parallel with equal priority
     enqueue_embedding_job(node_id)
-    enqueue_tags_job(node_id)
+    enqueue_tags_job(node_id, manual_tags: tags)
 
     # Add to working memory (access_count starts at 0)
     @working_memory.add(node_id, content, token_count: token_count, access_count: 0)
@@ -273,14 +277,11 @@ class HTM
   end
 
   def enqueue_embedding_job(node_id)
-    # Run embedding generation in background thread
+    # Enqueue embedding generation using configured job backend
     # Job will use HTM.embed which delegates to configured embedding_generator
-    Thread.new do
-      HTM::Jobs::GenerateEmbeddingJob.perform(node_id: node_id)
-    end
-    HTM.logger.debug "Started embedding job for node #{node_id}"
+    HTM::JobAdapter.enqueue(HTM::Jobs::GenerateEmbeddingJob, node_id: node_id)
   rescue StandardError => e
-    HTM.logger.error "Failed to start embedding job for node #{node_id}: #{e.message}"
+    HTM.logger.error "Failed to enqueue embedding job for node #{node_id}: #{e.message}"
   end
 
   def enqueue_tags_job(node_id, manual_tags: [])
@@ -293,14 +294,11 @@ class HTM
       HTM.logger.debug "Added #{manual_tags.length} manual tags to node #{node_id}"
     end
 
-    # Run tag generation in background thread
+    # Enqueue tag generation using configured job backend
     # Job will use HTM.extract_tags which delegates to configured tag_extractor
-    Thread.new do
-      HTM::Jobs::GenerateTagsJob.perform(node_id: node_id)
-    end
-    HTM.logger.debug "Started tags job for node #{node_id}"
+    HTM::JobAdapter.enqueue(HTM::Jobs::GenerateTagsJob, node_id: node_id)
   rescue StandardError => e
-    HTM.logger.error "Failed to start tags job for node #{node_id}: #{e.message}"
+    HTM.logger.error "Failed to enqueue tags job for node #{node_id}: #{e.message}"
   end
 
   def add_to_working_memory(node)

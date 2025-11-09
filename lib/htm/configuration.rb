@@ -40,6 +40,7 @@ class HTM
     attr_accessor :ollama_url
     attr_accessor :embedding_timeout, :tag_timeout, :connection_timeout
     attr_accessor :logger
+    attr_accessor :job_backend
 
     def initialize
       # Default configuration
@@ -59,6 +60,9 @@ class HTM
 
       # Default logger (STDOUT with INFO level)
       @logger = default_logger
+
+      # Auto-detect job backend based on environment
+      @job_backend = detect_job_backend
 
       # Set default implementations
       reset_to_defaults
@@ -88,9 +92,47 @@ class HTM
       unless @logger.respond_to?(:info) && @logger.respond_to?(:warn) && @logger.respond_to?(:error)
         raise HTM::ValidationError, "logger must respond to :info, :warn, and :error"
       end
+
+      unless [:active_job, :sidekiq, :inline, :thread].include?(@job_backend)
+        raise HTM::ValidationError, "job_backend must be one of: :active_job, :sidekiq, :inline, :thread (got #{@job_backend.inspect})"
+      end
     end
 
     private
+
+    # Auto-detect appropriate job backend based on environment
+    #
+    # Detection priority:
+    # 1. ActiveJob (if defined) - Rails applications
+    # 2. Sidekiq (if defined) - Sinatra and other web apps
+    # 3. Inline (if test environment) - Test suites
+    # 4. Thread (default fallback) - CLI and standalone apps
+    #
+    # @return [Symbol] Detected job backend
+    #
+    def detect_job_backend
+      # Check for explicit environment variable override
+      if ENV['HTM_JOB_BACKEND']
+        return ENV['HTM_JOB_BACKEND'].to_sym
+      end
+
+      # Detect test environment - use inline for synchronous execution
+      test_env = ENV['RACK_ENV'] == 'test' || ENV['RAILS_ENV'] == 'test' || ENV['APP_ENV'] == 'test'
+      return :inline if test_env
+
+      # Detect Rails - prefer ActiveJob
+      if defined?(ActiveJob)
+        return :active_job
+      end
+
+      # Detect Sidekiq - direct integration for Sinatra apps
+      if defined?(Sidekiq)
+        return :sidekiq
+      end
+
+      # Default fallback - simple threading for standalone/CLI apps
+      :thread
+    end
 
     # Default logger configuration
     def default_logger

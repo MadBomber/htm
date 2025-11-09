@@ -17,7 +17,7 @@ class OntologyTest < Minitest::Test
     # Add a node with manual hierarchical tags
     node_id = @htm.remember(
       "PostgreSQL with TimescaleDB provides efficient time-series data storage using hypertables and compression policies",
-      source: "user",
+      speaker: "user",
       tags: ["database:postgresql:timescaledb", "storage:time-series", "performance:optimization"]
     )
 
@@ -46,7 +46,7 @@ class OntologyTest < Minitest::Test
     # Add a node with properly formatted hierarchical tags
     node_id = @htm.remember(
       "Ruby on Rails is a web framework for building database-backed applications",
-      source: "user",
+      speaker: "user",
       tags: ["web:frameworks:rails", "programming:ruby", "database:orm"]
     )
 
@@ -66,7 +66,7 @@ class OntologyTest < Minitest::Test
     # Add a node with tags from multiple perspectives
     node_id = @htm.remember(
       "Machine learning models for database query optimization can improve performance by 30-50%",
-      source: "user",
+      speaker: "user",
       tags: ["ai:machine-learning:optimization", "database:performance:query-optimization", "performance:improvement"]
     )
 
@@ -87,7 +87,7 @@ class OntologyTest < Minitest::Test
     # Add a node with initial tags
     node_id = @htm.remember(
       "Initial content about Ruby programming",
-      source: "user",
+      speaker: "user",
       tags: ["programming:ruby", "language:interpreted"]
     )
 
@@ -115,12 +115,38 @@ class OntologyTest < Minitest::Test
     delete_node(node_id)
   end
 
+  def test_ontology_structure_view
+    # Add several nodes with related hierarchical tags
+    nodes = []
+    3.times do |i|
+      nodes << @htm.remember(
+        "PostgreSQL database content number #{i}",
+        speaker: "user",
+        tags: ["database:postgresql", "storage:relational"]
+      )
+    end
+
+    # Query the ontology_structure view
+    structure = query_ontology_structure
+
+    # Verify the view returns results
+    refute_empty structure, "Ontology structure view should return data"
+
+    # Verify structure has expected columns
+    first_row = structure.first
+    assert first_row.key?('root_topic'), "Should have root_topic column"
+    assert first_row.key?('full_path'), "Should have full_path column"
+    assert first_row.key?('node_count'), "Should have node_count column"
+
+    # Clean up
+    nodes.each { |node_id| delete_node(node_id) }
+  end
 
   def test_topic_uniqueness_per_node
     # Add a node with tags (database enforces uniqueness via UNIQUE constraint)
     node_id = @htm.remember(
       "Ruby programming language",
-      source: "user",
+      speaker: "user",
       tags: ["programming:ruby", "language:interpreted", "programming:ruby"]  # Duplicate intentionally
     )
 
@@ -139,7 +165,7 @@ class OntologyTest < Minitest::Test
     # Verify that node creation succeeds even without tags
     node_id = @htm.remember(
       "Test content without tags",
-      source: "user"
+      speaker: "user"
     )
 
     # Node should be created successfully
@@ -156,7 +182,7 @@ class OntologyTest < Minitest::Test
     # Add a node with deep hierarchy tags
     node_id = @htm.remember(
       "TimescaleDB continuous aggregates with real-time materialization for time-series analytics",
-      source: "user",
+      speaker: "user",
       tags: [
         "database:timescaledb:features:continuous-aggregates",
         "analytics:time-series:real-time"
@@ -175,12 +201,42 @@ class OntologyTest < Minitest::Test
     delete_node(node_id)
   end
 
+  def test_topic_relationships_view
+    # Add multiple nodes with overlapping tags
+    nodes = []
+    nodes << @htm.remember("PostgreSQL basics", speaker: "user",
+                              tags: ["database:postgresql", "sql:basics"])
+    nodes << @htm.remember("PostgreSQL advanced features", speaker: "user",
+                              tags: ["database:postgresql", "sql:advanced"])
+    nodes << @htm.remember("Database design", speaker: "user",
+                              tags: ["database:design", "architecture"])
+
+    # Query topic relationships view
+    relationships = query_topic_relationships
+
+    # If we have relationships, verify structure
+    unless relationships.empty?
+      first_rel = relationships.first
+      assert first_rel.key?('topic1'), "Should have topic1 column"
+      assert first_rel.key?('topic2'), "Should have topic2 column"
+      assert first_rel.key?('shared_nodes'), "Should have shared_nodes column"
+
+      # Should show that database:postgresql co-occurs with sql:basics and sql:advanced
+      assert relationships.any? { |r|
+        (r['topic1'] == 'database:postgresql' || r['topic2'] == 'database:postgresql') &&
+        r['shared_nodes'].to_i >= 2
+      }, "Should have relationship for database:postgresql appearing in multiple nodes"
+    end
+
+    # Clean up
+    nodes.each { |node_id| delete_node(node_id) }
+  end
 
   def test_empty_tag_array_no_topics
     # Add a node with empty tags array
     node_id = @htm.remember(
       "Content with empty tags array",
-      source: "user",
+      speaker: "user",
       tags: []
     )
 
@@ -197,46 +253,54 @@ class OntologyTest < Minitest::Test
 
   # Helper method to get topics for a node
   def get_node_topics(node_id)
-    HTM::Models::NodeTag
-      .joins(:tag)
-      .where(node_id: node_id)
-      .pluck('tags.name')
-      .sort
+    @htm.long_term_memory.send(:with_connection) do |conn|
+      result = conn.exec_params(
+        "SELECT tag FROM tags WHERE node_id = $1 ORDER BY tag",
+        [node_id]
+      )
+      result.map { |row| row['tag'] }
+    end
   end
 
   # Helper method to delete a node by ID
   def delete_node(node_id)
-    HTM::Models::Node.find(node_id).destroy
+    @htm.long_term_memory.send(:with_connection) do |conn|
+      conn.exec_params("DELETE FROM nodes WHERE id = $1", [node_id])
+    end
   end
 
   # Helper method to delete all tags for a node
   def delete_node_tags(node_id)
-    HTM::Models::NodeTag.where(node_id: node_id).destroy_all
+    @htm.long_term_memory.send(:with_connection) do |conn|
+      conn.exec_params("DELETE FROM tags WHERE node_id = $1", [node_id])
+    end
   end
 
   # Helper method to add tags to a node
   def add_node_tags(node_id, tags)
-    tags.each do |tag_name|
-      tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
-      HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+    @htm.long_term_memory.send(:with_connection) do |conn|
+      tags.each do |tag|
+        conn.exec_params(
+          "INSERT INTO tags (node_id, tag) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+          [node_id, tag]
+        )
+      end
     end
   end
 
   # Helper method to query ontology structure view
   def query_ontology_structure
-    result = HTM::Models::Node.connection.exec_query(
-      "SELECT * FROM ontology_structure LIMIT 10",
-      "Query Ontology Structure"
-    )
-    result.to_a
+    @htm.long_term_memory.send(:with_connection) do |conn|
+      result = conn.exec("SELECT * FROM ontology_structure LIMIT 10")
+      result.to_a
+    end
   end
 
   # Helper method to query topic relationships view
   def query_topic_relationships
-    result = HTM::Models::Node.connection.exec_query(
-      "SELECT * FROM topic_relationships LIMIT 10",
-      "Query Topic Relationships"
-    )
-    result.to_a
+    @htm.long_term_memory.send(:with_connection) do |conn|
+      result = conn.exec("SELECT * FROM topic_relationships LIMIT 10")
+      result.to_a
+    end
   end
 end
