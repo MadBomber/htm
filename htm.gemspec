@@ -42,7 +42,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency "tiktoken_ruby"
   spec.add_dependency "ruby_llm"
   spec.add_dependency "lru_redux"
-  spec.add_dependency "async-job"
+
+  # Optional runtime dependencies for different job backends
+  # - ActiveJob (bundled with Rails)
+  # - Sidekiq (add to Gemfile if using :sidekiq backend)
 
   # Development dependencies
   spec.add_development_dependency "rake"
