@@ -3,17 +3,25 @@
   <!-- img src="docs/assets/images/htm.jpg" alt="HTM - Hierarchical Temporal Memory" width="600" -->
   <img src="docs/assets/images/htm_demo.gif" alt="HTM Demo" width="400">
 
-  <p>Intelligent memory management for LLM-based applications. HTM implements a two-tier memory system with durable long-term storage and token-limited working memory, enabling robots to recall context from past conversations using RAG (Retrieval-Augmented Generation).</p>
+  <p>A hierarchical and temporal system for encoding, storing, and retrieving information—operating across varying levels of abstraction (from simple to detailed concepts and their relationships) and across time (from the present to the past).<br/>
+  </p>
 </div>
 
 <br/><br/>
 
 > [!CAUTION]
-> This library is under active development. APIs and features may change without notice. Not recommended for production use yet.
+> This library is under active development and experimentation. APIs and features may change without notice. Not recommended for production use yet... and the documentation may lie to you!
 > <br /><br/>
 > Apologies to Jeff Hawkins for using his term in such a macro-superficial way.
 
-<br/><br/>
+
+## What does it mean?
+
+- **Hierarchical**: operates across multiple levels of abstraction, from simple concepts to detailed relationships
+- **Temporal**: functions across time, from the present moment to historical data
+- **Memory function**: encodes, stores, and retrieves information
+
+**HTM**: a hierarchical and temporal memory system that organizes and recalls information at multiple levels of detail over extended timeframes.
 
 ## Features
 
