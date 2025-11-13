@@ -14,7 +14,7 @@
 
   <!-- Title -->
   <text x="475" y="30" text-anchor="middle" class="text-header">Long-term Memory Architecture</text>
-  <text x="475" y="50" text-anchor="middle" class="text-small">PostgreSQL/TimescaleDB</text>
+  <text x="475" y="50" text-anchor="middle" class="text-small">PostgreSQL</text>
 
   <!-- Main Container -->
   <rect x="50" y="75" width="850" height="590" class="ltm-box" rx="5"/>
@@ -83,9 +83,9 @@
   <text x="350" y="485" class="text-tiny">• Supports ts_rank scoring</text>
   <text x="350" y="500" class="text-tiny">⚡ Fast keyword matching</text>
 
-  <!-- TimescaleDB Chunks -->
+  <!-- PostgreSQL Chunks -->
   <rect x="610" y="390" width="250" height="120" class="hypertable" rx="3"/>
-  <text x="735" y="410" text-anchor="middle" class="text-label" fill="#9C27B0">TimescaleDB Chunks</text>
+  <text x="735" y="410" text-anchor="middle" class="text-label" fill="#9C27B0">PostgreSQL Chunks</text>
   <text x="620" y="435" class="text-small">Time-series Partitioning</text>
   <text x="620" y="455" class="text-tiny">• Auto-partitioning by time</text>
   <text x="620" y="470" class="text-tiny">• Compression policies</text>

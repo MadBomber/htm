@@ -51,7 +51,7 @@
   <rect x="100" y="560" width="600" height="100" fill="rgba(121, 85, 72, 0.2)" stroke="#795548" stroke-width="2" rx="5"/>
   <text x="400" y="585" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Data Layer</text>
   <text x="250" y="615" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL 16+</text>
-  <text x="400" y="615" text-anchor="middle" fill="#B0B0B0" font-size="12">TimescaleDB</text>
+  <text x="400" y="615" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL</text>
   <text x="550" y="615" text-anchor="middle" fill="#B0B0B0" font-size="12">pgvector</text>
   <text x="400" y="640" text-anchor="middle" fill="#B0B0B0" font-size="11">Hypertables • Vector Indexes • Full-Text Search</text>
 

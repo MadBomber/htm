@@ -79,7 +79,7 @@
   <!-- Shared Long-term Memory -->
   <rect x="150" y="370" width="700" height="250" class="shared-box" rx="5"/>
   <text x="500" y="400" text-anchor="middle" class="text-header" font-size="18">Long-term Memory (Shared)</text>
-  <text x="500" y="420" text-anchor="middle" class="text-small">PostgreSQL/TimescaleDB</text>
+  <text x="500" y="420" text-anchor="middle" class="text-small">PostgreSQL</text>
 
   <!-- Shared memory features -->
   <rect x="170" y="445" width="160" height="160" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
