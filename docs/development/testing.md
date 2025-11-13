@@ -52,7 +52,7 @@ HTM uses **Minitest** as its testing framework. The test suite is organized into
 **Characteristics**:
 
 - Slower execution (seconds)
-- Requires PostgreSQL/TimescaleDB
+- Requires PostgreSQL
 - Requires Ollama for embeddings
 - Tests real-world scenarios
 - Tests database interactions

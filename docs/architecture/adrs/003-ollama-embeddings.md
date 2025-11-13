@@ -405,7 +405,6 @@ htm = HTM.new(
 - [pgai Documentation](https://github.com/timescale/pgai)
 - [ADR-011: Database-Side Embedding Generation with pgai](011-pgai-integration.md) - **Supersedes this ADR**
 - [HTM Setup Guide](../../installation.md)
-- [PGAI_MIGRATION.md](../../../PGAI_MIGRATION.md) - Migration guide to pgai
 
 ---
 

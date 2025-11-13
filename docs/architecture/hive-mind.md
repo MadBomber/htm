@@ -13,7 +13,7 @@ In the hive mind model, all robots access a single shared long-term memory datab
   <!-- Central Database -->
   <ellipse cx="450" cy="300" rx="180" ry="120" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3"/>
   <text x="450" y="280" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Long-Term Memory</text>
-  <text x="450" y="305" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL/TimescaleDB</text>
+  <text x="450" y="305" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL</text>
   <text x="450" y="325" text-anchor="middle" fill="#B0B0B0" font-size="12">Shared Global Database</text>
   <text x="450" y="345" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">All Robots Access Here</text>
 
@@ -127,7 +127,7 @@ HTM uses a hybrid memory topology:
   <!-- Shared Long-Term Memory -->
   <rect x="150" y="280" width="500" height="150" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3" rx="5"/>
   <text x="400" y="310" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Long-Term Memory (Shared)</text>
-  <text x="400" y="340" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL/TimescaleDB</text>
+  <text x="400" y="340" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL</text>
   <text x="400" y="365" text-anchor="middle" fill="#B0B0B0" font-size="12">All robots read/write here</text>
   <text x="400" y="390" text-anchor="middle" fill="#B0B0B0" font-size="12">Memories attributed with robot_id</text>
   <text x="400" y="410" text-anchor="middle" fill="#4CAF50" font-size="12" font-weight="bold">Single Source of Truth</text>

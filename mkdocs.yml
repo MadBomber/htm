@@ -137,9 +137,6 @@ extra:
     - icon: fontawesome/solid/gem
       link: https://rubygems.org/gems/htm
       name: HTM on RubyGems
-  
-  version:
-    provider: mike
 
 # Navigation
 nav:
@@ -162,6 +159,8 @@ nav:
       - ADR-007 Eviction Strategy: architecture/adrs/007-eviction-strategy.md
       - ADR-008 Robot Identification: architecture/adrs/008-robot-identification.md
       - ADR-009 Never-Forget Philosophy: architecture/adrs/009-never-forget.md
+      - ADR-010 Redis Working Memory (Rejected): architecture/adrs/010-redis-working-memory-rejected.md
+      - ADR-011 pgai Integration: architecture/adrs/011-pgai-integration.md
   - Guides:
     - guides/index.md
     - Getting Started: guides/getting-started.md
@@ -185,3 +184,7 @@ nav:
     - Testing: development/testing.md
     - Contributing: development/contributing.md
     - Database Schema: development/schema.md
+    - Multi-Framework Support: multi_framework_support.md
+    - Database Rake Tasks: database_rake_tasks.md
+    - Using Rake Tasks: using_rake_tasks_in_your_app.md
+    - Setup Local Database: setup_local_database.md

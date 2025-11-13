@@ -29,7 +29,7 @@ memories = htm.recall("PostgreSQL", limit: 10)
 puts "Found #{memories.length} memories"
 ```
 
-**Example:** [`examples/cli_app/htm_cli.rb`](../examples/cli_app/htm_cli.rb)
+**Example:** [`examples/cli_app/htm_cli.rb`](https://github.com/madbomber/htm/blob/main/examples/cli_app/htm_cli.rb)
 
 ---
 
@@ -62,7 +62,7 @@ class MyApp < Sinatra::Base
 end
 ```
 
-**Example:** [`examples/sinatra_app/app.rb`](../examples/sinatra_app/app.rb)
+**Example:** [`examples/sinatra_app/app.rb`](https://github.com/madbomber/htm/blob/main/examples/sinatra_app/app.rb)
 
 ---
 
@@ -495,8 +495,8 @@ register_htm  # Auto-configures Sidekiq
 
 See working examples in the repository:
 
-- **CLI:** [`examples/cli_app/htm_cli.rb`](../examples/cli_app/htm_cli.rb)
-- **Sinatra:** [`examples/sinatra_app/app.rb`](../examples/sinatra_app/app.rb)
+- **CLI:** [`examples/cli_app/htm_cli.rb`](https://github.com/madbomber/htm/blob/main/examples/cli_app/htm_cli.rb)
+- **Sinatra:** [`examples/sinatra_app/app.rb`](https://github.com/madbomber/htm/blob/main/examples/sinatra_app/app.rb)
 - **Rails:** `examples/rails_app/` (full Rails 7 app)
 
 ---

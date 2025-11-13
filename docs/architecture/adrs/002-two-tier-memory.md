@@ -44,7 +44,7 @@ LLM-based applications face a fundamental challenge: LLMs have limited context w
 We will implement a **two-tier memory architecture** with:
 
 - **Working Memory**: Token-limited, in-memory active context
-- **Long-term Memory**: Durable PostgreSQL/TimescaleDB storage
+- **Long-term Memory**: Durable PostgreSQL storage
 
 ---
 

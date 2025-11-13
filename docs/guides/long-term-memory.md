@@ -1,6 +1,6 @@
 # Long-term Memory
 
-Long-term memory is HTM's durable PostgreSQL/TimescaleDB storage layer. This guide covers database operations, maintenance, performance optimization, and advanced queries.
+Long-term memory is HTM's durable PostgreSQL storage layer. This guide covers database operations, maintenance, performance optimization, and advanced queries.
 
 ## Architecture Overview
 

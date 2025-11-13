@@ -1,16 +1,17 @@
-# HTM - Hierarchical Temporary Memory
+<div align="center">
+  <img src="assets/images/htm_demo.gif" alt="Tree of Knowledge" width="800">
+</div>
 
-Welcome to HTM, an intelligent memory management system designed specifically for LLM-based applications and AI robots.
+<p>A hierarchical and temporal system for encoding, storing, and retrieving information—operating across varying levels of abstraction (from simple to detailed concepts and their relationships) and across time (from the present to the past).<br/>
+</p>
 
-## What is HTM?
+## What does it mean?
 
-HTM (Hierarchical Temporary Memory) provides a sophisticated two-tier memory architecture that enables LLM applications to remember and recall information across conversations, making your AI robots truly intelligent and context-aware.
+- **Hierarchical**: operates across multiple levels of abstraction, from simple concepts to detailed relationships
+- **Temporal**: functions across time, from the present moment to historical data
+- **Memory function**: encodes, stores, and retrieves information
 
-Think of HTM as a human-like memory system for your AI:
-
-- **Working Memory**: Like human short-term memory, HTM maintains a token-limited context of immediately relevant information for your LLM
-- **Long-term Memory**: Like human long-term memory, HTM stores all experiences durably in PostgreSQL/TimescaleDB
-- **Smart Recall**: Using RAG (Retrieval-Augmented Generation), HTM intelligently retrieves relevant memories based on context, time, and semantic similarity
+**HTM**: a hierarchical and temporal memory system that organizes and recalls information at multiple levels of detail over extended timeframes.
 
 ## Key Features
 
@@ -19,7 +20,7 @@ Think of HTM as a human-like memory system for your AI:
 HTM implements a realistic memory model inspired by human cognition:
 
 - **Working Memory**: Token-limited active context optimized for immediate LLM consumption
-- **Long-term Memory**: Durable PostgreSQL/TimescaleDB storage that persists forever
+- **Long-term Memory**: Durable PostgreSQL storage that persists forever
 
 The two tiers work seamlessly together - working memory pulls from long-term storage as needed, and automatically evicts less important memories back to long-term storage when space is limited.
 
@@ -59,15 +60,6 @@ Build rich relationship networks between memories:
 - Tag-based categorization
 - Importance scoring for prioritization
 - Navigate memory relationships programmatically
-
-### Time-Series Optimized
-
-Built on TimescaleDB for exceptional performance:
-
-- Hypertables for efficient time-range queries
-- Automatic compression for old data
-- Fast queries across billions of memories
-- Production-ready scalability
 
 ## Quick Example
 
@@ -149,7 +141,7 @@ HTM consists of several key components working together:
 │ Working Memory  │              │ Long-term Memory │
 │  (In-Memory)    │◄────────────►│  (PostgreSQL)    │
 │  128k tokens    │  Eviction    │  ∞ storage       │
-│  Fast access    │  & Recall    │  TimescaleDB     │
+│  Fast access    │  & Recall    │                  │
 └─────────────────┘              └──────────────────┘
                                            │
                                            ▼
@@ -164,7 +156,7 @@ HTM consists of several key components working together:
 
 - **HTM API**: Main interface for all memory operations
 - **WorkingMemory**: Token-limited in-memory cache for immediate LLM use
-- **LongTermMemory**: PostgreSQL-backed durable storage with TimescaleDB optimization
+- **LongTermMemory**: PostgreSQL-backed durable storage
 - **EmbeddingService**: Generates vector embeddings via RubyLLM and Ollama
 - **Database**: Schema management and connection pooling
 

@@ -1,6 +1,6 @@
 # LongTermMemory Class
 
-PostgreSQL/TimescaleDB-backed permanent memory storage with RAG-based retrieval.
+PostgreSQL-backed permanent memory storage with RAG-based retrieval.
 
 ## Overview
 

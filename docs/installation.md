@@ -8,7 +8,6 @@ Before installing HTM, ensure you have:
 
 - **Ruby 3.0 or higher** - HTM requires modern Ruby features
 - **PostgreSQL 17+** - For the database backend
-- **TimescaleDB** - PostgreSQL extension for time-series optimization
 - **Ollama** - For generating vector embeddings (via RubyLLM)
 
 ### Check Your Ruby Version
@@ -58,45 +57,9 @@ gem install htm
 
 ## Step 2: Database Setup
 
-HTM requires PostgreSQL with TimescaleDB extensions. You have two options:
+HTM requires PostgreSQL 17+ with the pgvector extension.
 
-### Option A: TimescaleDB Cloud (Recommended for Quick Start)
-
-The easiest way to get started is using [TimescaleDB Cloud](https://www.timescale.com/):
-
-1. **Create a Free Account**: Sign up at [https://www.timescale.com/](https://www.timescale.com/)
-
-2. **Create a Service**:
-   - Click "Create Service"
-   - Select your region (choose closest to you)
-   - Choose the free tier or your preferred plan
-   - Wait for provisioning (2-3 minutes)
-
-3. **Get Connection Details**:
-   - Click on your service
-   - Copy the connection string (looks like `postgres://username:password@host:port/database?sslmode=require`)
-
-4. **Save Connection URL**:
-
-```bash
-# Add to ~/.bashrc__tiger (or your preferred config file)
-export HTM_DBURL="postgres://username:password@host:port/tsdb?sslmode=require"
-export HTM_DBNAME="tsdb"
-export HTM_DBUSER="tsdbadmin"
-export HTM_DBPASS="your_password"
-export HTM_DBPORT="37807"
-export HTM_SERVICE_NAME="your_service_name"
-
-# Load the configuration
-source ~/.bashrc__tiger
-```
-
-!!! tip "Environment Configuration"
-    HTM automatically uses the `HTM_DBURL` environment variable if available. You can also pass database configuration directly to `HTM.new()`.
-
-### Option B: Local PostgreSQL Installation
-
-If you prefer running PostgreSQL locally:
+### Option A: Local PostgreSQL Installation
 
 #### macOS (using Homebrew)
 
@@ -106,16 +69,6 @@ brew install postgresql@17
 
 # Start PostgreSQL service
 brew services start postgresql@17
-
-# Install TimescaleDB
-brew tap timescale/tap
-brew install timescaledb
-
-# Run TimescaleDB setup
-timescaledb-tune --quiet --yes
-
-# Restart PostgreSQL
-brew services restart postgresql@17
 ```
 
 #### Linux (Ubuntu/Debian)
@@ -129,22 +82,12 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-
 sudo apt-get update
 sudo apt-get install postgresql-17 postgresql-client-17
 
-# Add TimescaleDB repository
-echo "deb https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -c -s) main" | sudo tee /etc/apt/sources.list.d/timescaledb.list
-
-# Install TimescaleDB
-wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | sudo apt-key add -
-sudo apt-get update
-sudo apt-get install timescaledb-2-postgresql-17
-
-# Configure TimescaleDB
-sudo timescaledb-tune
-
-# Restart PostgreSQL
-sudo systemctl restart postgresql
+# Start PostgreSQL service
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
 ```
 
-#### Create Database
+### Create Database
 
 ```bash
 # Create database and user
@@ -152,10 +95,27 @@ createdb htm_db
 psql htm_db
 
 # In psql console:
-CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 CREATE EXTENSION IF NOT EXISTS pgvector;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
+
+### Configure Environment Variables
+
+```bash
+# Add to ~/.bashrc or your preferred config file
+export HTM_DBURL="postgres://username:password@localhost:5432/htm_db"
+export HTM_DBNAME="htm_db"
+export HTM_DBUSER="your_username"
+export HTM_DBPASS="your_password"
+export HTM_DBPORT="5432"
+export HTM_DBHOST="localhost"
+
+# Load the configuration
+source ~/.bashrc
+```
+
+!!! tip "Environment Configuration"
+    HTM automatically uses the `HTM_DBURL` environment variable if available. You can also pass database configuration directly to `HTM.new()`.
 
 Set environment variable:
 
@@ -165,9 +125,8 @@ export HTM_DBURL="postgres://localhost/htm_db"
 
 ## Step 3: Enable PostgreSQL Extensions
 
-HTM requires three PostgreSQL extensions:
+HTM requires two PostgreSQL extensions:
 
-- **TimescaleDB**: Time-series optimization
 - **pgvector**: Vector similarity search
 - **pg_trgm**: Full-text search
 
@@ -192,11 +151,10 @@ Expected output:
 ```
 ✓ pg_trgm: Version 1.6
 ✓ pgvector: Version 0.8.1
-✓ timescaledb: Version 2.22.1
 ```
 
 !!! warning "Missing Extensions"
-    If extensions are missing, contact your database administrator or TimescaleDB Cloud support. Most cloud services include these extensions by default.
+    If extensions are missing, you may need to install them. On Debian/Ubuntu: `sudo apt-get install postgresql-17-pgvector`. On macOS: `brew install pgvector`.
 
 ## Step 4: Install Ollama
 
@@ -301,7 +259,7 @@ This creates the following tables:
 - **`relationships`**: Knowledge graph connections
 - **`tags`**: Flexible categorization
 - **`robots`**: Robot registry
-- **`operations_log`**: Audit trail (TimescaleDB hypertable)
+- **`operations_log`**: Audit trail
 
 !!! success "Schema Created"
     You'll see confirmation messages as each table and index is created.
@@ -375,8 +333,8 @@ HTM uses the following environment variables:
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `HTM_DBURL` | PostgreSQL connection URL | - | Yes |
-| `HTM_DBNAME` | Database name | `tsdb` | No |
-| `HTM_DBUSER` | Database user | `tsdbadmin` | No |
+| `HTM_DBNAME` | Database name | `htm_db` | No |
+| `HTM_DBUSER` | Database user | `postgres` | No |
 | `HTM_DBPASS` | Database password | - | No |
 | `HTM_DBPORT` | Database port | `5432` | No |
 | `OLLAMA_URL` | Ollama API URL | `http://localhost:11434` | No |
@@ -448,10 +406,6 @@ ollama list | grep gpt-oss
 **Solutions**:
 
 ```bash
-# For TimescaleDB Cloud users:
-# Extensions should be pre-installed. Contact support if missing.
-
-# For local installations:
 # Install pgvector
 git clone https://github.com/pgvector/pgvector.git
 cd pgvector
@@ -518,7 +472,6 @@ If you encounter issues:
 ## Additional Resources
 
 - **Ollama Documentation**: [https://ollama.ai/](https://ollama.ai/)
-- **TimescaleDB Documentation**: [https://docs.timescale.com/](https://docs.timescale.com/)
 - **pgvector Documentation**: [https://github.com/pgvector/pgvector](https://github.com/pgvector/pgvector)
 - **PostgreSQL Documentation**: [https://www.postgresql.org/docs/](https://www.postgresql.org/docs/)
 - **RubyLLM Documentation**: [https://github.com/madbomber/ruby_llm](https://github.com/madbomber/ruby_llm)

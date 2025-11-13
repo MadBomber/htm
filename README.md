@@ -1,7 +1,7 @@
 <div align="center">
   <h1>HTM</h1>
   <!-- img src="docs/assets/images/htm.jpg" alt="HTM - Hierarchical Temporal Memory" width="600" -->
-  <img src="docs/assets/images/htm_demo.gif" alt="HTM Demo" width="400">
+  <img src="docs/assets/images/htm_demo.gif" alt="Tree of Knowledge is Growing" width="400">
 
   <p>A hierarchical and temporal system for encoding, storing, and retrieving information—operating across varying levels of abstraction (from simple to detailed concepts and their relationships) and across time (from the present to the past).<br/>
   </p>

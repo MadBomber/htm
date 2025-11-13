@@ -7,7 +7,7 @@ Welcome to the HTM (Hierarchical Temporary Memory) user guide collection. These 
 HTM is an intelligent memory management system for LLM robots that implements a two-tier architecture:
 
 - **Working Memory**: Token-limited active context for immediate LLM use
-- **Long-term Memory**: Durable PostgreSQL/TimescaleDB storage for permanent knowledge
+- **Long-term Memory**: Durable PostgreSQL storage for permanent knowledge
 
 HTM enables your robots to recall context from past conversations using RAG (Retrieval-Augmented Generation), creating continuity across sessions and enabling sophisticated multi-robot collaboration.
 

@@ -379,5 +379,5 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO your_user;
 ## See Also
 
 - [Database Rake Tasks Reference](database_rake_tasks.md) - Complete task documentation
-- [README.md](../README.md) - HTM gem overview
-- [SETUP.md](../SETUP.md) - Initial setup guide
+- [README.md](https://github.com/madbomber/htm/blob/main/README.md) - HTM gem overview
+- [SETUP.md](https://github.com/madbomber/htm/blob/main/SETUP.md) - Initial setup guide

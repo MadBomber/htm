@@ -7,14 +7,14 @@ Complete API documentation for HTM (Hierarchical Temporary Memory).
 HTM is a two-tier intelligent memory management system for LLM-based robots:
 
 - **Working Memory**: Token-limited active context for immediate LLM use
-- **Long-term Memory**: Durable PostgreSQL/TimescaleDB storage with RAG-based retrieval
+- **Long-term Memory**: Durable PostgreSQL storage with RAG-based retrieval
 
 ## Class Hierarchy
 
 ```
 HTM (main class)
 ├── HTM::WorkingMemory (token-limited active context)
-├── HTM::LongTermMemory (PostgreSQL/TimescaleDB backend)
+├── HTM::LongTermMemory (PostgreSQL backend)
 ├── HTM::EmbeddingService (vector embeddings)
 └── HTM::Database (schema setup and configuration)
 ```

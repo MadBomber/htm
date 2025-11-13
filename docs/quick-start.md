@@ -61,7 +61,7 @@ Get started with HTM in just 5 minutes! This guide will walk you through buildin
   <rect x="500" y="250" width="300" height="120" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="2" rx="5"/>
   <text x="650" y="275" text-anchor="middle" fill="#E0E0E0" font-size="13" font-weight="bold">Long-Term Memory (Durable)</text>
   <text x="520" y="300" fill="#B0B0B0" font-size="11">• Unlimited storage</text>
-  <text x="520" y="320" fill="#B0B0B0" font-size="11">• PostgreSQL + TimescaleDB</text>
+  <text x="520" y="320" fill="#B0B0B0" font-size="11">• PostgreSQL</text>
   <text x="520" y="340" fill="#B0B0B0" font-size="11">• RAG search (vector + text)</text>
   <text x="520" y="360" fill="#4CAF50" font-size="10" font-weight="bold">Permanent storage</text>
 
@@ -155,7 +155,7 @@ puts "\n1. Adding a project decision..."
 
 htm.add_node(
   "decision_001",                    # Unique key
-  "We decided to use PostgreSQL with TimescaleDB for the database " \
+  "We decided to use PostgreSQL for the database " \
   "because it provides excellent time-series optimization and " \
   "native vector search with pgvector.",
   type: :decision,                   # Memory type
@@ -352,7 +352,7 @@ puts "✓ HTM initialized for '#{htm.robot_name}'"
 # Step 2: Add memories
 htm.add_node(
   "decision_001",
-  "We decided to use PostgreSQL with TimescaleDB for the database.",
+  "We decided to use PostgreSQL for the database.",
   type: :decision,
   category: "architecture",
   importance: 9.0,
@@ -466,8 +466,8 @@ htm.add_node(
 
 # Add another related concept
 htm.add_node(
-  "concept_timescaledb",
-  "TimescaleDB extends PostgreSQL with time-series optimization.",
+  "concept_postgresql",
+  "PostgreSQL provides robust relational database capabilities.",
   type: :fact,
   importance: 8.0,
   related_to: ["concept_postgresql", "concept_databases"]
@@ -476,7 +476,7 @@ htm.add_node(
 # Now you have a knowledge graph:
 # concept_databases
 #   ├── concept_postgresql
-#   │    └── concept_timescaledb
+#   │    └── concept_postgresql
 ```
 
 ## Forget (Explicit Deletion)

@@ -7,7 +7,7 @@ The main interface for HTM's intelligent memory management system.
 `HTM` is the primary class that orchestrates the two-tier memory system:
 
 - **Working Memory**: Token-limited active context for immediate LLM use
-- **Long-term Memory**: Durable PostgreSQL/TimescaleDB storage
+- **Long-term Memory**: Durable PostgreSQL storage
 
 Key features:
 

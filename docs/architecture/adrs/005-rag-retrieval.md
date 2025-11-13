@@ -515,7 +515,6 @@ end
 - [ADR-003: Ollama Embeddings](003-ollama-embeddings.md) - **Superseded by ADR-011**
 - [ADR-011: Database-Side Embedding Generation with pgai](011-pgai-integration.md) - **Superseded (returned to client-side)**
 - [Search Strategies Guide](../../guides/search-strategies.md)
-- [PGAI_MIGRATION.md](../../../PGAI_MIGRATION.md) - Migration guide
 
 ---
 

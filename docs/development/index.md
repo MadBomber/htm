@@ -271,7 +271,7 @@ htm/
 │   ├── embedding_service_test.rb # Embedding tests
 │   └── integration_test.rb      # Integration tests
 ├── sql/                    # Database schemas
-│   └── schema.sql              # PostgreSQL/TimescaleDB schema
+│   └── schema.sql              # PostgreSQL schema
 ├── examples/              # Usage examples
 │   └── basic_usage.rb          # Basic usage demonstration
 ├── docs/                   # Documentation (MkDocs)

@@ -22,7 +22,7 @@ HTM provides intelligent memory management through five core components that wor
   <!-- Long-Term Memory -->
   <rect x="300" y="200" width="200" height="120" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="2" rx="5"/>
   <text x="400" y="235" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Long-Term Memory</text>
-  <text x="400" y="255" text-anchor="middle" fill="#B0B0B0" font-size="11">PostgreSQL/TimescaleDB</text>
+  <text x="400" y="255" text-anchor="middle" fill="#B0B0B0" font-size="11">PostgreSQL</text>
   <text x="400" y="275" text-anchor="middle" fill="#B0B0B0" font-size="11">Unlimited Capacity</text>
   <text x="400" y="295" text-anchor="middle" fill="#B0B0B0" font-size="11">Durable Storage</text>
 
@@ -97,7 +97,7 @@ Token-limited, in-memory storage for active conversation context. Working memory
 
 ### Long-Term Memory
 
-Durable PostgreSQL/TimescaleDB storage for permanent knowledge retention. All memories are stored here permanently unless explicitly deleted.
+Durable PostgreSQL storage for permanent knowledge retention. All memories are stored here permanently unless explicitly deleted.
 
 **Characteristics:**
 
