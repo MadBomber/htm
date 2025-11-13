@@ -11,13 +11,7 @@ HTM is a two-tier intelligent memory management system for LLM-based robots:
 
 ## Class Hierarchy
 
-```
-HTM (main class)
-├── HTM::WorkingMemory (token-limited active context)
-├── HTM::LongTermMemory (PostgreSQL backend)
-├── HTM::EmbeddingService (vector embeddings)
-└── HTM::Database (schema setup and configuration)
-```
+![HTM Class Hierarchy](../assets/images/class-hierarchy.svg)
 
 ## Class Diagram
 

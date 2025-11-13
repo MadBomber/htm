@@ -1,0 +1,78 @@
+<svg viewBox="0 0 800 900" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="bold">HTM Project Structure</text>
+
+  <!-- Root -->
+  <text x="50" y="70" fill="#4CAF50" font-size="14" font-weight="bold">htm/</text>
+
+  <!-- lib/ -->
+  <text x="70" y="100" fill="#2196F3" font-size="13" font-weight="bold">├── lib/</text>
+  <text x="250" y="100" fill="#B0B0B0" font-size="11">Main library code</text>
+  <text x="90" y="125" fill="#FF9800" font-size="12">├── htm.rb</text>
+  <text x="250" y="125" fill="#B0B0B0" font-size="10">HTM main class</text>
+  <text x="90" y="150" fill="#FF9800" font-size="12">└── htm/</text>
+  <text x="120" y="175" fill="#FFC107" font-size="11">├── database.rb</text>
+  <text x="300" y="175" fill="#B0B0B0" font-size="10">Database setup and management</text>
+  <text x="120" y="200" fill="#FFC107" font-size="11">├── long_term_memory.rb</text>
+  <text x="300" y="200" fill="#B0B0B0" font-size="10">PostgreSQL-backed storage</text>
+  <text x="120" y="225" fill="#FFC107" font-size="11">├── working_memory.rb</text>
+  <text x="300" y="225" fill="#B0B0B0" font-size="10">In-memory active context</text>
+  <text x="120" y="250" fill="#FFC107" font-size="11">├── embedding_service.rb</text>
+  <text x="300" y="250" fill="#B0B0B0" font-size="10">Vector embedding generation</text>
+  <text x="120" y="275" fill="#FFC107" font-size="11">└── version.rb</text>
+  <text x="300" y="275" fill="#B0B0B0" font-size="10">Version constant</text>
+
+  <!-- test/ -->
+  <text x="70" y="310" fill="#2196F3" font-size="13" font-weight="bold">├── test/</text>
+  <text x="250" y="310" fill="#B0B0B0" font-size="11">Test suite</text>
+  <text x="90" y="335" fill="#FF9800" font-size="12">├── test_helper.rb</text>
+  <text x="300" y="335" fill="#B0B0B0" font-size="10">Test configuration</text>
+  <text x="90" y="360" fill="#FF9800" font-size="12">├── htm_test.rb</text>
+  <text x="300" y="360" fill="#B0B0B0" font-size="10">Unit tests</text>
+  <text x="90" y="385" fill="#FF9800" font-size="12">├── embedding_service_test.rb</text>
+  <text x="300" y="385" fill="#B0B0B0" font-size="10">Embedding tests</text>
+  <text x="90" y="410" fill="#FF9800" font-size="12">└── integration_test.rb</text>
+  <text x="300" y="410" fill="#B0B0B0" font-size="10">Integration tests</text>
+
+  <!-- sql/ -->
+  <text x="70" y="445" fill="#2196F3" font-size="13" font-weight="bold">├── sql/</text>
+  <text x="250" y="445" fill="#B0B0B0" font-size="11">Database schemas</text>
+  <text x="90" y="470" fill="#FF9800" font-size="12">└── schema.sql</text>
+  <text x="300" y="470" fill="#B0B0B0" font-size="10">PostgreSQL schema</text>
+
+  <!-- examples/ -->
+  <text x="70" y="505" fill="#2196F3" font-size="13" font-weight="bold">├── examples/</text>
+  <text x="250" y="505" fill="#B0B0B0" font-size="11">Usage examples</text>
+  <text x="90" y="530" fill="#FF9800" font-size="12">└── basic_usage.rb</text>
+  <text x="300" y="530" fill="#B0B0B0" font-size="10">Basic usage demonstration</text>
+
+  <!-- docs/ -->
+  <text x="70" y="565" fill="#2196F3" font-size="13" font-weight="bold">├── docs/</text>
+  <text x="250" y="565" fill="#B0B0B0" font-size="11">Documentation (MkDocs)</text>
+  <text x="90" y="590" fill="#FF9800" font-size="12">├── development/</text>
+  <text x="300" y="590" fill="#B0B0B0" font-size="10">This guide</text>
+  <text x="90" y="615" fill="#FF9800" font-size="12">├── guides/</text>
+  <text x="300" y="615" fill="#B0B0B0" font-size="10">User guides</text>
+  <text x="90" y="640" fill="#FF9800" font-size="12">├── api/</text>
+  <text x="300" y="640" fill="#B0B0B0" font-size="10">API reference</text>
+  <text x="90" y="665" fill="#FF9800" font-size="12">└── architecture/</text>
+  <text x="300" y="665" fill="#B0B0B0" font-size="10">Architecture docs</text>
+
+  <!-- Root files -->
+  <text x="70" y="700" fill="#2196F3" font-size="13" font-weight="bold">├── Rakefile</text>
+  <text x="250" y="700" fill="#B0B0B0" font-size="11">Rake tasks</text>
+  <text x="70" y="725" fill="#2196F3" font-size="13" font-weight="bold">├── Gemfile</text>
+  <text x="250" y="725" fill="#B0B0B0" font-size="11">Development dependencies</text>
+  <text x="70" y="750" fill="#2196F3" font-size="13" font-weight="bold">├── htm.gemspec</text>
+  <text x="250" y="750" fill="#B0B0B0" font-size="11">Gem specification</text>
+  <text x="70" y="775" fill="#2196F3" font-size="13" font-weight="bold">└── README.md</text>
+  <text x="250" y="775" fill="#B0B0B0" font-size="11">Project overview</text>
+
+  <!-- Legend -->
+  <rect x="30" y="810" width="740" height="70" fill="rgba(33, 150, 243, 0.1)" stroke="#2196F3" stroke-width="2" rx="5" stroke-dasharray="5,5"/>
+  <text x="400" y="830" text-anchor="middle" fill="#2196F3" font-size="12" font-weight="bold">Directory Structure Key</text>
+  <text x="50" y="850" fill="#B0B0B0" font-size="10">• <tspan fill="#4CAF50" font-weight="bold">Green</tspan>: Root directory</text>
+  <text x="250" y="850" fill="#B0B0B0" font-size="10">• <tspan fill="#2196F3" font-weight="bold">Blue</tspan>: Directories &amp; root files</text>
+  <text x="500" y="850" fill="#B0B0B0" font-size="10">• <tspan fill="#FF9800" font-weight="bold">Orange/Yellow</tspan>: Files</text>
+  <text x="50" y="870" fill="#B0B0B0" font-size="10">• <tspan fill="#B0B0B0">Gray</tspan>: Descriptions</text>
+</svg>

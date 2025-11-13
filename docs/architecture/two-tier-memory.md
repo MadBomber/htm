@@ -645,41 +645,7 @@ With TimescaleDB compression (after 30 days):
 
 ### Complete Flow Diagram
 
-```mermaid
-graph TB
-    subgraph "1. Add Memory"
-        A[User: add_node] --> B[Generate embedding]
-        B --> C[Store in LTM]
-        C --> D{WM has space?}
-        D -->|Yes| E[Add to WM]
-        D -->|No| F[Evict from WM]
-        F --> G[Mark evicted in LTM]
-        G --> E
-    end
-
-    subgraph "2. Memory States"
-        E --> H[In Both Memories]
-        G --> I[In LTM Only]
-    end
-
-    subgraph "3. Recall Memory"
-        J[User: recall] --> K[RAG Search in LTM]
-        K --> L[Results found]
-        L --> M{WM has space?}
-        M -->|Yes| N[Add to WM]
-        M -->|No| O[Evict from WM]
-        O --> N
-        N --> H
-    end
-
-    I -.recall.-> J
-    H -.already loaded.-> P[Return from WM]
-
-    style A fill:rgba(76,175,80,0.3)
-    style J fill:rgba(33,150,243,0.3)
-    style H fill:rgba(255,193,7,0.3)
-    style I fill:rgba(156,39,176,0.3)
-```
+![Complete Memory Flow](../assets/images/htm-complete-memory-flow.svg)
 
 ### Example: Adding 5000-Token Memory to Full Working Memory
 

@@ -147,15 +147,7 @@ ruby -r debug test/htm_test.rb
 
 ### Test File Layout
 
-```
-test/
-├── test_helper.rb              # Shared test configuration
-├── htm_test.rb                 # Unit tests for HTM class
-├── embedding_service_test.rb   # Unit tests for EmbeddingService
-├── integration_test.rb         # Integration tests
-└── fixtures/                   # Test data (future)
-    └── sample_memories.json
-```
+![Test Directory Structure](../assets/images/test-directory-structure.svg)
 
 ### Test File Template
 

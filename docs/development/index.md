@@ -255,35 +255,7 @@ We value continuous improvement:
 
 Understanding the codebase structure:
 
-```
-htm/
-├── lib/                    # Main library code
-│   ├── htm.rb             # HTM main class
-│   └── htm/
-│       ├── database.rb           # Database setup and management
-│       ├── long_term_memory.rb   # PostgreSQL-backed storage
-│       ├── working_memory.rb     # In-memory active context
-│       ├── embedding_service.rb  # Vector embedding generation
-│       └── version.rb            # Version constant
-├── test/                   # Test suite
-│   ├── test_helper.rb           # Test configuration
-│   ├── htm_test.rb              # Unit tests
-│   ├── embedding_service_test.rb # Embedding tests
-│   └── integration_test.rb      # Integration tests
-├── sql/                    # Database schemas
-│   └── schema.sql              # PostgreSQL schema
-├── examples/              # Usage examples
-│   └── basic_usage.rb          # Basic usage demonstration
-├── docs/                   # Documentation (MkDocs)
-│   ├── development/            # This guide
-│   ├── guides/                 # User guides
-│   ├── api/                    # API reference
-│   └── architecture/           # Architecture docs
-├── Rakefile               # Rake tasks
-├── Gemfile                # Development dependencies
-├── htm.gemspec            # Gem specification
-└── README.md              # Project overview
-```
+![HTM Project Structure](../assets/images/project-structure.svg)
 
 ## Tools and Technologies
 

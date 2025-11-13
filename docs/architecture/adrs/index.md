@@ -174,18 +174,7 @@ Proposal to add Redis as a persistent storage layer for working memory was thoro
 
 ## ADR Dependencies
 
-```
-ADR-001 (Storage)
-  └─> ADR-002 (Two-Tier Memory)
-        ├─> ADR-007 (Eviction Strategy)
-        ├─> ADR-009 (Never-Forget)
-        └─> ADR-010 (Redis WM - Rejected Alternative)
-  └─> ADR-003 (Embeddings)
-        └─> ADR-005 (RAG Retrieval)
-  └─> ADR-004 (Hive Mind)
-        └─> ADR-008 (Robot ID)
-  └─> ADR-006 (Context Assembly)
-```
+![ADR Dependency Tree](../../assets/images/adr-dependency-tree.svg)
 
 ## Related Documentation
 

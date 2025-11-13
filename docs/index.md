@@ -1,4 +1,15 @@
+
 <div align="center">
+  <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: 4px solid #ff0000; border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 800px; box-shadow: 0 8px 16px rgba(255, 0, 0, 0.3);">
+    <p style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+      ⚠️ WARNING ⚠️
+    </p>
+    <p style="color: #fff; font-size: 16px; margin: 10px 0 0 0; line-height: 1.6;">
+      This documentation is AI-generated and may contain <strong>hallucinations</strong>, <strong>inaccuracies</strong>, or <strong>outdated information</strong>.<br/>
+      Always verify critical details in the source code.
+    </p>
+  </div>
+
   <img src="assets/images/htm_demo.gif" alt="Tree of Knowledge" width="800">
 </div>
 
@@ -124,33 +135,7 @@ HTM is perfect for:
 
 HTM consists of several key components working together:
 
-```
-┌─────────────────────────────────────────────────┐
-│                    Your LLM                     │
-│              (Claude, GPT, etc.)                │
-└─────────────────┬───────────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────────┐
-│                   HTM API                       │
-│  add_node(), recall(), create_context(), etc.  │
-└──────┬──────────────────────────────────┬──────┘
-       │                                    │
-       ▼                                    ▼
-┌─────────────────┐              ┌──────────────────┐
-│ Working Memory  │              │ Long-term Memory │
-│  (In-Memory)    │◄────────────►│  (PostgreSQL)    │
-│  128k tokens    │  Eviction    │  ∞ storage       │
-│  Fast access    │  & Recall    │                  │
-└─────────────────┘              └──────────────────┘
-                                           │
-                                           ▼
-                                  ┌──────────────────┐
-                                  │ Embedding Service│
-                                  │  (Ollama/RubyLLM)│
-                                  │   gpt-oss model  │
-                                  └──────────────────┘
-```
+![HTM Architecture Overview](assets/images/htm-architecture-overview.svg)
 
 ### Component Breakdown
 

@@ -353,13 +353,7 @@ system("ollama pull nomic-embed-text")
 
 ### Exception Types
 
-```ruby
-HTM::EmbeddingError
-  ├─ "Ollama connection failed"
-  ├─ "OpenAI API error: ..."
-  ├─ "Invalid model: ..."
-  └─ "Empty text provided"
-```
+![HTM Exception Hierarchy](../assets/images/exception-hierarchy.svg)
 
 ---
 

@@ -98,41 +98,7 @@ This diagram shows the complete flow of adding a new memory node to HTM with **c
 !!! info "Architecture Note"
     With client-side generation (October 2025), embeddings are generated in Ruby before database insertion. This provides reliable, cross-platform operation.
 
-```mermaid
-graph TD
-    A[User: add_message] -->|1. Request| B[HTM]
-    B -->|2. Count tokens| C[EmbeddingService]
-    C -->|3. Return count| B
-
-    B -->|4. Generate embedding| C
-    C -->|5. HTTP call| D[Ollama/OpenAI]
-    D -->|6. Return vector| C
-    C -->|7. Return embedding| B
-
-    B -->|8. Persist with embedding| E[LongTermMemory]
-    E -->|9. INSERT nodes with embedding| F[PostgreSQL]
-    F -->|10. Return node_id| E
-    E -->|11. Return node_id| B
-
-    B -->|12. Check space| G[WorkingMemory]
-    G -->|13. Space available?| H{Has Space?}
-    H -->|No| I[Evict nodes]
-    I -->|14. Mark evicted| E
-    H -->|Yes| J[Add to WM]
-    I --> J
-
-    J -->|15. Success| B
-    B -->|16. Log operation| E
-    B -->|17. Return node_id| A
-
-    style A fill:rgba(76,175,80,0.3)
-    style B fill:rgba(33,150,243,0.3)
-    style C fill:rgba(255,152,0,0.3)
-    style D fill:rgba(255,193,7,0.3)
-    style E fill:rgba(156,39,176,0.3)
-    style F fill:rgba(156,39,176,0.3)
-    style G fill:rgba(33,150,243,0.3)
-```
+![Memory Addition Flow](../assets/images/htm-memory-addition-flow.svg)
 
 ### Memory Recall Flow
 
@@ -141,79 +107,13 @@ This diagram illustrates the RAG-based retrieval process with **client-side quer
 !!! info "Architecture Note"
     With client-side generation, query embeddings are generated in Ruby before being passed to SQL for vector similarity search.
 
-```mermaid
-graph TD
-    A[User: recall] -->|1. Request| B[HTM]
-    B -->|2. Parse timeframe| C[Parse Natural Language]
-    C -->|3. Return range| B
-
-    B -->|4. Generate query embedding| D[EmbeddingService]
-    D -->|5. HTTP call| E[Ollama/OpenAI]
-    E -->|6. Return vector| D
-    D -->|7. Return embedding| B
-
-    B -->|8. Search with embedding| F[LongTermMemory]
-    F -->|9. Vector similarity| G{Search Strategy}
-    G -->|:vector| H[Vector Search]
-    G -->|:fulltext| I[Full-Text Search]
-    G -->|:hybrid| J[Hybrid Search]
-
-    H -->|10. pgvector HNSW| K[Return results]
-    I -->|10. ts_rank GIN| K
-    J -->|10. Hybrid + RRF| K
-
-    K -->|11. Results| F
-    F -->|12. Results| B
-
-    B -->|13. For each result| L[WorkingMemory]
-    L -->|14. Add to WM| M{Has Space?}
-    M -->|No| N[Evict old nodes]
-    P -->|Yes| R[Add node]
-    Q --> R
-
-    R -->|12. Log operation| E
-    B -->|13. Return memories| A
-
-    style A fill:rgba(76,175,80,0.3)
-    style B fill:rgba(33,150,243,0.3)
-    style E fill:rgba(156,39,176,0.3)
-    style J fill:rgba(255,193,7,0.3)
-    style O fill:rgba(33,150,243,0.3)
-```
+![Memory Recall Flow](../assets/images/htm-memory-recall-flow.svg)
 
 ### Context Assembly Flow
 
 This diagram shows how working memory assembles context for LLM consumption using different strategies.
 
-```mermaid
-graph TD
-    A[User: create_context] -->|1. Request with strategy| B[HTM]
-    B -->|2. Assemble| C[WorkingMemory]
-
-    C -->|3. Strategy?| D{Strategy Type}
-    D -->|:recent| E[Sort by access order]
-    D -->|:important| F[Sort by importance]
-    D -->|:balanced| G[Hybrid score]
-
-    E --> H[Sorted nodes]
-    F --> H
-    G --> H
-
-    H -->|4. Build context| I[Token budget loop]
-    I -->|5. Check tokens| J{Tokens < max?}
-    J -->|Yes| K[Add node to context]
-    J -->|No| L[Stop, return context]
-    K --> I
-
-    L -->|6. Join nodes| M[Assembled context string]
-    M -->|7. Return| C
-    C -->|8. Return| B
-    B -->|9. Return| A
-
-    style A fill:rgba(76,175,80,0.3)
-    style C fill:rgba(33,150,243,0.3)
-    style G fill:rgba(255,193,7,0.3)
-```
+![Context Assembly Flow](../assets/images/htm-context-assembly-flow.svg)
 
 ## Memory Lifecycle
 
@@ -221,79 +121,13 @@ graph TD
 
 A memory node transitions through several states during its lifetime in HTM:
 
-```mermaid
-stateDiagram-v2
-    [*] --> Created: add_node()
-
-    Created --> InBothMemories: Initial state
-    InBothMemories --> WorkingMemoryOnly: Evicted from WM
-    InBothMemories --> LongTermMemoryOnly: WM cleared
-
-    WorkingMemoryOnly --> InBothMemories: Recalled
-    LongTermMemoryOnly --> InBothMemories: Recalled
-
-    InBothMemories --> Forgotten: forget(confirm: :confirmed)
-    WorkingMemoryOnly --> Forgotten: forget(confirm: :confirmed)
-    LongTermMemoryOnly --> Forgotten: forget(confirm: :confirmed)
-
-    Forgotten --> [*]
-
-    note right of InBothMemories
-        Node exists in:
-        - Working Memory (fast access)
-        - Long-Term Memory (persistent)
-        in_working_memory = TRUE
-    end note
-
-    note right of WorkingMemoryOnly
-        Node exists only in:
-        - Long-Term Memory
-        in_working_memory = FALSE
-        (Evicted due to token limit)
-    end note
-
-    note right of Forgotten
-        Node permanently deleted
-        from both memories
-        (Explicit user action)
-    end note
-```
+![Node States](../assets/images/htm-node-states.svg)
 
 ### Eviction Process
 
 When working memory reaches its token limit, the eviction process runs to free up space:
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant HTM
-    participant WM as WorkingMemory
-    participant LTM as LongTermMemory
-    participant DB as Database
-
-    User->>HTM: add_node(large_memory)
-    HTM->>WM: add(key, value, token_count)
-    WM->>WM: Check: token_count + current > max?
-
-    alt Space Available
-        WM->>WM: Add node directly
-        WM-->>HTM: Success
-    else No Space
-        WM->>WM: Sort by [importance, -recency]
-        WM->>WM: Evict low-importance old nodes
-        Note over WM: Free enough tokens
-
-        WM->>HTM: Return evicted nodes
-        HTM->>LTM: mark_evicted(keys)
-        LTM->>DB: UPDATE in_working_memory = FALSE
-        DB-->>LTM: Updated
-
-        WM->>WM: Add new node
-        WM-->>HTM: Success
-    end
-
-    HTM-->>User: node_id
-```
+![Eviction Process](../assets/images/htm-eviction-process.svg)
 
 ## Database Schema
 

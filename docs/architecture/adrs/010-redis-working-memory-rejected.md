@@ -30,18 +30,7 @@ During architectural review, we identified that working memory is currently vola
 
 ### Current Architecture (Two-Tier)
 
-```
-┌─────────────────┐
-│   HTM Instance  │
-│                 │
-│  ┌───────────┐  │     ┌──────────────┐
-│  │ Working   │  │────>│  PostgreSQL  │
-│  │ Memory    │  │     │ (Long-Term)  │
-│  │ (Hash)    │  │     │              │
-│  └───────────┘  │     └──────────────┘
-│   volatile      │       persistent
-└─────────────────┘
-```
+![Current Two-Tier Architecture](../../assets/images/adr-010-current-architecture.svg)
 
 **How it works**:
 1. `add_node()` saves **immediately** to PostgreSQL
@@ -53,21 +42,7 @@ During architectural review, we identified that working memory is currently vola
 
 ### Proposed Architecture (Three-Tier)
 
-```
-┌─────────────────┐
-│   HTM Instance  │
-│                 │
-│      ││          │
-│      ││          │
-│      ▼▼          │
-│  ┌───────────┐  │     ┌──────────────┐
-│  │   Redis   │  │────>│  PostgreSQL  │
-│  │ (Working) │  │     │ (Long-Term)  │
-│  │           │  │     │              │
-│  └───────────┘  │     └──────────────┘
-│   persistent    │       persistent
-└─────────────────┘
-```
+![Proposed Three-Tier Architecture (Rejected)](../../assets/images/adr-010-proposed-architecture.svg)
 
 **Proposed changes**:
 - Store working memory in Redis (shared across processes)
