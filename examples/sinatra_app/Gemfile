@@ -1,0 +1,21 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+# Web framework
+gem 'sinatra', '~> 3.0'
+gem 'puma', '~> 6.0'
+
+# Background jobs
+gem 'sidekiq', '~> 7.0'
+gem 'redis', '~> 5.0'
+
+# HTM (use local development version)
+gem 'htm', path: '../..'
+
+# JSON handling
+gem 'multi_json'
+
+group :development do
+  gem 'rerun' # Auto-reload on file changes
+end
