@@ -4032,39 +4032,7 @@
 </ul>
 <h2 id="memory-flow-add-evict-recall">Memory Flow: Add → Evict → Recall<a class="headerlink" href="#memory-flow-add-evict-recall" title="Permanent link">&para;</a></h2>
 <h3 id="complete-flow-diagram">Complete Flow Diagram<a class="headerlink" href="#complete-flow-diagram" title="Permanent link">&para;</a></h3>
-<pre class="mermaid"><code>graph TB
-    subgraph "1. Add Memory"
-        A[User: add_node] --&gt; B[Generate embedding]
-        B --&gt; C[Store in LTM]
-        C --&gt; D{WM has space?}
-        D --&gt;|Yes| E[Add to WM]
-        D --&gt;|No| F[Evict from WM]
-        F --&gt; G[Mark evicted in LTM]
-        G --&gt; E
-    end
-
-    subgraph "2. Memory States"
-        E --&gt; H[In Both Memories]
-        G --&gt; I[In LTM Only]
-    end
-
-    subgraph "3. Recall Memory"
-        J[User: recall] --&gt; K[RAG Search in LTM]
-        K --&gt; L[Results found]
-        L --&gt; M{WM has space?}
-        M --&gt;|Yes| N[Add to WM]
-        M --&gt;|No| O[Evict from WM]
-        O --&gt; N
-        N --&gt; H
-    end
-
-    I -.recall.-&gt; J
-    H -.already loaded.-&gt; P[Return from WM]
-
-    style A fill:rgba(76,175,80,0.3)
-    style J fill:rgba(33,150,243,0.3)
-    style H fill:rgba(255,193,7,0.3)
-    style I fill:rgba(156,39,176,0.3)</code></pre>
+<p><img alt="Complete Memory Flow" src="../../assets/images/htm-complete-memory-flow.svg" /></p>
 <h3 id="example-adding-5000-token-memory-to-full-working-memory">Example: Adding 5000-Token Memory to Full Working Memory<a class="headerlink" href="#example-adding-5000-token-memory-to-full-working-memory" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Initial state</span>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">memory_stats</span><span class="o">[</span><span class="ss">:working_memory</span><span class="o">]</span>

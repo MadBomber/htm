@@ -2415,6 +2415,16 @@
   <h1>Home</h1>
 
 <div align="center">
+  <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: 4px solid #ff0000; border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 800px; box-shadow: 0 8px 16px rgba(255, 0, 0, 0.3);">
+    <p style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+      ⚠️ WARNING ⚠️
+    </p>
+    <p style="color: #fff; font-size: 16px; margin: 10px 0 0 0; line-height: 1.6;">
+      This documentation is AI-generated and may contain <strong>hallucinations</strong>, <strong>inaccuracies</strong>, or <strong>outdated information</strong>.<br/>
+      Always verify critical details in the source code.
+    </p>
+  </div>
+
   <img src="assets/images/htm_demo.gif" alt="Tree of Knowledge" width="800">
 </div>
 
@@ -2525,32 +2535,7 @@
 </ul>
 <h2 id="architecture-overview">Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permanent link">&para;</a></h2>
 <p>HTM consists of several key components working together:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌─────────────────────────────────────────────────┐
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│                    Your LLM                     │
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│              (Claude, GPT, etc.)                │
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>└─────────────────┬───────────────────────────────┘
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>                  │
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>                  ▼
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>┌─────────────────────────────────────────────────┐
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│                   HTM API                       │
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│  add_node(), recall(), create_context(), etc.  │
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>└──────┬──────────────────────────────────┬──────┘
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>       │                                    │
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>       ▼                                    ▼
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>┌─────────────────┐              ┌──────────────────┐
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│ Working Memory  │              │ Long-term Memory │
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│  (In-Memory)    │◄────────────►│  (PostgreSQL)    │
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│  128k tokens    │  Eviction    │  ∞ storage       │
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│  Fast access    │  &amp; Recall    │                  │
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>└─────────────────┘              └──────────────────┘
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>                                           │
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>                                           ▼
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>                                  ┌──────────────────┐
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>                                  │ Embedding Service│
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>                                  │  (Ollama/RubyLLM)│
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>                                  │   gpt-oss model  │
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>                                  └──────────────────┘
-</span></code></pre></div>
+<p><img alt="HTM Architecture Overview" src="assets/images/htm-architecture-overview.svg" /></p>
 <h3 id="component-breakdown">Component Breakdown<a class="headerlink" href="#component-breakdown" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>HTM API</strong>: Main interface for all memory operations</li>

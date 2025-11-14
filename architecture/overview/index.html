@@ -3347,180 +3347,24 @@
 <p class="admonition-title">Architecture Note</p>
 <p>With client-side generation (October 2025), embeddings are generated in Ruby before database insertion. This provides reliable, cross-platform operation.</p>
 </div>
-<pre class="mermaid"><code>graph TD
-    A[User: add_message] --&gt;|1. Request| B[HTM]
-    B --&gt;|2. Count tokens| C[EmbeddingService]
-    C --&gt;|3. Return count| B
-
-    B --&gt;|4. Generate embedding| C
-    C --&gt;|5. HTTP call| D[Ollama/OpenAI]
-    D --&gt;|6. Return vector| C
-    C --&gt;|7. Return embedding| B
-
-    B --&gt;|8. Persist with embedding| E[LongTermMemory]
-    E --&gt;|9. INSERT nodes with embedding| F[PostgreSQL]
-    F --&gt;|10. Return node_id| E
-    E --&gt;|11. Return node_id| B
-
-    B --&gt;|12. Check space| G[WorkingMemory]
-    G --&gt;|13. Space available?| H{Has Space?}
-    H --&gt;|No| I[Evict nodes]
-    I --&gt;|14. Mark evicted| E
-    H --&gt;|Yes| J[Add to WM]
-    I --&gt; J
-
-    J --&gt;|15. Success| B
-    B --&gt;|16. Log operation| E
-    B --&gt;|17. Return node_id| A
-
-    style A fill:rgba(76,175,80,0.3)
-    style B fill:rgba(33,150,243,0.3)
-    style C fill:rgba(255,152,0,0.3)
-    style D fill:rgba(255,193,7,0.3)
-    style E fill:rgba(156,39,176,0.3)
-    style F fill:rgba(156,39,176,0.3)
-    style G fill:rgba(33,150,243,0.3)</code></pre>
+<p><img alt="Memory Addition Flow" src="../../assets/images/htm-memory-addition-flow.svg" /></p>
 <h3 id="memory-recall-flow">Memory Recall Flow<a class="headerlink" href="#memory-recall-flow" title="Permanent link">&para;</a></h3>
 <p>This diagram illustrates the RAG-based retrieval process with <strong>client-side query embeddings</strong>.</p>
 <div class="admonition info">
 <p class="admonition-title">Architecture Note</p>
 <p>With client-side generation, query embeddings are generated in Ruby before being passed to SQL for vector similarity search.</p>
 </div>
-<pre class="mermaid"><code>graph TD
-    A[User: recall] --&gt;|1. Request| B[HTM]
-    B --&gt;|2. Parse timeframe| C[Parse Natural Language]
-    C --&gt;|3. Return range| B
-
-    B --&gt;|4. Generate query embedding| D[EmbeddingService]
-    D --&gt;|5. HTTP call| E[Ollama/OpenAI]
-    E --&gt;|6. Return vector| D
-    D --&gt;|7. Return embedding| B
-
-    B --&gt;|8. Search with embedding| F[LongTermMemory]
-    F --&gt;|9. Vector similarity| G{Search Strategy}
-    G --&gt;|:vector| H[Vector Search]
-    G --&gt;|:fulltext| I[Full-Text Search]
-    G --&gt;|:hybrid| J[Hybrid Search]
-
-    H --&gt;|10. pgvector HNSW| K[Return results]
-    I --&gt;|10. ts_rank GIN| K
-    J --&gt;|10. Hybrid + RRF| K
-
-    K --&gt;|11. Results| F
-    F --&gt;|12. Results| B
-
-    B --&gt;|13. For each result| L[WorkingMemory]
-    L --&gt;|14. Add to WM| M{Has Space?}
-    M --&gt;|No| N[Evict old nodes]
-    P --&gt;|Yes| R[Add node]
-    Q --&gt; R
-
-    R --&gt;|12. Log operation| E
-    B --&gt;|13. Return memories| A
-
-    style A fill:rgba(76,175,80,0.3)
-    style B fill:rgba(33,150,243,0.3)
-    style E fill:rgba(156,39,176,0.3)
-    style J fill:rgba(255,193,7,0.3)
-    style O fill:rgba(33,150,243,0.3)</code></pre>
+<p><img alt="Memory Recall Flow" src="../../assets/images/htm-memory-recall-flow.svg" /></p>
 <h3 id="context-assembly-flow">Context Assembly Flow<a class="headerlink" href="#context-assembly-flow" title="Permanent link">&para;</a></h3>
 <p>This diagram shows how working memory assembles context for LLM consumption using different strategies.</p>
-<pre class="mermaid"><code>graph TD
-    A[User: create_context] --&gt;|1. Request with strategy| B[HTM]
-    B --&gt;|2. Assemble| C[WorkingMemory]
-
-    C --&gt;|3. Strategy?| D{Strategy Type}
-    D --&gt;|:recent| E[Sort by access order]
-    D --&gt;|:important| F[Sort by importance]
-    D --&gt;|:balanced| G[Hybrid score]
-
-    E --&gt; H[Sorted nodes]
-    F --&gt; H
-    G --&gt; H
-
-    H --&gt;|4. Build context| I[Token budget loop]
-    I --&gt;|5. Check tokens| J{Tokens &lt; max?}
-    J --&gt;|Yes| K[Add node to context]
-    J --&gt;|No| L[Stop, return context]
-    K --&gt; I
-
-    L --&gt;|6. Join nodes| M[Assembled context string]
-    M --&gt;|7. Return| C
-    C --&gt;|8. Return| B
-    B --&gt;|9. Return| A
-
-    style A fill:rgba(76,175,80,0.3)
-    style C fill:rgba(33,150,243,0.3)
-    style G fill:rgba(255,193,7,0.3)</code></pre>
+<p><img alt="Context Assembly Flow" src="../../assets/images/htm-context-assembly-flow.svg" /></p>
 <h2 id="memory-lifecycle">Memory Lifecycle<a class="headerlink" href="#memory-lifecycle" title="Permanent link">&para;</a></h2>
 <h3 id="node-states">Node States<a class="headerlink" href="#node-states" title="Permanent link">&para;</a></h3>
 <p>A memory node transitions through several states during its lifetime in HTM:</p>
-<pre class="mermaid"><code>stateDiagram-v2
-    [*] --&gt; Created: add_node()
-
-    Created --&gt; InBothMemories: Initial state
-    InBothMemories --&gt; WorkingMemoryOnly: Evicted from WM
-    InBothMemories --&gt; LongTermMemoryOnly: WM cleared
-
-    WorkingMemoryOnly --&gt; InBothMemories: Recalled
-    LongTermMemoryOnly --&gt; InBothMemories: Recalled
-
-    InBothMemories --&gt; Forgotten: forget(confirm: :confirmed)
-    WorkingMemoryOnly --&gt; Forgotten: forget(confirm: :confirmed)
-    LongTermMemoryOnly --&gt; Forgotten: forget(confirm: :confirmed)
-
-    Forgotten --&gt; [*]
-
-    note right of InBothMemories
-        Node exists in:
-        - Working Memory (fast access)
-        - Long-Term Memory (persistent)
-        in_working_memory = TRUE
-    end note
-
-    note right of WorkingMemoryOnly
-        Node exists only in:
-        - Long-Term Memory
-        in_working_memory = FALSE
-        (Evicted due to token limit)
-    end note
-
-    note right of Forgotten
-        Node permanently deleted
-        from both memories
-        (Explicit user action)
-    end note</code></pre>
+<p><img alt="Node States" src="../../assets/images/htm-node-states.svg" /></p>
 <h3 id="eviction-process">Eviction Process<a class="headerlink" href="#eviction-process" title="Permanent link">&para;</a></h3>
 <p>When working memory reaches its token limit, the eviction process runs to free up space:</p>
-<pre class="mermaid"><code>sequenceDiagram
-    participant User
-    participant HTM
-    participant WM as WorkingMemory
-    participant LTM as LongTermMemory
-    participant DB as Database
-
-    User-&gt;&gt;HTM: add_node(large_memory)
-    HTM-&gt;&gt;WM: add(key, value, token_count)
-    WM-&gt;&gt;WM: Check: token_count + current &gt; max?
-
-    alt Space Available
-        WM-&gt;&gt;WM: Add node directly
-        WM--&gt;&gt;HTM: Success
-    else No Space
-        WM-&gt;&gt;WM: Sort by [importance, -recency]
-        WM-&gt;&gt;WM: Evict low-importance old nodes
-        Note over WM: Free enough tokens
-
-        WM-&gt;&gt;HTM: Return evicted nodes
-        HTM-&gt;&gt;LTM: mark_evicted(keys)
-        LTM-&gt;&gt;DB: UPDATE in_working_memory = FALSE
-        DB--&gt;&gt;LTM: Updated
-
-        WM-&gt;&gt;WM: Add new node
-        WM--&gt;&gt;HTM: Success
-    end
-
-    HTM--&gt;&gt;User: node_id</code></pre>
+<p><img alt="Eviction Process" src="../../assets/images/htm-eviction-process.svg" /></p>
 <h2 id="database-schema">Database Schema<a class="headerlink" href="#database-schema" title="Permanent link">&para;</a></h2>
 <h3 id="entity-relationship-diagram">Entity-Relationship Diagram<a class="headerlink" href="#entity-relationship-diagram" title="Permanent link">&para;</a></h3>
 <p><img alt="HTM Database Schema" src="../../assets/images/htm-database-schema.svg" /></p>
