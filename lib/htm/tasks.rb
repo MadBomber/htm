@@ -28,11 +28,15 @@
 #   rake htm:jobs:failed             # Show nodes with processing issues
 #   rake htm:jobs:clear_all          # Clear all embeddings and tags (testing)
 #
+# Tag tasks:
+#   rake htm:tags:tree               # Display tags as a hierarchical tree
+#
 
 if defined?(Rake)
   # Load the rake tasks
   load File.expand_path('../tasks/htm.rake', __dir__)
   load File.expand_path('../tasks/jobs.rake', __dir__)
+  load File.expand_path('../tasks/tags.rake', __dir__)
 else
   warn "HTM tasks not loaded: Rake is not available"
 end
