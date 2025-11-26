@@ -38,7 +38,7 @@ puts "Found #{memories.length} memories"
 ```ruby
 require 'sinatra'
 require 'htm'
-require 'htm/sinatra'
+require 'htm/integrations/sinatra'
 
 class MyApp < Sinatra::Base
   # Automatically configures HTM with Sidekiq
@@ -51,7 +51,7 @@ class MyApp < Sinatra::Base
   end
 
   post '/remember' do
-    node_id = remember(params[:content], source: 'user')
+    node_id = remember(params[:content])
     json status: 'ok', node_id: node_id
   end
 
@@ -209,7 +209,7 @@ gem 'redis'
 gem 'htm'
 
 # app.rb
-require 'htm/sinatra'
+require 'htm/integrations/sinatra'
 
 class MyApp < Sinatra::Base
   register_htm  # Auto-configures HTM
@@ -451,7 +451,7 @@ require 'htm'
 # Threads used (not production-ready)
 
 # After:
-require 'htm/sinatra'
+require 'htm/integrations/sinatra'
 register_htm  # Auto-configures Sidekiq
 # Production-ready background jobs
 ```

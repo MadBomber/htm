@@ -22,8 +22,9 @@
 require 'sinatra'
 require 'sinatra/json'
 require 'sidekiq'
+require 'securerandom'
 require_relative '../../lib/htm'
-require_relative '../../lib/htm/sinatra'
+require_relative '../../lib/htm/integrations/sinatra'
 
 # Sidekiq configuration
 Sidekiq.configure_server do |config|
@@ -41,7 +42,11 @@ class HTMApp < Sinatra::Base
 
   # Enable sessions for robot identification
   enable :sessions
-  set :session_secret, ENV.fetch('SESSION_SECRET', 'change_me_in_production')
+  # Session secret must be at least 64 bytes for Rack session encryption
+  set :session_secret, ENV.fetch('SESSION_SECRET', SecureRandom.hex(64))
+
+  # Enable inline templates (defined after __END__)
+  enable :inline_templates
 
   # Initialize HTM for each request
   before do
@@ -133,15 +138,63 @@ class HTMApp < Sinatra::Base
     )
   end
 
+  # API: Get all tags in topological sort order
+  get '/api/tags' do
+    # Get tags with node counts via LEFT JOIN
+    tags = HTM::Models::Tag
+      .left_joins(:nodes)
+      .select('tags.id, tags.name, tags.created_at, COUNT(nodes.id) as node_count')
+      .group('tags.id, tags.name, tags.created_at')
+      .order(:name)
+
+    # Build tag hierarchy and sort topologically
+    sorted_tags = topological_sort_tags(tags)
+
+    json(
+      status: 'ok',
+      count: sorted_tags.length,
+      tags: sorted_tags
+    )
+  end
+
   private
 
+  # Topologically sort tags by their hierarchical structure
+  # Tags like "database:postgresql:extensions" come after "database:postgresql"
+  def topological_sort_tags(tags)
+    # Convert to hash format with hierarchy info
+    tag_entries = tags.map do |tag|
+      parts = tag.name.split(':')
+      {
+        id: tag.id,
+        name: tag.name,
+        depth: parts.length,
+        parent: parts.length > 1 ? parts[0..-2].join(':') : nil,
+        node_count: tag.node_count.to_i,
+        created_at: tag.created_at
+      }
+    end
+
+    # Sort: first by depth (parents before children), then alphabetically
+    tag_entries.sort_by { |t| [t[:depth], t[:name]] }
+  end
+
   def format_memory(memory)
-    {
+    result = {
       id: memory['id'],
       content: memory['content'],
       created_at: memory['created_at'],
       token_count: memory['token_count']
     }
+
+    # Include hybrid search scoring if available
+    if memory['similarity']
+      result[:similarity] = memory['similarity'].to_f.round(4)
+      result[:tag_boost] = memory['tag_boost'].to_f.round(4)
+      result[:combined_score] = memory['combined_score'].to_f.round(4)
+    end
+
+    result
   end
 
   # Run the app
@@ -200,11 +253,35 @@ __END__
       border-left-color: #dc3545;
       background: #fff5f5;
     }
+    .scores {
+      color: #6c757d;
+      font-style: italic;
+    }
+    .tag-list {
+      font-family: monospace;
+      margin-top: 10px;
+    }
+    .tag-item {
+      padding: 2px 0;
+    }
+    .tag-name {
+      color: #007bff;
+      font-weight: bold;
+    }
+    .tag-nodes {
+      color: #6c757d;
+      font-size: 0.85em;
+      margin-left: 8px;
+    }
+    .depth-1 .tag-name { color: #28a745; }
+    .depth-2 .tag-name { color: #17a2b8; }
+    .depth-3 .tag-name { color: #6f42c1; }
+    .depth-4 .tag-name { color: #fd7e14; }
   </style>
 </head>
 <body>
   <h1>HTM Sinatra Example</h1>
-  <p>Hierarchical Temporary Memory with Sidekiq background jobs</p>
+  <p>Hierarchical Temporary Memory with tag-enhanced hybrid search and Sidekiq background jobs</p>
 
   <div class="section">
     <h2>Remember Information</h2>
@@ -215,9 +292,10 @@ __END__
 
   <div class="section">
     <h2>Recall Memories</h2>
+    <p><small>Hybrid search uses combined scoring: (similarity × 0.7) + (tag_boost × 0.3)</small></p>
     <input type="text" id="recallTopic" placeholder="Enter topic to search...">
     <select id="recallStrategy">
-      <option value="hybrid">Hybrid (Vector + Fulltext)</option>
+      <option value="hybrid">Hybrid (Vector + Fulltext + Tags)</option>
       <option value="vector">Vector Only</option>
       <option value="fulltext">Fulltext Only</option>
     </select>
@@ -229,6 +307,13 @@ __END__
     <h2>Memory Statistics</h2>
     <button onclick="getStats()">Refresh Stats</button>
     <div id="statsResult"></div>
+  </div>
+
+  <div class="section">
+    <h2>Tag Hierarchy</h2>
+    <p><small>Tags sorted topologically (parents before children, then alphabetically)</small></p>
+    <button onclick="getTags()">Refresh Tags</button>
+    <div id="tagsResult"></div>
   </div>
 
   <script>
@@ -282,13 +367,21 @@ __END__
           if (data.count === 0) {
             resultDiv.innerHTML = '<div class="result">No memories found</div>';
           } else {
-            const memoriesHtml = data.memories.map(m => `
-              <div class="result">
-                <strong>Node ${m.id}</strong><br>
-                ${m.content}<br>
-                <small>${new Date(m.created_at).toLocaleString()} • ${m.token_count} tokens</small>
-              </div>
-            `).join('');
+            const memoriesHtml = data.memories.map(m => {
+              // Build scoring info if available (hybrid search)
+              let scoreInfo = '';
+              if (m.combined_score !== undefined) {
+                scoreInfo = `<br><small class="scores">Score: ${m.combined_score.toFixed(3)} (similarity: ${m.similarity.toFixed(3)}, tag boost: ${m.tag_boost.toFixed(3)})</small>`;
+              }
+              return `
+                <div class="result">
+                  <strong>Node ${m.id}</strong><br>
+                  ${m.content}<br>
+                  <small>${new Date(m.created_at).toLocaleString()} • ${m.token_count} tokens</small>
+                  ${scoreInfo}
+                </div>
+              `;
+            }).join('');
             resultDiv.innerHTML = `<p>Found ${data.count} memories:</p>${memoriesHtml}`;
           }
         } else {
@@ -327,8 +420,46 @@ __END__
       }
     }
 
-    // Load stats on page load
-    window.onload = getStats;
+    async function getTags() {
+      const resultDiv = document.getElementById('tagsResult');
+
+      try {
+        const response = await fetch('/api/tags');
+        const data = await response.json();
+
+        if (response.ok) {
+          if (data.count === 0) {
+            resultDiv.innerHTML = '<div class="result">No tags found</div>';
+          } else {
+            const tagsHtml = data.tags.map(t => {
+              const indent = '&nbsp;&nbsp;'.repeat(t.depth - 1);
+              const nodeInfo = `<span class="tag-nodes">[${t.node_count} nodes]</span>`;
+              return `
+                <div class="tag-item depth-${t.depth}">
+                  ${indent}<span class="tag-name">${t.name}</span> ${nodeInfo}
+                </div>
+              `;
+            }).join('');
+            resultDiv.innerHTML = `
+              <div class="result">
+                <strong>Tags (${data.count} total):</strong><br>
+                <div class="tag-list">${tagsHtml}</div>
+              </div>
+            `;
+          }
+        } else {
+          resultDiv.innerHTML = `<div class="result error">✗ ${data.error}</div>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<div class="result error">✗ ${error.message}</div>`;
+      }
+    }
+
+    // Load stats and tags on page load
+    window.onload = function() {
+      getStats();
+      getTags();
+    };
   </script>
 </body>
 </html>

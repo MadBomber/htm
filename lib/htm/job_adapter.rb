@@ -72,7 +72,10 @@ class HTM
 
         # Convert job class to Sidekiq worker if needed
         sidekiq_class = to_sidekiq_worker(job_class)
-        sidekiq_class.perform_async(**params)
+
+        # Sidekiq 7.x requires native JSON types - convert symbol keys to strings
+        json_params = params.transform_keys(&:to_s)
+        sidekiq_class.perform_async(json_params)
 
         HTM.logger.debug "Enqueued #{job_class.name} via Sidekiq with params: #{params.inspect}"
       end
@@ -135,12 +138,16 @@ class HTM
         return job_class if job_class.included_modules.include?(Sidekiq::Worker)
 
         # Create wrapper Sidekiq worker
+        # Note: Sidekiq 7.x requires JSON-compatible args, so we accept a hash
+        # and convert string keys back to symbols for the underlying job
         Class.new do
           include Sidekiq::Worker
           sidekiq_options queue: :htm, retry: 3
 
-          define_method(:perform) do |**params|
-            job_class.perform(**params)
+          define_method(:perform) do |params|
+            # Convert string keys back to symbols for the job class
+            symbolized_params = params.transform_keys(&:to_sym)
+            job_class.perform(**symbolized_params)
           end
 
           # Set descriptive name
