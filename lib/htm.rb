@@ -397,6 +397,15 @@ class HTM
     when /last (\d+) days?/
       days = $1.to_i
       (now - days * 24 * 3600)..now
+    when /last (\d+) seconds?/
+      seconds = $1.to_i
+      (now - seconds)..now
+    when /last (\d+) minutes?/
+      minutes = $1.to_i
+      (now - minutes * 60)..now
+    when /last (\d+) hours?/
+      hours = $1.to_i
+      (now - hours * 3600)..now
     when /this month/
       start_of_month = Time.new(now.year, now.month, 1)
       start_of_month..now

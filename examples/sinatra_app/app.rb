@@ -85,6 +85,7 @@ class HTMApp < Sinatra::Base
     topic = params[:topic]
     limit = (params[:limit] || 10).to_i
     strategy = (params[:strategy] || 'hybrid').to_sym
+    timeframe_param = params[:timeframe]
 
     unless topic && !topic.empty?
       halt 400, json(error: 'Topic is required')
@@ -94,11 +95,16 @@ class HTMApp < Sinatra::Base
       halt 400, json(error: 'Invalid strategy. Use: vector, fulltext, or hybrid')
     end
 
-    memories = recall(topic, limit: limit, strategy: strategy, raw: true)
+    # Parse timeframe parameter (in seconds)
+    # Valid values: "5", "10", "15", "20", "25", "30", "30+", "all", or nil
+    timeframe = parse_timeframe_param(timeframe_param)
+
+    memories = recall(topic, limit: limit, strategy: strategy, timeframe: timeframe, raw: true)
 
     json(
       status: 'ok',
       count: memories.length,
+      timeframe: timeframe_param || 'all',
       memories: memories.map { |m| format_memory(m) }
     )
   end
@@ -138,45 +144,34 @@ class HTMApp < Sinatra::Base
     )
   end
 
-  # API: Get all tags in topological sort order
+  # API: Get all tags as a tree structure
   get '/api/tags' do
-    # Get tags with node counts via LEFT JOIN
-    tags = HTM::Models::Tag
-      .left_joins(:nodes)
-      .select('tags.id, tags.name, tags.created_at, COUNT(nodes.id) as node_count')
-      .group('tags.id, tags.name, tags.created_at')
-      .order(:name)
-
-    # Build tag hierarchy and sort topologically
-    sorted_tags = topological_sort_tags(tags)
+    tags = HTM::Models::Tag.all
 
     json(
       status: 'ok',
-      count: sorted_tags.length,
-      tags: sorted_tags
+      count: tags.count,
+      tree: tags.tree
     )
   end
 
   private
 
-  # Topologically sort tags by their hierarchical structure
-  # Tags like "database:postgresql:extensions" come after "database:postgresql"
-  def topological_sort_tags(tags)
-    # Convert to hash format with hierarchy info
-    tag_entries = tags.map do |tag|
-      parts = tag.name.split(':')
-      {
-        id: tag.id,
-        name: tag.name,
-        depth: parts.length,
-        parent: parts.length > 1 ? parts[0..-2].join(':') : nil,
-        node_count: tag.node_count.to_i,
-        created_at: tag.created_at
-      }
-    end
+  # Parse timeframe parameter from query string
+  # Returns a string like "last N seconds" or nil for "all"
+  def parse_timeframe_param(param)
+    return nil if param.nil? || param.empty? || param == 'all'
 
-    # Sort: first by depth (parents before children), then alphabetically
-    tag_entries.sort_by { |t| [t[:depth], t[:name]] }
+    case param
+    when '5', '10', '15', '20', '25', '30'
+      "last #{param} seconds"
+    when '30+'
+      # 30+ means older than 30 seconds (from beginning of time to 30 seconds ago)
+      thirty_seconds_ago = Time.now - 30
+      Time.at(0)..thirty_seconds_ago
+    else
+      nil  # Default to all time
+    end
   end
 
   def format_memory(memory)
@@ -257,26 +252,31 @@ __END__
       color: #6c757d;
       font-style: italic;
     }
-    .tag-list {
+    .tag-tree {
       font-family: monospace;
-      margin-top: 10px;
+      margin: 10px 0;
+      line-height: 1.4;
     }
-    .tag-item {
-      padding: 2px 0;
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
     }
-    .tag-name {
-      color: #007bff;
-      font-weight: bold;
+    .filter-row select {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
     }
-    .tag-nodes {
-      color: #6c757d;
+    .timeframe-badge {
+      display: inline-block;
+      background: #6c757d;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
       font-size: 0.85em;
       margin-left: 8px;
     }
-    .depth-1 .tag-name { color: #28a745; }
-    .depth-2 .tag-name { color: #17a2b8; }
-    .depth-3 .tag-name { color: #6f42c1; }
-    .depth-4 .tag-name { color: #fd7e14; }
   </style>
 </head>
 <body>
@@ -294,11 +294,23 @@ __END__
     <h2>Recall Memories</h2>
     <p><small>Hybrid search uses combined scoring: (similarity × 0.7) + (tag_boost × 0.3)</small></p>
     <input type="text" id="recallTopic" placeholder="Enter topic to search...">
-    <select id="recallStrategy">
-      <option value="hybrid">Hybrid (Vector + Fulltext + Tags)</option>
-      <option value="vector">Vector Only</option>
-      <option value="fulltext">Fulltext Only</option>
-    </select>
+    <div class="filter-row">
+      <select id="recallStrategy">
+        <option value="hybrid">Hybrid (Vector + Fulltext + Tags)</option>
+        <option value="vector">Vector Only</option>
+        <option value="fulltext">Fulltext Only</option>
+      </select>
+      <select id="recallTimeframe">
+        <option value="all">All Time</option>
+        <option value="5">Last 5 seconds</option>
+        <option value="10">Last 10 seconds</option>
+        <option value="15">Last 15 seconds</option>
+        <option value="20">Last 20 seconds</option>
+        <option value="25">Last 25 seconds</option>
+        <option value="30">Last 30 seconds</option>
+        <option value="30+">Older than 30 seconds</option>
+      </select>
+    </div>
     <button onclick="recall()">Recall</button>
     <div id="recallResult"></div>
   </div>
@@ -310,9 +322,8 @@ __END__
   </div>
 
   <div class="section">
-    <h2>Tag Hierarchy</h2>
-    <p><small>Tags sorted topologically (parents before children, then alphabetically)</small></p>
-    <button onclick="getTags()">Refresh Tags</button>
+    <h2>Tag Tree</h2>
+    <button onclick="getTags()">Refresh</button>
     <div id="tagsResult"></div>
   </div>
 
@@ -352,6 +363,7 @@ __END__
     async function recall() {
       const topic = document.getElementById('recallTopic').value;
       const strategy = document.getElementById('recallStrategy').value;
+      const timeframe = document.getElementById('recallTimeframe').value;
       const resultDiv = document.getElementById('recallResult');
 
       if (!topic) {
@@ -360,35 +372,69 @@ __END__
       }
 
       try {
-        const response = await fetch(`/api/recall?topic=${encodeURIComponent(topic)}&strategy=${strategy}&limit=10`);
+        const response = await fetch(`/api/recall?topic=${encodeURIComponent(topic)}&strategy=${strategy}&timeframe=${timeframe}&limit=10`);
         const data = await response.json();
 
         if (response.ok) {
           if (data.count === 0) {
             resultDiv.innerHTML = '<div class="result">No memories found</div>';
           } else {
+            // Format timeframe for display
+            const timeframeDisplay = formatTimeframe(data.timeframe);
             const memoriesHtml = data.memories.map(m => {
               // Build scoring info if available (hybrid search)
               let scoreInfo = '';
               if (m.combined_score !== undefined) {
                 scoreInfo = `<br><small class="scores">Score: ${m.combined_score.toFixed(3)} (similarity: ${m.similarity.toFixed(3)}, tag boost: ${m.tag_boost.toFixed(3)})</small>`;
               }
+              // Calculate age of memory
+              const age = formatAge(m.created_at);
               return `
                 <div class="result">
-                  <strong>Node ${m.id}</strong><br>
+                  <strong>Node ${m.id}</strong> <span class="timeframe-badge">${age}</span><br>
                   ${m.content}<br>
                   <small>${new Date(m.created_at).toLocaleString()} • ${m.token_count} tokens</small>
                   ${scoreInfo}
                 </div>
               `;
             }).join('');
-            resultDiv.innerHTML = `<p>Found ${data.count} memories:</p>${memoriesHtml}`;
+            resultDiv.innerHTML = `<p>Found ${data.count} memories (${timeframeDisplay}):</p>${memoriesHtml}`;
           }
         } else {
           resultDiv.innerHTML = `<div class="result error">✗ ${data.error}</div>`;
         }
       } catch (error) {
         resultDiv.innerHTML = `<div class="result error">✗ ${error.message}</div>`;
+      }
+    }
+
+    function formatTimeframe(tf) {
+      switch(tf) {
+        case 'all': return 'all time';
+        case '5': return 'last 5 seconds';
+        case '10': return 'last 10 seconds';
+        case '15': return 'last 15 seconds';
+        case '20': return 'last 20 seconds';
+        case '25': return 'last 25 seconds';
+        case '30': return 'last 30 seconds';
+        case '30+': return 'older than 30 seconds';
+        default: return tf;
+      }
+    }
+
+    function formatAge(createdAt) {
+      const now = new Date();
+      const created = new Date(createdAt);
+      const diffSeconds = Math.floor((now - created) / 1000);
+
+      if (diffSeconds < 60) {
+        return `${diffSeconds}s ago`;
+      } else if (diffSeconds < 3600) {
+        return `${Math.floor(diffSeconds / 60)}m ago`;
+      } else if (diffSeconds < 86400) {
+        return `${Math.floor(diffSeconds / 3600)}h ago`;
+      } else {
+        return `${Math.floor(diffSeconds / 86400)}d ago`;
       }
     }
 
@@ -431,19 +477,11 @@ __END__
           if (data.count === 0) {
             resultDiv.innerHTML = '<div class="result">No tags found</div>';
           } else {
-            const tagsHtml = data.tags.map(t => {
-              const indent = '&nbsp;&nbsp;'.repeat(t.depth - 1);
-              const nodeInfo = `<span class="tag-nodes">[${t.node_count} nodes]</span>`;
-              return `
-                <div class="tag-item depth-${t.depth}">
-                  ${indent}<span class="tag-name">${t.name}</span> ${nodeInfo}
-                </div>
-              `;
-            }).join('');
+            const treeHtml = renderTagTree(data.tree);
             resultDiv.innerHTML = `
               <div class="result">
-                <strong>Tags (${data.count} total):</strong><br>
-                <div class="tag-list">${tagsHtml}</div>
+                <pre class="tag-tree">${treeHtml}</pre>
+                <small>${data.count} tags</small>
               </div>
             `;
           }
@@ -453,6 +491,33 @@ __END__
       } catch (error) {
         resultDiv.innerHTML = `<div class="result error">✗ ${error.message}</div>`;
       }
+    }
+
+    function renderTagTree(tree, prefix = '', isLastArray = []) {
+      const keys = Object.keys(tree).sort();
+      let result = '';
+
+      keys.forEach((key, index) => {
+        const isLast = index === keys.length - 1;
+
+        // Build prefix from parent branches
+        let linePrefix = '';
+        isLastArray.forEach(wasLast => {
+          linePrefix += wasLast ? '    ' : '│   ';
+        });
+
+        // Add branch character
+        const branch = isLast ? '└── ' : '├── ';
+        result += linePrefix + branch + key + '\n';
+
+        // Recurse into children
+        const children = tree[key];
+        if (Object.keys(children).length > 0) {
+          result += renderTagTree(children, prefix, [...isLastArray, isLast]);
+        }
+      });
+
+      return result;
     }
 
     // Load stats and tags on page load

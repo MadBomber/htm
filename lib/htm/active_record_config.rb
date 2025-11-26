@@ -53,9 +53,14 @@ class HTM
 
       # Check if connection is established and active
       def connected?
-        ActiveRecord::Base.connected? &&
-          ActiveRecord::Base.connection.active?
-      rescue StandardError
+        return false unless defined?(ActiveRecord::Base)
+        return false unless ActiveRecord::Base.connection_handler.connection_pool_list.any?
+
+        ActiveRecord::Base.connected? && ActiveRecord::Base.connection.active?
+      rescue ActiveRecord::ConnectionNotDefined, ActiveRecord::ConnectionNotEstablished
+        false
+      rescue StandardError => e
+        HTM.logger.debug "Connection check failed: #{e.class} - #{e.message}"
         false
       end
 

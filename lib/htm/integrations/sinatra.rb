@@ -107,16 +107,18 @@ class HTM
     #   end
     #
     class Middleware
+      # Class-level storage for connection configuration (shared across threads)
+      @@db_config = nil
+      @@config_mutex = Mutex.new
+
       def initialize(app, options = {})
         @app = app
         @options = options
       end
 
       def call(env)
-        # Establish connection if needed
-        unless HTM::ActiveRecordConfig.connected?
-          HTM::ActiveRecordConfig.establish_connection!
-        end
+        # Ensure connection is available in this thread
+        ensure_thread_connection!
 
         # Process request
         status, headers, body = @app.call(env)
@@ -124,10 +126,55 @@ class HTM
         # Return response
         [status, headers, body]
       ensure
-        # Return connections to pool
+        # Return connections to pool after request completes
         if defined?(ActiveRecord::Base) && ActiveRecord::Base.respond_to?(:connection_handler)
           ActiveRecord::Base.connection_handler.clear_active_connections!
         end
+      end
+
+      # Store the connection config at startup (called from register_htm)
+      def self.store_config!
+        @@config_mutex.synchronize do
+          return if @@db_config
+
+          @@db_config = HTM::ActiveRecordConfig.load_database_config
+          HTM.logger.debug "HTM database config stored for thread-safe access"
+        end
+      end
+
+      private
+
+      def ensure_thread_connection!
+        # Check if connection pool exists and has an active connection
+        pool_exists = begin
+          ActiveRecord::Base.connection_pool
+          true
+        rescue ActiveRecord::ConnectionNotDefined
+          false
+        end
+
+        if pool_exists
+          return if ActiveRecord::Base.connection_pool.active_connection?
+        end
+
+        # Re-establish connection using stored config
+        if @@db_config
+          ActiveRecord::Base.establish_connection(@@db_config)
+          HTM.logger.debug "HTM database connection established for request thread"
+        else
+          raise "HTM database config not stored - call register_htm at app startup"
+        end
+      rescue ActiveRecord::ConnectionNotDefined, ActiveRecord::ConnectionNotEstablished => e
+        # Pool doesn't exist, establish connection
+        if @@db_config
+          ActiveRecord::Base.establish_connection(@@db_config)
+          HTM.logger.debug "HTM database connection established for request thread"
+        else
+          raise "HTM database config not stored - call register_htm at app startup"
+        end
+      rescue StandardError => e
+        HTM.logger.error "Failed to ensure thread connection: #{e.class} - #{e.message}"
+        raise
       end
     end
   end
@@ -166,6 +213,16 @@ module ::Sinatra
         else
           config.job_backend = :thread
         end
+      end
+
+      # Store database config for thread-safe access and establish initial connection
+      begin
+        HTM::Sinatra::Middleware.store_config!
+        HTM::ActiveRecordConfig.establish_connection!
+        HTM.logger.info "HTM database connection established"
+      rescue StandardError => e
+        HTM.logger.error "Failed to establish HTM database connection: #{e.message}"
+        raise
       end
 
       HTM.logger.info "HTM registered with Sinatra application"
