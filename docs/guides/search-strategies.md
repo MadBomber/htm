@@ -1,6 +1,6 @@
 # Search Strategies Deep Dive
 
-HTM provides three search strategies for retrieving memories: vector search, full-text search, and hybrid search. This guide explores each strategy in depth, when to use them, and how to optimize performance.
+HTM provides three search strategies for retrieving memories: vector search, full-text search, and tag-enhanced hybrid search. This guide explores each strategy in depth, when to use them, and how to optimize performance.
 
 ## Overview
 
@@ -8,7 +8,7 @@ HTM provides three search strategies for retrieving memories: vector search, ful
 |----------|--------|----------|----------|
 | **Vector** | Semantic similarity via embeddings | Understanding meaning | Conceptual queries, related topics |
 | **Full-text** | PostgreSQL text search | Exact keyword matching | Specific terms, proper nouns |
-| **Hybrid** | Combines both approaches | Best overall accuracy | General purpose queries |
+| **Hybrid** | Vector + fulltext + tag matching | Best overall accuracy | General purpose queries |
 
 <svg viewBox="0 0 900 650" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
   <!-- Title -->
@@ -123,14 +123,15 @@ User Query: "database optimization techniques"
 
 ```ruby
 memories = htm.recall(
+  "improving application performance",
   timeframe: "last month",
-  topic: "improving application performance",
   strategy: :vector,
-  limit: 10
+  limit: 10,
+  raw: true  # Get full node data with scores
 )
 
 memories.each do |m|
-  puts "#{m['value']}"
+  puts "#{m['content']}"
   puts "Similarity: #{m['similarity']}"  # 0.0 to 1.0
   puts
 end
@@ -496,43 +497,67 @@ result = conn.exec_params(
 conn.close
 ```
 
-## Hybrid Search (Combined)
+## Hybrid Search (Tag-Enhanced)
 
-Hybrid search combines full-text and vector search for optimal results.
+Hybrid search combines full-text, vector, and tag matching for optimal results. This is the recommended strategy for most use cases.
 
 ### How It Works
 
 ```
 User Query: "PostgreSQL performance tuning"
       ↓
-  Step 1: Full-text Search (Prefilter)
-  - Find all memories with keywords
-  - Limit to 100 candidates
+  Step 1: Find Matching Tags
+  - Search tags for query terms (3+ chars)
+  - E.g., finds "database:postgresql", "performance:optimization"
       ↓
-  Step 2: Vector Ranking
-  - Generate query embedding
-  - Rank candidates by similarity
+  Step 2: Build Candidate Pool
+  - Full-text matches (keyword)
+  - Nodes with matching tags (categorical)
+      ↓
+  Step 3: Score and Rank
+  - Vector similarity (semantic)
+  - Tag boost (categorical match)
+  - Combined score: (similarity × 0.7) + (tag_boost × 0.3)
       ↓
   Final Results
-  - Keyword precision + Semantic understanding
+  - Keyword precision + Semantic understanding + Tag relevance
 ```
 
 ### Basic Usage
 
 ```ruby
 memories = htm.recall(
+  "PostgreSQL performance optimization",
   timeframe: "last month",
-  topic: "PostgreSQL performance optimization",
   strategy: :hybrid,
-  limit: 10
+  limit: 10,
+  raw: true  # Get full node data with scores
 )
 
-# Results have both keyword matches AND semantic relevance
+# Results have keyword matches, semantic relevance, AND tag boosting
 memories.each do |m|
-  puts "#{m['value']}"
-  puts "Similarity: #{m['similarity']}"
+  puts "#{m['content']}"
+  puts "Similarity: #{m['similarity']}"     # Vector similarity (0-1)
+  puts "Tag Boost: #{m['tag_boost']}"        # Tag match score (0-1)
+  puts "Combined: #{m['combined_score']}"   # Weighted combination
   puts
 end
+```
+
+### Tag-Enhanced Scoring
+
+The hybrid search automatically:
+
+1. **Finds matching tags**: Searches tags for query term matches
+2. **Includes tagged nodes**: Adds nodes with matching tags to candidate pool
+3. **Calculates combined score**: `(similarity × 0.7) + (tag_boost × 0.3)`
+
+```ruby
+# Check which tags match a query
+matching_tags = htm.long_term_memory.find_query_matching_tags("PostgreSQL database")
+# => ["database:postgresql", "database:postgresql:extensions", "database:sql"]
+
+# These tags boost relevance of associated nodes in hybrid search
 ```
 
 ### When Hybrid Search Excels
@@ -542,14 +567,16 @@ end
 ```ruby
 # Best for most use cases
 memories = htm.recall(
-  timeframe: "all time",
-  topic: "how to improve database query speed",
-  strategy: :hybrid
+  "how to improve database query speed",
+  timeframe: "last year",
+  strategy: :hybrid,
+  raw: true
 )
 
 # Combines:
 # - Keyword matches (database, query, speed)
 # - Semantic understanding (optimization, performance)
+# - Tag boost (nodes tagged with "database:*")
 ```
 
 **2. Mixed Terminology**
@@ -557,14 +584,16 @@ memories = htm.recall(
 ```ruby
 # Query with both specific and general terms
 memories = htm.recall(
-  timeframe: "all time",
-  topic: "JWT token authentication security best practices",
-  strategy: :hybrid
+  "JWT token authentication security best practices",
+  timeframe: "last year",
+  strategy: :hybrid,
+  raw: true
 )
 
 # Finds:
 # - Exact "JWT" mentions (full-text)
 # - Related security concepts (vector)
+# - Nodes tagged "auth:jwt", "security:*" (tag boost)
 ```
 
 **3. Production Applications**
@@ -572,12 +601,17 @@ memories = htm.recall(
 ```ruby
 # Recommended default for production
 class ProductionSearch
-  def search(query)
-    htm.recall(
-      timeframe: "last 90 days",
-      topic: query,
+  def initialize(htm)
+    @htm = htm
+  end
+
+  def search(query, timeframe: "last 90 days")
+    @htm.recall(
+      query,
+      timeframe: timeframe,
       strategy: :hybrid,  # Best all-around
-      limit: 20
+      limit: 20,
+      raw: true
     )
   end
 end
@@ -587,28 +621,18 @@ end
 
 **Prefilter Limit**
 
-The number of candidates from full-text search:
+The number of candidates considered from each source (fulltext and tags):
 
 ```ruby
-# Internal parameter (not exposed in public API)
-# Default: 100 candidates
-
 # In LongTermMemory#search_hybrid:
-# prefilter_limit: 100
-```
+# prefilter_limit: 100 (default)
 
-For very large databases, you might want to adjust this:
-
-```ruby
-# Direct database query with custom prefilter
-ltm = HTM::LongTermMemory.new(HTM::Database.default_config)
-embedding_service = HTM::EmbeddingService.new
-
-results = ltm.search_hybrid(
-  timeframe: Time.at(0)..Time.now,
+# Direct access with custom prefilter
+results = htm.long_term_memory.search_hybrid(
+  timeframe: (Time.now - 365*24*3600)..Time.now,
   query: "database optimization",
   limit: 10,
-  embedding_service: embedding_service,
+  embedding_service: HTM::EmbeddingService.new,
   prefilter_limit: 200  # More candidates
 )
 ```
@@ -620,15 +644,15 @@ results = ltm.search_hybrid(
 ```ruby
 # Good: Mix of specific keywords and concepts
 htm.recall(
-  topic: "PostgreSQL query optimization indexing performance",
+  "PostgreSQL query optimization indexing performance",
   strategy: :hybrid
 )
 
 # Suboptimal: Only keywords
-htm.recall(topic: "PostgreSQL SQL", strategy: :hybrid)
+htm.recall("PostgreSQL SQL", strategy: :hybrid)
 
 # Suboptimal: Only concepts
-htm.recall(topic: "making things faster", strategy: :hybrid)
+htm.recall("making things faster", strategy: :hybrid)
 ```
 
 **2. Use Appropriate Timeframes**
@@ -636,17 +660,27 @@ htm.recall(topic: "making things faster", strategy: :hybrid)
 ```ruby
 # Narrow timeframe: Faster, more recent results
 htm.recall(
+  "recent errors",
   timeframe: "last week",
-  topic: "recent errors",
   strategy: :hybrid
 )
 
 # Wide timeframe: Comprehensive, slower
 htm.recall(
+  "architecture decisions",
   timeframe: "last year",
-  topic: "architecture decisions",
   strategy: :hybrid
 )
+```
+
+**3. Check Tag Coverage**
+
+```ruby
+# See which tags exist for better query formulation
+popular = htm.long_term_memory.popular_tags(limit: 20)
+popular.each do |tag|
+  puts "#{tag[:name]}: #{tag[:usage_count]} nodes"
+end
 ```
 
 ## Strategy Comparison

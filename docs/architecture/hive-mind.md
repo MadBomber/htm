@@ -250,95 +250,106 @@ end
 !!! info "Related ADR"
     See [ADR-008: Robot Identification System](adrs/008-robot-identification.md) for detailed design decisions.
 
-## Memory Attribution
+## Memory Attribution and Deduplication
 
-Every memory node stores the `robot_id` of the robot that created it, enabling attribution tracking and analysis.
+HTM uses a many-to-many relationship between robots and nodes, enabling both content deduplication and attribution tracking.
 
 ### Attribution Schema
 
 ```sql
+-- Nodes are content-deduplicated via SHA-256 hash
 CREATE TABLE nodes (
   id BIGSERIAL PRIMARY KEY,
-  key TEXT UNIQUE NOT NULL,
-  value TEXT NOT NULL,
-  robot_id TEXT NOT NULL REFERENCES robots(id),  -- Attribution!
+  content TEXT NOT NULL,
+  content_hash VARCHAR(64) UNIQUE,  -- SHA-256 for deduplication
   ...
 );
 
--- Index for robot-specific queries
-CREATE INDEX idx_nodes_robot_id ON nodes(robot_id);
+-- Robot-node relationships tracked in join table
+CREATE TABLE robot_nodes (
+  id BIGSERIAL PRIMARY KEY,
+  robot_id BIGINT NOT NULL REFERENCES robots(id),
+  node_id BIGINT NOT NULL REFERENCES nodes(id),
+  first_remembered_at TIMESTAMPTZ,  -- When robot first saw this content
+  last_remembered_at TIMESTAMPTZ,   -- When robot last tried to remember
+  remember_count INTEGER DEFAULT 1  -- How many times robot remembered this
+);
+
+-- Indexes for efficient queries
+CREATE UNIQUE INDEX idx_robot_nodes_unique ON robot_nodes(robot_id, node_id);
+CREATE INDEX idx_robot_nodes_robot_id ON robot_nodes(robot_id);
+CREATE INDEX idx_robot_nodes_node_id ON robot_nodes(node_id);
 ```
 
-### Attribution Tracking
+### Content Deduplication
 
-When a robot adds a memory:
+When a robot remembers content:
 
 ```ruby
-def add_node(key, value, ...)
-  # Store with attribution
-  node_id = @long_term_memory.add(
-    key: key,
-    value: value,
-    robot_id: @robot_id,  # Attribution
-    ...
-  )
+def remember(content, tags: [])
+  # 1. Compute SHA-256 hash of content
+  content_hash = Digest::SHA256.hexdigest(content)
+
+  # 2. Check if node with same hash exists
+  existing_node = HTM::Models::Node.find_by(content_hash: content_hash)
+
+  if existing_node
+    # 3a. Link robot to existing node (or update remember_count)
+    link_robot_to_node(robot_id: @robot_id, node: existing_node)
+    return existing_node.id
+  else
+    # 3b. Create new node and link robot
+    node = create_new_node(content, content_hash)
+    link_robot_to_node(robot_id: @robot_id, node: node)
+    return node.id
+  end
 end
 ```
 
 ### Attribution Queries
 
-#### Which robot said this?
+#### Which robots remember this content?
 
 ```ruby
-def which_robot_said(topic, limit: 100)
-  results = @long_term_memory.search_fulltext(
-    timeframe: (Time.at(0)..Time.now),
-    query: topic,
-    limit: limit
-  )
-
-  results.group_by { |n| n['robot_id'] }
-         .transform_values(&:count)
+# Find all robots that have remembered a specific node
+def robots_for_node(node_id)
+  HTM::Models::RobotNode
+    .where(node_id: node_id)
+    .includes(:robot)
+    .map do |rn|
+      {
+        robot_name: rn.robot.name,
+        first_remembered_at: rn.first_remembered_at,
+        remember_count: rn.remember_count
+      }
+    end
 end
 
-# Example usage
-breakdown = htm.which_robot_said("PostgreSQL")
-# => { "robot-abc123" => 15, "robot-xyz789" => 8 }
-
-# Get robot names
-breakdown.map do |robot_id, count|
-  robot = db.query("SELECT name FROM robots WHERE id = $1", [robot_id]).first
-  "#{robot['name']}: #{count} mentions"
-end
-# => ["Code Helper: 15 mentions", "Research Bot: 8 mentions"]
+# Example
+robots_for_node(123)
+# => [
+#   { robot_name: "Code Helper", first_remembered_at: "2025-01-15", remember_count: 3 },
+#   { robot_name: "Research Bot", first_remembered_at: "2025-01-16", remember_count: 1 }
+# ]
 ```
 
-#### Conversation timeline
+#### Nodes shared by multiple robots
 
 ```ruby
-def conversation_timeline(topic, limit: 50)
-  results = @long_term_memory.search_fulltext(
-    timeframe: (Time.at(0)..Time.now),
-    query: topic,
-    limit: limit
-  )
-
-  results.sort_by { |n| n['created_at'] }
-         .map { |n| {
-           timestamp: n['created_at'],
-           robot: n['robot_id'],
-           content: n['value'],
-           type: n['type']
-         }}
+# Find content that multiple robots have remembered
+def shared_memories(min_robots: 2, limit: 50)
+  HTM::Models::Node
+    .joins(:robot_nodes)
+    .group('nodes.id')
+    .having('COUNT(DISTINCT robot_nodes.robot_id) >= ?', min_robots)
+    .order('COUNT(DISTINCT robot_nodes.robot_id) DESC')
+    .limit(limit)
+    .map(&:attributes)
 end
 
-# Example usage
-timeline = htm.conversation_timeline("HTM design", limit: 20)
-# => [
-#   { timestamp: "2025-10-20 10:00:00", robot: "robot-abc123", content: "Let's use PostgreSQL", ... },
-#   { timestamp: "2025-10-20 10:15:00", robot: "robot-xyz789", content: "I agree, TimescaleDB is perfect", ... },
-#   ...
-# ]
+# Example
+shared_memories(min_robots: 2)
+# => Nodes that 2+ robots have remembered
 ```
 
 #### Robot activity
@@ -349,18 +360,19 @@ SELECT id, name, last_active
 FROM robots
 ORDER BY last_active DESC;
 
--- Which robot contributed most memories?
-SELECT r.name, COUNT(n.id) as memory_count
+-- Which robot has remembered the most nodes?
+SELECT r.name, COUNT(rn.node_id) as memory_count
 FROM robots r
-LEFT JOIN nodes n ON n.robot_id = r.id
+LEFT JOIN robot_nodes rn ON rn.robot_id = r.id
 GROUP BY r.id, r.name
 ORDER BY memory_count DESC;
 
--- What has a specific robot been doing?
-SELECT operation, created_at, details
-FROM operations_log
-WHERE robot_id = 'robot-abc123'
-ORDER BY created_at DESC
+-- What has a specific robot remembered recently?
+SELECT n.content, rn.first_remembered_at, rn.remember_count
+FROM robot_nodes rn
+JOIN nodes n ON n.id = rn.node_id
+WHERE rn.robot_id = 1
+ORDER BY rn.last_remembered_at DESC
 LIMIT 50;
 ```
 
@@ -374,80 +386,74 @@ A user works with Robot A in one session, then Robot B in another session. Robot
 
 ```ruby
 # Session 1 - Robot A (Code Helper)
-htm_a = HTM.new(robot_id: "robot-abc123", robot_name: "Code Helper A")
-htm_a.add_node(
-  "user_pref_001",
-  "User prefers debug_me over puts for debugging",
-  type: :preference,
-  importance: 9.0
-)
-# Stored in long-term memory with robot_id: "robot-abc123"
+htm_a = HTM.new(robot_name: "Code Helper A")
+htm_a.remember("User prefers debug_me over puts for debugging")
+# Stored in long-term memory, linked to robot A via robot_nodes
 
 # === User logs out, logs in next day ===
 
 # Session 2 - Robot B (different process, same or different machine)
-htm_b = HTM.new(robot_id: "robot-xyz789", robot_name: "Code Helper B")
+htm_b = HTM.new(robot_name: "Code Helper B")
 
 # Robot B recalls preferences
-memories = htm_b.recall(timeframe: "last week", topic: "debugging preference")
+memories = htm_b.recall("debugging preference", timeframe: "last week")
 # => Finds preference from Robot A!
-# => [{ "key" => "user_pref_001", "robot_id" => "robot-abc123", ... }]
 
 # Robot B knows user preference without being told
 ```
 
-### Use Case 2: Collaborative Development
+### Use Case 2: Collaborative Development with Deduplication
 
-Different robots working on different aspects of a project can build on each other's knowledge.
+Different robots working on the same content automatically share nodes.
 
 ```ruby
 # Robot A (Architecture discussion)
 htm_a = HTM.new(robot_name: "Architect Bot")
-htm_a.add_node(
-  "decision_001",
-  "We decided to use PostgreSQL with TimescaleDB for HTM storage",
-  type: :decision,
-  importance: 10.0,
+node_id = htm_a.remember(
+  "We decided to use PostgreSQL with pgvector for HTM storage",
   tags: ["architecture", "database"]
 )
+# => node_id: 123 (new node created)
 
-# Robot B (Implementation)
+# Robot B learns the same fact independently
 htm_b = HTM.new(robot_name: "Code Bot")
-memories = htm_b.recall(timeframe: "today", topic: "database decision")
-# => Finds architectural decision from Robot A
-
-# Robot B implements based on Robot A's decision
-htm_b.add_node(
-  "implementation_001",
-  "Implemented Database class with ConnectionPool for PostgreSQL",
-  type: :code,
-  importance: 7.0,
-  related_to: ["decision_001"],  # Link to Robot A's decision
-  tags: ["implementation", "database"]
+node_id = htm_b.remember(
+  "We decided to use PostgreSQL with pgvector for HTM storage"
 )
+# => node_id: 123 (same node! Content hash matched)
+
+# Both robots now linked to the same node
+# Robot A: remember_count = 1
+# Robot B: remember_count = 1
+
+# Check shared ownership
+rns = HTM::Models::RobotNode.where(node_id: 123)
+rns.each { |rn| puts "Robot #{rn.robot_id}: #{rn.remember_count} times" }
+# => Robot 1: 1 times
+# => Robot 2: 1 times
 ```
 
-### Use Case 3: Multi-Robot Conversation Analysis
+### Use Case 3: Finding Shared Knowledge
 
-Analyze contributions from different robots across a conversation:
+Analyze what content is shared across robots:
 
 ```ruby
-# Get all mentions of "TimescaleDB"
-breakdown = htm.which_robot_said("TimescaleDB", limit: 100)
-# => {
-#   "robot-abc123" => 25,  # Architect Bot
-#   "robot-xyz789" => 12,  # Code Bot
-#   "robot-def456" => 8    # Research Bot
-# }
+# Find nodes remembered by multiple robots
+shared_nodes = HTM::Models::Node
+  .joins(:robot_nodes)
+  .group('nodes.id')
+  .having('COUNT(DISTINCT robot_nodes.robot_id) >= 2')
+  .select('nodes.*, COUNT(DISTINCT robot_nodes.robot_id) as robot_count')
 
-# Get chronological conversation
-timeline = htm.conversation_timeline("TimescaleDB design", limit: 50)
-# => [
-#   { timestamp: "2025-10-20 10:00", robot: "robot-abc123", content: "Let's explore TimescaleDB" },
-#   { timestamp: "2025-10-20 10:15", robot: "robot-xyz789", content: "I'll implement the connection" },
-#   { timestamp: "2025-10-20 10:30", robot: "robot-def456", content: "Here's the research on compression" },
-#   ...
-# ]
+shared_nodes.each do |node|
+  puts "Node #{node.id}: #{node.robot_count} robots"
+  puts "  Content: #{node.content[0..80]}..."
+
+  # Show which robots
+  node.robot_nodes.each do |rn|
+    puts "  - Robot #{rn.robot.name}: remembered #{rn.remember_count}x"
+  end
+end
 ```
 
 ## Robot Activity Tracking
@@ -639,47 +645,47 @@ WHERE rtm.team_id = $1;
 
 ## Code Examples
 
-### Example 1: Persistent Robot with Stable Identity
+### Example 1: Persistent Robot with Named Identity
 
 ```ruby
-# Store robot ID in config or environment
-ROBOT_ID = ENV.fetch('ROBOT_ID', 'code-helper-001')
-
-# Initialize with persistent identity
+# Initialize with persistent name
 htm = HTM.new(
-  robot_id: ROBOT_ID,
   robot_name: "Code Helper",
   working_memory_size: 128_000
 )
 
-# Add memories (attributed to this robot)
-htm.add_node("arch_decision", "Use PostgreSQL", importance: 10.0)
+# Add memories (linked to this robot via robot_nodes)
+htm.remember("Use PostgreSQL for ACID guarantees and pgvector support")
 
-# All memories from this robot_id across sessions
+# Robot ID is stored in database, robot_name is human-readable
+puts "Robot ID: #{htm.robot_id}"
+puts "Robot name: #{htm.robot_name}"
 ```
 
-### Example 2: Multi-Robot Collaboration
+### Example 2: Multi-Robot Collaboration with Deduplication
 
 ```ruby
 # Robot A: Architecture discussion
-robot_a = HTM.new(robot_id: "arch-001", robot_name: "Architect")
-robot_a.add_node(
-  "db_choice",
+robot_a = HTM.new(robot_name: "Architect")
+node_id = robot_a.remember(
   "PostgreSQL chosen for ACID guarantees and pgvector support",
-  type: :decision,
-  importance: 10.0
+  tags: ["architecture:database", "decision"]
 )
 
 # Robot B: Implementation (different process, accesses same LTM)
-robot_b = HTM.new(robot_id: "code-001", robot_name: "Coder")
-decisions = robot_b.recall(timeframe: "today", topic: "database")
+robot_b = HTM.new(robot_name: "Coder")
+decisions = robot_b.recall("database decision", timeframe: "today")
 # => Finds Robot A's decision automatically
 
-robot_b.add_node(
-  "db_impl",
+# If Robot B remembers the same content, it links to existing node
+same_node_id = robot_b.remember(
+  "PostgreSQL chosen for ACID guarantees and pgvector support"
+)
+# => same_node_id == node_id (deduplication!)
+
+robot_b.remember(
   "Implemented Database class with connection pooling",
-  type: :code,
-  related_to: ["db_choice"]  # Link to Robot A's decision
+  tags: ["implementation:database", "code:ruby"]
 )
 ```
 
@@ -687,41 +693,34 @@ robot_b.add_node(
 
 ```ruby
 # Get all robots and their activity
-stats = {}
+stats = []
 
-robots = db.query("SELECT * FROM robots ORDER BY last_active DESC")
+HTM::Models::Robot.order(last_active: :desc).each do |robot|
+  # Count memories via robot_nodes
+  memory_count = robot.robot_nodes.count
 
-robots.each do |robot|
-  # Count memories
-  memory_count = db.query(<<~SQL, [robot['id']]).first['count'].to_i
-    SELECT COUNT(*) FROM nodes WHERE robot_id = $1
-  SQL
+  # Get remember statistics
+  remember_stats = robot.robot_nodes.group(:node_id).count.size  # Unique nodes
+  total_remembers = robot.robot_nodes.sum(:remember_count)       # Total remembers
 
-  # Recent operations
-  recent_ops = db.query(<<~SQL, [robot['id']]).to_a
-    SELECT operation, COUNT(*) as count
-    FROM operations_log
-    WHERE robot_id = $1 AND timestamp > NOW() - INTERVAL '7 days'
-    GROUP BY operation
-  SQL
-
-  stats[robot['name']] = {
-    id: robot['id'],
-    last_active: robot['last_active'],
-    total_memories: memory_count,
-    recent_operations: recent_ops
+  stats << {
+    name: robot.name,
+    id: robot.id,
+    last_active: robot.last_active,
+    unique_memories: memory_count,
+    total_remembers: total_remembers
   }
 end
 
 # Display dashboard
-stats.each do |name, data|
-  puts "#{name} (#{data[:id]})"
+puts "=" * 60
+puts "Robot Activity Dashboard"
+puts "=" * 60
+stats.each do |data|
+  puts "#{data[:name]} (ID: #{data[:id]})"
   puts "  Last active: #{data[:last_active]}"
-  puts "  Total memories: #{data[:total_memories]}"
-  puts "  Recent operations:"
-  data[:recent_operations].each do |op|
-    puts "    #{op['operation']}: #{op['count']}"
-  end
+  puts "  Unique memories: #{data[:unique_memories]}"
+  puts "  Total remembers: #{data[:total_remembers]}"
   puts
 end
 ```

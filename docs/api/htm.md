@@ -7,15 +7,15 @@ The main interface for HTM's intelligent memory management system.
 `HTM` is the primary class that orchestrates the two-tier memory system:
 
 - **Working Memory**: Token-limited active context for immediate LLM use
-- **Long-term Memory**: Durable PostgreSQL storage
+- **Long-term Memory**: Durable PostgreSQL storage with vector embeddings
 
 Key features:
 
 - Never forgets unless explicitly told (`forget`)
 - RAG-based retrieval (temporal + semantic search)
-- Multi-robot "hive mind" - all robots share global memory
-- Relationship graphs for knowledge connections
-- Time-series optimized with TimescaleDB
+- Multi-robot "hive mind" - all robots share global memory via content deduplication
+- Hierarchical tagging for knowledge organization
+- Tag-enhanced hybrid search for improved relevance
 
 ## Class Definition
 
@@ -34,11 +34,12 @@ Create a new HTM instance.
 ```ruby
 HTM.new(
   working_memory_size: 128_000,
-  robot_id: nil,
   robot_name: nil,
   db_config: nil,
-  embedding_service: :ollama,
-  embedding_model: 'gpt-oss'
+  db_pool_size: 5,
+  db_query_timeout: 30_000,
+  db_cache_size: 1000,
+  db_cache_ttl: 300
 )
 ```
 
@@ -47,11 +48,12 @@ HTM.new(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `working_memory_size` | Integer | `128_000` | Maximum tokens for working memory |
-| `robot_id` | String, nil | Auto-generated UUID | Unique identifier for this robot |
-| `robot_name` | String, nil | `"robot_#{id[0..7]}"` | Human-readable name |
+| `robot_name` | String, nil | `"robot_#{uuid[0..7]}"` | Human-readable name |
 | `db_config` | Hash, nil | From `ENV['HTM_DBURL']` | Database configuration |
-| `embedding_service` | Symbol | `:ollama` | Embedding provider (`:ollama`, `:openai`, `:cohere`, `:local`) |
-| `embedding_model` | String | `'gpt-oss'` | Model name for embeddings |
+| `db_pool_size` | Integer | `5` | Database connection pool size |
+| `db_query_timeout` | Integer | `30_000` | Query timeout in milliseconds |
+| `db_cache_size` | Integer | `1000` | Query cache size (0 to disable) |
+| `db_cache_ttl` | Integer | `300` | Cache TTL in seconds |
 
 #### Returns
 
@@ -69,14 +71,7 @@ htm = HTM.new(
   working_memory_size: 256_000
 )
 
-# OpenAI embeddings
-htm = HTM.new(
-  robot_name: "Research Bot",
-  embedding_service: :openai,
-  embedding_model: 'text-embedding-3-small'
-)
-
-# Custom database
+# Custom database configuration
 htm = HTM.new(
   db_config: {
     host: 'localhost',
@@ -86,6 +81,12 @@ htm = HTM.new(
     password: 'secret'
   }
 )
+
+# With caching disabled
+htm = HTM.new(
+  robot_name: "No Cache Bot",
+  db_cache_size: 0
+)
 ```
 
 ---
@@ -94,13 +95,13 @@ htm = HTM.new(
 
 ### `robot_id` {: #robot_id }
 
-Unique identifier for this robot instance.
+Unique integer identifier for this robot instance.
 
-- **Type**: String (UUID format)
+- **Type**: Integer
 - **Read-only**: Yes
 
 ```ruby
-htm.robot_id  # => "a1b2c3d4-e5f6-..."
+htm.robot_id  # => 42
 ```
 
 ### `robot_name` {: #robot_name }
@@ -140,106 +141,86 @@ htm.long_term_memory.stats  # => {...}
 
 ## Public Methods
 
-### `add_node(key, value, **options)` {: #add_node }
+### `remember(content, tags:)` {: #remember }
 
-Add a new memory node to both working and long-term memory.
+Remember new information by storing it in long-term memory.
 
 ```ruby
-add_node(key, value,
-  type: nil,
-  category: nil,
-  importance: 1.0,
-  related_to: [],
-  tags: []
-)
+remember(content, tags: [])
 ```
 
 #### Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `key` | String | *required* | Unique identifier for this node |
-| `value` | String | *required* | Content of the memory |
-| `type` | Symbol, nil | `nil` | Memory type (`:fact`, `:context`, `:code`, `:preference`, `:decision`, `:question`) |
-| `category` | String, nil | `nil` | Optional category for organization |
-| `importance` | Float | `1.0` | Importance score (0.0-10.0) |
-| `related_to` | Array\<String\> | `[]` | Keys of related nodes |
-| `tags` | Array\<String\> | `[]` | Tags for categorization |
+| `content` | String | *required* | The information to remember |
+| `tags` | Array\<String\> | `[]` | Manual tags to assign (in addition to auto-extracted tags) |
 
 #### Returns
 
-- `Integer` - Database ID of the created node
+- `Integer` - Database ID of the memory node
 
 #### Side Effects
 
-- Stores node in PostgreSQL with vector embedding
+- Stores node in PostgreSQL with content deduplication (via SHA-256 hash)
+- Creates/updates `robot_nodes` association for this robot
 - Adds node to working memory (evicts if needed)
-- Creates relationships to `related_to` nodes
-- Adds tags to the node
-- Logs operation to `operations_log` table
+- Enqueues background job for embedding generation (new nodes only)
+- Enqueues background job for tag extraction (new nodes only)
 - Updates robot activity timestamp
+
+#### Content Deduplication
+
+When `remember()` is called:
+
+1. A SHA-256 hash of the content is computed
+2. If a node with the same hash exists, the existing node is reused
+3. A new `robot_nodes` association is created (or `remember_count` is incremented)
+4. This ensures identical memories are stored once but can be "remembered" by multiple robots
 
 #### Examples
 
 ```ruby
-# Simple fact
-htm.add_node("db_choice", "We chose PostgreSQL for its reliability")
+# Basic usage
+node_id = htm.remember("PostgreSQL supports vector similarity search via pgvector")
 
-# Architectural decision
-htm.add_node(
-  "api_gateway_decision",
-  "Decided to use Kong as API gateway for rate limiting and auth",
-  type: :decision,
-  importance: 9.0,
-  tags: ["architecture", "api", "gateway"],
-  related_to: ["microservices_architecture"]
+# With manual tags
+node_id = htm.remember(
+  "Time-series data works great with hypertables",
+  tags: ["database:timescaledb", "performance"]
 )
 
-# Code snippet
-code = <<~RUBY
-  def calculate_total(items)
-    items.sum(&:price)
-  end
-RUBY
+# Multiple robots remembering the same content
+robot1 = HTM.new(robot_name: "assistant_1")
+robot2 = HTM.new(robot_name: "assistant_2")
 
-htm.add_node(
-  "total_calculation_v1",
-  code,
-  type: :code,
-  category: "helpers",
-  importance: 5.0,
-  tags: ["ruby", "calculation"]
-)
-
-# User preference
-htm.add_node(
-  "user_123_timezone",
-  "User prefers UTC timezone for all timestamps",
-  type: :preference,
-  category: "user_settings",
-  importance: 6.0
-)
+# Both robots remember the same fact - stored once, linked to both
+robot1.remember("Ruby 3.3 was released in December 2023")
+robot2.remember("Ruby 3.3 was released in December 2023")
+# Same node_id returned, remember_count incremented for robot2
 ```
 
 #### Notes
 
-- The `key` must be unique across all nodes
-- Embeddings are generated automatically
-- Token count is calculated automatically
-- If working memory is full, less important nodes are evicted
+- Embeddings and hierarchical tags are generated asynchronously via background jobs
+- Empty content returns the ID of the most recent node without creating a duplicate
+- Token count is calculated automatically using the configured token counter
 
 ---
 
-### `recall(timeframe:, topic:, **options)` {: #recall }
+### `recall(topic, **options)` {: #recall }
 
-Recall memories from a timeframe and topic using RAG-based retrieval.
+Recall memories from long-term storage using RAG-based retrieval.
 
 ```ruby
 recall(
-  timeframe:,
-  topic:,
+  topic,
+  timeframe: "last 7 days",
   limit: 20,
-  strategy: :vector
+  strategy: :vector,
+  with_relevance: false,
+  query_tags: [],
+  raw: false
 )
 ```
 
@@ -247,10 +228,13 @@ recall(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `timeframe` | String, Range | *required* | Time range (e.g., `"last week"`, `7.days.ago..Time.now`) |
 | `topic` | String | *required* | Topic to search for |
+| `timeframe` | String, Range | `"last 7 days"` | Time range |
 | `limit` | Integer | `20` | Maximum number of nodes to retrieve |
 | `strategy` | Symbol | `:vector` | Search strategy (`:vector`, `:fulltext`, `:hybrid`) |
+| `with_relevance` | Boolean | `false` | Include dynamic relevance scores |
+| `query_tags` | Array\<String\> | `[]` | Tags to boost relevance |
+| `raw` | Boolean | `false` | Return full node hashes instead of content strings |
 
 #### Timeframe Formats
 
@@ -274,27 +258,35 @@ Range format:
 |----------|-------------|----------|
 | `:vector` | Semantic similarity using embeddings | Find conceptually related content |
 | `:fulltext` | PostgreSQL full-text search | Find exact terms and phrases |
-| `:hybrid` | Fulltext prefilter + vector ranking | Best accuracy + semantic understanding |
+| `:hybrid` | Vector + fulltext + tag matching | Best accuracy with tag boosting |
+
+#### Tag-Enhanced Hybrid Search
+
+When using `:hybrid` strategy, the search automatically:
+
+1. Finds tags matching query terms (words 3+ chars)
+2. Includes nodes with matching tags in the candidate pool
+3. Calculates combined score: `(similarity × 0.7) + (tag_boost × 0.3)`
+4. Returns results sorted by combined score
 
 #### Returns
 
-- `Array<Hash>` - Retrieved memory nodes
+- `Array<String>` - Content strings (when `raw: false`, default)
+- `Array<Hash>` - Full node hashes (when `raw: true`)
 
-Each hash contains:
+When `raw: true`, each hash contains:
 
 ```ruby
 {
   "id" => 123,                    # Database ID
-  "key" => "node_key",            # Node identifier
-  "value" => "content...",        # Node content
-  "type" => "fact",               # Node type
-  "category" => "architecture",   # Category
-  "importance" => 8.0,            # Importance score
+  "content" => "...",             # Node content
+  "content_hash" => "abc123...",  # SHA-256 hash
+  "access_count" => 5,            # Times accessed
   "created_at" => "2025-01-15...", # Creation timestamp
-  "robot_id" => "abc123...",      # Robot that created it
   "token_count" => 125,           # Token count
-  "similarity" => 0.87            # Similarity score (vector/hybrid only)
-  # or "rank" => 0.456            # Rank score (fulltext only)
+  "similarity" => 0.87,           # Similarity score (hybrid/vector)
+  "tag_boost" => 0.3,             # Tag boost score (hybrid only)
+  "combined_score" => 0.79        # Combined score (hybrid only)
 }
 ```
 
@@ -302,118 +294,79 @@ Each hash contains:
 
 - Adds recalled nodes to working memory
 - Evicts existing nodes if working memory is full
-- Logs operation to `operations_log` table
 - Updates robot activity timestamp
 
 #### Examples
 
 ```ruby
+# Basic usage (returns content strings)
+memories = htm.recall("PostgreSQL")
+# => ["PostgreSQL supports vector search...", "PostgreSQL with pgvector..."]
+
+# Get full node hashes
+nodes = htm.recall("PostgreSQL", raw: true)
+# => [{"id" => 1, "content" => "...", "similarity" => 0.92, ...}, ...]
+
 # Vector semantic search
 memories = htm.recall(
+  "database performance optimization",
   timeframe: "last week",
-  topic: "database performance optimization"
+  strategy: :vector
 )
 
 # Fulltext search for exact phrases
 memories = htm.recall(
+  "PostgreSQL connection pooling",
   timeframe: "last 30 days",
-  topic: "PostgreSQL connection pooling",
   strategy: :fulltext,
   limit: 10
 )
 
-# Hybrid search (best of both)
+# Hybrid search with tag boosting (recommended)
 memories = htm.recall(
+  "API rate limiting implementation",
   timeframe: "this month",
-  topic: "API rate limiting implementation",
   strategy: :hybrid,
-  limit: 15
+  limit: 15,
+  raw: true
 )
+
+# Check matching tags for a query
+matching_tags = htm.long_term_memory.find_query_matching_tags("PostgreSQL")
+# => ["database:postgresql", "database:postgresql:extensions"]
 
 # Custom time range
 start_time = Time.new(2025, 1, 1)
 end_time = Time.now
 
 memories = htm.recall(
+  "security vulnerabilities",
   timeframe: start_time..end_time,
-  topic: "security vulnerabilities",
   limit: 50
 )
-
-# Process results
-memories.each do |memory|
-  puts "#{memory['created_at']}: #{memory['value']}"
-  puts "  Similarity: #{memory['similarity']}" if memory['similarity']
-  puts "  Robot: #{memory['robot_id']}"
-end
 ```
 
 #### Performance Notes
 
 - Vector search: Best for semantic understanding, requires embedding generation
 - Fulltext search: Fastest for exact matches, no embedding overhead
-- Hybrid search: Slower but most accurate, combines both approaches
+- Hybrid search: Most accurate, combines vector + fulltext + tags with weighted scoring
 
 ---
 
-### `retrieve(key)` {: #retrieve }
-
-Retrieve a specific memory node by its key.
-
-```ruby
-retrieve(key)
-```
-
-#### Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `key` | String | Key of the node to retrieve |
-
-#### Returns
-
-- `Hash` - Node data if found
-- `nil` - If node doesn't exist
-
-#### Side Effects
-
-- Updates `last_accessed` timestamp for the node
-- Logs operation to `operations_log` table
-
-#### Examples
-
-```ruby
-# Retrieve a node
-node = htm.retrieve("api_decision_001")
-
-if node
-  puts node['value']
-  puts "Created: #{node['created_at']}"
-  puts "Importance: #{node['importance']}"
-else
-  puts "Node not found"
-end
-
-# Use retrieved data
-config = htm.retrieve("database_config")
-db_url = JSON.parse(config['value'])['url'] if config
-```
-
----
-
-### `forget(key, confirm:)` {: #forget }
+### `forget(node_id, confirm:)` {: #forget }
 
 Explicitly delete a memory node. Requires confirmation to prevent accidental deletion.
 
 ```ruby
-forget(key, confirm: :confirmed)
+forget(node_id, confirm: :confirmed)
 ```
 
 #### Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `key` | String | Key of the node to delete |
+| `node_id` | Integer | ID of the node to delete |
 | `confirm` | Symbol | Must be `:confirmed` to proceed |
 
 #### Returns
@@ -423,27 +376,28 @@ forget(key, confirm: :confirmed)
 #### Raises
 
 - `ArgumentError` - If `confirm` is not `:confirmed`
+- `ArgumentError` - If `node_id` is nil
+- `HTM::NotFoundError` - If node doesn't exist
 
 #### Side Effects
 
 - Deletes node from PostgreSQL
 - Removes node from working memory
-- Logs operation before deletion
 - Updates robot activity timestamp
 
 #### Examples
 
 ```ruby
 # Correct usage
-htm.forget("temp_note_123", confirm: :confirmed)
+htm.forget(123, confirm: :confirmed)
 
 # This will raise ArgumentError
-htm.forget("temp_note_123")  # Missing confirm parameter
+htm.forget(123)  # Missing confirm parameter
 
 # Safe deletion with verification
-if htm.retrieve("old_data")
-  htm.forget("old_data", confirm: :confirmed)
-  puts "Deleted old_data"
+if htm.long_term_memory.exists?(node_id)
+  htm.forget(node_id, confirm: :confirmed)
+  puts "Deleted node #{node_id}"
 end
 ```
 
@@ -451,250 +405,8 @@ end
 
 - This is the **only** way to delete data from HTM
 - Deletion is permanent and cannot be undone
-- Related relationships and tags are also deleted (CASCADE)
-
----
-
-### `create_context(strategy:, max_tokens:)` {: #create_context }
-
-Create a context string from working memory for LLM consumption.
-
-```ruby
-create_context(strategy: :balanced, max_tokens: nil)
-```
-
-#### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `strategy` | Symbol | `:balanced` | Assembly strategy |
-| `max_tokens` | Integer, nil | Working memory max | Optional token limit |
-
-#### Assembly Strategies
-
-| Strategy | Behavior | Use Case |
-|----------|----------|----------|
-| `:recent` | Most recently accessed first | Prioritize latest information |
-| `:important` | Highest importance scores first | Focus on critical information |
-| `:balanced` | Weighted by importance × recency | Best general-purpose strategy |
-
-#### Returns
-
-- `String` - Assembled context with nodes separated by `"\n\n"`
-
-#### Examples
-
-```ruby
-# Balanced context (default)
-context = htm.create_context(strategy: :balanced)
-
-# Recent context with token limit
-context = htm.create_context(
-  strategy: :recent,
-  max_tokens: 50_000
-)
-
-# Important context only
-context = htm.create_context(strategy: :important)
-
-# Use in LLM prompt
-prompt = <<~PROMPT
-  You are a helpful assistant.
-
-  Context from memory:
-  #{context}
-
-  User question: #{user_input}
-PROMPT
-```
-
-#### Notes
-
-- Nodes are concatenated with double newlines
-- Token limits are respected (stops adding when limit reached)
-- Empty string if working memory is empty
-
----
-
-### `memory_stats()` {: #memory_stats }
-
-Get comprehensive statistics about memory usage.
-
-```ruby
-memory_stats()
-```
-
-#### Returns
-
-- `Hash` - Statistics hash
-
-Structure:
-
-```ruby
-{
-  robot_id: "abc123...",
-  robot_name: "Assistant",
-
-  # Long-term memory stats
-  total_nodes: 1234,
-  nodes_by_robot: {
-    "robot-1" => 500,
-    "robot-2" => 734
-  },
-  nodes_by_type: [
-    {"type" => "fact", "count" => 400},
-    {"type" => "decision", "count" => 200},
-    ...
-  ],
-  total_relationships: 567,
-  total_tags: 890,
-  oldest_memory: "2025-01-01 12:00:00",
-  newest_memory: "2025-01-15 14:30:00",
-  active_robots: 3,
-  robot_activity: [...],
-  database_size: 12345678,
-
-  # Working memory stats
-  working_memory: {
-    current_tokens: 45234,
-    max_tokens: 128000,
-    utilization: 35.34,
-    node_count: 23
-  }
-}
-```
-
-#### Examples
-
-```ruby
-stats = htm.memory_stats
-
-puts "Total memories: #{stats[:total_nodes]}"
-puts "Working memory: #{stats[:working_memory][:utilization]}% full"
-puts "Active robots: #{stats[:active_robots]}"
-
-# Check if working memory is getting full
-if stats[:working_memory][:utilization] > 80
-  puts "Warning: Working memory is #{stats[:working_memory][:utilization]}% full"
-end
-
-# Display by robot
-stats[:nodes_by_robot].each do |robot_id, count|
-  puts "#{robot_id}: #{count} nodes"
-end
-```
-
----
-
-### `which_robot_said(topic, limit:)` {: #which_robot_said }
-
-Find which robots have discussed a specific topic.
-
-```ruby
-which_robot_said(topic, limit: 100)
-```
-
-#### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `topic` | String | *required* | Topic to search for |
-| `limit` | Integer | `100` | Maximum results to consider |
-
-#### Returns
-
-- `Hash` - Robot IDs mapped to mention counts
-
-```ruby
-{
-  "robot-abc123" => 15,
-  "robot-def456" => 8,
-  "robot-ghi789" => 3
-}
-```
-
-#### Examples
-
-```ruby
-# Find who discussed deployment
-robots = htm.which_robot_said("deployment")
-# => {"robot-1" => 12, "robot-2" => 5}
-
-# Top contributor
-top_robot, count = robots.max_by { |robot, count| count }
-puts "#{top_robot} mentioned it #{count} times"
-
-# Check if specific robot discussed it
-if robots.key?("robot-123")
-  puts "Robot-123 discussed deployment #{robots['robot-123']} times"
-end
-```
-
----
-
-### `conversation_timeline(topic, limit:)` {: #conversation_timeline }
-
-Get a chronological timeline of conversation about a topic.
-
-```ruby
-conversation_timeline(topic, limit: 50)
-```
-
-#### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `topic` | String | *required* | Topic to search for |
-| `limit` | Integer | `50` | Maximum results |
-
-#### Returns
-
-- `Array<Hash>` - Timeline entries sorted by timestamp
-
-Structure:
-
-```ruby
-[
-  {
-    timestamp: "2025-01-15 10:30:00",
-    robot: "robot-abc123",
-    content: "We should consider PostgreSQL...",
-    type: "decision"
-  },
-  {
-    timestamp: "2025-01-15 11:45:00",
-    robot: "robot-def456",
-    content: "Agreed, PostgreSQL has better...",
-    type: "fact"
-  },
-  ...
-]
-```
-
-#### Examples
-
-```ruby
-# Get timeline
-timeline = htm.conversation_timeline("API design", limit: 20)
-
-# Display timeline
-timeline.each do |entry|
-  puts "[#{entry[:timestamp]}] #{entry[:robot]}:"
-  puts "  #{entry[:content]}"
-  puts "  (#{entry[:type]})"
-  puts
-end
-
-# Find first mention
-first = timeline.first
-puts "First discussed by #{first[:robot]} at #{first[:timestamp]}"
-
-# Group by robot
-by_robot = timeline.group_by { |e| e[:robot] }
-by_robot.each do |robot, entries|
-  puts "#{robot}: #{entries.size} contributions"
-end
-```
+- Related robot_nodes, node_tags are also deleted (CASCADE)
+- Other robots' associations to this node are also removed
 
 ---
 
@@ -704,12 +416,24 @@ end
 
 ```ruby
 # Invalid confirm parameter
-htm.forget("key")
+htm.forget(123)
 # => ArgumentError: Must pass confirm: :confirmed to delete
 
+# Nil node_id
+htm.forget(nil, confirm: :confirmed)
+# => ArgumentError: node_id cannot be nil
+
 # Invalid timeframe
-htm.recall(timeframe: nil, topic: "test")
-# => ArgumentError: Invalid timeframe: nil
+htm.recall("test", timeframe: 123)
+# => ValidationError: Timeframe must be a Range or String
+```
+
+### HTM::NotFoundError
+
+```ruby
+# Node doesn't exist
+htm.forget(999999, confirm: :confirmed)
+# => HTM::NotFoundError: Node not found: 999999
 ```
 
 ### PG::Error
@@ -718,73 +442,95 @@ htm.recall(timeframe: nil, topic: "test")
 # Database connection issues
 htm = HTM.new(db_config: { host: 'invalid' })
 # => PG::ConnectionBad: could not translate host name...
-
-# Duplicate key
-htm.add_node("existing_key", "value")
-# => PG::UniqueViolation: duplicate key value...
 ```
 
 ## Best Practices
 
-### Memory Organization
+### Content Organization
 
 ```ruby
-# Use consistent key naming
-htm.add_node("decision_20250115_api_gateway", ...)
-htm.add_node("fact_20250115_database_choice", ...)
+# Use meaningful content that stands alone
+htm.remember("PostgreSQL was chosen for its reliability and pgvector support")
 
-# Use importance strategically
-htm.add_node(key, value, importance: 9.0)  # Critical
-htm.add_node(key, value, importance: 5.0)  # Normal
-htm.add_node(key, value, importance: 2.0)  # Low priority
-
-# Build knowledge graphs
-htm.add_node(
-  "api_v2_implementation",
-  "...",
-  related_to: ["api_v1_design", "authentication_decision"]
+# Add hierarchical tags for organization
+htm.remember(
+  "Rate limiting implemented using Redis sliding window algorithm",
+  tags: ["architecture:api:rate-limiting", "database:redis"]
 )
+
+# Let the system extract tags automatically for most content
+htm.remember("The authentication system uses JWT tokens with 1-hour expiry")
+# Auto-extracted tags might include: security:authentication, technology:jwt
 ```
 
 ### Search Strategies
 
 ```ruby
+# Use hybrid for best results (recommended)
+memories = htm.recall(
+  "security vulnerability",
+  strategy: :hybrid  # Combines vector + fulltext + tags
+)
+
 # Use vector for semantic understanding
 memories = htm.recall(
-  timeframe: "last month",
-  topic: "performance issues",
+  "performance issues",
   strategy: :vector  # Finds "slow queries", "optimization", etc.
 )
 
 # Use fulltext for exact terms
 memories = htm.recall(
-  timeframe: "this week",
-  topic: "PostgreSQL EXPLAIN ANALYZE",
+  "PostgreSQL EXPLAIN ANALYZE",
   strategy: :fulltext  # Exact match
 )
+```
 
-# Use hybrid for best results
-memories = htm.recall(
-  timeframe: "last week",
-  topic: "security vulnerability",
-  strategy: :hybrid  # Accurate + semantic
-)
+### Leveraging Tag-Enhanced Search
+
+```ruby
+# Check what tags exist for a topic
+tags = htm.long_term_memory.find_query_matching_tags("database")
+# => ["database:postgresql", "database:redis", "database:timescaledb"]
+
+# Hybrid search automatically boosts nodes with matching tags
+memories = htm.recall("database optimization", strategy: :hybrid, raw: true)
+memories.each do |m|
+  puts "Score: #{m['combined_score']} (sim: #{m['similarity']}, tag: #{m['tag_boost']})"
+end
+```
+
+### Multi-Robot Memory Sharing
+
+```ruby
+# Content is deduplicated across robots
+assistant = HTM.new(robot_name: "assistant")
+researcher = HTM.new(robot_name: "researcher")
+
+# Both robots remember the same fact
+assistant.remember("Ruby 3.3 supports YJIT by default")
+researcher.remember("Ruby 3.3 supports YJIT by default")
+# Node stored once, linked to both robots
+
+# Any robot can recall shared memories
+memories = assistant.recall("Ruby YJIT")
+# Returns the shared memory
 ```
 
 ### Resource Management
 
 ```ruby
 # Check working memory before large operations
-stats = htm.memory_stats
-if stats[:working_memory][:utilization] > 90
-  # Maybe explicitly recall less
+stats = htm.working_memory.stats
+if stats[:utilization] > 90
+  # Consider clearing working memory or using smaller limits
 end
 
 # Use appropriate limits
-htm.recall(topic: "common_topic", limit: 10)  # Not 1000
+htm.recall("common_topic", limit: 10)  # Not 1000
 
-# Monitor database size
-if stats[:database_size] > 1_000_000_000  # 1GB
+# Monitor node counts
+node_count = HTM::Models::Node.count
+if node_count > 1_000_000
   # Consider archival strategy
 end
 ```

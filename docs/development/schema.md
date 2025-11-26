@@ -24,143 +24,7 @@ CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 
 Here's the complete database structure:
 
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" style="background: transparent;">
-  <defs>
-    <style>
-      .table-box { fill: #1e1e1e; stroke: #4a9eff; stroke-width: 2; }
-      .table-header { fill: #2d5a8e; }
-      .text-header { fill: #ffffff; font-family: monospace; font-size: 14px; font-weight: bold; }
-      .text-field { fill: #d4d4d4; font-family: monospace; font-size: 11px; }
-      .text-type { fill: #8cb4e8; font-family: monospace; font-size: 10px; }
-      .relation-line { stroke: #4a9eff; stroke-width: 1.5; fill: none; }
-      .arrow { fill: #4a9eff; }
-      .join-table { fill: #1e3a1e; stroke: #4a9eff; stroke-width: 2; }
-    </style>
-  </defs>
-
-  <!-- Robots Table -->
-  <rect class="table-box" x="50" y="50" width="280" height="140" rx="5"/>
-  <rect class="table-header" x="50" y="50" width="280" height="35" rx="5"/>
-  <text class="text-header" x="190" y="73" text-anchor="middle">robots</text>
-
-  <text class="text-field" x="60" y="100">id</text>
-  <text class="text-type" x="320" y="100" text-anchor="end">BIGSERIAL PK</text>
-
-  <text class="text-field" x="60" y="120">name</text>
-  <text class="text-type" x="320" y="120" text-anchor="end">TEXT</text>
-
-  <text class="text-field" x="60" y="140">created_at</text>
-  <text class="text-type" x="320" y="140" text-anchor="end">TIMESTAMPTZ</text>
-
-  <text class="text-field" x="60" y="160">last_active</text>
-  <text class="text-type" x="320" y="160" text-anchor="end">TIMESTAMPTZ</text>
-
-  <text class="text-field" x="60" y="180">metadata</text>
-  <text class="text-type" x="320" y="180" text-anchor="end">JSONB</text>
-
-  <!-- Nodes Table -->
-  <rect class="table-box" x="50" y="250" width="280" height="400" rx="5"/>
-  <rect class="table-header" x="50" y="250" width="280" height="35" rx="5"/>
-  <text class="text-header" x="190" y="273" text-anchor="middle">nodes</text>
-
-  <text class="text-field" x="60" y="300">id</text>
-  <text class="text-type" x="320" y="300" text-anchor="end">BIGSERIAL PK</text>
-
-  <text class="text-field" x="60" y="320">content</text>
-  <text class="text-type" x="320" y="320" text-anchor="end">TEXT NOT NULL</text>
-
-  <text class="text-field" x="60" y="340">speaker</text>
-  <text class="text-type" x="320" y="340" text-anchor="end">TEXT NOT NULL</text>
-
-  <text class="text-field" x="60" y="360">type</text>
-  <text class="text-type" x="320" y="360" text-anchor="end">TEXT</text>
-
-  <text class="text-field" x="60" y="380">category</text>
-  <text class="text-type" x="320" y="380" text-anchor="end">TEXT</text>
-
-  <text class="text-field" x="60" y="400">importance</text>
-  <text class="text-type" x="320" y="400" text-anchor="end">DOUBLE PRECISION</text>
-
-  <text class="text-field" x="60" y="420">created_at</text>
-  <text class="text-type" x="320" y="420" text-anchor="end">TIMESTAMPTZ</text>
-
-  <text class="text-field" x="60" y="440">updated_at</text>
-  <text class="text-type" x="320" y="440" text-anchor="end">TIMESTAMPTZ</text>
-
-  <text class="text-field" x="60" y="460">last_accessed</text>
-  <text class="text-type" x="320" y="460" text-anchor="end">TIMESTAMPTZ</text>
-
-  <text class="text-field" x="60" y="480">token_count</text>
-  <text class="text-type" x="320" y="480" text-anchor="end">INTEGER</text>
-
-  <text class="text-field" x="60" y="500">in_working_memory</text>
-  <text class="text-type" x="320" y="500" text-anchor="end">BOOLEAN</text>
-
-  <text class="text-field" x="60" y="520">robot_id</text>
-  <text class="text-type" x="320" y="520" text-anchor="end">BIGINT FK</text>
-
-  <text class="text-field" x="60" y="540">embedding</text>
-  <text class="text-type" x="320" y="540" text-anchor="end">vector(2000)</text>
-
-  <text class="text-field" x="60" y="560">embedding_dimension</text>
-  <text class="text-type" x="320" y="560" text-anchor="end">INTEGER</text>
-
-  <!-- Tags Table -->
-  <rect class="table-box" x="850" y="250" width="280" height="120" rx="5"/>
-  <rect class="table-header" x="850" y="250" width="280" height="35" rx="5"/>
-  <text class="text-header" x="990" y="273" text-anchor="middle">tags</text>
-
-  <text class="text-field" x="860" y="300">id</text>
-  <text class="text-type" x="1120" y="300" text-anchor="end">BIGSERIAL PK</text>
-
-  <text class="text-field" x="860" y="320">name</text>
-  <text class="text-type" x="1120" y="320" text-anchor="end">TEXT UNIQUE</text>
-
-  <text class="text-field" x="860" y="340">created_at</text>
-  <text class="text-type" x="1120" y="340" text-anchor="end">TIMESTAMPTZ</text>
-
-  <!-- nodes_tags Join Table -->
-  <rect class="join-table" x="450" y="420" width="280" height="140" rx="5"/>
-  <rect class="table-header" x="450" y="420" width="280" height="35" rx="5"/>
-  <text class="text-header" x="590" y="443" text-anchor="middle">nodes_tags</text>
-
-  <text class="text-field" x="460" y="470">id</text>
-  <text class="text-type" x="720" y="470" text-anchor="end">BIGSERIAL PK</text>
-
-  <text class="text-field" x="460" y="490">node_id</text>
-  <text class="text-type" x="720" y="490" text-anchor="end">BIGINT FK</text>
-
-  <text class="text-field" x="460" y="510">tag_id</text>
-  <text class="text-type" x="720" y="510" text-anchor="end">BIGINT FK</text>
-
-  <text class="text-field" x="460" y="530">created_at</text>
-  <text class="text-type" x="720" y="530" text-anchor="end">TIMESTAMPTZ</text>
-
-  <!-- Relationships: robots -> nodes -->
-  <path class="relation-line" d="M 190 190 L 190 250"/>
-  <polygon class="arrow" points="190,250 185,240 195,240"/>
-
-  <!-- Relationships: nodes -> nodes_tags -->
-  <path class="relation-line" d="M 330 490 L 450 490"/>
-  <polygon class="arrow" points="450,490 440,485 440,495"/>
-
-  <!-- Relationships: tags -> nodes_tags -->
-  <path class="relation-line" d="M 850 310 L 730 310 L 730 510 L 730 510"/>
-  <polygon class="arrow" points="730,510 725,500 735,500"/>
-
-  <!-- Legend -->
-  <text class="text-field" x="50" y="720" font-weight="bold">Legend:</text>
-  <text class="text-field" x="50" y="740">PK = Primary Key</text>
-  <text class="text-field" x="200" y="740">FK = Foreign Key</text>
-  <text class="text-field" x="50" y="760">Green box = Join table (many-to-many)</text>
-
-  <!-- Annotations -->
-  <text class="text-field" x="400" y="370" font-style="italic">1:N</text>
-  <text class="text-field" x="380" y="480" font-style="italic">N:M</text>
-  <text class="text-field" x="770" y="480" font-style="italic">N:M</text>
-</svg>
-```
+![HTM Entity-Relationship Diagram](../images/htm-er-diagram.svg)
 
 ## Table Definitions
 
@@ -197,7 +61,7 @@ ALTER TABLE ONLY public.robots ADD CONSTRAINT robots_pkey PRIMARY KEY (id);
 - `PRIMARY KEY` on `id`
 
 **Relationships**:
-- One robot has many nodes (1:N)
+- Many robots have many nodes through robot_nodes (N:M)
 
 ---
 
@@ -205,31 +69,26 @@ ALTER TABLE ONLY public.robots ADD CONSTRAINT robots_pkey PRIMARY KEY (id);
 
 The core table storing all memory nodes with vector embeddings for semantic search.
 
-**Purpose**: Stores all memories (conversation messages, facts, decisions, code, etc.) with full-text and vector search capabilities.
+**Purpose**: Stores all memories (conversation messages, facts, etc.) with full-text and vector search capabilities. Nodes are shared across robots via the `robot_nodes` join table, enabling a "hive mind" architecture where identical content is stored once and referenced by multiple robots.
 
 ```sql
 CREATE TABLE public.nodes (
     id bigint NOT NULL,
     content text NOT NULL,
-    speaker text NOT NULL,
-    type text,
-    category text,
-    importance double precision DEFAULT 1.0,
+    access_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     last_accessed timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     token_count integer,
     in_working_memory boolean DEFAULT false,
-    robot_id bigint NOT NULL,
     embedding public.vector(2000),
     embedding_dimension integer,
+    content_hash character varying(64),
     CONSTRAINT check_embedding_dimension CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension > 0) AND (embedding_dimension <= 2000))))
 );
 
 ALTER TABLE ONLY public.nodes ALTER COLUMN id SET DEFAULT nextval('public.nodes_id_seq'::regclass);
 ALTER TABLE ONLY public.nodes ADD CONSTRAINT nodes_pkey PRIMARY KEY (id);
-ALTER TABLE ONLY public.nodes
-    ADD CONSTRAINT fk_rails_60162e9d3a FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
 ```
 
 **Columns**:
@@ -238,26 +97,21 @@ ALTER TABLE ONLY public.nodes
 |--------|------|----------|---------|-------------|
 | `id` | BIGINT | NO | AUTO | Unique identifier (primary key) |
 | `content` | TEXT | NO | - | The conversation message/utterance content |
-| `speaker` | TEXT | NO | - | Who said it: user or robot name |
-| `type` | TEXT | YES | NULL | Memory type: fact, context, code, preference, decision, question |
-| `category` | TEXT | YES | NULL | Optional category for organizing memories |
-| `importance` | DOUBLE PRECISION | YES | 1.0 | Importance score (0.0-1.0) for prioritizing recall |
+| `content_hash` | VARCHAR(64) | YES | NULL | SHA-256 hash of content for deduplication |
+| `access_count` | INTEGER | NO | 0 | Number of times this node has been accessed/retrieved |
 | `created_at` | TIMESTAMPTZ | YES | NOW() | When this memory was created |
 | `updated_at` | TIMESTAMPTZ | YES | NOW() | When this memory was last modified |
 | `last_accessed` | TIMESTAMPTZ | YES | NOW() | When this memory was last accessed |
 | `token_count` | INTEGER | YES | NULL | Number of tokens in the content (for context budget management) |
 | `in_working_memory` | BOOLEAN | YES | FALSE | Whether this memory is currently in working memory |
-| `robot_id` | BIGINT | NO | - | ID of the robot that owns this memory |
 | `embedding` | vector(2000) | YES | NULL | Vector embedding (max 2000 dimensions) for semantic search |
 | `embedding_dimension` | INTEGER | YES | NULL | Actual number of dimensions used in the embedding vector (max 2000) |
 
 **Indexes**:
 
 - `PRIMARY KEY` on `id`
-- `idx_nodes_robot_id` BTREE on `robot_id`
-- `idx_nodes_speaker` BTREE on `speaker`
-- `idx_nodes_type` BTREE on `type`
-- `idx_nodes_category` BTREE on `category`
+- `idx_nodes_content_hash_unique` UNIQUE BTREE on `content_hash` - Enforces content deduplication
+- `idx_nodes_access_count` BTREE on `access_count`
 - `idx_nodes_created_at` BTREE on `created_at`
 - `idx_nodes_updated_at` BTREE on `updated_at`
 - `idx_nodes_last_accessed` BTREE on `last_accessed`
@@ -266,15 +120,92 @@ ALTER TABLE ONLY public.nodes
 - `idx_nodes_content_gin` GIN on `to_tsvector('english', content)` for full-text search
 - `idx_nodes_content_trgm` GIN on `content` using `gin_trgm_ops` for fuzzy matching
 
-**Foreign Keys**:
-- `robot_id` references `robots(id)` ON DELETE CASCADE
-
 **Relationships**:
-- Many nodes belong to one robot (N:1)
-- Many nodes have many tags through nodes_tags (N:M)
+- Many nodes have many robots through robot_nodes (N:M)
+- Many nodes have many tags through node_tags (N:M)
 
 **Check Constraints**:
 - `check_embedding_dimension`: Ensures embedding_dimension is NULL or between 1 and 2000
+
+**Deduplication**:
+
+Content deduplication is enforced via SHA-256 hashing:
+
+1. When `remember()` is called, a SHA-256 hash of the content is computed
+2. If a node with the same `content_hash` exists, the existing node is reused
+3. A new `robot_nodes` association is created (or updated if it already exists)
+4. This ensures identical memories are stored once but can be "remembered" by multiple robots
+
+---
+
+### robot_nodes
+
+The robot_nodes join table implements the many-to-many relationship between robots and nodes, enabling shared memory across robots.
+
+**Purpose**: Links robots to nodes, allowing each node to be remembered by multiple robots and each robot to access multiple nodes. This enables the "hive mind" architecture where robots share memories. Also tracks per-robot remember metadata (when/how often a robot remembered content).
+
+```sql
+CREATE TABLE public.robot_nodes (
+    id bigint NOT NULL,
+    robot_id bigint NOT NULL,
+    node_id bigint NOT NULL,
+    first_remembered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    last_remembered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    remember_count integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE ONLY public.robot_nodes ALTER COLUMN id SET DEFAULT nextval('public.robot_nodes_id_seq'::regclass);
+ALTER TABLE ONLY public.robot_nodes ADD CONSTRAINT robot_nodes_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.robot_nodes
+    ADD CONSTRAINT fk_rails_9b003078a8 FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.robot_nodes
+    ADD CONSTRAINT fk_rails_f2fc98d49e FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+```
+
+**Columns**:
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | BIGINT | NO | AUTO | Unique identifier (primary key) |
+| `robot_id` | BIGINT | NO | - | ID of the robot that remembered this node |
+| `node_id` | BIGINT | NO | - | ID of the node being remembered |
+| `first_remembered_at` | TIMESTAMPTZ | YES | NOW() | When this robot first remembered this content |
+| `last_remembered_at` | TIMESTAMPTZ | YES | NOW() | When this robot last tried to remember this content |
+| `remember_count` | INTEGER | NO | 1 | Number of times this robot has tried to remember this content |
+| `created_at` | TIMESTAMPTZ | YES | NOW() | When this association was created |
+| `updated_at` | TIMESTAMPTZ | YES | NOW() | When this association was last modified |
+
+**Indexes**:
+- `PRIMARY KEY` on `id`
+- `idx_robot_nodes_unique` UNIQUE BTREE on `(robot_id, node_id)` - Prevents duplicate associations
+- `idx_robot_nodes_robot_id` BTREE on `robot_id` - Fast lookups of nodes for a robot
+- `idx_robot_nodes_node_id` BTREE on `node_id` - Fast lookups of robots for a node
+- `idx_robot_nodes_last_remembered_at` BTREE on `last_remembered_at` - For temporal queries
+
+**Foreign Keys**:
+- `robot_id` references `robots(id)` ON DELETE CASCADE
+- `node_id` references `nodes(id)` ON DELETE CASCADE
+
+**Cascade Behavior**:
+- When a robot is deleted, all its node associations are automatically removed
+- When a node is deleted, all associations to that node are automatically removed
+- The join table ensures referential integrity between robots and nodes
+
+**Remember Tracking**:
+
+The `robot_nodes` table tracks per-robot remember metadata:
+
+1. `first_remembered_at` - When this robot first encountered this content
+2. `last_remembered_at` - Updated each time the robot tries to remember the same content
+3. `remember_count` - Incremented each time (useful for identifying frequently reinforced memories)
+
+This allows querying for:
+- Recently reinforced memories: `ORDER BY last_remembered_at DESC`
+- Frequently remembered content: `ORDER BY remember_count DESC`
+- New vs old memories: Compare `first_remembered_at` across robots
 
 ---
 
@@ -326,27 +257,27 @@ SELECT * FROM tags WHERE name LIKE 'ai:llm:%';    -- All LLM-related tags
 
 ---
 
-### nodes_tags
+### node_tags
 
-The nodes_tags join table implements the many-to-many relationship between nodes and tags.
+The node_tags join table implements the many-to-many relationship between nodes and tags.
 
 **Purpose**: Links nodes to tags, allowing each node to have multiple tags and each tag to be applied to multiple nodes.
 
 ```sql
-CREATE TABLE public.nodes_tags (
+CREATE TABLE public.node_tags (
     id bigint NOT NULL,
     node_id bigint NOT NULL,
     tag_id bigint NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE ONLY public.nodes_tags ALTER COLUMN id SET DEFAULT nextval('public.node_tags_id_seq'::regclass);
-ALTER TABLE ONLY public.nodes_tags ADD CONSTRAINT node_tags_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.node_tags ALTER COLUMN id SET DEFAULT nextval('public.node_tags_id_seq'::regclass);
+ALTER TABLE ONLY public.node_tags ADD CONSTRAINT node_tags_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY public.nodes_tags
-    ADD CONSTRAINT fk_rails_b0b726ecf8 FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
-ALTER TABLE ONLY public.nodes_tags
-    ADD CONSTRAINT fk_rails_eccc99cec5 FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.node_tags
+    ADD CONSTRAINT fk_rails_b51cdcc57f FOREIGN KEY (tag_id) REFERENCES public.tags(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.node_tags
+    ADD CONSTRAINT fk_rails_ebc9aafd9f FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
 ```
 
 **Columns**:
@@ -377,12 +308,43 @@ ALTER TABLE ONLY public.nodes_tags
 
 ## Common Query Patterns
 
+### Finding Nodes for a Robot
+
+```sql
+SELECT n.*
+FROM nodes n
+JOIN robot_nodes rn ON n.id = rn.node_id
+WHERE rn.robot_id = $1
+ORDER BY rn.last_remembered_at DESC;
+```
+
+### Finding Robots that Share a Node
+
+```sql
+SELECT r.*
+FROM robots r
+JOIN robot_nodes rn ON r.id = rn.robot_id
+WHERE rn.node_id = $1
+ORDER BY rn.first_remembered_at;
+```
+
+### Finding Frequently Remembered Content
+
+```sql
+SELECT n.*, rn.remember_count, rn.first_remembered_at, rn.last_remembered_at
+FROM nodes n
+JOIN robot_nodes rn ON n.id = rn.node_id
+WHERE rn.robot_id = $1
+ORDER BY rn.remember_count DESC
+LIMIT 10;
+```
+
 ### Finding Tags for a Node
 
 ```sql
 SELECT t.name
 FROM tags t
-JOIN nodes_tags nt ON t.id = nt.tag_id
+JOIN node_tags nt ON t.id = nt.tag_id
 WHERE nt.node_id = $1
 ORDER BY t.name;
 ```
@@ -392,7 +354,7 @@ ORDER BY t.name;
 ```sql
 SELECT n.*
 FROM nodes n
-JOIN nodes_tags nt ON n.id = nt.node_id
+JOIN node_tags nt ON n.id = nt.node_id
 JOIN tags t ON nt.tag_id = t.id
 WHERE t.name = 'database:postgresql'
 ORDER BY n.created_at DESC;
@@ -403,7 +365,7 @@ ORDER BY n.created_at DESC;
 ```sql
 SELECT n.*
 FROM nodes n
-JOIN nodes_tags nt ON n.id = nt.node_id
+JOIN node_tags nt ON n.id = nt.node_id
 JOIN tags t ON nt.tag_id = t.id
 WHERE t.name LIKE 'ai:llm:%'
 ORDER BY n.created_at DESC;
@@ -417,8 +379,8 @@ SELECT
     t2.name AS topic2,
     COUNT(DISTINCT nt1.node_id) AS shared_nodes
 FROM tags t1
-JOIN nodes_tags nt1 ON t1.id = nt1.tag_id
-JOIN nodes_tags nt2 ON nt1.node_id = nt2.node_id
+JOIN node_tags nt1 ON t1.id = nt1.tag_id
+JOIN node_tags nt2 ON nt1.node_id = nt2.node_id
 JOIN tags t2 ON nt2.tag_id = t2.id
 WHERE t1.name < t2.name
 GROUP BY t1.name, t2.name
@@ -431,7 +393,7 @@ ORDER BY shared_nodes DESC;
 ```sql
 SELECT n.*, n.embedding <=> $1::vector AS distance
 FROM nodes n
-JOIN nodes_tags nt ON n.id = nt.node_id
+JOIN node_tags nt ON n.id = nt.node_id
 JOIN tags t ON nt.tag_id = t.id
 WHERE t.name = 'programming:ruby'
   AND n.embedding IS NOT NULL
@@ -444,13 +406,24 @@ LIMIT 10;
 ```sql
 SELECT n.*, ts_rank(to_tsvector('english', n.content), query) AS rank
 FROM nodes n
-JOIN nodes_tags nt ON n.id = nt.node_id
+JOIN node_tags nt ON n.id = nt.node_id
 JOIN tags t ON nt.tag_id = t.id,
      to_tsquery('english', 'database & optimization') query
 WHERE to_tsvector('english', n.content) @@ query
   AND t.name LIKE 'database:%'
 ORDER BY rank DESC
 LIMIT 20;
+```
+
+### Finding Content Shared by Multiple Robots
+
+```sql
+SELECT n.*, COUNT(DISTINCT rn.robot_id) AS robot_count
+FROM nodes n
+JOIN robot_nodes rn ON n.id = rn.node_id
+GROUP BY n.id
+HAVING COUNT(DISTINCT rn.robot_id) > 1
+ORDER BY robot_count DESC;
 ```
 
 ---
