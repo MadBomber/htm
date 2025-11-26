@@ -72,18 +72,15 @@ class ExampleApp
     puts "(Tags will be auto-extracted by LLM in background)"
 
     node_1 = htm.remember(
-      "HTM provides intelligent memory management for LLM-based applications",
-      source: "assistant"
+      "HTM provides intelligent memory management for LLM-based applications"
     )
 
     node_2 = htm.remember(
-      "The two-tier architecture includes working memory and long-term storage",
-      source: "assistant"
+      "The two-tier architecture includes working memory and long-term storage"
     )
 
     node_3 = htm.remember(
-      "Can you explain how the working memory eviction algorithm works?",
-      source: "user"
+      "Can you explain how the working memory eviction algorithm works?"
     )
 
     puts "✓ Remembered 3 conversation messages (nodes #{node_1}, #{node_2}, #{node_3})"
@@ -132,8 +129,8 @@ class ExampleApp
       limit: 3
     )
     puts "Found #{fulltext_memories.length} memories:"
-    fulltext_memories.each do |memory|
-      puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
+    fulltext_memories.each do |content|
+      puts "  - #{content[0..60]}..."
     end
 
     # 2. Vector search (requires embeddings)
@@ -146,8 +143,8 @@ class ExampleApp
         limit: 3
       )
       puts "Found #{vector_memories.length} memories:"
-      vector_memories.each do |memory|
-        puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
+      vector_memories.each do |content|
+        puts "  - #{content[0..60]}..."
       end
     rescue StandardError => e
       puts "  ⚠ Vector search error: #{e.message}"
@@ -164,8 +161,8 @@ class ExampleApp
         limit: 3
       )
       puts "Found #{hybrid_memories.length} memories:"
-      hybrid_memories.each do |memory|
-        puts "  - Node #{memory['id']}: #{memory['content'][0..60]}..."
+      hybrid_memories.each do |content|
+        puts "  - #{content[0..60]}..."
       end
     rescue StandardError => e
       puts "  ⚠ Hybrid search error: #{e.message}"
@@ -177,12 +174,12 @@ class ExampleApp
     puts "✓ Demo Complete!"
     puts "="*60
     puts "\nThe HTM API provides 3 core methods:"
-    puts "  1. htm.remember(content, source:)"
+    puts "  1. htm.remember(content, tags: [])"
     puts "     - Stores information in long-term memory"
     puts "     - Adds to working memory for immediate use"
     puts "     - Generates embeddings and tags in background"
     puts ""
-    puts "  2. htm.recall(timeframe:, topic:, strategy:, limit:)"
+    puts "  2. htm.recall(topic, timeframe:, strategy:, limit:)"
     puts "     - Retrieves relevant memories"
     puts "     - Strategies: :fulltext, :vector, :hybrid"
     puts "     - Results added to working memory"

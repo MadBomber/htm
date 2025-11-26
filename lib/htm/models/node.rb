@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
+require 'digest'
+
 class HTM
   module Models
     # Node model - represents a memory node (conversation message)
+    #
+    # Nodes are globally unique by content (via content_hash) and can be
+    # linked to multiple robots through the robot_nodes join table.
     #
     # Nearest Neighbor Search (via neighbor gem):
     #   # Find 5 nearest neighbors by cosine distance
@@ -18,8 +23,9 @@ class HTM
     class Node < ActiveRecord::Base
       self.table_name = 'nodes'
 
-      # Associations
-      belongs_to :robot, class_name: 'HTM::Models::Robot', foreign_key: 'robot_id', primary_key: 'id'
+      # Associations - Many-to-many with robots via robot_nodes
+      has_many :robot_nodes, class_name: 'HTM::Models::RobotNode', dependent: :destroy
+      has_many :robots, through: :robot_nodes, class_name: 'HTM::Models::Robot'
       has_many :node_tags, class_name: 'HTM::Models::NodeTag', dependent: :destroy
       has_many :tags, through: :node_tags, class_name: 'HTM::Models::Tag'
 
@@ -28,20 +34,41 @@ class HTM
 
       # Validations
       validates :content, presence: true
-      validates :robot_id, presence: true
+      validates :content_hash, presence: true, uniqueness: true
       validates :embedding_dimension, numericality: { greater_than: 0, less_than_or_equal_to: 2000 }, allow_nil: true
 
       # Callbacks
+      before_validation :set_content_hash, if: -> { content_hash.blank? && content.present? }
       before_create :set_defaults
       before_save :update_timestamps
 
       # Scopes
-      scope :by_robot, ->(robot_id) { where(robot_id: robot_id) }
-      scope :by_source, ->(source) { where(source: source) }
+      scope :by_robot, ->(robot_id) { joins(:robot_nodes).where(robot_nodes: { robot_id: robot_id }) }
       scope :in_working_memory, -> { where(in_working_memory: true) }
       scope :recent, -> { order(created_at: :desc) }
       scope :in_timeframe, ->(start_time, end_time) { where(created_at: start_time..end_time) }
       scope :with_embeddings, -> { where.not(embedding: nil) }
+
+      # Class methods
+
+      # Find a node by content hash, or return nil
+      #
+      # @param content [String] The content to search for
+      # @return [Node, nil] The existing node or nil
+      #
+      def self.find_by_content(content)
+        hash = generate_content_hash(content)
+        find_by(content_hash: hash)
+      end
+
+      # Generate SHA-256 hash for content
+      #
+      # @param content [String] Content to hash
+      # @return [String] 64-character hex hash
+      #
+      def self.generate_content_hash(content)
+        Digest::SHA256.hexdigest(content.to_s)
+      end
 
       # Instance methods
 
@@ -93,6 +120,10 @@ class HTM
       end
 
       private
+
+      def set_content_hash
+        self.content_hash = self.class.generate_content_hash(content)
+      end
 
       def set_defaults
         self.in_working_memory ||= false

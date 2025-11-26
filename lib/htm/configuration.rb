@@ -6,10 +6,44 @@ require 'logger'
 class HTM
   # HTM Configuration
   #
-  # Applications using HTM should configure LLM access by providing two methods:
-  # 1. embedding_generator - Converts text to vector embeddings
-  # 2. tag_extractor - Extracts hierarchical tags from text
-  # 3. logger - Logger instance for HTM operations
+  # HTM uses RubyLLM for multi-provider LLM support. Supported providers:
+  # - :openai (OpenAI API)
+  # - :anthropic (Anthropic Claude)
+  # - :gemini (Google Gemini)
+  # - :azure (Azure OpenAI)
+  # - :ollama (Local Ollama - default)
+  # - :huggingface (HuggingFace Inference API)
+  # - :openrouter (OpenRouter)
+  # - :bedrock (AWS Bedrock)
+  # - :deepseek (DeepSeek)
+  #
+  # @example Configure with OpenAI
+  #   HTM.configure do |config|
+  #     config.embedding_provider = :openai
+  #     config.embedding_model = 'text-embedding-3-small'
+  #     config.tag_provider = :openai
+  #     config.tag_model = 'gpt-4o-mini'
+  #     config.openai_api_key = ENV['OPENAI_API_KEY']
+  #   end
+  #
+  # @example Configure with Ollama (default)
+  #   HTM.configure do |config|
+  #     config.embedding_provider = :ollama
+  #     config.embedding_model = 'nomic-embed-text'
+  #     config.tag_provider = :ollama
+  #     config.tag_model = 'llama3'
+  #     config.ollama_url = 'http://localhost:11434'
+  #   end
+  #
+  # @example Configure with Anthropic for tags, OpenAI for embeddings
+  #   HTM.configure do |config|
+  #     config.embedding_provider = :openai
+  #     config.embedding_model = 'text-embedding-3-small'
+  #     config.openai_api_key = ENV['OPENAI_API_KEY']
+  #     config.tag_provider = :anthropic
+  #     config.tag_model = 'claude-3-haiku-20240307'
+  #     config.anthropic_api_key = ENV['ANTHROPIC_API_KEY']
+  #   end
   #
   # @example Configure with custom methods
   #   HTM.configure do |config|
@@ -19,39 +53,72 @@ class HTM
   #     config.tag_extractor = ->(text, ontology) {
   #       MyApp::LLMService.extract_tags(text, ontology)  # Returns Array<String>
   #     }
-  #     config.logger = Rails.logger  # Use Rails logger
+  #     config.logger = Rails.logger
   #   end
-  #
-  # @example Use defaults with custom timeouts
-  #   HTM.configure do |config|
-  #     config.embedding_timeout = 60      # 1 minute for faster models
-  #     config.tag_timeout = 300           # 5 minutes for larger models
-  #     config.connection_timeout = 10     # 10 seconds connection timeout
-  #     config.reset_to_defaults  # Apply default implementations with new timeouts
-  #   end
-  #
-  # @example Use defaults
-  #   HTM.configure  # Uses default implementations
   #
   class Configuration
     attr_accessor :embedding_generator, :tag_extractor, :token_counter
     attr_accessor :embedding_model, :embedding_provider, :embedding_dimensions
     attr_accessor :tag_model, :tag_provider
-    attr_accessor :ollama_url
     attr_accessor :embedding_timeout, :tag_timeout, :connection_timeout
     attr_accessor :logger
     attr_accessor :job_backend
 
+    # Provider-specific API keys and endpoints
+    attr_accessor :openai_api_key, :openai_organization, :openai_project
+    attr_accessor :anthropic_api_key
+    attr_accessor :gemini_api_key
+    attr_accessor :azure_api_key, :azure_endpoint, :azure_api_version
+    attr_accessor :ollama_url
+    attr_accessor :huggingface_api_key
+    attr_accessor :openrouter_api_key
+    attr_accessor :bedrock_access_key, :bedrock_secret_key, :bedrock_region
+    attr_accessor :deepseek_api_key
+
+    # Supported providers
+    SUPPORTED_PROVIDERS = %i[
+      openai anthropic gemini azure ollama
+      huggingface openrouter bedrock deepseek
+    ].freeze
+
+    # Default embedding dimensions by provider/model
+    DEFAULT_DIMENSIONS = {
+      openai: 1536,      # text-embedding-3-small
+      anthropic: 1024,   # voyage embeddings
+      gemini: 768,       # text-embedding-004
+      azure: 1536,       # same as OpenAI
+      ollama: 768,       # nomic-embed-text
+      huggingface: 768,  # varies by model
+      openrouter: 1536,  # varies by model
+      bedrock: 1536,     # titan-embed-text
+      deepseek: 1536     # varies by model
+    }.freeze
+
     def initialize
-      # Default configuration
+      # Default configuration - Ollama for local development
       @embedding_provider = :ollama
-      @embedding_model = 'nomic-embed-text'
+      @embedding_model = 'nomic-embed-text:latest'  # Include tag for Ollama models
       @embedding_dimensions = 768
 
       @tag_provider = :ollama
-      @tag_model = 'llama3'
+      @tag_model = 'gemma3:latest'  # Include tag for Ollama models
 
-      @ollama_url = ENV['OLLAMA_URL'] || 'http://localhost:11434'
+      # Provider credentials from environment variables
+      @openai_api_key = ENV['OPENAI_API_KEY']
+      @openai_organization = ENV['OPENAI_ORGANIZATION']
+      @openai_project = ENV['OPENAI_PROJECT']
+      @anthropic_api_key = ENV['ANTHROPIC_API_KEY']
+      @gemini_api_key = ENV['GEMINI_API_KEY']
+      @azure_api_key = ENV['AZURE_OPENAI_API_KEY']
+      @azure_endpoint = ENV['AZURE_OPENAI_ENDPOINT']
+      @azure_api_version = ENV['AZURE_OPENAI_API_VERSION'] || '2024-02-01'
+      @ollama_url = ENV['OLLAMA_API_BASE'] || ENV['OLLAMA_URL'] || 'http://localhost:11434'
+      @huggingface_api_key = ENV['HUGGINGFACE_API_KEY']
+      @openrouter_api_key = ENV['OPENROUTER_API_KEY']
+      @bedrock_access_key = ENV['AWS_ACCESS_KEY_ID']
+      @bedrock_secret_key = ENV['AWS_SECRET_ACCESS_KEY']
+      @bedrock_region = ENV['AWS_REGION'] || 'us-east-1'
+      @deepseek_api_key = ENV['DEEPSEEK_API_KEY']
 
       # Timeout settings (in seconds) - apply to all LLM providers
       @embedding_timeout = 120      # 2 minutes for embedding generation
@@ -95,6 +162,76 @@ class HTM
 
       unless [:active_job, :sidekiq, :inline, :thread].include?(@job_backend)
         raise HTM::ValidationError, "job_backend must be one of: :active_job, :sidekiq, :inline, :thread (got #{@job_backend.inspect})"
+      end
+
+      # Validate provider if specified
+      if @embedding_provider && !SUPPORTED_PROVIDERS.include?(@embedding_provider)
+        raise HTM::ValidationError, "embedding_provider must be one of: #{SUPPORTED_PROVIDERS.join(', ')} (got #{@embedding_provider.inspect})"
+      end
+
+      if @tag_provider && !SUPPORTED_PROVIDERS.include?(@tag_provider)
+        raise HTM::ValidationError, "tag_provider must be one of: #{SUPPORTED_PROVIDERS.join(', ')} (got #{@tag_provider.inspect})"
+      end
+    end
+
+    # Normalize Ollama model name to include tag if missing
+    #
+    # Ollama models require a tag (e.g., :latest, :7b, :13b). If the user
+    # specifies a model without a tag, we append :latest by default.
+    #
+    # @param model_name [String] Original model name
+    # @return [String] Normalized model name with tag
+    #
+    def normalize_ollama_model(model_name)
+      return model_name if model_name.nil? || model_name.empty?
+      return model_name if model_name.include?(':')
+
+      "#{model_name}:latest"
+    end
+
+    # Configure RubyLLM with the appropriate provider credentials
+    #
+    # @param provider [Symbol] The provider to configure (:openai, :anthropic, etc.)
+    #
+    def configure_ruby_llm(provider = nil)
+      require 'ruby_llm' unless defined?(RubyLLM)
+
+      provider ||= @embedding_provider
+
+      RubyLLM.configure do |config|
+        case provider
+        when :openai
+          config.openai_api_key = @openai_api_key if @openai_api_key
+          config.openai_organization = @openai_organization if @openai_organization && config.respond_to?(:openai_organization=)
+          config.openai_project = @openai_project if @openai_project && config.respond_to?(:openai_project=)
+        when :anthropic
+          config.anthropic_api_key = @anthropic_api_key if @anthropic_api_key
+        when :gemini
+          config.gemini_api_key = @gemini_api_key if @gemini_api_key
+        when :azure
+          config.azure_api_key = @azure_api_key if @azure_api_key && config.respond_to?(:azure_api_key=)
+          config.azure_endpoint = @azure_endpoint if @azure_endpoint && config.respond_to?(:azure_endpoint=)
+          config.azure_api_version = @azure_api_version if @azure_api_version && config.respond_to?(:azure_api_version=)
+        when :ollama
+          # Ollama exposes OpenAI-compatible API at /v1
+          # Ensure URL has /v1 suffix (add if missing, don't duplicate if present)
+          ollama_api_base = if @ollama_url.end_with?('/v1') || @ollama_url.end_with?('/v1/')
+            @ollama_url.sub(%r{/+$}, '')  # Just remove trailing slashes
+          else
+            "#{@ollama_url.sub(%r{/+$}, '')}/v1"
+          end
+          config.ollama_api_base = ollama_api_base
+        when :huggingface
+          config.huggingface_api_key = @huggingface_api_key if @huggingface_api_key && config.respond_to?(:huggingface_api_key=)
+        when :openrouter
+          config.openrouter_api_key = @openrouter_api_key if @openrouter_api_key && config.respond_to?(:openrouter_api_key=)
+        when :bedrock
+          config.bedrock_api_key = @bedrock_access_key if @bedrock_access_key && config.respond_to?(:bedrock_api_key=)
+          config.bedrock_secret_key = @bedrock_secret_key if @bedrock_secret_key && config.respond_to?(:bedrock_secret_key=)
+          config.bedrock_region = @bedrock_region if @bedrock_region && config.respond_to?(:bedrock_region=)
+        when :deepseek
+          config.deepseek_api_key = @deepseek_api_key if @deepseek_api_key && config.respond_to?(:deepseek_api_key=)
+        end
       end
     end
 
@@ -153,50 +290,93 @@ class HTM
       end
     end
 
-    # Default embedding generator using Ollama HTTP API
+    # Default embedding generator using RubyLLM
     #
     # @return [Proc] Callable that takes text and returns embedding vector
     #
     def default_embedding_generator
       lambda do |text|
-        require 'net/http'
-        require 'json'
+        require 'ruby_llm' unless defined?(RubyLLM)
 
-        case @embedding_provider
-        when :ollama
-          uri = URI("#{@ollama_url}/api/embeddings")
-          request = Net::HTTP::Post.new(uri)
-          request['Content-Type'] = 'application/json'
-          request.body = { model: @embedding_model, prompt: text }.to_json
+        # Configure RubyLLM for the embedding provider
+        configure_ruby_llm(@embedding_provider)
 
-          response = Net::HTTP.start(uri.hostname, uri.port,
-            read_timeout: @embedding_timeout,
-            open_timeout: @connection_timeout) do |http|
-            http.request(request)
-          end
-
-          data = JSON.parse(response.body)
-          embedding = data['embedding']
-
-          unless embedding.is_a?(Array)
-            raise HTM::EmbeddingError, "Invalid embedding response format"
-          end
-
-          embedding
-        else
-          raise HTM::EmbeddingError, "Unsupported embedding provider: #{@embedding_provider}. Only :ollama is currently supported."
+        # Refresh models for Ollama to discover local models
+        if @embedding_provider == :ollama && !@ollama_models_refreshed
+          RubyLLM.models.refresh!
+          @ollama_models_refreshed = true
         end
+
+        # Normalize Ollama model name (ensure it has a tag like :latest)
+        model = @embedding_provider == :ollama ? normalize_ollama_model(@embedding_model) : @embedding_model
+
+        # Generate embedding using RubyLLM
+        response = RubyLLM.embed(text, model: model)
+
+        # Extract embedding vector from response
+        embedding = extract_embedding_from_response(response)
+
+        unless embedding.is_a?(Array) && embedding.all? { |v| v.is_a?(Numeric) }
+          raise HTM::EmbeddingError, "Invalid embedding response format from #{@embedding_provider}"
+        end
+
+        embedding
       end
     end
 
-    # Default tag extractor using Ollama HTTP API
+    # Extract embedding vector from RubyLLM response
+    #
+    # @param response [Object] RubyLLM embed response
+    # @return [Array<Float>] Embedding vector
+    #
+    def extract_embedding_from_response(response)
+      return nil unless response
+
+      # Handle different response formats from RubyLLM
+      case response
+      when Array
+        # Direct array response
+        response
+      when ->(r) { r.respond_to?(:vectors) }
+        # RubyLLM::Embedding object with vectors method
+        vectors = response.vectors
+        vectors.is_a?(Array) && vectors.first.is_a?(Array) ? vectors.first : vectors
+      when ->(r) { r.respond_to?(:to_a) }
+        # Can be converted to array
+        response.to_a
+      when ->(r) { r.respond_to?(:embedding) }
+        # Has embedding attribute
+        response.embedding
+      else
+        # Try to extract vectors from instance variables
+        if response.respond_to?(:instance_variable_get)
+          vectors = response.instance_variable_get(:@vectors)
+          return vectors.first if vectors.is_a?(Array) && vectors.first.is_a?(Array)
+          return vectors if vectors.is_a?(Array)
+        end
+        raise HTM::EmbeddingError, "Cannot extract embedding from response: #{response.class}"
+      end
+    end
+
+    # Default tag extractor using RubyLLM chat
     #
     # @return [Proc] Callable that takes text and ontology, returns array of tags
     #
     def default_tag_extractor
       lambda do |text, existing_ontology = []|
-        require 'net/http'
-        require 'json'
+        require 'ruby_llm' unless defined?(RubyLLM)
+
+        # Configure RubyLLM for the tag provider
+        configure_ruby_llm(@tag_provider)
+
+        # Refresh models for Ollama to discover local models
+        if @tag_provider == :ollama && !@ollama_models_refreshed
+          RubyLLM.models.refresh!
+          @ollama_models_refreshed = true
+        end
+
+        # Normalize Ollama model name (ensure it has a tag like :latest)
+        model = @tag_provider == :ollama ? normalize_ollama_model(@tag_model) : @tag_model
 
         # Build prompt
         ontology_context = if existing_ontology.any?
@@ -225,41 +405,48 @@ class HTM
           Return ONLY the topic tags, one per line, no explanations.
         PROMPT
 
-        case @tag_provider
-        when :ollama
-          uri = URI("#{@ollama_url}/api/generate")
-          request = Net::HTTP::Post.new(uri)
-          request['Content-Type'] = 'application/json'
-          request.body = {
-            model: @tag_model,
-            prompt: prompt,
-            system: 'You are a precise topic extraction system. Output only topic tags in hierarchical format: root:subtopic:detail',
-            stream: false,
-            options: { temperature: 0 }
-          }.to_json
+        system_prompt = 'You are a precise topic extraction system. Output only topic tags in hierarchical format: root:subtopic:detail'
 
-          response = Net::HTTP.start(uri.hostname, uri.port,
-            read_timeout: @tag_timeout,
-            open_timeout: @connection_timeout) do |http|
-            http.request(request)
-          end
+        # Use RubyLLM chat for tag extraction
+        chat = RubyLLM.chat(model: model)
+        chat.with_instructions(system_prompt)
+        response = chat.ask(prompt)
 
-          data = JSON.parse(response.body)
-          response_text = data['response']
+        # Extract text from response
+        response_text = extract_text_from_response(response)
 
-          # Parse and validate tags
-          tags = response_text.to_s.split("\n").map(&:strip).reject(&:empty?)
+        # Parse and validate tags
+        tags = response_text.to_s.split("\n").map(&:strip).reject(&:empty?)
 
-          # Validate format: lowercase alphanumeric + hyphens + colons
-          valid_tags = tags.select do |tag|
-            tag =~ /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/
-          end
-
-          # Limit depth to 5 levels (4 colons maximum)
-          valid_tags.select { |tag| tag.count(':') < 5 }
-        else
-          raise HTM::TagError, "Unsupported tag provider: #{@tag_provider}. Only :ollama is currently supported."
+        # Validate format: lowercase alphanumeric + hyphens + colons
+        valid_tags = tags.select do |tag|
+          tag =~ /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/
         end
+
+        # Limit depth to 5 levels (4 colons maximum)
+        valid_tags.select { |tag| tag.count(':') < 5 }
+      end
+    end
+
+    # Extract text content from RubyLLM chat response
+    #
+    # @param response [Object] RubyLLM chat response
+    # @return [String] Response text
+    #
+    def extract_text_from_response(response)
+      return '' unless response
+
+      case response
+      when String
+        response
+      when ->(r) { r.respond_to?(:content) }
+        response.content.to_s
+      when ->(r) { r.respond_to?(:text) }
+        response.text.to_s
+      when ->(r) { r.respond_to?(:to_s) }
+        response.to_s
+      else
+        ''
       end
     end
   end

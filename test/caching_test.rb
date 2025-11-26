@@ -4,10 +4,9 @@ require "test_helper"
 
 class CachingTest < Minitest::Test
   def setup
-    # Skip if database is not configured
-    unless ENV['HTM_DBURL']
-      skip "Database not configured. Set HTM_DBURL to run caching tests."
-    end
+    # Skip entire test class if database not available
+    skip_without_database
+    return if skipped?
 
     # Configure HTM with mocks
     @mock_service = configure_htm_with_mocks
@@ -24,11 +23,9 @@ class CachingTest < Minitest::Test
 
     # Clean up test data - delete all nodes created by this test robot
     begin
-      # Get all nodes for this robot and delete them
-      HTM::Models::Node.joins(:robot).where(robots: { name: @htm.robot_name }).destroy_all
+      HTM::Models::Node.joins(:robots).where(robots: { name: @htm.robot_name }).destroy_all
     rescue => e
       # Ignore errors during cleanup
-      puts "Cleanup warning: #{e.message}"
     end
   end
 
@@ -94,7 +91,7 @@ class CachingTest < Minitest::Test
 
   def test_long_term_memory_has_cache
     # Add a test node first
-    @htm.remember("test content", source: "test")
+    @htm.remember("test content")
 
     # Search should use cache
     result = @htm.long_term_memory.stats
@@ -104,7 +101,7 @@ class CachingTest < Minitest::Test
 
   def test_query_cache_stats_structure
     # Add a test node
-    @htm.remember("test content", source: "test")
+    @htm.remember("test content")
 
     # Perform a search to populate cache
     @htm.recall("test", timeframe: "last week")
@@ -119,7 +116,7 @@ class CachingTest < Minitest::Test
 
   def test_query_cache_hit_on_identical_queries
     # Add test data
-    @htm.remember("test content about PostgreSQL", source: "test")
+    @htm.remember("test content about PostgreSQL")
 
     # Use a fixed timeframe Range (not a string that gets parsed dynamically)
     now = Time.now
@@ -146,7 +143,7 @@ class CachingTest < Minitest::Test
 
   def test_query_cache_miss_on_different_queries
     # Add test data
-    @htm.remember("test content", source: "test")
+    @htm.remember("test content")
 
     # Different queries should not hit cache
     @htm.recall("test1", timeframe: "last week", strategy: :fulltext)
@@ -160,7 +157,7 @@ class CachingTest < Minitest::Test
 
   def test_query_cache_different_strategies_are_cached_separately
     # Add test data
-    @htm.remember("test content", source: "test")
+    @htm.remember("test content")
 
     timeframe = "last week"
     topic = "test"
@@ -179,7 +176,7 @@ class CachingTest < Minitest::Test
 
   def test_cache_invalidation_on_add_node
     # Add initial node
-    @htm.remember("initial content", source: "test")
+    @htm.remember("initial content")
 
     # Query and cache result
     result1 = @htm.recall("content", timeframe: "last week", strategy: :fulltext)
@@ -187,10 +184,9 @@ class CachingTest < Minitest::Test
 
     # Get initial cache stats
     cache_stats1 = @htm.long_term_memory.stats[:cache]
-    initial_cache_size = cache_stats1[:size]
 
     # Add new node - should invalidate cache
-    @htm.remember("new content to trigger cache invalidation", source: "test")
+    @htm.remember("new content to trigger cache invalidation")
 
     # Cache should be cleared
     cache_stats2 = @htm.long_term_memory.stats[:cache]
@@ -205,8 +201,8 @@ class CachingTest < Minitest::Test
 
   def test_cache_invalidation_on_delete_node
     # Add nodes
-    node_id1 = @htm.remember("content to cache", source: "test")
-    node_id2 = @htm.remember("content to delete", source: "test")
+    node_id1 = @htm.remember("content to cache")
+    node_id2 = @htm.remember("content to delete")
 
     # Query and cache
     @htm.recall("content", timeframe: "last week", strategy: :fulltext)
@@ -228,7 +224,7 @@ class CachingTest < Minitest::Test
 
     begin
       # Add test data
-      htm_no_cache.remember("test content", source: "test")
+      htm_no_cache.remember("test content")
 
       # Stats should not include cache
       stats = htm_no_cache.long_term_memory.stats
@@ -238,8 +234,12 @@ class CachingTest < Minitest::Test
       result = htm_no_cache.recall("test", timeframe: "last week", strategy: :fulltext)
       assert_instance_of Array, result
     ensure
-      # Cleaned up in teardown
-      htm_no_cache.long_term_memory.shutdown
+      # Clean up
+      begin
+        HTM::Models::Node.joins(:robots).where(robots: { name: "No Cache Robot" }).destroy_all
+      rescue
+        # Ignore cleanup errors
+      end
     end
   end
 
@@ -247,7 +247,7 @@ class CachingTest < Minitest::Test
 
   def test_memory_stats_includes_cache_statistics
     # Add test data
-    @htm.remember("test content", source: "test")
+    @htm.remember("test content")
 
     # Perform queries to populate caches
     @htm.recall("test", timeframe: "last week")
@@ -267,7 +267,7 @@ class CachingTest < Minitest::Test
 
   def test_cache_hit_rate_calculation
     # Add test data
-    @htm.remember("test content", source: "test")
+    @htm.remember("test content")
 
     # Query 3 times (1 miss + 2 hits)
     3.times do
@@ -283,7 +283,7 @@ class CachingTest < Minitest::Test
 
   def test_cache_works_with_all_search_strategies
     # Add test data
-    @htm.remember("test content for all strategies", source: "test")
+    @htm.remember("test content for all strategies")
 
     # Use a fixed timeframe Range
     now = Time.now
@@ -335,7 +335,7 @@ class CachingTest < Minitest::Test
   def test_cache_size_is_tracked
     # Add multiple nodes
     10.times do |i|
-      @htm.remember("content #{i}", source: "test")
+      @htm.remember("content #{i}")
     end
 
     # Query with different topics to populate cache
@@ -348,7 +348,5 @@ class CachingTest < Minitest::Test
     # Cache should contain entries
     assert cache_stats[:size] > 0
     assert cache_stats[:size] <= 100  # Max cache size
-
-    # Cleanup handled in teardown
   end
 end

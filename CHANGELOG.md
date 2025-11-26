@@ -8,6 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Multi-provider LLM support via RubyLLM** - HTM now supports 9 LLM providers:
+  - OpenAI (`text-embedding-3-small`, `gpt-4o-mini`)
+  - Anthropic (`claude-3-haiku-20240307`)
+  - Google Gemini (`text-embedding-004`)
+  - Azure OpenAI
+  - Ollama (default, local-first)
+  - HuggingFace Inference API
+  - OpenRouter
+  - AWS Bedrock
+  - DeepSeek
+- Provider-specific configuration attributes:
+  - `openai_api_key`, `openai_organization`, `openai_project`
+  - `anthropic_api_key`
+  - `gemini_api_key`
+  - `azure_api_key`, `azure_endpoint`, `azure_api_version`
+  - `ollama_url`
+  - `huggingface_api_key`
+  - `openrouter_api_key`
+  - `bedrock_access_key`, `bedrock_secret_key`, `bedrock_region`
+  - `deepseek_api_key`
+- `HTM::Configuration#configure_ruby_llm` method for provider credential setup
+- `SUPPORTED_PROVIDERS` constant listing all available providers
+- `DEFAULT_DIMENSIONS` hash with typical embedding dimensions per provider
 - Architecture documentation using ai-software-architect framework
 - Comprehensive ADRs (Architecture Decision Records):
   - ADR-001: PostgreSQL with TimescaleDB for storage
@@ -21,6 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ADR-009: Never-forget philosophy with explicit deletion
 - Architecture review team with 8 specialist perspectives
 - Had the robot convert my notss and system analysis documentation into Architectural Decision Records (ADR)
+
+### Changed
+- **Embedding generator now uses `RubyLLM.embed()`** instead of raw HTTP calls to Ollama
+- **Tag extractor now uses `RubyLLM.chat()`** instead of raw HTTP calls to Ollama
+- Configuration validation now checks provider is in `SUPPORTED_PROVIDERS`
+- Updated CLAUDE.md with multi-provider documentation and examples
+- Environment variables section expanded with all provider API keys
 
 ## [0.1.0] - 2025-10-25
 

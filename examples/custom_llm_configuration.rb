@@ -160,8 +160,7 @@ htm = HTM.new(robot_name: "IntegrationBot")
 # Remember information - will use custom LLM configuration
 puts "\nRemembering information in HTM..."
 node_id = htm.remember(
-  "PostgreSQL with pgvector enables efficient vector similarity search",
-  source: 'user'
+  "PostgreSQL with pgvector enables efficient vector similarity search"
 )
 
 puts "✓ Information remembered with node_id: #{node_id}"

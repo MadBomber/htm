@@ -4,20 +4,28 @@ require "test_helper"
 
 class OntologyTest < Minitest::Test
   def setup
-    # Skip if database is not configured
-    unless ENV['HTM_DBURL']
-      skip "Database not configured. Set HTM_DBURL to run ontology tests."
-    end
+    # Skip entire test class if database not available
+    skip_without_database
+    return if skipped?
 
-        @htm = HTM.new(
-      robot_name: "Ontology Test Robot")
+    @htm = HTM.new(robot_name: "Ontology Test Robot")
   end
 
-    def test_manual_topic_assignment
+  def teardown
+    return unless @htm
+
+    # Clean up test data
+    begin
+      HTM::Models::Node.joins(:robots).where(robots: { name: @htm.robot_name }).destroy_all
+    rescue => e
+      # Ignore errors during cleanup
+    end
+  end
+
+  def test_manual_topic_assignment
     # Add a node with manual hierarchical tags
     node_id = @htm.remember(
       "PostgreSQL with TimescaleDB provides efficient time-series data storage using hypertables and compression policies",
-      source: "user",
       tags: ["database:postgresql:timescaledb", "storage:time-series", "performance:optimization"]
     )
 
@@ -46,7 +54,6 @@ class OntologyTest < Minitest::Test
     # Add a node with properly formatted hierarchical tags
     node_id = @htm.remember(
       "Ruby on Rails is a web framework for building database-backed applications",
-      source: "user",
       tags: ["web:frameworks:rails", "programming:ruby", "database:orm"]
     )
 
@@ -66,7 +73,6 @@ class OntologyTest < Minitest::Test
     # Add a node with tags from multiple perspectives
     node_id = @htm.remember(
       "Machine learning models for database query optimization can improve performance by 30-50%",
-      source: "user",
       tags: ["ai:machine-learning:optimization", "database:performance:query-optimization", "performance:improvement"]
     )
 
@@ -87,7 +93,6 @@ class OntologyTest < Minitest::Test
     # Add a node with initial tags
     node_id = @htm.remember(
       "Initial content about Ruby programming",
-      source: "user",
       tags: ["programming:ruby", "language:interpreted"]
     )
 
@@ -115,12 +120,10 @@ class OntologyTest < Minitest::Test
     delete_node(node_id)
   end
 
-
   def test_topic_uniqueness_per_node
     # Add a node with tags (database enforces uniqueness via UNIQUE constraint)
     node_id = @htm.remember(
       "Ruby programming language",
-      source: "user",
       tags: ["programming:ruby", "language:interpreted", "programming:ruby"]  # Duplicate intentionally
     )
 
@@ -138,8 +141,7 @@ class OntologyTest < Minitest::Test
   def test_node_creation_without_tags
     # Verify that node creation succeeds even without tags
     node_id = @htm.remember(
-      "Test content without tags",
-      source: "user"
+      "Test content without tags"
     )
 
     # Node should be created successfully
@@ -156,7 +158,6 @@ class OntologyTest < Minitest::Test
     # Add a node with deep hierarchy tags
     node_id = @htm.remember(
       "TimescaleDB continuous aggregates with real-time materialization for time-series analytics",
-      source: "user",
       tags: [
         "database:timescaledb:features:continuous-aggregates",
         "analytics:time-series:real-time"
@@ -175,12 +176,10 @@ class OntologyTest < Minitest::Test
     delete_node(node_id)
   end
 
-
   def test_empty_tag_array_no_topics
     # Add a node with empty tags array
     node_id = @htm.remember(
       "Content with empty tags array",
-      source: "user",
       tags: []
     )
 
@@ -220,23 +219,5 @@ class OntologyTest < Minitest::Test
       tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
       HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
     end
-  end
-
-  # Helper method to query ontology structure view
-  def query_ontology_structure
-    result = HTM::Models::Node.connection.exec_query(
-      "SELECT * FROM ontology_structure LIMIT 10",
-      "Query Ontology Structure"
-    )
-    result.to_a
-  end
-
-  # Helper method to query topic relationships view
-  def query_topic_relationships
-    result = HTM::Models::Node.connection.exec_query(
-      "SELECT * FROM topic_relationships LIMIT 10",
-      "Query Topic Relationships"
-    )
-    result.to_a
   end
 end

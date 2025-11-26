@@ -66,7 +66,7 @@ class HTMApp < Sinatra::Base
       halt 400, json(error: 'Content is required')
     end
 
-    node_id = remember(content, source: 'web_user')
+    node_id = remember(content)
 
     json(
       status: 'ok',
@@ -105,7 +105,7 @@ class HTMApp < Sinatra::Base
     nodes_with_tags = HTM::Models::Node.joins(:tags).distinct.count
     total_tags = HTM::Models::Tag.count
 
-    robot_nodes = HTM::Models::Node.where(robot_id: htm.robot_id).count
+    robot_nodes = HTM::Models::RobotNode.where(robot_id: htm.robot_id).count
 
     json(
       status: 'ok',
@@ -139,7 +139,6 @@ class HTMApp < Sinatra::Base
     {
       id: memory['id'],
       content: memory['content'],
-      source: memory['source'],
       created_at: memory['created_at'],
       token_count: memory['token_count']
     }
@@ -285,7 +284,7 @@ __END__
           } else {
             const memoriesHtml = data.memories.map(m => `
               <div class="result">
-                <strong>Node ${m.id}</strong> (${m.source})<br>
+                <strong>Node ${m.id}</strong><br>
                 ${m.content}<br>
                 <small>${new Date(m.created_at).toLocaleString()} • ${m.token_count} tokens</small>
               </div>

@@ -107,15 +107,14 @@ class HTM
   # @return [Integer] Database ID of the memory node
   #
   # @example Remember with source
-  #   node_id = htm.remember("PostgreSQL is great for HTM", source: "user")
+  #   node_id = htm.remember("PostgreSQL is great for HTM")
   #
   # @example Remember with manual tags
-  #   node_id = htm.remember("Time-series data", source: "user", tags: ["database:timescaledb"])
+  #   node_id = htm.remember("Time-series data", tags: ["database:timescaledb"])
   #
-  def remember(content, source: "", tags: [])
+  def remember(content, tags: [])
     # Convert nil to empty string
     content = content.to_s
-    source = source.to_s
 
     # If content is empty, return the last node ID without creating a new entry
     if content.empty?
@@ -126,22 +125,35 @@ class HTM
     # Calculate token count using configured counter
     token_count = HTM.count_tokens(content)
 
-    # Store in long-term memory immediately (without embedding)
-    # Embedding and tags will be generated asynchronously
-    node_id = @long_term_memory.add(
+    # Store in long-term memory (with deduplication)
+    # Returns { node_id:, is_new:, robot_node: }
+    result = @long_term_memory.add(
       content: content,
-      source: source,
       token_count: token_count,
       robot_id: @robot_id,
       embedding: nil  # Will be generated in background
     )
 
-    HTM.logger.info "Node #{node_id} created for robot #{@robot_name} (#{token_count} tokens)"
+    node_id = result[:node_id]
+    is_new = result[:is_new]
 
-    # Enqueue background jobs for embedding and tag generation
-    # Both jobs run in parallel with equal priority
-    enqueue_embedding_job(node_id)
-    enqueue_tags_job(node_id, manual_tags: tags)
+    if is_new
+      HTM.logger.info "Node #{node_id} created for robot #{@robot_name} (#{token_count} tokens)"
+
+      # Enqueue background jobs for embedding and tag generation
+      # Only for NEW nodes - existing nodes already have embeddings/tags
+      enqueue_embedding_job(node_id)
+      enqueue_tags_job(node_id, manual_tags: tags)
+    else
+      HTM.logger.info "Node #{node_id} already exists, linked to robot #{@robot_name} (remember_count: #{result[:robot_node].remember_count})"
+
+      # For existing nodes, only add manual tags if provided
+      if tags.any?
+        node = HTM::Models::Node.find(node_id)
+        node.add_tags(tags)
+        HTM.logger.info "Added #{tags.length} manual tags to existing node #{node_id}"
+      end
+    end
 
     # Add to working memory (access_count starts at 0)
     @working_memory.add(node_id, content, token_count: token_count, access_count: 0)

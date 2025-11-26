@@ -3,9 +3,82 @@
 ## Prerequisites
 
 1. **Ruby** (version 3.0 or higher)
-2. **TimescaleDB Cloud Account** (already set up)
-3. **Database Environment Variables** (already configured)
-4. **Ollama** (for embeddings via RubyLLM)
+2. **PostgreSQL** (14+ with pgvector and pg_trgm extensions)
+3. **Ollama** (for embeddings via RubyLLM)
+
+## PostgreSQL Setup
+
+### 1. Install PostgreSQL
+
+**macOS (via Homebrew):**
+```bash
+brew install postgresql@17
+brew services start postgresql@17
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+### 2. Install pgvector Extension
+
+**macOS:**
+```bash
+brew install pgvector
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt install postgresql-17-pgvector
+```
+
+**From source:**
+```bash
+git clone https://github.com/pgvector/pgvector.git
+cd pgvector
+make
+sudo make install
+```
+
+### 3. Create Database and Enable Extensions
+
+```bash
+# Create the development database
+createdb htm_development
+
+# Enable required extensions
+psql htm_development -c "CREATE EXTENSION IF NOT EXISTS vector;"
+psql htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+
+# Verify extensions
+psql htm_development -c "SELECT extname, extversion FROM pg_extension;"
+```
+
+### 4. Set Environment Variable
+
+```bash
+# Add to your ~/.bashrc or ~/.zshrc
+export HTM_DBURL="postgresql://postgres@localhost:5432/htm_development"
+
+# Or for a specific user with password
+export HTM_DBURL="postgresql://username:password@localhost:5432/htm_development"
+```
+
+### 5. Verify Connection
+
+```bash
+cd /path/to/HTM
+ruby test_connection.rb
+```
+
+You should see:
+```
+✓ Connected successfully!
+✓ pgvector Extension: Version 0.8.x
+✓ pg_trgm Extension: Version 1.6
+```
 
 ## Ollama Setup
 
@@ -28,13 +101,16 @@ curl https://ollama.ai/install.sh | sh
 curl http://localhost:11434/api/version
 ```
 
-### 3. Pull the gpt-oss Model
+### 3. Pull Required Models
 
 ```bash
-# Pull the default model used by HTM
-ollama pull gpt-oss
+# Pull the embedding model
+ollama pull nomic-embed-text
 
-# Verify the model is available
+# Pull the chat model (for tag extraction)
+ollama pull llama3
+
+# Verify models are available
 ollama list
 ```
 
@@ -42,7 +118,10 @@ ollama list
 
 ```bash
 # Test that embeddings work
-ollama run gpt-oss "Hello, world!"
+curl http://localhost:11434/api/embeddings -d '{
+  "model": "nomic-embed-text",
+  "prompt": "Hello, world!"
+}'
 ```
 
 ### Optional: Custom Ollama URL
@@ -53,72 +132,36 @@ If Ollama is running on a different host/port, set the environment variable:
 export OLLAMA_URL="http://custom-host:11434"
 ```
 
-## Database Setup
-
-### 1. Load Database Credentials
-
-The HTM project uses environment variables to manage database credentials. These are defined in `~/.bashrc__tiger`.
-
-```bash
-# Load the Tiger database environment variables
-source ~/.bashrc__tiger
-```
-
-To make these variables available automatically in new shell sessions, ensure `~/.bashrc__tiger` is sourced in your `~/.bashrc` or `~/.bash_profile`.
-
-### 2. Verify Connection
-
-Test the database connection:
-
-```bash
-cd /path/to/HTM
-ruby test_connection.rb
-```
-
-You should see:
-```
-✓ Connected successfully!
-✓ TimescaleDB Extension: Version 2.22.1
-✓ pgvector Extension: Version 0.8.1
-✓ pg_trgm Extension: Version 1.6
-```
-
-### 3. Enable Extensions (One-time)
-
-Enable required PostgreSQL extensions (already done, but can be re-run safely):
-
-```bash
-ruby enable_extensions.rb
-```
-
 ## Environment Variables Reference
-
-After sourcing `~/.bashrc__tiger`, these variables are available:
 
 | Variable | Description | Example Value |
 |----------|-------------|---------------|
-| `HTM_SERVICE_NAME` | Service identifier | `db-67977` |
-| `HTM_DBNAME` | Database name | `tsdb` |
-| `HTM_DBUSER` | Database user | `tsdbadmin` |
-| `HTM_DBPASS` | Database password | `***` |
-| `HTM_DBURL` | Full connection URL (preferred) | `postgres://...` |
-| `HTM_DBPORT` | Database port | `37807` |
+| `HTM_DBURL` | Full PostgreSQL connection URL (preferred) | `postgresql://postgres@localhost:5432/htm_development` |
+| `HTM_DBNAME` | Database name (fallback) | `htm_development` |
+| `HTM_DBUSER` | Database user (fallback) | `postgres` |
+| `HTM_DBPASS` | Database password (fallback) | `` |
+| `HTM_DBHOST` | Database host (fallback) | `localhost` |
+| `HTM_DBPORT` | Database port (fallback) | `5432` |
+| `OLLAMA_URL` | Ollama server URL | `http://localhost:11434` |
 
 ## Development Workflow
 
 ### Quick Start
 
 ```bash
-# 1. Source environment variables (if not in .bashrc)
-source ~/.bashrc__tiger
+# 1. Set database URL (if not in shell config)
+export HTM_DBURL="postgresql://postgres@localhost:5432/htm_development"
 
-# 2. Install dependencies (when gem is created)
+# 2. Install dependencies
 bundle install
 
-# 3. Initialize database schema (when ready)
-ruby -r ./lib/htm -e "HTMDatabase.setup"
+# 3. Initialize database schema
+rake db_setup
 
-# 4. Test HTM functionality (when implemented)
+# 4. Run tests
+rake test
+
+# 5. Try the basic example
 ruby examples/basic_usage.rb
 ```
 
@@ -130,10 +173,8 @@ HTM uses Minitest for testing:
 # Run all tests
 rake test
 
-# Or run directly with Ruby
-ruby test/htm_test.rb
-
 # Run specific test file
+ruby test/htm_test.rb
 ruby test/embedding_service_test.rb
 
 # Run integration tests (requires database)
@@ -150,14 +191,18 @@ HTM/
 │   │   ├── database.rb           # Database setup and schema
 │   │   ├── long_term_memory.rb   # PostgreSQL-backed storage
 │   │   ├── working_memory.rb     # In-memory active context
-│   │   ├── embedding_service.rb  # RubyLLM embedding generation (Ollama/gpt-oss)
+│   │   ├── embedding_service.rb  # RubyLLM embedding generation
+│   │   ├── tag_service.rb        # Hierarchical tag extraction
+│   │   ├── configuration.rb      # Multi-provider LLM config
 │   │   └── version.rb            # Version constant
-├── sql/
+├── config/
+│   └── database.yml              # Database configuration
+├── db/
 │   └── schema.sql                # Database schema
 ├── test/
 │   ├── test_helper.rb            # Minitest configuration
 │   ├── htm_test.rb               # Basic HTM tests
-│   ├── embedding_service_test.rb # Embedding tests (RubyLLM/Ollama)
+│   ├── embedding_service_test.rb # Embedding tests
 │   └── integration_test.rb       # Full integration tests
 ├── examples/
 │   └── basic_usage.rb            # Basic usage example
@@ -165,23 +210,11 @@ HTM/
 ├── enable_extensions.rb          # Enable PostgreSQL extensions
 ├── SETUP.md                      # This file
 ├── README.md                     # Project overview
-├── htm_teamwork.md               # Planning and design doc
+├── CLAUDE.md                     # AI assistant instructions
 ├── Gemfile
 ├── htm.gemspec
 └── Rakefile                      # Rake tasks
 ```
-
-## Next Steps
-
-1. **Phase 1**: Create basic gem structure
-2. **Phase 2**: Implement database schema
-3. **Phase 3**: Implement LongTermMemory class
-4. **Phase 4**: Implement WorkingMemory class
-5. **Phase 5**: Implement HTM main class
-6. **Phase 6**: Add tests
-7. **Phase 7**: Create examples
-
-See `htm_teamwork.md` for detailed roadmap.
 
 ## Troubleshooting
 
@@ -193,24 +226,20 @@ If you encounter embedding errors:
 # Verify Ollama is running
 curl http://localhost:11434/api/version
 
-# Check if gpt-oss model is available
-ollama list | grep gpt-oss
+# Check if models are available
+ollama list
 
 # Test embedding generation
-ollama run gpt-oss "Test embedding"
+curl http://localhost:11434/api/embeddings -d '{"model": "nomic-embed-text", "prompt": "Test"}'
 
-# View Ollama logs
-ollama logs
-
-# Restart Ollama service
-# On macOS, Ollama runs as a background service
-# Check Activity Monitor or restart from the menu bar
+# View Ollama logs (macOS)
+# Check Console.app or Activity Monitor
 ```
 
 **Common Ollama Errors:**
 
 - **"connection refused"**: Ollama service is not running. Start Ollama from Applications or via CLI.
-- **"model not found"**: Run `ollama pull gpt-oss` to download the model.
+- **"model not found"**: Run `ollama pull nomic-embed-text` to download the model.
 - **Custom URL not working**: Ensure `OLLAMA_URL` environment variable is set correctly.
 
 ### Database Connection Issues
@@ -218,14 +247,15 @@ ollama logs
 If you get connection errors:
 
 ```bash
-# Verify environment variables are set
+# Verify environment variable is set
 echo $HTM_DBURL
 
 # Test connection manually
-psql $HTM_DBURL
+psql $HTM_DBURL -c "SELECT 1"
 
-# Check if ~/.bashrc__tiger is sourced
-grep "bashrc__tiger" ~/.bashrc
+# Check PostgreSQL is running
+brew services list | grep postgresql  # macOS
+systemctl status postgresql           # Linux
 ```
 
 ### Extension Issues
@@ -233,31 +263,32 @@ grep "bashrc__tiger" ~/.bashrc
 If extensions aren't available:
 
 ```bash
+# Check if pgvector is installed
+psql htm_development -c "SELECT * FROM pg_available_extensions WHERE name = 'vector';"
+
 # Re-run extension setup
 ruby enable_extensions.rb
 
-# Check extension status manually
-psql $HTM_DBURL -c "SELECT extname, extversion FROM pg_extension ORDER BY extname"
+# Check extension status
+psql htm_development -c "SELECT extname, extversion FROM pg_extension ORDER BY extname"
 ```
 
-### SSL Issues
+### Test Database
 
-The TimescaleDB Cloud instance requires SSL. If you see SSL errors:
+For running tests, create a separate test database:
 
 ```bash
-# Ensure sslmode is set in connection URL
-echo $HTM_DBURL | grep sslmode
-# Should show: sslmode=require
+createdb htm_development_test
+psql htm_development_test -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 ```
 
 ## Resources
 
 - **Ollama**: https://ollama.ai/
-- **RubyLLM**: https://github.com/madbomber/ruby_llm
-- **TimescaleDB Docs**: https://docs.timescale.com/
+- **RubyLLM**: https://github.com/crmne/ruby_llm
 - **pgvector Docs**: https://github.com/pgvector/pgvector
-- **Planning Document**: `htm_teamwork.md`
 - **PostgreSQL Docs**: https://www.postgresql.org/docs/
+- **Planning Document**: `htm_teamwork.md`
 
 ## Support
 

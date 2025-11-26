@@ -146,5 +146,34 @@ def reset_htm_configuration
   HTM.configuration.job_backend = :inline
 end
 
+# Check if database is available for integration tests
+# Returns true if HTM_DBURL is set and we can connect
+def database_available?
+  return @database_available if defined?(@database_available)
+
+  unless ENV['HTM_DBURL']
+    @database_available = false
+    return false
+  end
+
+  begin
+    # Try to establish connection
+    HTM::ActiveRecordConfig.establish_connection!
+    @database_available = true
+  rescue => e
+    @database_available = false
+  end
+
+  @database_available
+end
+
+# Helper method for tests that require database
+# Use in setup: `skip_without_database` (returns early if DB not available)
+def skip_without_database
+  unless database_available?
+    skip "Database not configured or unavailable. Set HTM_DBURL to run database tests."
+  end
+end
+
 # Setup default test configuration
 configure_htm_with_mocks

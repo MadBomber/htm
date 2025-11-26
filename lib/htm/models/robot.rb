@@ -3,12 +3,18 @@
 class HTM
   module Models
     # Robot model - represents an LLM agent using the HTM system
+    #
+    # Robots can share memories through the many-to-many relationship with nodes.
+    # When a robot is deleted, only the robot_nodes links are removed; shared
+    # nodes remain in the database for other robots.
+    #
     class Robot < ActiveRecord::Base
       self.table_name = 'robots'
 
-      # Associations
-      has_many :nodes, class_name: 'HTM::Models::Node', dependent: :destroy
-      has_many :operation_logs, class_name: 'HTM::Models::OperationLog', dependent: :destroy
+      # Associations - Many-to-many with nodes via robot_nodes
+      # dependent: :destroy removes links only, NOT the shared nodes
+      has_many :robot_nodes, class_name: 'HTM::Models::RobotNode', dependent: :destroy
+      has_many :nodes, through: :robot_nodes, class_name: 'HTM::Models::Node'
 
       # Validations
       validates :name, presence: true
@@ -32,6 +38,26 @@ class HTM
 
       def recent_nodes(limit = 10)
         nodes.recent.limit(limit)
+      end
+
+      # Get nodes with their remember metadata for this robot
+      #
+      # @param limit [Integer] Max nodes to return
+      # @return [Array<Hash>] Nodes with remember_count, first/last_remembered_at
+      #
+      def nodes_with_metadata(limit = 10)
+        robot_nodes
+          .includes(:node)
+          .order(last_remembered_at: :desc)
+          .limit(limit)
+          .map do |rn|
+            {
+              node: rn.node,
+              remember_count: rn.remember_count,
+              first_remembered_at: rn.first_remembered_at,
+              last_remembered_at: rn.last_remembered_at
+            }
+          end
       end
 
       def memory_summary

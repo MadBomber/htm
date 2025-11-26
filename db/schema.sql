@@ -82,16 +82,15 @@ ALTER SEQUENCE public.node_tags_id_seq OWNED BY public.node_tags.id;
 CREATE TABLE public.nodes (
     id bigint NOT NULL,
     content text NOT NULL,
-    source text DEFAULT ''::text,
     access_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     last_accessed timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     token_count integer,
     in_working_memory boolean DEFAULT false,
-    robot_id bigint NOT NULL,
     embedding public.vector(2000),
     embedding_dimension integer,
+    content_hash character varying(64),
     CONSTRAINT check_embedding_dimension CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension > 0) AND (embedding_dimension <= 2000))))
 );
 
@@ -106,12 +105,6 @@ COMMENT ON TABLE public.nodes IS 'Core memory storage for conversation messages 
 --
 
 COMMENT ON COLUMN public.nodes.content IS 'The conversation message/utterance content';
-
---
--- Name: COLUMN nodes.source; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.nodes.source IS 'From where the content came (empty string if unknown)';
 
 --
 -- Name: COLUMN nodes.access_count; Type: COMMENT; Schema: public; Owner: -
@@ -150,12 +143,6 @@ COMMENT ON COLUMN public.nodes.token_count IS 'Number of tokens in the content (
 COMMENT ON COLUMN public.nodes.in_working_memory IS 'Whether this memory is currently in working memory';
 
 --
--- Name: COLUMN nodes.robot_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.nodes.robot_id IS 'ID of the robot that owns this memory';
-
---
 -- Name: COLUMN nodes.embedding; Type: COMMENT; Schema: public; Owner: -
 --
 
@@ -166,6 +153,12 @@ COMMENT ON COLUMN public.nodes.embedding IS 'Vector embedding (max 2000 dimensio
 --
 
 COMMENT ON COLUMN public.nodes.embedding_dimension IS 'Actual number of dimensions used in the embedding vector (max 2000)';
+
+--
+-- Name: COLUMN nodes.content_hash; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.nodes.content_hash IS 'SHA-256 hash of content for deduplication';
 
 --
 -- Name: nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -183,6 +176,74 @@ CREATE SEQUENCE public.nodes_id_seq
 --
 
 ALTER SEQUENCE public.nodes_id_seq OWNED BY public.nodes.id;
+
+--
+-- Name: robot_nodes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.robot_nodes (
+    id bigint NOT NULL,
+    robot_id bigint NOT NULL,
+    node_id bigint NOT NULL,
+    first_remembered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    last_remembered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    remember_count integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+--
+-- Name: TABLE robot_nodes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.robot_nodes IS 'Join table connecting robots to nodes (many-to-many)';
+
+--
+-- Name: COLUMN robot_nodes.robot_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.robot_nodes.robot_id IS 'ID of the robot that remembered this node';
+
+--
+-- Name: COLUMN robot_nodes.node_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.robot_nodes.node_id IS 'ID of the node being remembered';
+
+--
+-- Name: COLUMN robot_nodes.first_remembered_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.robot_nodes.first_remembered_at IS 'When this robot first remembered this content';
+
+--
+-- Name: COLUMN robot_nodes.last_remembered_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.robot_nodes.last_remembered_at IS 'When this robot last tried to remember this content';
+
+--
+-- Name: COLUMN robot_nodes.remember_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.robot_nodes.remember_count IS 'Number of times this robot has tried to remember this content';
+
+--
+-- Name: robot_nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.robot_nodes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+--
+-- Name: robot_nodes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.robot_nodes_id_seq OWNED BY public.robot_nodes.id;
 
 --
 -- Name: robots; Type: TABLE; Schema: public; Owner: -
@@ -309,6 +370,12 @@ ALTER TABLE ONLY public.node_tags ALTER COLUMN id SET DEFAULT nextval('public.no
 ALTER TABLE ONLY public.nodes ALTER COLUMN id SET DEFAULT nextval('public.nodes_id_seq'::regclass);
 
 --
+-- Name: robot_nodes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.robot_nodes ALTER COLUMN id SET DEFAULT nextval('public.robot_nodes_id_seq'::regclass);
+
+--
 -- Name: robots id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -333,6 +400,13 @@ ALTER TABLE ONLY public.node_tags
 
 ALTER TABLE ONLY public.nodes
     ADD CONSTRAINT nodes_pkey PRIMARY KEY (id);
+
+--
+-- Name: robot_nodes robot_nodes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.robot_nodes
+    ADD CONSTRAINT robot_nodes_pkey PRIMARY KEY (id);
 
 --
 -- Name: robots robots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -386,6 +460,12 @@ CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count);
 CREATE INDEX idx_nodes_content_gin ON public.nodes USING gin (to_tsvector('english'::regconfig, content));
 
 --
+-- Name: idx_nodes_content_hash_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_nodes_content_hash_unique ON public.nodes USING btree (content_hash);
+
+--
 -- Name: idx_nodes_content_trgm; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -416,22 +496,34 @@ CREATE INDEX idx_nodes_in_working_memory ON public.nodes USING btree (in_working
 CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed);
 
 --
--- Name: idx_nodes_robot_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_nodes_robot_id ON public.nodes USING btree (robot_id);
-
---
--- Name: idx_nodes_source; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_nodes_source ON public.nodes USING btree (source);
-
---
 -- Name: idx_nodes_updated_at; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at);
+
+--
+-- Name: idx_robot_nodes_last_remembered_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_robot_nodes_last_remembered_at ON public.robot_nodes USING btree (last_remembered_at);
+
+--
+-- Name: idx_robot_nodes_node_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_robot_nodes_node_id ON public.robot_nodes USING btree (node_id);
+
+--
+-- Name: idx_robot_nodes_robot_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_robot_nodes_robot_id ON public.robot_nodes USING btree (robot_id);
+
+--
+-- Name: idx_robot_nodes_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (robot_id, node_id);
 
 --
 -- Name: idx_tags_name_pattern; Type: INDEX; Schema: public; Owner: -
@@ -446,11 +538,11 @@ CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern
 CREATE UNIQUE INDEX idx_tags_name_unique ON public.tags USING btree (name);
 
 --
--- Name: nodes fk_rails_60162e9d3a; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: robot_nodes fk_rails_9b003078a8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.nodes
-    ADD CONSTRAINT fk_rails_60162e9d3a FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.robot_nodes
+    ADD CONSTRAINT fk_rails_9b003078a8 FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
 
 --
 -- Name: node_tags fk_rails_b51cdcc57f; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -467,7 +559,14 @@ ALTER TABLE ONLY public.node_tags
     ADD CONSTRAINT fk_rails_ebc9aafd9f FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
 
 --
+-- Name: robot_nodes fk_rails_f2fc98d49e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.robot_nodes
+    ADD CONSTRAINT fk_rails_f2fc98d49e FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict f5a75Zsnuw7NUeDmu1kxeQ3pRMbaORhrsWHJyDdXV4wbRfzQweTumJBXu85kf1z
+\unrestrict IieHmgW8wejEEh1mkHFMOd8VeCneImLZFTsPGj6lGq8Z2RzkgiEcdb1cBeWT5KL

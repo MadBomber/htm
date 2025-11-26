@@ -4,37 +4,26 @@ require "test_helper"
 
 class IntegrationTest < Minitest::Test
   def setup
-    # Skip if database is not configured
-    unless ENV['HTM_DBURL']
-      skip "Database not configured. Set HTM_DBURL to run integration tests."
-    end
+    # Skip entire test class if database not available
+    skip_without_database
+    return if skipped?
 
-    # Use mock embedding service for tests (real Ollama not required)
-        # Initialize HTM with mock embedding service
+    # Initialize HTM with mock embedding service
     @htm = HTM.new(
       robot_name: "Test Robot",
-      working_memory_size: 128_000)
+      working_memory_size: 128_000
+    )
   end
 
   def teardown
-    # Clean up test data if HTM was initialized
     return unless @htm
 
     begin
-      # Forget test nodes (use all possible test keys)
-      test_keys = [
-        'test_decision_001', 'test_fact_001', 'test_code_001',
-        'test_forget_001', 'test_forget_confirmation_001'
-      ]
-      test_keys.each do |key|
-        @htm.forget(key, confirm: :confirmed) rescue nil
-      end
+      # Clean up test data
+      HTM::Models::Node.joins(:robots).where(robots: { name: @htm.robot_name }).destroy_all
     rescue => e
       # Ignore errors during cleanup
-      puts "Cleanup warning: #{e.message}"
-    ensure
-      # Always shutdown to release connection pool
-          end
+    end
   end
 
   def test_htm_initializes_with_ollama
@@ -43,12 +32,9 @@ class IntegrationTest < Minitest::Test
     assert_equal "Test Robot", @htm.robot_name
   end
 
-
-
-
   def test_working_memory_tracking
     # Add a node and check working memory
-    @htm.remember("Working memory test with Ollama embeddings", source: "test")
+    @htm.remember("Working memory test with Ollama embeddings")
 
     # Check working memory stats
     assert @htm.working_memory.node_count > 0
@@ -56,7 +42,28 @@ class IntegrationTest < Minitest::Test
     assert @htm.working_memory.utilization_percentage >= 0
   end
 
+  def test_remember_and_recall
+    # Add a node
+    node_id = @htm.remember("Test content for integration")
+    assert_instance_of Integer, node_id
 
+    # Recall should find it
+    results = @htm.recall("integration", timeframe: "last week", strategy: :fulltext)
+    assert_instance_of Array, results
+  end
 
+  def test_forget_with_confirmation
+    # Add a node
+    node_id = @htm.remember("Content to forget")
 
+    # Should require confirmation
+    error = assert_raises(ArgumentError) do
+      @htm.forget(node_id)
+    end
+    assert_match(/confirm/, error.message.downcase)
+
+    # Should work with confirmation
+    result = @htm.forget(node_id, confirm: :confirmed)
+    assert result
+  end
 end

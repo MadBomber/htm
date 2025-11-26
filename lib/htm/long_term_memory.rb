@@ -39,44 +39,96 @@ class HTM
       end
     end
 
-    # Add a node to long-term memory
+    # Add a node to long-term memory (with deduplication)
     #
-    # Embeddings should be generated client-side and provided via the embedding parameter.
+    # If content already exists (by content_hash), links the robot to the existing
+    # node and updates timestamps. Otherwise creates a new node.
     #
     # @param content [String] Conversation message/utterance
-    # @param speaker [String] Who said it: 'user' or robot name
     # @param token_count [Integer] Token count
-    # @param robot_id [String] Robot identifier
+    # @param robot_id [Integer] Robot identifier
     # @param embedding [Array<Float>, nil] Pre-generated embedding vector
-    # @return [Integer] Node database ID
+    # @return [Hash] { node_id:, is_new:, robot_node: }
     #
-    def add(content:, source:, token_count: 0, robot_id:, embedding: nil)
-      # Prepare embedding if provided
-      if embedding
-        # Pad embedding to 2000 dimensions if needed
-        actual_dimension = embedding.length
-        if actual_dimension < 2000
-          padded_embedding = embedding + Array.new(2000 - actual_dimension, 0.0)
-        else
-          padded_embedding = embedding
+    def add(content:, token_count: 0, robot_id:, embedding: nil)
+      content_hash = HTM::Models::Node.generate_content_hash(content)
+
+      # Check for existing node with same content
+      existing_node = HTM::Models::Node.find_by(content_hash: content_hash)
+
+      if existing_node
+        # Link robot to existing node (or update if already linked)
+        robot_node = link_robot_to_node(robot_id: robot_id, node: existing_node)
+
+        # Update the node's updated_at timestamp
+        existing_node.touch
+
+        {
+          node_id: existing_node.id,
+          is_new: false,
+          robot_node: robot_node
+        }
+      else
+        # Prepare embedding if provided
+        embedding_str = nil
+        if embedding
+          # Pad embedding to 2000 dimensions if needed
+          actual_dimension = embedding.length
+          padded_embedding = if actual_dimension < 2000
+            embedding + Array.new(2000 - actual_dimension, 0.0)
+          else
+            embedding
+          end
+          embedding_str = "[#{padded_embedding.join(',')}]"
         end
-        embedding_str = "[#{padded_embedding.join(',')}]"
+
+        # Create new node
+        node = HTM::Models::Node.create!(
+          content: content,
+          content_hash: content_hash,
+          token_count: token_count,
+          embedding: embedding_str,
+          embedding_dimension: embedding&.length
+        )
+
+        # Link robot to new node
+        robot_node = link_robot_to_node(robot_id: robot_id, node: node)
+
+        # Invalidate cache since database content changed
+        invalidate_cache!
+
+        {
+          node_id: node.id,
+          is_new: true,
+          robot_node: robot_node
+        }
+      end
+    end
+
+    # Link a robot to a node (create or update robot_node record)
+    #
+    # @param robot_id [Integer] Robot ID
+    # @param node [HTM::Models::Node] Node to link
+    # @return [HTM::Models::RobotNode] The robot_node link record
+    #
+    def link_robot_to_node(robot_id:, node:)
+      robot_node = HTM::Models::RobotNode.find_by(robot_id: robot_id, node_id: node.id)
+
+      if robot_node
+        # Existing link - record that robot remembered this again
+        robot_node.record_remember!
+      else
+        # New link
+        robot_node = HTM::Models::RobotNode.create!(
+          robot_id: robot_id,
+          node_id: node.id,
+          first_remembered_at: Time.current,
+          last_remembered_at: Time.current,
+          remember_count: 1
+        )
       end
 
-      # Create node using ActiveRecord
-      node = HTM::Models::Node.create!(
-        content: content,
-        source: source,
-        token_count: token_count,
-        robot_id: robot_id,
-        embedding: embedding ? embedding_str : nil,
-        embedding_dimension: embedding ? embedding.length : nil
-      )
-
-      # Invalidate cache since database content changed
-      invalidate_cache!
-
-      node.id
+      robot_node
     end
 
     # Retrieve a node by ID
@@ -294,7 +346,7 @@ class HTM
     def stats
       base_stats = {
         total_nodes: HTM::Models::Node.count,
-        nodes_by_robot: HTM::Models::Node.group(:robot_id).count,
+        nodes_by_robot: HTM::Models::RobotNode.group(:robot_id).count,
         total_tags: HTM::Models::Tag.count,
         oldest_memory: HTM::Models::Node.minimum(:created_at),
         newest_memory: HTM::Models::Node.maximum(:created_at),
@@ -574,6 +626,32 @@ class HTM
         .map { |tag| { name: tag.name, usage_count: tag.usage_count } }
     end
 
+    # Find tags that match terms in the query
+    #
+    # Searches the tags table for tags where any hierarchy level matches
+    # query words. For example, query "PostgreSQL database" would match
+    # tags like "database:postgresql", "database:sql", etc.
+    #
+    # @param query [String] Search query
+    # @return [Array<String>] Matching tag names
+    #
+    def find_query_matching_tags(query)
+      return [] if query.nil? || query.strip.empty?
+
+      # Extract words from query (lowercase, 3+ chars)
+      words = query.downcase.split(/\s+/).select { |w| w.length >= 3 }
+      return [] if words.empty?
+
+      # Build LIKE conditions for each word
+      # Match tags where any part of the hierarchy contains the word
+      conditions = words.map { |w| "name ILIKE ?" }
+      values = words.map { |w| "%#{w}%" }
+
+      HTM::Models::Tag
+        .where(conditions.join(' OR '), *values)
+        .pluck(:name)
+    end
+
     private
 
     # Generate cache key for query
@@ -682,7 +760,7 @@ class HTM
 
       result = ActiveRecord::Base.connection.select_all(
         <<~SQL,
-          SELECT id, content, source, access_count, created_at, robot_id, token_count,
+          SELECT id, content, access_count, created_at, token_count,
                  1 - (embedding <=> '#{embedding_str}'::vector) as similarity
           FROM nodes
           WHERE created_at BETWEEN '#{timeframe.begin.iso8601}' AND '#{timeframe.end.iso8601}'
@@ -710,7 +788,7 @@ class HTM
       result = ActiveRecord::Base.connection.select_all(
         ActiveRecord::Base.sanitize_sql_array([
           <<~SQL,
-            SELECT id, content, source, access_count, created_at, robot_id, token_count,
+            SELECT id, content, access_count, created_at, token_count,
                    ts_rank(to_tsvector('english', content), plainto_tsquery('english', ?)) as rank
             FROM nodes
             WHERE created_at BETWEEN ? AND ?
@@ -731,15 +809,17 @@ class HTM
 
     # Uncached hybrid search
     #
-    # Generates query embedding client-side, then combines full-text search for
-    # candidate selection with vector similarity for ranking.
+    # Generates query embedding client-side, then combines:
+    # 1. Full-text search for content matching
+    # 2. Tag matching for categorical relevance
+    # 3. Vector similarity for semantic ranking
     #
     # @param timeframe [Range] Time range to search
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object] Service to generate query embedding
     # @param prefilter_limit [Integer] Candidates to consider
-    # @return [Array<Hash>] Matching nodes
+    # @return [Array<Hash>] Matching nodes with similarity and tag_boost scores
     #
     def search_hybrid_uncached(timeframe:, query:, limit:, embedding_service:, prefilter_limit:)
       # Generate query embedding client-side
@@ -753,26 +833,93 @@ class HTM
       # Convert to PostgreSQL vector format
       embedding_str = "[#{query_embedding.join(',')}]"
 
-      result = ActiveRecord::Base.connection.select_all(
-        ActiveRecord::Base.sanitize_sql_array([
-          <<~SQL,
-            WITH candidates AS (
-              SELECT id, content, source, access_count, created_at, robot_id, token_count, embedding
-              FROM nodes
-              WHERE created_at BETWEEN ? AND ?
-              AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
-              AND embedding IS NOT NULL
+      # Find tags that match query terms
+      matching_tags = find_query_matching_tags(query)
+
+      # Build the hybrid query
+      # If we have matching tags, include nodes with those tags in the candidate pool
+      if matching_tags.any?
+        # Escape tag names for SQL
+        tag_list = matching_tags.map { |t| ActiveRecord::Base.connection.quote(t) }.join(', ')
+
+        result = ActiveRecord::Base.connection.select_all(
+          ActiveRecord::Base.sanitize_sql_array([
+            <<~SQL,
+              WITH fulltext_candidates AS (
+                -- Nodes matching full-text search
+                SELECT DISTINCT n.id, n.content, n.access_count, n.created_at, n.token_count, n.embedding
+                FROM nodes n
+                WHERE n.created_at BETWEEN ? AND ?
+                AND to_tsvector('english', n.content) @@ plainto_tsquery('english', ?)
+                AND n.embedding IS NOT NULL
+                LIMIT ?
+              ),
+              tag_candidates AS (
+                -- Nodes matching relevant tags
+                SELECT DISTINCT n.id, n.content, n.access_count, n.created_at, n.token_count, n.embedding
+                FROM nodes n
+                JOIN node_tags nt ON nt.node_id = n.id
+                JOIN tags t ON t.id = nt.tag_id
+                WHERE n.created_at BETWEEN ? AND ?
+                AND t.name IN (#{tag_list})
+                AND n.embedding IS NOT NULL
+                LIMIT ?
+              ),
+              all_candidates AS (
+                SELECT * FROM fulltext_candidates
+                UNION
+                SELECT * FROM tag_candidates
+              ),
+              scored AS (
+                SELECT
+                  ac.id, ac.content, ac.access_count, ac.created_at, ac.token_count,
+                  1 - (ac.embedding <=> '#{embedding_str}'::vector) as similarity,
+                  COALESCE((
+                    SELECT COUNT(DISTINCT t.name)::float / ?
+                    FROM node_tags nt
+                    JOIN tags t ON t.id = nt.tag_id
+                    WHERE nt.node_id = ac.id AND t.name IN (#{tag_list})
+                  ), 0) as tag_boost
+                FROM all_candidates ac
+              )
+              SELECT id, content, access_count, created_at, token_count,
+                     similarity, tag_boost,
+                     (similarity * 0.7 + tag_boost * 0.3) as combined_score
+              FROM scored
+              ORDER BY combined_score DESC
               LIMIT ?
-            )
-            SELECT id, content, source, access_count, created_at, robot_id, token_count,
-                   1 - (embedding <=> '#{embedding_str}'::vector) as similarity
-            FROM candidates
-            ORDER BY embedding <=> '#{embedding_str}'::vector
-            LIMIT ?
-          SQL
-          timeframe.begin, timeframe.end, query, prefilter_limit, limit
-        ])
-      )
+            SQL
+            timeframe.begin, timeframe.end, query, prefilter_limit,
+            timeframe.begin, timeframe.end, prefilter_limit,
+            matching_tags.length.to_f,
+            limit
+          ])
+        )
+      else
+        # No matching tags, fall back to standard hybrid (fulltext + vector)
+        result = ActiveRecord::Base.connection.select_all(
+          ActiveRecord::Base.sanitize_sql_array([
+            <<~SQL,
+              WITH candidates AS (
+                SELECT id, content, access_count, created_at, token_count, embedding
+                FROM nodes
+                WHERE created_at BETWEEN ? AND ?
+                AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
+                AND embedding IS NOT NULL
+                LIMIT ?
+              )
+              SELECT id, content, access_count, created_at, token_count,
+                     1 - (embedding <=> '#{embedding_str}'::vector) as similarity,
+                     0.0 as tag_boost,
+                     1 - (embedding <=> '#{embedding_str}'::vector) as combined_score
+              FROM candidates
+              ORDER BY embedding <=> '#{embedding_str}'::vector
+              LIMIT ?
+            SQL
+            timeframe.begin, timeframe.end, query, prefilter_limit, limit
+          ])
+        )
+      end
 
       # Track access for retrieved nodes
       node_ids = result.map { |r| r['id'] }
