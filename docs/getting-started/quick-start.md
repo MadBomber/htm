@@ -499,9 +499,9 @@ Congratulations! You've learned the basics of HTM. Here's what to explore next:
 
 ### Explore Advanced Features
 
-- **[User Guide](guides/getting-started.md)**: Deep dive into all HTM features
-- **[API Reference](api/htm.md)**: Complete API documentation
-- **[Architecture Guide](architecture/overview.md)**: Understand HTM's internals
+- **[User Guide](../guides/getting-started.md)**: Deep dive into all HTM features
+- **[API Reference](../api/htm.md)**: Complete API documentation
+- **[Architecture Guide](../architecture/overview.md)**: Understand HTM's internals
 
 ### Build Real Applications
 
@@ -648,8 +648,8 @@ memories = htm.recall(
 ## Additional Resources
 
 - **[Installation Guide](installation.md)**: Complete setup instructions
-- **[User Guide](guides/getting-started.md)**: Comprehensive feature documentation
-- **[API Reference](api/htm.md)**: Detailed API documentation
+- **[User Guide](../guides/getting-started.md)**: Comprehensive feature documentation
+- **[API Reference](../api/htm.md)**: Detailed API documentation
 - **[Examples](https://github.com/madbomber/htm/tree/main/examples)**: Real-world code examples
 
 Happy coding with HTM! 🚀

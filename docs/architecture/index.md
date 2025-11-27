@@ -332,8 +332,8 @@ Explore detailed architecture documentation:
 
 ## Related Documentation
 
-- [Installation Guide](../installation.md) - Setup PostgreSQL, TimescaleDB, and dependencies
-- [Quick Start](../quick-start.md) - Get started with HTM in 5 minutes
+- [Installation Guide](../getting-started/installation.md) - Setup PostgreSQL, TimescaleDB, and dependencies
+- [Quick Start](../getting-started/quick-start.md) - Get started with HTM in 5 minutes
 - [API Reference](../api/htm.md) - Complete API documentation
 - [Architecture Decision Records](adrs/index.md) - Detailed decision history
 

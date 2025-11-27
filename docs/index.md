@@ -162,8 +162,8 @@ Each type can have custom importance scores, tags, and relationships.
 
 Ready to add intelligent memory to your LLM application? Follow these steps:
 
-1. **[Installation](installation.md)**: Set up HTM, PostgreSQL, TimescaleDB, and Ollama
-2. **[Quick Start](quick-start.md)**: Build your first HTM-powered application in 5 minutes
+1. **[Installation](getting-started/installation.md)**: Set up HTM, PostgreSQL, TimescaleDB, and Ollama
+2. **[Quick Start](getting-started/quick-start.md)**: Build your first HTM-powered application in 5 minutes
 3. **[User Guide](guides/getting-started.md)**: Deep dive into all HTM features
 4. **[API Reference](api/htm.md)**: Complete API documentation
 
@@ -193,7 +193,7 @@ Licensed under the MIT License.
 
 **Next Steps:**
 
-- [Install HTM](installation.md) and set up your environment
-- Follow the [Quick Start Guide](quick-start.md) to build your first application
+- [Install HTM](getting-started/installation.md) and set up your environment
+- Follow the [Quick Start Guide](getting-started/quick-start.md) to build your first application
 - Explore the [User Guide](guides/getting-started.md) for advanced features
 - Check out the [API Reference](api/htm.md) for detailed documentation

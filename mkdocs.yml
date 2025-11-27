@@ -13,21 +13,21 @@ edit_uri: edit/main/docs/
 # Configuration
 theme:
   name: material
-  
+
   # Color scheme - Default to light mode
   palette:
     # Palette toggle for light mode (default)
     - scheme: default
-      primary: blue
-      accent: blue
+      primary: indigo
+      accent: deep purple
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    
+
     # Palette toggle for dark mode
     - scheme: slate
-      primary: blue
-      accent: blue
+      primary: indigo
+      accent: deep purple
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -36,6 +36,10 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
+
+  # Logo and icon
+  icon:
+    repo: fontawesome/brands/github
 
   # Theme features
   features:
@@ -48,6 +52,7 @@ theme:
     - navigation.path
     - navigation.indexes
     - navigation.top
+    - navigation.footer
 
     # Table of contents
     - toc.follow
@@ -72,6 +77,7 @@ theme:
 plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - tags
 
 # Extensions
 markdown_extensions:
@@ -82,6 +88,7 @@ markdown_extensions:
   - def_list
   - footnotes
   - md_in_html
+  - tables
   - toc:
       permalink: true
       title: On this page
@@ -92,6 +99,7 @@ markdown_extensions:
   - pymdownx.betterem:
       smart_enable: all
   - pymdownx.caret
+  - pymdownx.critic
   - pymdownx.details
   - pymdownx.emoji:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
@@ -108,6 +116,8 @@ markdown_extensions:
       repo: htm
   - pymdownx.mark
   - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      check_paths: true
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
@@ -138,11 +148,28 @@ extra:
       link: https://rubygems.org/gems/htm
       name: HTM on RubyGems
 
+  analytics:
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Help us improve by creating an issue.
+
 # Navigation
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Quick Start: quick-start.md
+  - Getting Started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
   - Architecture:
     - architecture/index.md
     - Overview: architecture/overview.md
@@ -184,6 +211,26 @@ nav:
     - Testing: development/testing.md
     - Contributing: development/contributing.md
     - Database Schema: development/schema.md
+    - Database Tables:
+      - database/README.md
+      - Core Tables:
+        - Robots: database/public.robots.md
+        - Nodes: database/public.nodes.md
+        - Tags: database/public.tags.md
+        - Working Memories: database/public.working_memories.md
+      - Join Tables:
+        - Node Tags: database/public.node_tags.md
+        - Nodes Tags (Legacy): database/public.nodes_tags.md
+        - Robot Nodes: database/public.robot_nodes.md
+      - Views & Stats:
+        - Node Stats: database/public.node_stats.md
+        - Robot Activity: database/public.robot_activity.md
+        - Topic Relationships: database/public.topic_relationships.md
+        - Ontology Structure: database/public.ontology_structure.md
+        - Relationships: database/public.relationships.md
+      - System:
+        - Operations Log: database/public.operations_log.md
+        - Schema Migrations: database/public.schema_migrations.md
     - Multi-Framework Support: multi_framework_support.md
     - Database Rake Tasks: database_rake_tasks.md
     - Using Rake Tasks: using_rake_tasks_in_your_app.md

@@ -180,7 +180,7 @@ Proposal to add Redis as a persistent storage layer for working memory was thoro
 
 - [HTM API Guide](../../api/index.md)
 - [Database Schema](../../development/schema.md)
-- [Configuration Guide](../../installation.md)
+- [Configuration Guide](../../getting-started/installation.md)
 - [Development Workflow](../../development/index.md)
 
 ## Contributing to ADRs

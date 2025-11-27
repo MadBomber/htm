@@ -264,241 +264,28 @@ htm = HTM.new(db_config: HTM::Database.default_config)
 
 ## Database Schema
 
-### Tables
+For detailed database schema documentation, see:
 
-#### `nodes`
+- **[Database Schema Documentation](../development/schema.md)** - Query patterns, optimization tips, and best practices
+- **[Database Tables Overview](../database/README.md)** - Auto-generated table reference with ER diagram
 
-Primary memory storage table (hypertable partitioned by `created_at`).
+### Quick Reference
 
-```sql
-CREATE TABLE nodes (
-  id SERIAL PRIMARY KEY,
-  key TEXT UNIQUE NOT NULL,
-  value TEXT NOT NULL,
-  type TEXT,
-  category TEXT,
-  importance REAL DEFAULT 1.0,
-  token_count INTEGER DEFAULT 0,
-  robot_id TEXT NOT NULL REFERENCES robots(id),
-  embedding vector(1536),
-  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  last_accessed TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  in_working_memory BOOLEAN DEFAULT TRUE,
-  evicted_at TIMESTAMPTZ
-);
+| Table | Purpose |
+|-------|---------|
+| [robots](../database/public.robots.md) | Robot registry for multi-robot tracking |
+| [nodes](../database/public.nodes.md) | Primary memory storage with vector embeddings |
+| [tags](../database/public.tags.md) | Hierarchical tag names for categorization |
+| [robot_nodes](../database/public.robot_nodes.md) | Robot-to-node associations (hive mind) |
+| [node_tags](../database/public.node_tags.md) | Node-to-tag associations |
+| [working_memories](../database/public.working_memories.md) | Per-robot working memory state |
 
--- Indexes
-CREATE UNIQUE INDEX idx_nodes_key ON nodes(key);
-CREATE INDEX idx_nodes_created_at ON nodes(created_at DESC);
-CREATE INDEX idx_nodes_robot_id ON nodes(robot_id);
-CREATE INDEX idx_nodes_type ON nodes(type);
-CREATE INDEX idx_nodes_embedding ON nodes USING ivfflat (embedding vector_cosine_ops);
-CREATE INDEX idx_nodes_value_fts ON nodes USING GIN (to_tsvector('english', value));
-```
+### Required Extensions
 
-#### `relationships`
-
-Node relationship graph.
-
-```sql
-CREATE TABLE relationships (
-  id SERIAL PRIMARY KEY,
-  from_node_id INTEGER NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  to_node_id INTEGER NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  relationship_type TEXT,
-  strength REAL DEFAULT 1.0,
-  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(from_node_id, to_node_id, relationship_type)
-);
-
--- Indexes
-CREATE INDEX idx_relationships_from ON relationships(from_node_id);
-CREATE INDEX idx_relationships_to ON relationships(to_node_id);
-```
-
-#### `tags`
-
-Flexible tagging system.
-
-```sql
-CREATE TABLE tags (
-  id SERIAL PRIMARY KEY,
-  node_id INTEGER NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
-  tag TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(node_id, tag)
-);
-
--- Indexes
-CREATE INDEX idx_tags_node_id ON tags(node_id);
-CREATE INDEX idx_tags_tag ON tags(tag);
-```
-
-#### `robots`
-
-Robot registry for multi-robot tracking.
-
-```sql
-CREATE TABLE robots (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  last_active TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-#### `operations_log`
-
-Audit log for all operations (hypertable partitioned by `timestamp`).
-
-```sql
-CREATE TABLE operations_log (
-  id SERIAL,
-  operation TEXT NOT NULL,
-  node_id INTEGER REFERENCES nodes(id) ON DELETE SET NULL,
-  robot_id TEXT NOT NULL REFERENCES robots(id),
-  timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  details JSONB
-);
-
--- Indexes
-CREATE INDEX idx_operations_log_timestamp ON operations_log(timestamp DESC);
-CREATE INDEX idx_operations_log_robot_id ON operations_log(robot_id);
-CREATE INDEX idx_operations_log_operation ON operations_log(operation);
-```
-
-### Views
-
-#### `node_stats`
-
-Aggregate statistics by node type.
-
-```sql
-CREATE VIEW node_stats AS
-SELECT
-  type,
-  COUNT(*) as count,
-  AVG(importance) as avg_importance,
-  MIN(created_at) as oldest,
-  MAX(created_at) as newest
-FROM nodes
-GROUP BY type;
-```
-
-#### `robot_activity`
-
-Robot activity summary.
-
-```sql
-CREATE VIEW robot_activity AS
-SELECT
-  id,
-  name,
-  last_active,
-  (SELECT COUNT(*) FROM nodes WHERE robot_id = robots.id) as node_count
-FROM robots
-ORDER BY last_active DESC;
-```
-
----
-
-## TimescaleDB Hypertables
-
-### `nodes` Hypertable
-
-```sql
-SELECT create_hypertable('nodes', 'created_at',
-  if_not_exists => TRUE,
-  migrate_data => TRUE
-);
-```
-
-**Partitioning**: By `created_at` timestamp
-
-**Chunk Interval**: 7 days (default)
-
-**Compression**:
-
-```sql
-ALTER TABLE nodes SET (
-  timescaledb.compress,
-  timescaledb.compress_segmentby = 'robot_id,type'
-);
-
-SELECT add_compression_policy('nodes', INTERVAL '30 days',
-  if_not_exists => TRUE
-);
-```
-
-- Automatically compresses chunks older than 30 days
-- Segments by `robot_id` and `type` for efficient queries
-- Reduces storage by ~90% for old data
-
-### `operations_log` Hypertable
-
-```sql
-SELECT create_hypertable('operations_log', 'timestamp',
-  if_not_exists => TRUE,
-  migrate_data => TRUE
-);
-```
-
-**Partitioning**: By `timestamp`
-
-**Chunk Interval**: 1 day (default)
-
-**Benefits**:
-
-- Fast time-range queries
-- Automatic data retention policies (can be added)
-- Optimized for append-only workload
-
----
-
-## Required PostgreSQL Extensions
-
-### TimescaleDB
-
-Time-series database extension.
-
-```sql
-CREATE EXTENSION IF NOT EXISTS timescaledb;
-```
-
-**Features Used**:
-
-- Hypertables for time-series optimization
-- Automatic chunking and partitioning
-- Compression policies
-- Continuous aggregates (planned)
-
-### pgvector
-
-Vector similarity search.
-
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-```
-
-**Features Used**:
-
-- `vector(1536)` data type for embeddings
-- Cosine similarity operator `<=>`
-- IVFFlat index for approximate nearest neighbor
-
-### pg_trgm
-
-Trigram-based text search.
-
-```sql
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-```
-
-**Features Used**:
-
-- Full-text search with fuzzy matching
-- GIN indexes for fast text queries
-- Similarity ranking
+| Extension | Purpose |
+|-----------|---------|
+| `pgvector` | Vector similarity search with HNSW indexes |
+| `pg_trgm` | Trigram-based fuzzy text matching |
 
 ---
 
@@ -801,6 +588,7 @@ end
 
 - [HTM API](htm.md) - Main class that uses Database config
 - [LongTermMemory API](long-term-memory.md) - Uses database for storage
-- [Database Schema](../development/schema.md) - Complete schema documentation
-- [TimescaleDB Documentation](https://docs.timescale.com/) - Hypertable features
+- [Database Schema](../development/schema.md) - Query patterns, optimization tips, and best practices
+- [Database Tables](../database/README.md) - Auto-generated table reference with ER diagram
 - [pgvector Documentation](https://github.com/pgvector/pgvector) - Vector search
+- [pg_trgm Documentation](https://www.postgresql.org/docs/current/pgtrgm.html) - Trigram fuzzy matching

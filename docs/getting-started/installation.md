@@ -453,8 +453,8 @@ psql $HTM_DBURL -c "
 Now that HTM is installed, you're ready to start building:
 
 1. **[Quick Start Guide](quick-start.md)**: Build your first HTM application in 5 minutes
-2. **[User Guide](guides/getting-started.md)**: Learn all HTM features in depth
-3. **[API Reference](api/htm.md)**: Explore the complete API documentation
+2. **[User Guide](../guides/getting-started.md)**: Learn all HTM features in depth
+3. **[API Reference](../api/htm.md)**: Explore the complete API documentation
 4. **[Examples](https://github.com/madbomber/htm/tree/main/examples)**: See real-world usage examples
 
 ## Getting Help

@@ -1,0 +1,30 @@
+# tbls configuration for HTM database documentation
+# https://github.com/k1LoW/tbls
+
+# Database connection - uses HTM_DBURL environment variable
+dsn: env://HTM_DBURL
+
+# Output documentation to docs/database directory
+docPath: docs/database
+
+# Documentation format options
+format:
+  adjust_table_width: true
+  sort: true
+
+# ER diagram settings
+er:
+  format: svg
+  comment: true
+  distance: 2
+
+# Include schema metadata
+include:
+  - public.*
+
+# Lint rules for schema quality
+lint:
+  requireColumnComment:
+    enabled: false
+  requireTableComment:
+    enabled: false

@@ -299,7 +299,7 @@ ALTER TABLE nodes SET (
 - [pgvector Documentation](https://github.com/pgvector/pgvector)
 - [PostgreSQL Full-Text Search](https://www.postgresql.org/docs/current/textsearch.html)
 - [HTM Database Schema Guide](../../development/schema.md)
-- [HTM Configuration Guide](../../installation.md)
+- [HTM Configuration Guide](../../getting-started/installation.md)
 
 ---
 
