@@ -4,11 +4,13 @@
 
 | Name | Columns | Comment | Type |
 | ---- | ------- | ------- | ---- |
-| [public.node_tags](public.node_tags.md) | 4 | Join table connecting nodes to tags (many-to-many) | BASE TABLE |
+| [public.robot_nodes](public.robot_nodes.md) | 8 | Join table connecting robots to nodes (many-to-many) | BASE TABLE |
 | [public.schema_migrations](public.schema_migrations.md) | 1 |  | BASE TABLE |
-| [public.robots](public.robots.md) | 5 | Registry of all LLM robots using the HTM system | BASE TABLE |
-| [public.nodes](public.nodes.md) | 12 | Core memory storage for conversation messages and context | BASE TABLE |
+| [public.robots](public.robots.md) | 4 | Registry of all LLM robots using the HTM system | BASE TABLE |
+| [public.nodes](public.nodes.md) | 10 | Core memory storage for conversation messages and context | BASE TABLE |
 | [public.tags](public.tags.md) | 3 | Unique tag names for categorization | BASE TABLE |
+| [public.node_tags](public.node_tags.md) | 4 | Join table connecting nodes to tags (many-to-many) | BASE TABLE |
+| [public.working_memories](public.working_memories.md) | 5 | Per-robot working memory state (optional persistence) | BASE TABLE |
 
 ## Stored procedures and functions
 

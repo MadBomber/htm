@@ -63,7 +63,7 @@ class HTM
       def memory_summary
         {
           total_nodes: nodes.count,
-          in_working_memory: nodes.in_working_memory.count,
+          in_working_memory: HTM::Models::WorkingMemoryEntry.where(robot_id: id).count,
           with_embeddings: nodes.with_embeddings.count
         }
       end

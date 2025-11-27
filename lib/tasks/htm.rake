@@ -138,10 +138,41 @@ namespace :htm do
       end
     end
 
+  end
+
+  namespace :doc do
     desc "Generate/update database documentation in dbdoc/"
-    task :doc do
+    task :db do
+      unless system("which tbls > /dev/null 2>&1")
+        puts "Error: 'tbls' is not installed."
+        puts "Install it with: brew install tbls"
+        exit 1
+      end
       require 'htm'
       HTM::Database.generate_docs
     end
+
+    desc "Build documentation site with MkDocs"
+    task :build do
+      unless system("which mkdocs > /dev/null 2>&1")
+        puts "Error: 'mkdocs' is not installed."
+        puts "Install it with: brew install mkdocs"
+        exit 1
+      end
+      sh "mkdocs build"
+    end
+
+    desc "Serve documentation site locally with MkDocs"
+    task :serve do
+      unless system("which mkdocs > /dev/null 2>&1")
+        puts "Error: 'mkdocs' is not installed."
+        puts "Install it with: brew install mkdocs"
+        exit 1
+      end
+      sh "mkdocs serve"
+    end
+
+    desc "Generate DB docs, build site, and serve locally"
+    task :all => [:db, :build, :serve]
   end
 end

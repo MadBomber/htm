@@ -42,9 +42,13 @@ namespace :htm do
       # Tags by depth
       if total_tags > 0
         puts "\nTag hierarchy breakdown:"
-        HTM::Models::Tag.all.each do |tag|
-          depth = tag.name.count(':')
-          puts "  Depth #{depth}: #{tag.name.count(':', depth)} tags" if depth <= 3
+        depth_counts = Hash.new(0)
+        HTM::Models::Tag.pluck(:name).each do |name|
+          depth = name.count(':')
+          depth_counts[depth] += 1
+        end
+        depth_counts.keys.sort.each do |depth|
+          puts "  Depth #{depth}: #{depth_counts[depth]} tags"
         end
       end
 

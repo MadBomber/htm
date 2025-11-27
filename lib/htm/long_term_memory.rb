@@ -292,13 +292,15 @@ class HTM
 
     # Mark nodes as evicted from working memory
     #
-    # @param node_ids [Array<Integer>] Node IDs
+    # Working memory state is now tracked per-robot in the working_memories table
+    # (optional persistence). The in-memory WorkingMemory class handles eviction
+    # tracking. This method is retained for API compatibility but is a no-op.
+    #
+    # @param node_ids [Array<Integer>] Node IDs (ignored)
     # @return [void]
     #
     def mark_evicted(node_ids)
-      return if node_ids.empty?
-
-      HTM::Models::Node.where(id: node_ids).update_all(in_working_memory: false)
+      # No-op: working memory is tracked in-memory or via WorkingMemoryEntry model
     end
 
     # Track access for multiple nodes (bulk operation)

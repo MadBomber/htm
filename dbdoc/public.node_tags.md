@@ -9,18 +9,17 @@ Join table connecting nodes to tags (many-to-many)
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
 | id | bigint | nextval('node_tags_id_seq'::regclass) | false |  |  |  |
-| node_id | bigint |  | false |  | [public.nodes](public.nodes.md) |  |
-| tag_id | bigint |  | false |  | [public.tags](public.tags.md) |  |
-| created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  |  |
+| node_id | bigint |  | false |  | [public.nodes](public.nodes.md) | ID of the node being tagged |
+| tag_id | bigint |  | false |  | [public.tags](public.tags.md) | ID of the tag being applied |
+| created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this association was created |
 
 ## Constraints
 
 | Name | Type | Definition |
 | ---- | ---- | ---------- |
-| node_tags_pkey | PRIMARY KEY | PRIMARY KEY (id) |
-| idx_node_tags_unique | UNIQUE | UNIQUE (node_id, tag_id) |
 | fk_rails_ebc9aafd9f | FOREIGN KEY | FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE |
 | fk_rails_b51cdcc57f | FOREIGN KEY | FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE |
+| node_tags_pkey | PRIMARY KEY | PRIMARY KEY (id) |
 
 ## Indexes
 

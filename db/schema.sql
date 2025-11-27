@@ -87,7 +87,6 @@ CREATE TABLE public.nodes (
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     last_accessed timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     token_count integer,
-    in_working_memory boolean DEFAULT false,
     embedding public.vector(2000),
     embedding_dimension integer,
     content_hash character varying(64),
@@ -135,12 +134,6 @@ COMMENT ON COLUMN public.nodes.last_accessed IS 'When this memory was last acces
 --
 
 COMMENT ON COLUMN public.nodes.token_count IS 'Number of tokens in the content (for context budget management)';
-
---
--- Name: COLUMN nodes.in_working_memory; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.nodes.in_working_memory IS 'Whether this memory is currently in working memory';
 
 --
 -- Name: COLUMN nodes.embedding; Type: COMMENT; Schema: public; Owner: -
@@ -253,8 +246,7 @@ CREATE TABLE public.robots (
     id bigint NOT NULL,
     name text,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    last_active timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    metadata jsonb
+    last_active timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 --
@@ -280,12 +272,6 @@ COMMENT ON COLUMN public.robots.created_at IS 'When the robot was first register
 --
 
 COMMENT ON COLUMN public.robots.last_active IS 'Last time the robot accessed the system';
-
---
--- Name: COLUMN robots.metadata; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.robots.metadata IS 'Robot-specific configuration and metadata';
 
 --
 -- Name: robots_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -358,6 +344,65 @@ CREATE SEQUENCE public.tags_id_seq
 ALTER SEQUENCE public.tags_id_seq OWNED BY public.tags.id;
 
 --
+-- Name: working_memories; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.working_memories (
+    id bigint NOT NULL,
+    robot_id bigint NOT NULL,
+    node_id bigint NOT NULL,
+    added_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    token_count integer
+);
+
+--
+-- Name: TABLE working_memories; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.working_memories IS 'Per-robot working memory state (optional persistence)';
+
+--
+-- Name: COLUMN working_memories.robot_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.working_memories.robot_id IS 'Robot whose working memory this belongs to';
+
+--
+-- Name: COLUMN working_memories.node_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.working_memories.node_id IS 'Node currently in working memory';
+
+--
+-- Name: COLUMN working_memories.added_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.working_memories.added_at IS 'When node was added to working memory';
+
+--
+-- Name: COLUMN working_memories.token_count; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.working_memories.token_count IS 'Cached token count for budget tracking';
+
+--
+-- Name: working_memories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.working_memories_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+--
+-- Name: working_memories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.working_memories_id_seq OWNED BY public.working_memories.id;
+
+--
 -- Name: node_tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -386,6 +431,12 @@ ALTER TABLE ONLY public.robots ALTER COLUMN id SET DEFAULT nextval('public.robot
 --
 
 ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
+
+--
+-- Name: working_memories id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.working_memories ALTER COLUMN id SET DEFAULT nextval('public.working_memories_id_seq'::regclass);
 
 --
 -- Name: node_tags node_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -428,6 +479,13 @@ ALTER TABLE ONLY public.schema_migrations
 
 ALTER TABLE ONLY public.tags
     ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
+
+--
+-- Name: working_memories working_memories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.working_memories
+    ADD CONSTRAINT working_memories_pkey PRIMARY KEY (id);
 
 --
 -- Name: idx_node_tags_node_id; Type: INDEX; Schema: public; Owner: -
@@ -484,12 +542,6 @@ CREATE INDEX idx_nodes_created_at ON public.nodes USING btree (created_at);
 CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding public.vector_cosine_ops) WITH (m='16', ef_construction='64');
 
 --
--- Name: idx_nodes_in_working_memory; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_nodes_in_working_memory ON public.nodes USING btree (in_working_memory);
-
---
 -- Name: idx_nodes_last_accessed; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -538,6 +590,38 @@ CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern
 CREATE UNIQUE INDEX idx_tags_name_unique ON public.tags USING btree (name);
 
 --
+-- Name: idx_working_memories_node_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_working_memories_node_id ON public.working_memories USING btree (node_id);
+
+--
+-- Name: idx_working_memories_robot_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_working_memories_robot_id ON public.working_memories USING btree (robot_id);
+
+--
+-- Name: idx_working_memories_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_working_memories_unique ON public.working_memories USING btree (robot_id, node_id);
+
+--
+-- Name: working_memories fk_rails_2c1d8b383c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.working_memories
+    ADD CONSTRAINT fk_rails_2c1d8b383c FOREIGN KEY (node_id) REFERENCES public.nodes(id) ON DELETE CASCADE;
+
+--
+-- Name: working_memories fk_rails_4b7c3eb07b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.working_memories
+    ADD CONSTRAINT fk_rails_4b7c3eb07b FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
+
+--
 -- Name: robot_nodes fk_rails_9b003078a8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -569,4 +653,4 @@ ALTER TABLE ONLY public.robot_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict IieHmgW8wejEEh1mkHFMOd8VeCneImLZFTsPGj6lGq8Z2RzkgiEcdb1cBeWT5KL
+\unrestrict 6qynyffXXn5BTZM7u0DVZKV2Nc24dPezkY3OOwzriuYfchXNsoQuf114yBOqrIb

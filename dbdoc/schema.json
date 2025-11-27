@@ -2,28 +2,57 @@
   "name": "htm_development",
   "tables": [
     {
-      "name": "public.node_tags",
+      "name": "public.robot_nodes",
       "type": "BASE TABLE",
-      "comment": "Join table connecting nodes to tags (many-to-many)",
+      "comment": "Join table connecting robots to nodes (many-to-many)",
       "columns": [
         {
           "name": "id",
           "type": "bigint",
           "nullable": false,
-          "default": "nextval('node_tags_id_seq'::regclass)"
+          "default": "nextval('robot_nodes_id_seq'::regclass)"
+        },
+        {
+          "name": "robot_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "ID of the robot that remembered this node"
         },
         {
           "name": "node_id",
           "type": "bigint",
-          "nullable": false
+          "nullable": false,
+          "comment": "ID of the node being remembered"
         },
         {
-          "name": "tag_id",
-          "type": "bigint",
-          "nullable": false
+          "name": "first_remembered_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this robot first remembered this content"
+        },
+        {
+          "name": "last_remembered_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this robot last tried to remember this content"
+        },
+        {
+          "name": "remember_count",
+          "type": "integer",
+          "nullable": false,
+          "default": "1",
+          "comment": "Number of times this robot has tried to remember this content"
         },
         {
           "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
           "type": "timestamp with time zone",
           "nullable": true,
           "default": "CURRENT_TIMESTAMP"
@@ -31,82 +60,79 @@
       ],
       "indexes": [
         {
-          "name": "node_tags_pkey",
-          "def": "CREATE UNIQUE INDEX node_tags_pkey ON public.node_tags USING btree (id)",
-          "table": "public.node_tags",
+          "name": "robot_nodes_pkey",
+          "def": "CREATE UNIQUE INDEX robot_nodes_pkey ON public.robot_nodes USING btree (id)",
+          "table": "public.robot_nodes",
           "columns": [
             "id"
           ]
         },
         {
-          "name": "idx_node_tags_unique",
-          "def": "CREATE UNIQUE INDEX idx_node_tags_unique ON public.node_tags USING btree (node_id, tag_id)",
-          "table": "public.node_tags",
+          "name": "idx_robot_nodes_unique",
+          "def": "CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (robot_id, node_id)",
+          "table": "public.robot_nodes",
           "columns": [
-            "node_id",
-            "tag_id"
+            "robot_id",
+            "node_id"
           ]
         },
         {
-          "name": "idx_node_tags_node_id",
-          "def": "CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id)",
-          "table": "public.node_tags",
+          "name": "idx_robot_nodes_robot_id",
+          "def": "CREATE INDEX idx_robot_nodes_robot_id ON public.robot_nodes USING btree (robot_id)",
+          "table": "public.robot_nodes",
+          "columns": [
+            "robot_id"
+          ]
+        },
+        {
+          "name": "idx_robot_nodes_node_id",
+          "def": "CREATE INDEX idx_robot_nodes_node_id ON public.robot_nodes USING btree (node_id)",
+          "table": "public.robot_nodes",
           "columns": [
             "node_id"
           ]
         },
         {
-          "name": "idx_node_tags_tag_id",
-          "def": "CREATE INDEX idx_node_tags_tag_id ON public.node_tags USING btree (tag_id)",
-          "table": "public.node_tags",
+          "name": "idx_robot_nodes_last_remembered_at",
+          "def": "CREATE INDEX idx_robot_nodes_last_remembered_at ON public.robot_nodes USING btree (last_remembered_at)",
+          "table": "public.robot_nodes",
           "columns": [
-            "tag_id"
+            "last_remembered_at"
           ]
         }
       ],
       "constraints": [
         {
-          "name": "node_tags_pkey",
+          "name": "robot_nodes_pkey",
           "type": "PRIMARY KEY",
           "def": "PRIMARY KEY (id)",
-          "table": "public.node_tags",
+          "table": "public.robot_nodes",
           "referenced_table": "",
           "columns": [
             "id"
           ]
         },
         {
-          "name": "idx_node_tags_unique",
-          "type": "UNIQUE",
-          "def": "UNIQUE (node_id, tag_id)",
-          "table": "public.node_tags",
-          "referenced_table": "",
-          "columns": [
-            "node_id",
-            "tag_id"
-          ]
-        },
-        {
-          "name": "fk_rails_ebc9aafd9f",
+          "name": "fk_rails_9b003078a8",
           "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
-          "table": "public.node_tags",
-          "referenced_table": "nodes",
+          "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
+          "table": "public.robot_nodes",
+          "referenced_table": "robots",
           "columns": [
-            "node_id"
+            "robot_id"
           ],
           "referenced_columns": [
             "id"
           ]
         },
         {
-          "name": "fk_rails_b51cdcc57f",
+          "name": "fk_rails_f2fc98d49e",
           "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE",
-          "table": "public.node_tags",
-          "referenced_table": "tags",
+          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.robot_nodes",
+          "referenced_table": "nodes",
           "columns": [
-            "tag_id"
+            "node_id"
           ],
           "referenced_columns": [
             "id"
@@ -177,12 +203,6 @@
           "nullable": true,
           "default": "CURRENT_TIMESTAMP",
           "comment": "Last time the robot accessed the system"
-        },
-        {
-          "name": "metadata",
-          "type": "jsonb",
-          "nullable": true,
-          "comment": "Robot-specific configuration and metadata"
         }
       ],
       "indexes": [
@@ -226,13 +246,6 @@
           "comment": "The conversation message/utterance content"
         },
         {
-          "name": "source",
-          "type": "text",
-          "nullable": true,
-          "default": "''::text",
-          "comment": "From where the content came (empty string if unknown)"
-        },
-        {
           "name": "access_count",
           "type": "integer",
           "nullable": false,
@@ -267,19 +280,6 @@
           "comment": "Number of tokens in the content (for context budget management)"
         },
         {
-          "name": "in_working_memory",
-          "type": "boolean",
-          "nullable": true,
-          "default": "false",
-          "comment": "Whether this memory is currently in working memory"
-        },
-        {
-          "name": "robot_id",
-          "type": "bigint",
-          "nullable": false,
-          "comment": "ID of the robot that owns this memory"
-        },
-        {
           "name": "embedding",
           "type": "vector(2000)",
           "nullable": true,
@@ -290,6 +290,12 @@
           "type": "integer",
           "nullable": true,
           "comment": "Actual number of dimensions used in the embedding vector (max 2000)"
+        },
+        {
+          "name": "content_hash",
+          "type": "varchar(64)",
+          "nullable": true,
+          "comment": "SHA-256 hash of content for deduplication"
         }
       ],
       "indexes": [
@@ -334,30 +340,6 @@
           ]
         },
         {
-          "name": "idx_nodes_robot_id",
-          "def": "CREATE INDEX idx_nodes_robot_id ON public.nodes USING btree (robot_id)",
-          "table": "public.nodes",
-          "columns": [
-            "robot_id"
-          ]
-        },
-        {
-          "name": "idx_nodes_source",
-          "def": "CREATE INDEX idx_nodes_source ON public.nodes USING btree (source)",
-          "table": "public.nodes",
-          "columns": [
-            "source"
-          ]
-        },
-        {
-          "name": "idx_nodes_in_working_memory",
-          "def": "CREATE INDEX idx_nodes_in_working_memory ON public.nodes USING btree (in_working_memory)",
-          "table": "public.nodes",
-          "columns": [
-            "in_working_memory"
-          ]
-        },
-        {
           "name": "idx_nodes_embedding",
           "def": "CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')",
           "table": "public.nodes",
@@ -380,6 +362,14 @@
           "columns": [
             "content"
           ]
+        },
+        {
+          "name": "idx_nodes_content_hash_unique",
+          "def": "CREATE UNIQUE INDEX idx_nodes_content_hash_unique ON public.nodes USING btree (content_hash)",
+          "table": "public.nodes",
+          "columns": [
+            "content_hash"
+          ]
         }
       ],
       "constraints": [
@@ -391,19 +381,6 @@
           "referenced_table": "",
           "columns": [
             "embedding_dimension"
-          ]
-        },
-        {
-          "name": "fk_rails_60162e9d3a",
-          "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
-          "table": "public.nodes",
-          "referenced_table": "robots",
-          "columns": [
-            "robot_id"
-          ],
-          "referenced_columns": [
-            "id"
           ]
         },
         {
@@ -481,9 +458,251 @@
           ]
         }
       ]
+    },
+    {
+      "name": "public.node_tags",
+      "type": "BASE TABLE",
+      "comment": "Join table connecting nodes to tags (many-to-many)",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('node_tags_id_seq'::regclass)"
+        },
+        {
+          "name": "node_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "ID of the node being tagged"
+        },
+        {
+          "name": "tag_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "ID of the tag being applied"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this association was created"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "node_tags_pkey",
+          "def": "CREATE UNIQUE INDEX node_tags_pkey ON public.node_tags USING btree (id)",
+          "table": "public.node_tags",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_node_tags_unique",
+          "def": "CREATE UNIQUE INDEX idx_node_tags_unique ON public.node_tags USING btree (node_id, tag_id)",
+          "table": "public.node_tags",
+          "columns": [
+            "node_id",
+            "tag_id"
+          ]
+        },
+        {
+          "name": "idx_node_tags_node_id",
+          "def": "CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id)",
+          "table": "public.node_tags",
+          "columns": [
+            "node_id"
+          ]
+        },
+        {
+          "name": "idx_node_tags_tag_id",
+          "def": "CREATE INDEX idx_node_tags_tag_id ON public.node_tags USING btree (tag_id)",
+          "table": "public.node_tags",
+          "columns": [
+            "tag_id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_rails_ebc9aafd9f",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.node_tags",
+          "referenced_table": "nodes",
+          "columns": [
+            "node_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "fk_rails_b51cdcc57f",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE",
+          "table": "public.node_tags",
+          "referenced_table": "tags",
+          "columns": [
+            "tag_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "node_tags_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.node_tags",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.working_memories",
+      "type": "BASE TABLE",
+      "comment": "Per-robot working memory state (optional persistence)",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('working_memories_id_seq'::regclass)"
+        },
+        {
+          "name": "robot_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "Robot whose working memory this belongs to"
+        },
+        {
+          "name": "node_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "Node currently in working memory"
+        },
+        {
+          "name": "added_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When node was added to working memory"
+        },
+        {
+          "name": "token_count",
+          "type": "integer",
+          "nullable": true,
+          "comment": "Cached token count for budget tracking"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "working_memories_pkey",
+          "def": "CREATE UNIQUE INDEX working_memories_pkey ON public.working_memories USING btree (id)",
+          "table": "public.working_memories",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_working_memories_robot_id",
+          "def": "CREATE INDEX idx_working_memories_robot_id ON public.working_memories USING btree (robot_id)",
+          "table": "public.working_memories",
+          "columns": [
+            "robot_id"
+          ]
+        },
+        {
+          "name": "idx_working_memories_node_id",
+          "def": "CREATE INDEX idx_working_memories_node_id ON public.working_memories USING btree (node_id)",
+          "table": "public.working_memories",
+          "columns": [
+            "node_id"
+          ]
+        },
+        {
+          "name": "idx_working_memories_unique",
+          "def": "CREATE UNIQUE INDEX idx_working_memories_unique ON public.working_memories USING btree (robot_id, node_id)",
+          "table": "public.working_memories",
+          "columns": [
+            "robot_id",
+            "node_id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_rails_4b7c3eb07b",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
+          "table": "public.working_memories",
+          "referenced_table": "robots",
+          "columns": [
+            "robot_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "fk_rails_2c1d8b383c",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.working_memories",
+          "referenced_table": "nodes",
+          "columns": [
+            "node_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "working_memories_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.working_memories",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
     }
   ],
   "relations": [
+    {
+      "table": "public.robot_nodes",
+      "columns": [
+        "robot_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.robots",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.robot_nodes",
+      "columns": [
+        "node_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    },
     {
       "table": "public.node_tags",
       "columns": [
@@ -511,7 +730,7 @@
       "def": "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE"
     },
     {
-      "table": "public.nodes",
+      "table": "public.working_memories",
       "columns": [
         "robot_id"
       ],
@@ -522,6 +741,19 @@
       ],
       "parent_cardinality": "exactly_one",
       "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.working_memories",
+      "columns": [
+        "node_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
     }
   ],
   "functions": [
@@ -1422,7 +1654,7 @@
   ],
   "driver": {
     "name": "postgres",
-    "database_version": "PostgreSQL 17.6 (Homebrew) on aarch64-apple-darwin25.0.0, compiled by Apple clang version 17.0.0 (clang-1700.3.19.1), 64-bit",
+    "database_version": "PostgreSQL 17.7 (Homebrew) on aarch64-apple-darwin25.1.0, compiled by Apple clang version 17.0.0 (clang-1700.4.4.1), 64-bit",
     "meta": {
       "current_schema": "public",
       "search_paths": [

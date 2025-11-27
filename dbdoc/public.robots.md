@@ -8,11 +8,10 @@ Registry of all LLM robots using the HTM system
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
-| id | bigint | nextval('robots_id_seq'::regclass) | false | [public.nodes](public.nodes.md) |  |  |
+| id | bigint | nextval('robots_id_seq'::regclass) | false | [public.robot_nodes](public.robot_nodes.md) [public.working_memories](public.working_memories.md) |  |  |
 | name | text |  | true |  |  | Human-readable name for the robot |
 | created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When the robot was first registered |
 | last_active | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | Last time the robot accessed the system |
-| metadata | jsonb |  | true |  |  | Robot-specific configuration and metadata |
 
 ## Constraints
 

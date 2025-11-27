@@ -44,7 +44,6 @@ class HTM
 
       # Scopes
       scope :by_robot, ->(robot_id) { joins(:robot_nodes).where(robot_nodes: { robot_id: robot_id }) }
-      scope :in_working_memory, -> { where(in_working_memory: true) }
       scope :recent, -> { order(created_at: :desc) }
       scope :in_timeframe, ->(start_time, end_time) { where(created_at: start_time..end_time) }
       scope :with_embeddings, -> { where.not(embedding: nil) }
@@ -126,7 +125,6 @@ class HTM
       end
 
       def set_defaults
-        self.in_working_memory ||= false
         self.created_at ||= Time.current
         self.updated_at ||= Time.current
         self.last_accessed ||= Time.current
