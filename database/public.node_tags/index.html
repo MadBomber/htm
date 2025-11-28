@@ -3079,6 +3079,15 @@
 </thead>
 <tbody>
 <tr>
+<td>created_at</td>
+<td>timestamp with time zone</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>true</td>
+<td></td>
+<td></td>
+<td>When this association was created</td>
+</tr>
+<tr>
 <td>id</td>
 <td>bigint</td>
 <td>nextval('node_tags_id_seq'::regclass)</td>
@@ -3105,15 +3114,6 @@
 <td><a href="../public.tags/">public.tags</a></td>
 <td>ID of the tag being applied</td>
 </tr>
-<tr>
-<td>created_at</td>
-<td>timestamp with time zone</td>
-<td>CURRENT_TIMESTAMP</td>
-<td>true</td>
-<td></td>
-<td></td>
-<td>When this association was created</td>
-</tr>
 </tbody>
 </table>
 <h2 id="constraints">Constraints<a class="headerlink" href="#constraints" title="Permanent link">&para;</a></h2>
@@ -3127,14 +3127,14 @@
 </thead>
 <tbody>
 <tr>
-<td>fk_rails_ebc9aafd9f</td>
-<td>FOREIGN KEY</td>
-<td>FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE</td>
-</tr>
-<tr>
 <td>fk_rails_b51cdcc57f</td>
 <td>FOREIGN KEY</td>
 <td>FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE</td>
+</tr>
+<tr>
+<td>fk_rails_ebc9aafd9f</td>
+<td>FOREIGN KEY</td>
+<td>FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE</td>
 </tr>
 <tr>
 <td>node_tags_pkey</td>
@@ -3153,20 +3153,20 @@
 </thead>
 <tbody>
 <tr>
-<td>node_tags_pkey</td>
-<td>CREATE UNIQUE INDEX node_tags_pkey ON public.node_tags USING btree (id)</td>
-</tr>
-<tr>
-<td>idx_node_tags_unique</td>
-<td>CREATE UNIQUE INDEX idx_node_tags_unique ON public.node_tags USING btree (node_id, tag_id)</td>
-</tr>
-<tr>
 <td>idx_node_tags_node_id</td>
 <td>CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id)</td>
 </tr>
 <tr>
 <td>idx_node_tags_tag_id</td>
 <td>CREATE INDEX idx_node_tags_tag_id ON public.node_tags USING btree (tag_id)</td>
+</tr>
+<tr>
+<td>idx_node_tags_unique</td>
+<td>CREATE UNIQUE INDEX idx_node_tags_unique ON public.node_tags USING btree (node_id, tag_id)</td>
+</tr>
+<tr>
+<td>node_tags_pkey</td>
+<td>CREATE UNIQUE INDEX node_tags_pkey ON public.node_tags USING btree (id)</td>
 </tr>
 </tbody>
 </table>

@@ -3079,13 +3079,13 @@
 </thead>
 <tbody>
 <tr>
-<td>id</td>
-<td>bigint</td>
-<td>nextval('nodes_id_seq'::regclass)</td>
+<td>access_count</td>
+<td>integer</td>
+<td>0</td>
 <td>false</td>
-<td><a href="../public.robot_nodes/">public.robot_nodes</a> <a href="../public.node_tags/">public.node_tags</a> <a href="../public.working_memories/">public.working_memories</a></td>
 <td></td>
 <td></td>
+<td>Number of times this node has been accessed/retrieved</td>
 </tr>
 <tr>
 <td>content</td>
@@ -3097,13 +3097,13 @@
 <td>The conversation message/utterance content</td>
 </tr>
 <tr>
-<td>access_count</td>
-<td>integer</td>
-<td>0</td>
-<td>false</td>
+<td>content_hash</td>
+<td>varchar(64)</td>
+<td></td>
+<td>true</td>
 <td></td>
 <td></td>
-<td>Number of times this node has been accessed/retrieved</td>
+<td>SHA-256 hash of content for deduplication</td>
 </tr>
 <tr>
 <td>created_at</td>
@@ -3115,31 +3115,13 @@
 <td>When this memory was created</td>
 </tr>
 <tr>
-<td>updated_at</td>
+<td>deleted_at</td>
 <td>timestamp with time zone</td>
-<td>CURRENT_TIMESTAMP</td>
-<td>true</td>
-<td></td>
-<td></td>
-<td>When this memory was last modified</td>
-</tr>
-<tr>
-<td>last_accessed</td>
-<td>timestamp with time zone</td>
-<td>CURRENT_TIMESTAMP</td>
-<td>true</td>
-<td></td>
-<td></td>
-<td>When this memory was last accessed</td>
-</tr>
-<tr>
-<td>token_count</td>
-<td>integer</td>
 <td></td>
 <td>true</td>
 <td></td>
 <td></td>
-<td>Number of tokens in the content (for context budget management)</td>
+<td>Soft delete timestamp - node is considered deleted when set</td>
 </tr>
 <tr>
 <td>embedding</td>
@@ -3160,13 +3142,40 @@
 <td>Actual number of dimensions used in the embedding vector (max 2000)</td>
 </tr>
 <tr>
-<td>content_hash</td>
-<td>varchar(64)</td>
+<td>id</td>
+<td>bigint</td>
+<td>nextval('nodes_id_seq'::regclass)</td>
+<td>false</td>
+<td><a href="../public.node_tags/">public.node_tags</a> <a href="../public.robot_nodes/">public.robot_nodes</a> <a href="../public.working_memories/">public.working_memories</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>last_accessed</td>
+<td>timestamp with time zone</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>true</td>
+<td></td>
+<td></td>
+<td>When this memory was last accessed</td>
+</tr>
+<tr>
+<td>token_count</td>
+<td>integer</td>
 <td></td>
 <td>true</td>
 <td></td>
 <td></td>
-<td>SHA-256 hash of content for deduplication</td>
+<td>Number of tokens in the content (for context budget management)</td>
+</tr>
+<tr>
+<td>updated_at</td>
+<td>timestamp with time zone</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>true</td>
+<td></td>
+<td></td>
+<td>When this memory was last modified</td>
 </tr>
 </tbody>
 </table>
@@ -3202,40 +3211,48 @@
 </thead>
 <tbody>
 <tr>
-<td>nodes_pkey</td>
-<td>CREATE UNIQUE INDEX nodes_pkey ON public.nodes USING btree (id)</td>
-</tr>
-<tr>
-<td>idx_nodes_created_at</td>
-<td>CREATE INDEX idx_nodes_created_at ON public.nodes USING btree (created_at)</td>
-</tr>
-<tr>
-<td>idx_nodes_updated_at</td>
-<td>CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at)</td>
-</tr>
-<tr>
-<td>idx_nodes_last_accessed</td>
-<td>CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed)</td>
-</tr>
-<tr>
 <td>idx_nodes_access_count</td>
 <td>CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count)</td>
-</tr>
-<tr>
-<td>idx_nodes_embedding</td>
-<td>CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')</td>
 </tr>
 <tr>
 <td>idx_nodes_content_gin</td>
 <td>CREATE INDEX idx_nodes_content_gin ON public.nodes USING gin (to_tsvector('english'::regconfig, content))</td>
 </tr>
 <tr>
+<td>idx_nodes_content_hash_unique</td>
+<td>CREATE UNIQUE INDEX idx_nodes_content_hash_unique ON public.nodes USING btree (content_hash)</td>
+</tr>
+<tr>
 <td>idx_nodes_content_trgm</td>
 <td>CREATE INDEX idx_nodes_content_trgm ON public.nodes USING gin (content gin_trgm_ops)</td>
 </tr>
 <tr>
-<td>idx_nodes_content_hash_unique</td>
-<td>CREATE UNIQUE INDEX idx_nodes_content_hash_unique ON public.nodes USING btree (content_hash)</td>
+<td>idx_nodes_created_at</td>
+<td>CREATE INDEX idx_nodes_created_at ON public.nodes USING btree (created_at)</td>
+</tr>
+<tr>
+<td>idx_nodes_deleted_at</td>
+<td>CREATE INDEX idx_nodes_deleted_at ON public.nodes USING btree (deleted_at)</td>
+</tr>
+<tr>
+<td>idx_nodes_embedding</td>
+<td>CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')</td>
+</tr>
+<tr>
+<td>idx_nodes_last_accessed</td>
+<td>CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed)</td>
+</tr>
+<tr>
+<td>idx_nodes_not_deleted_created_at</td>
+<td>CREATE INDEX idx_nodes_not_deleted_created_at ON public.nodes USING btree (created_at) WHERE (deleted_at IS NULL)</td>
+</tr>
+<tr>
+<td>idx_nodes_updated_at</td>
+<td>CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at)</td>
+</tr>
+<tr>
+<td>nodes_pkey</td>
+<td>CREATE UNIQUE INDEX nodes_pkey ON public.nodes USING btree (id)</td>
 </tr>
 </tbody>
 </table>

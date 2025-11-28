@@ -2,27 +2,309 @@
   "name": "htm_development",
   "tables": [
     {
-      "name": "public.robot_nodes",
+      "name": "public.node_tags",
       "type": "BASE TABLE",
-      "comment": "Join table connecting robots to nodes (many-to-many)",
+      "comment": "Join table connecting nodes to tags (many-to-many)",
       "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this association was created"
+        },
         {
           "name": "id",
           "type": "bigint",
           "nullable": false,
-          "default": "nextval('robot_nodes_id_seq'::regclass)"
-        },
-        {
-          "name": "robot_id",
-          "type": "bigint",
-          "nullable": false,
-          "comment": "ID of the robot that remembered this node"
+          "default": "nextval('node_tags_id_seq'::regclass)"
         },
         {
           "name": "node_id",
           "type": "bigint",
           "nullable": false,
-          "comment": "ID of the node being remembered"
+          "comment": "ID of the node being tagged"
+        },
+        {
+          "name": "tag_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "ID of the tag being applied"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_node_tags_node_id",
+          "def": "CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id)",
+          "table": "public.node_tags",
+          "columns": [
+            "node_id"
+          ]
+        },
+        {
+          "name": "idx_node_tags_tag_id",
+          "def": "CREATE INDEX idx_node_tags_tag_id ON public.node_tags USING btree (tag_id)",
+          "table": "public.node_tags",
+          "columns": [
+            "tag_id"
+          ]
+        },
+        {
+          "name": "idx_node_tags_unique",
+          "def": "CREATE UNIQUE INDEX idx_node_tags_unique ON public.node_tags USING btree (node_id, tag_id)",
+          "table": "public.node_tags",
+          "columns": [
+            "node_id",
+            "tag_id"
+          ]
+        },
+        {
+          "name": "node_tags_pkey",
+          "def": "CREATE UNIQUE INDEX node_tags_pkey ON public.node_tags USING btree (id)",
+          "table": "public.node_tags",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "fk_rails_b51cdcc57f",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE",
+          "table": "public.node_tags",
+          "referenced_table": "tags",
+          "columns": [
+            "tag_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "fk_rails_ebc9aafd9f",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.node_tags",
+          "referenced_table": "nodes",
+          "columns": [
+            "node_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "node_tags_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.node_tags",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.nodes",
+      "type": "BASE TABLE",
+      "comment": "Core memory storage for conversation messages and context",
+      "columns": [
+        {
+          "name": "access_count",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "comment": "Number of times this node has been accessed/retrieved"
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "nullable": false,
+          "comment": "The conversation message/utterance content"
+        },
+        {
+          "name": "content_hash",
+          "type": "varchar(64)",
+          "nullable": true,
+          "comment": "SHA-256 hash of content for deduplication"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this memory was created"
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "comment": "Soft delete timestamp - node is considered deleted when set"
+        },
+        {
+          "name": "embedding",
+          "type": "vector(2000)",
+          "nullable": true,
+          "comment": "Vector embedding (max 2000 dimensions) for semantic search"
+        },
+        {
+          "name": "embedding_dimension",
+          "type": "integer",
+          "nullable": true,
+          "comment": "Actual number of dimensions used in the embedding vector (max 2000)"
+        },
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('nodes_id_seq'::regclass)"
+        },
+        {
+          "name": "last_accessed",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this memory was last accessed"
+        },
+        {
+          "name": "token_count",
+          "type": "integer",
+          "nullable": true,
+          "comment": "Number of tokens in the content (for context budget management)"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this memory was last modified"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_nodes_access_count",
+          "def": "CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count)",
+          "table": "public.nodes",
+          "columns": [
+            "access_count"
+          ]
+        },
+        {
+          "name": "idx_nodes_content_gin",
+          "def": "CREATE INDEX idx_nodes_content_gin ON public.nodes USING gin (to_tsvector('english'::regconfig, content))",
+          "table": "public.nodes",
+          "columns": [
+            "to_tsvector"
+          ]
+        },
+        {
+          "name": "idx_nodes_content_hash_unique",
+          "def": "CREATE UNIQUE INDEX idx_nodes_content_hash_unique ON public.nodes USING btree (content_hash)",
+          "table": "public.nodes",
+          "columns": [
+            "content_hash"
+          ]
+        },
+        {
+          "name": "idx_nodes_content_trgm",
+          "def": "CREATE INDEX idx_nodes_content_trgm ON public.nodes USING gin (content gin_trgm_ops)",
+          "table": "public.nodes",
+          "columns": [
+            "content"
+          ]
+        },
+        {
+          "name": "idx_nodes_created_at",
+          "def": "CREATE INDEX idx_nodes_created_at ON public.nodes USING btree (created_at)",
+          "table": "public.nodes",
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "idx_nodes_deleted_at",
+          "def": "CREATE INDEX idx_nodes_deleted_at ON public.nodes USING btree (deleted_at)",
+          "table": "public.nodes",
+          "columns": [
+            "deleted_at"
+          ]
+        },
+        {
+          "name": "idx_nodes_embedding",
+          "def": "CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')",
+          "table": "public.nodes",
+          "columns": [
+            "embedding"
+          ]
+        },
+        {
+          "name": "idx_nodes_last_accessed",
+          "def": "CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed)",
+          "table": "public.nodes",
+          "columns": [
+            "last_accessed"
+          ]
+        },
+        {
+          "name": "idx_nodes_not_deleted_created_at",
+          "def": "CREATE INDEX idx_nodes_not_deleted_created_at ON public.nodes USING btree (created_at) WHERE (deleted_at IS NULL)",
+          "table": "public.nodes",
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "idx_nodes_updated_at",
+          "def": "CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at)",
+          "table": "public.nodes",
+          "columns": [
+            "updated_at"
+          ]
+        },
+        {
+          "name": "nodes_pkey",
+          "def": "CREATE UNIQUE INDEX nodes_pkey ON public.nodes USING btree (id)",
+          "table": "public.nodes",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "check_embedding_dimension",
+          "type": "CHECK",
+          "def": "CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension \u003e 0) AND (embedding_dimension \u003c= 2000))))",
+          "table": "public.nodes",
+          "referenced_table": "",
+          "columns": [
+            "embedding_dimension"
+          ]
+        },
+        {
+          "name": "nodes_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.nodes",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.robot_nodes",
+      "type": "BASE TABLE",
+      "comment": "Join table connecting robots to nodes (many-to-many)",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP"
         },
         {
           "name": "first_remembered_at",
@@ -32,11 +314,23 @@
           "comment": "When this robot first remembered this content"
         },
         {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('robot_nodes_id_seq'::regclass)"
+        },
+        {
           "name": "last_remembered_at",
           "type": "timestamp with time zone",
           "nullable": true,
           "default": "CURRENT_TIMESTAMP",
           "comment": "When this robot last tried to remember this content"
+        },
+        {
+          "name": "node_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "ID of the node being remembered"
         },
         {
           "name": "remember_count",
@@ -46,10 +340,10 @@
           "comment": "Number of times this robot has tried to remember this content"
         },
         {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP"
+          "name": "robot_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "ID of the robot that remembered this node"
         },
         {
           "name": "updated_at",
@@ -60,19 +354,18 @@
       ],
       "indexes": [
         {
-          "name": "robot_nodes_pkey",
-          "def": "CREATE UNIQUE INDEX robot_nodes_pkey ON public.robot_nodes USING btree (id)",
+          "name": "idx_robot_nodes_last_remembered_at",
+          "def": "CREATE INDEX idx_robot_nodes_last_remembered_at ON public.robot_nodes USING btree (last_remembered_at)",
           "table": "public.robot_nodes",
           "columns": [
-            "id"
+            "last_remembered_at"
           ]
         },
         {
-          "name": "idx_robot_nodes_unique",
-          "def": "CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (robot_id, node_id)",
+          "name": "idx_robot_nodes_node_id",
+          "def": "CREATE INDEX idx_robot_nodes_node_id ON public.robot_nodes USING btree (node_id)",
           "table": "public.robot_nodes",
           "columns": [
-            "robot_id",
             "node_id"
           ]
         },
@@ -85,33 +378,24 @@
           ]
         },
         {
-          "name": "idx_robot_nodes_node_id",
-          "def": "CREATE INDEX idx_robot_nodes_node_id ON public.robot_nodes USING btree (node_id)",
+          "name": "idx_robot_nodes_unique",
+          "def": "CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (robot_id, node_id)",
           "table": "public.robot_nodes",
           "columns": [
+            "robot_id",
             "node_id"
           ]
         },
         {
-          "name": "idx_robot_nodes_last_remembered_at",
-          "def": "CREATE INDEX idx_robot_nodes_last_remembered_at ON public.robot_nodes USING btree (last_remembered_at)",
+          "name": "robot_nodes_pkey",
+          "def": "CREATE UNIQUE INDEX robot_nodes_pkey ON public.robot_nodes USING btree (id)",
           "table": "public.robot_nodes",
           "columns": [
-            "last_remembered_at"
+            "id"
           ]
         }
       ],
       "constraints": [
-        {
-          "name": "robot_nodes_pkey",
-          "type": "PRIMARY KEY",
-          "def": "PRIMARY KEY (id)",
-          "table": "public.robot_nodes",
-          "referenced_table": "",
-          "columns": [
-            "id"
-          ]
-        },
         {
           "name": "fk_rails_9b003078a8",
           "type": "FOREIGN KEY",
@@ -135,6 +419,71 @@
             "node_id"
           ],
           "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "robot_nodes_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.robot_nodes",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.robots",
+      "type": "BASE TABLE",
+      "comment": "Registry of all LLM robots using the HTM system",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When the robot was first registered"
+        },
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('robots_id_seq'::regclass)"
+        },
+        {
+          "name": "last_active",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "Last time the robot accessed the system"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": true,
+          "comment": "Human-readable name for the robot"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "robots_pkey",
+          "def": "CREATE UNIQUE INDEX robots_pkey ON public.robots USING btree (id)",
+          "table": "public.robots",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "robots_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.robots",
+          "referenced_table": "",
+          "columns": [
             "id"
           ]
         }
@@ -174,232 +523,17 @@
       ]
     },
     {
-      "name": "public.robots",
-      "type": "BASE TABLE",
-      "comment": "Registry of all LLM robots using the HTM system",
-      "columns": [
-        {
-          "name": "id",
-          "type": "bigint",
-          "nullable": false,
-          "default": "nextval('robots_id_seq'::regclass)"
-        },
-        {
-          "name": "name",
-          "type": "text",
-          "nullable": true,
-          "comment": "Human-readable name for the robot"
-        },
-        {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "When the robot was first registered"
-        },
-        {
-          "name": "last_active",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "Last time the robot accessed the system"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "robots_pkey",
-          "def": "CREATE UNIQUE INDEX robots_pkey ON public.robots USING btree (id)",
-          "table": "public.robots",
-          "columns": [
-            "id"
-          ]
-        }
-      ],
-      "constraints": [
-        {
-          "name": "robots_pkey",
-          "type": "PRIMARY KEY",
-          "def": "PRIMARY KEY (id)",
-          "table": "public.robots",
-          "referenced_table": "",
-          "columns": [
-            "id"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "public.nodes",
-      "type": "BASE TABLE",
-      "comment": "Core memory storage for conversation messages and context",
-      "columns": [
-        {
-          "name": "id",
-          "type": "bigint",
-          "nullable": false,
-          "default": "nextval('nodes_id_seq'::regclass)"
-        },
-        {
-          "name": "content",
-          "type": "text",
-          "nullable": false,
-          "comment": "The conversation message/utterance content"
-        },
-        {
-          "name": "access_count",
-          "type": "integer",
-          "nullable": false,
-          "default": "0",
-          "comment": "Number of times this node has been accessed/retrieved"
-        },
-        {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "When this memory was created"
-        },
-        {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "When this memory was last modified"
-        },
-        {
-          "name": "last_accessed",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "When this memory was last accessed"
-        },
-        {
-          "name": "token_count",
-          "type": "integer",
-          "nullable": true,
-          "comment": "Number of tokens in the content (for context budget management)"
-        },
-        {
-          "name": "embedding",
-          "type": "vector(2000)",
-          "nullable": true,
-          "comment": "Vector embedding (max 2000 dimensions) for semantic search"
-        },
-        {
-          "name": "embedding_dimension",
-          "type": "integer",
-          "nullable": true,
-          "comment": "Actual number of dimensions used in the embedding vector (max 2000)"
-        },
-        {
-          "name": "content_hash",
-          "type": "varchar(64)",
-          "nullable": true,
-          "comment": "SHA-256 hash of content for deduplication"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "nodes_pkey",
-          "def": "CREATE UNIQUE INDEX nodes_pkey ON public.nodes USING btree (id)",
-          "table": "public.nodes",
-          "columns": [
-            "id"
-          ]
-        },
-        {
-          "name": "idx_nodes_created_at",
-          "def": "CREATE INDEX idx_nodes_created_at ON public.nodes USING btree (created_at)",
-          "table": "public.nodes",
-          "columns": [
-            "created_at"
-          ]
-        },
-        {
-          "name": "idx_nodes_updated_at",
-          "def": "CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at)",
-          "table": "public.nodes",
-          "columns": [
-            "updated_at"
-          ]
-        },
-        {
-          "name": "idx_nodes_last_accessed",
-          "def": "CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed)",
-          "table": "public.nodes",
-          "columns": [
-            "last_accessed"
-          ]
-        },
-        {
-          "name": "idx_nodes_access_count",
-          "def": "CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count)",
-          "table": "public.nodes",
-          "columns": [
-            "access_count"
-          ]
-        },
-        {
-          "name": "idx_nodes_embedding",
-          "def": "CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')",
-          "table": "public.nodes",
-          "columns": [
-            "embedding"
-          ]
-        },
-        {
-          "name": "idx_nodes_content_gin",
-          "def": "CREATE INDEX idx_nodes_content_gin ON public.nodes USING gin (to_tsvector('english'::regconfig, content))",
-          "table": "public.nodes",
-          "columns": [
-            "to_tsvector"
-          ]
-        },
-        {
-          "name": "idx_nodes_content_trgm",
-          "def": "CREATE INDEX idx_nodes_content_trgm ON public.nodes USING gin (content gin_trgm_ops)",
-          "table": "public.nodes",
-          "columns": [
-            "content"
-          ]
-        },
-        {
-          "name": "idx_nodes_content_hash_unique",
-          "def": "CREATE UNIQUE INDEX idx_nodes_content_hash_unique ON public.nodes USING btree (content_hash)",
-          "table": "public.nodes",
-          "columns": [
-            "content_hash"
-          ]
-        }
-      ],
-      "constraints": [
-        {
-          "name": "check_embedding_dimension",
-          "type": "CHECK",
-          "def": "CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension \u003e 0) AND (embedding_dimension \u003c= 2000))))",
-          "table": "public.nodes",
-          "referenced_table": "",
-          "columns": [
-            "embedding_dimension"
-          ]
-        },
-        {
-          "name": "nodes_pkey",
-          "type": "PRIMARY KEY",
-          "def": "PRIMARY KEY (id)",
-          "table": "public.nodes",
-          "referenced_table": "",
-          "columns": [
-            "id"
-          ]
-        }
-      ]
-    },
-    {
       "name": "public.tags",
       "type": "BASE TABLE",
       "comment": "Unique tag names for categorization",
       "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When this tag was created"
+        },
         {
           "name": "id",
           "type": "bigint",
@@ -411,22 +545,15 @@
           "type": "text",
           "nullable": false,
           "comment": "Hierarchical tag in format: root:level1:level2 (e.g., database:postgresql:timescaledb)"
-        },
-        {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "When this tag was created"
         }
       ],
       "indexes": [
         {
-          "name": "tags_pkey",
-          "def": "CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id)",
+          "name": "idx_tags_name_pattern",
+          "def": "CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern_ops)",
           "table": "public.tags",
           "columns": [
-            "id"
+            "name"
           ]
         },
         {
@@ -438,11 +565,11 @@
           ]
         },
         {
-          "name": "idx_tags_name_pattern",
-          "def": "CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern_ops)",
+          "name": "tags_pkey",
+          "def": "CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id)",
           "table": "public.tags",
           "columns": [
-            "name"
+            "id"
           ]
         }
       ],
@@ -452,111 +579,6 @@
           "type": "PRIMARY KEY",
           "def": "PRIMARY KEY (id)",
           "table": "public.tags",
-          "referenced_table": "",
-          "columns": [
-            "id"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "public.node_tags",
-      "type": "BASE TABLE",
-      "comment": "Join table connecting nodes to tags (many-to-many)",
-      "columns": [
-        {
-          "name": "id",
-          "type": "bigint",
-          "nullable": false,
-          "default": "nextval('node_tags_id_seq'::regclass)"
-        },
-        {
-          "name": "node_id",
-          "type": "bigint",
-          "nullable": false,
-          "comment": "ID of the node being tagged"
-        },
-        {
-          "name": "tag_id",
-          "type": "bigint",
-          "nullable": false,
-          "comment": "ID of the tag being applied"
-        },
-        {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "When this association was created"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "node_tags_pkey",
-          "def": "CREATE UNIQUE INDEX node_tags_pkey ON public.node_tags USING btree (id)",
-          "table": "public.node_tags",
-          "columns": [
-            "id"
-          ]
-        },
-        {
-          "name": "idx_node_tags_unique",
-          "def": "CREATE UNIQUE INDEX idx_node_tags_unique ON public.node_tags USING btree (node_id, tag_id)",
-          "table": "public.node_tags",
-          "columns": [
-            "node_id",
-            "tag_id"
-          ]
-        },
-        {
-          "name": "idx_node_tags_node_id",
-          "def": "CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id)",
-          "table": "public.node_tags",
-          "columns": [
-            "node_id"
-          ]
-        },
-        {
-          "name": "idx_node_tags_tag_id",
-          "def": "CREATE INDEX idx_node_tags_tag_id ON public.node_tags USING btree (tag_id)",
-          "table": "public.node_tags",
-          "columns": [
-            "tag_id"
-          ]
-        }
-      ],
-      "constraints": [
-        {
-          "name": "fk_rails_ebc9aafd9f",
-          "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
-          "table": "public.node_tags",
-          "referenced_table": "nodes",
-          "columns": [
-            "node_id"
-          ],
-          "referenced_columns": [
-            "id"
-          ]
-        },
-        {
-          "name": "fk_rails_b51cdcc57f",
-          "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE",
-          "table": "public.node_tags",
-          "referenced_table": "tags",
-          "columns": [
-            "tag_id"
-          ],
-          "referenced_columns": [
-            "id"
-          ]
-        },
-        {
-          "name": "node_tags_pkey",
-          "type": "PRIMARY KEY",
-          "def": "PRIMARY KEY (id)",
-          "table": "public.node_tags",
           "referenced_table": "",
           "columns": [
             "id"
@@ -570,16 +592,17 @@
       "comment": "Per-robot working memory state (optional persistence)",
       "columns": [
         {
+          "name": "added_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When node was added to working memory"
+        },
+        {
           "name": "id",
           "type": "bigint",
           "nullable": false,
           "default": "nextval('working_memories_id_seq'::regclass)"
-        },
-        {
-          "name": "robot_id",
-          "type": "bigint",
-          "nullable": false,
-          "comment": "Robot whose working memory this belongs to"
         },
         {
           "name": "node_id",
@@ -588,11 +611,10 @@
           "comment": "Node currently in working memory"
         },
         {
-          "name": "added_at",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "When node was added to working memory"
+          "name": "robot_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "Robot whose working memory this belongs to"
         },
         {
           "name": "token_count",
@@ -603,11 +625,11 @@
       ],
       "indexes": [
         {
-          "name": "working_memories_pkey",
-          "def": "CREATE UNIQUE INDEX working_memories_pkey ON public.working_memories USING btree (id)",
+          "name": "idx_working_memories_node_id",
+          "def": "CREATE INDEX idx_working_memories_node_id ON public.working_memories USING btree (node_id)",
           "table": "public.working_memories",
           "columns": [
-            "id"
+            "node_id"
           ]
         },
         {
@@ -619,14 +641,6 @@
           ]
         },
         {
-          "name": "idx_working_memories_node_id",
-          "def": "CREATE INDEX idx_working_memories_node_id ON public.working_memories USING btree (node_id)",
-          "table": "public.working_memories",
-          "columns": [
-            "node_id"
-          ]
-        },
-        {
           "name": "idx_working_memories_unique",
           "def": "CREATE UNIQUE INDEX idx_working_memories_unique ON public.working_memories USING btree (robot_id, node_id)",
           "table": "public.working_memories",
@@ -634,22 +648,17 @@
             "robot_id",
             "node_id"
           ]
+        },
+        {
+          "name": "working_memories_pkey",
+          "def": "CREATE UNIQUE INDEX working_memories_pkey ON public.working_memories USING btree (id)",
+          "table": "public.working_memories",
+          "columns": [
+            "id"
+          ]
         }
       ],
       "constraints": [
-        {
-          "name": "fk_rails_4b7c3eb07b",
-          "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
-          "table": "public.working_memories",
-          "referenced_table": "robots",
-          "columns": [
-            "robot_id"
-          ],
-          "referenced_columns": [
-            "id"
-          ]
-        },
         {
           "name": "fk_rails_2c1d8b383c",
           "type": "FOREIGN KEY",
@@ -658,6 +667,19 @@
           "referenced_table": "nodes",
           "columns": [
             "node_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "fk_rails_4b7c3eb07b",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
+          "table": "public.working_memories",
+          "referenced_table": "robots",
+          "columns": [
+            "robot_id"
           ],
           "referenced_columns": [
             "id"
@@ -677,32 +699,6 @@
     }
   ],
   "relations": [
-    {
-      "table": "public.robot_nodes",
-      "columns": [
-        "robot_id"
-      ],
-      "cardinality": "zero_or_more",
-      "parent_table": "public.robots",
-      "parent_columns": [
-        "id"
-      ],
-      "parent_cardinality": "exactly_one",
-      "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
-    },
-    {
-      "table": "public.robot_nodes",
-      "columns": [
-        "node_id"
-      ],
-      "cardinality": "zero_or_more",
-      "parent_table": "public.nodes",
-      "parent_columns": [
-        "id"
-      ],
-      "parent_cardinality": "exactly_one",
-      "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
-    },
     {
       "table": "public.node_tags",
       "columns": [
@@ -728,6 +724,32 @@
       ],
       "parent_cardinality": "exactly_one",
       "def": "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.robot_nodes",
+      "columns": [
+        "robot_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.robots",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.robot_nodes",
+      "columns": [
+        "node_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
     },
     {
       "table": "public.working_memories",
@@ -758,218 +780,50 @@
   ],
   "functions": [
     {
-      "name": "public.vector_in",
-      "return_type": "vector",
-      "arguments": "cstring, oid, integer",
+      "name": "public.array_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "double precision[], integer, boolean",
       "type": "FUNCTION"
     },
     {
-      "name": "public.vector_out",
-      "return_type": "cstring",
-      "arguments": "vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_typmod_in",
-      "return_type": "int4",
-      "arguments": "cstring[]",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_recv",
-      "return_type": "vector",
-      "arguments": "internal, oid, integer",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_send",
-      "return_type": "bytea",
-      "arguments": "vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.l2_distance",
-      "return_type": "float8",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.inner_product",
-      "return_type": "float8",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.cosine_distance",
-      "return_type": "float8",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.l1_distance",
-      "return_type": "float8",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_dims",
-      "return_type": "int4",
-      "arguments": "vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_norm",
-      "return_type": "float8",
-      "arguments": "vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.l2_normalize",
-      "return_type": "vector",
-      "arguments": "vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.binary_quantize",
-      "return_type": "bit",
-      "arguments": "vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.subvector",
-      "return_type": "vector",
-      "arguments": "vector, integer, integer",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_add",
-      "return_type": "vector",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_sub",
-      "return_type": "vector",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_mul",
-      "return_type": "vector",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_concat",
-      "return_type": "vector",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_lt",
-      "return_type": "bool",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_le",
-      "return_type": "bool",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_eq",
-      "return_type": "bool",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_ne",
-      "return_type": "bool",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_ge",
-      "return_type": "bool",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_gt",
-      "return_type": "bool",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_cmp",
-      "return_type": "int4",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_l2_squared_distance",
-      "return_type": "float8",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_negative_inner_product",
-      "return_type": "float8",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_spherical_distance",
-      "return_type": "float8",
-      "arguments": "vector, vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_accum",
-      "return_type": "_float8",
-      "arguments": "double precision[], vector",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_avg",
-      "return_type": "vector",
-      "arguments": "double precision[]",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_combine",
-      "return_type": "_float8",
-      "arguments": "double precision[], double precision[]",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.avg",
-      "return_type": "vector",
-      "arguments": "vector",
-      "type": "a"
-    },
-    {
-      "name": "public.sum",
-      "return_type": "vector",
-      "arguments": "vector",
-      "type": "a"
-    },
-    {
-      "name": "public.vector",
-      "return_type": "vector",
-      "arguments": "vector, integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_vector",
-      "return_type": "vector",
+      "name": "public.array_to_halfvec",
+      "return_type": "halfvec",
       "arguments": "integer[], integer, boolean",
       "type": "FUNCTION"
     },
     {
-      "name": "public.array_to_vector",
-      "return_type": "vector",
+      "name": "public.array_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "numeric[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "real[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "double precision[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "integer[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "numeric[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_sparsevec",
+      "return_type": "sparsevec",
       "arguments": "real[], integer, boolean",
       "type": "FUNCTION"
     },
@@ -982,97 +836,43 @@
     {
       "name": "public.array_to_vector",
       "return_type": "vector",
+      "arguments": "integer[], integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.array_to_vector",
+      "return_type": "vector",
       "arguments": "numeric[], integer, boolean",
       "type": "FUNCTION"
     },
     {
-      "name": "public.vector_to_float4",
-      "return_type": "_float4",
-      "arguments": "vector, integer, boolean",
+      "name": "public.array_to_vector",
+      "return_type": "vector",
+      "arguments": "real[], integer, boolean",
       "type": "FUNCTION"
     },
     {
-      "name": "public.ivfflathandler",
-      "return_type": "index_am_handler",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.hnswhandler",
-      "return_type": "index_am_handler",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.ivfflat_halfvec_support",
-      "return_type": "internal",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.ivfflat_bit_support",
-      "return_type": "internal",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.hnsw_halfvec_support",
-      "return_type": "internal",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.hnsw_bit_support",
-      "return_type": "internal",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.hnsw_sparsevec_support",
-      "return_type": "internal",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.halfvec_in",
+      "name": "public.avg",
       "return_type": "halfvec",
-      "arguments": "cstring, oid, integer",
-      "type": "FUNCTION"
+      "arguments": "halfvec",
+      "type": "a"
     },
     {
-      "name": "public.halfvec_out",
-      "return_type": "cstring",
+      "name": "public.avg",
+      "return_type": "vector",
+      "arguments": "vector",
+      "type": "a"
+    },
+    {
+      "name": "public.binary_quantize",
+      "return_type": "bit",
       "arguments": "halfvec",
       "type": "FUNCTION"
     },
     {
-      "name": "public.halfvec_typmod_in",
-      "return_type": "int4",
-      "arguments": "cstring[]",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.halfvec_recv",
-      "return_type": "halfvec",
-      "arguments": "internal, oid, integer",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.halfvec_send",
-      "return_type": "bytea",
-      "arguments": "halfvec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.l2_distance",
-      "return_type": "float8",
-      "arguments": "halfvec, halfvec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.inner_product",
-      "return_type": "float8",
-      "arguments": "halfvec, halfvec",
+      "name": "public.binary_quantize",
+      "return_type": "bit",
+      "arguments": "vector",
       "type": "FUNCTION"
     },
     {
@@ -1082,39 +882,117 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.l1_distance",
+      "name": "public.cosine_distance",
       "return_type": "float8",
-      "arguments": "halfvec, halfvec",
+      "arguments": "sparsevec, sparsevec",
       "type": "FUNCTION"
     },
     {
-      "name": "public.vector_dims",
-      "return_type": "int4",
-      "arguments": "halfvec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.l2_norm",
+      "name": "public.cosine_distance",
       "return_type": "float8",
-      "arguments": "halfvec",
+      "arguments": "vector, vector",
       "type": "FUNCTION"
     },
     {
-      "name": "public.l2_normalize",
+      "name": "public.gin_extract_query_trgm",
+      "return_type": "internal",
+      "arguments": "text, internal, smallint, internal, internal, internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gin_extract_value_trgm",
+      "return_type": "internal",
+      "arguments": "text, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gin_trgm_consistent",
+      "return_type": "bool",
+      "arguments": "internal, smallint, text, integer, internal, internal, internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gin_trgm_triconsistent",
+      "return_type": "char",
+      "arguments": "internal, smallint, text, integer, internal, internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_compress",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_consistent",
+      "return_type": "bool",
+      "arguments": "internal, text, smallint, oid, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_decompress",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_distance",
+      "return_type": "float8",
+      "arguments": "internal, text, smallint, oid, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_in",
+      "return_type": "gtrgm",
+      "arguments": "cstring",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_options",
+      "return_type": "void",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_out",
+      "return_type": "cstring",
+      "arguments": "gtrgm",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_penalty",
+      "return_type": "internal",
+      "arguments": "internal, internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_picksplit",
+      "return_type": "internal",
+      "arguments": "internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_same",
+      "return_type": "internal",
+      "arguments": "gtrgm, gtrgm, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.gtrgm_union",
+      "return_type": "gtrgm",
+      "arguments": "internal, internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec",
       "return_type": "halfvec",
-      "arguments": "halfvec",
+      "arguments": "halfvec, integer, boolean",
       "type": "FUNCTION"
     },
     {
-      "name": "public.binary_quantize",
-      "return_type": "bit",
-      "arguments": "halfvec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.subvector",
-      "return_type": "halfvec",
-      "arguments": "halfvec, integer, integer",
+      "name": "public.halfvec_accum",
+      "return_type": "_float8",
+      "arguments": "double precision[], halfvec",
       "type": "FUNCTION"
     },
     {
@@ -1124,15 +1002,21 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.halfvec_sub",
+      "name": "public.halfvec_avg",
       "return_type": "halfvec",
+      "arguments": "double precision[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_cmp",
+      "return_type": "int4",
       "arguments": "halfvec, halfvec",
       "type": "FUNCTION"
     },
     {
-      "name": "public.halfvec_mul",
-      "return_type": "halfvec",
-      "arguments": "halfvec, halfvec",
+      "name": "public.halfvec_combine",
+      "return_type": "_float8",
+      "arguments": "double precision[], double precision[]",
       "type": "FUNCTION"
     },
     {
@@ -1142,25 +1026,7 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.halfvec_lt",
-      "return_type": "bool",
-      "arguments": "halfvec, halfvec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.halfvec_le",
-      "return_type": "bool",
-      "arguments": "halfvec, halfvec",
-      "type": "FUNCTION"
-    },
-    {
       "name": "public.halfvec_eq",
-      "return_type": "bool",
-      "arguments": "halfvec, halfvec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.halfvec_ne",
       "return_type": "bool",
       "arguments": "halfvec, halfvec",
       "type": "FUNCTION"
@@ -1178,14 +1044,38 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.halfvec_cmp",
-      "return_type": "int4",
-      "arguments": "halfvec, halfvec",
+      "name": "public.halfvec_in",
+      "return_type": "halfvec",
+      "arguments": "cstring, oid, integer",
       "type": "FUNCTION"
     },
     {
       "name": "public.halfvec_l2_squared_distance",
       "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_le",
+      "return_type": "bool",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_lt",
+      "return_type": "bool",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_mul",
+      "return_type": "halfvec",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_ne",
+      "return_type": "bool",
       "arguments": "halfvec, halfvec",
       "type": "FUNCTION"
     },
@@ -1196,44 +1086,44 @@
       "type": "FUNCTION"
     },
     {
+      "name": "public.halfvec_out",
+      "return_type": "cstring",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_recv",
+      "return_type": "halfvec",
+      "arguments": "internal, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.halfvec_send",
+      "return_type": "bytea",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
       "name": "public.halfvec_spherical_distance",
       "return_type": "float8",
       "arguments": "halfvec, halfvec",
       "type": "FUNCTION"
     },
     {
-      "name": "public.halfvec_accum",
-      "return_type": "_float8",
-      "arguments": "double precision[], halfvec",
+      "name": "public.halfvec_sub",
+      "return_type": "halfvec",
+      "arguments": "halfvec, halfvec",
       "type": "FUNCTION"
     },
     {
-      "name": "public.halfvec_avg",
-      "return_type": "halfvec",
-      "arguments": "double precision[]",
+      "name": "public.halfvec_to_float4",
+      "return_type": "_float4",
+      "arguments": "halfvec, integer, boolean",
       "type": "FUNCTION"
     },
     {
-      "name": "public.halfvec_combine",
-      "return_type": "_float8",
-      "arguments": "double precision[], double precision[]",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.avg",
-      "return_type": "halfvec",
-      "arguments": "halfvec",
-      "type": "a"
-    },
-    {
-      "name": "public.sum",
-      "return_type": "halfvec",
-      "arguments": "halfvec",
-      "type": "a"
-    },
-    {
-      "name": "public.halfvec",
-      "return_type": "halfvec",
+      "name": "public.halfvec_to_sparsevec",
+      "return_type": "sparsevec",
       "arguments": "halfvec, integer, boolean",
       "type": "FUNCTION"
     },
@@ -1244,39 +1134,9 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.vector_to_halfvec",
-      "return_type": "halfvec",
-      "arguments": "vector, integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_halfvec",
-      "return_type": "halfvec",
-      "arguments": "integer[], integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_halfvec",
-      "return_type": "halfvec",
-      "arguments": "real[], integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_halfvec",
-      "return_type": "halfvec",
-      "arguments": "double precision[], integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_halfvec",
-      "return_type": "halfvec",
-      "arguments": "numeric[], integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.halfvec_to_float4",
-      "return_type": "_float4",
-      "arguments": "halfvec, integer, boolean",
+      "name": "public.halfvec_typmod_in",
+      "return_type": "int4",
+      "arguments": "cstring[]",
       "type": "FUNCTION"
     },
     {
@@ -1286,45 +1146,33 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.jaccard_distance",
+      "name": "public.hnsw_bit_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.hnsw_halfvec_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.hnsw_sparsevec_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.hnswhandler",
+      "return_type": "index_am_handler",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.inner_product",
       "return_type": "float8",
-      "arguments": "bit, bit",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_in",
-      "return_type": "sparsevec",
-      "arguments": "cstring, oid, integer",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_out",
-      "return_type": "cstring",
-      "arguments": "sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_typmod_in",
-      "return_type": "int4",
-      "arguments": "cstring[]",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_recv",
-      "return_type": "sparsevec",
-      "arguments": "internal, oid, integer",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_send",
-      "return_type": "bytea",
-      "arguments": "sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.l2_distance",
-      "return_type": "float8",
-      "arguments": "sparsevec, sparsevec",
+      "arguments": "halfvec, halfvec",
       "type": "FUNCTION"
     },
     {
@@ -1334,7 +1182,43 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.cosine_distance",
+      "name": "public.inner_product",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.ivfflat_bit_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.ivfflat_halfvec_support",
+      "return_type": "internal",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.ivfflathandler",
+      "return_type": "index_am_handler",
+      "arguments": "internal",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.jaccard_distance",
+      "return_type": "float8",
+      "arguments": "bit, bit",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l1_distance",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l1_distance",
       "return_type": "float8",
       "arguments": "sparsevec, sparsevec",
       "type": "FUNCTION"
@@ -1342,7 +1226,31 @@
     {
       "name": "public.l1_distance",
       "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_distance",
+      "return_type": "float8",
+      "arguments": "halfvec, halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_distance",
+      "return_type": "float8",
       "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_distance",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_norm",
+      "return_type": "float8",
+      "arguments": "halfvec",
       "type": "FUNCTION"
     },
     {
@@ -1353,116 +1261,20 @@
     },
     {
       "name": "public.l2_normalize",
+      "return_type": "halfvec",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.l2_normalize",
       "return_type": "sparsevec",
       "arguments": "sparsevec",
       "type": "FUNCTION"
     },
     {
-      "name": "public.sparsevec_lt",
-      "return_type": "bool",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_le",
-      "return_type": "bool",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_eq",
-      "return_type": "bool",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_ne",
-      "return_type": "bool",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_ge",
-      "return_type": "bool",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_gt",
-      "return_type": "bool",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_cmp",
-      "return_type": "int4",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_l2_squared_distance",
-      "return_type": "float8",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_negative_inner_product",
-      "return_type": "float8",
-      "arguments": "sparsevec, sparsevec",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec",
-      "return_type": "sparsevec",
-      "arguments": "sparsevec, integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.vector_to_sparsevec",
-      "return_type": "sparsevec",
-      "arguments": "vector, integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_to_vector",
+      "name": "public.l2_normalize",
       "return_type": "vector",
-      "arguments": "sparsevec, integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.halfvec_to_sparsevec",
-      "return_type": "sparsevec",
-      "arguments": "halfvec, integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.sparsevec_to_halfvec",
-      "return_type": "halfvec",
-      "arguments": "sparsevec, integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_sparsevec",
-      "return_type": "sparsevec",
-      "arguments": "integer[], integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_sparsevec",
-      "return_type": "sparsevec",
-      "arguments": "real[], integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_sparsevec",
-      "return_type": "sparsevec",
-      "arguments": "double precision[], integer, boolean",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.array_to_sparsevec",
-      "return_type": "sparsevec",
-      "arguments": "numeric[], integer, boolean",
+      "arguments": "vector",
       "type": "FUNCTION"
     },
     {
@@ -1490,133 +1302,139 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.similarity_op",
-      "return_type": "bool",
-      "arguments": "text, text",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.word_similarity",
-      "return_type": "float4",
-      "arguments": "text, text",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.word_similarity_op",
-      "return_type": "bool",
-      "arguments": "text, text",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.word_similarity_commutator_op",
-      "return_type": "bool",
-      "arguments": "text, text",
-      "type": "FUNCTION"
-    },
-    {
       "name": "public.similarity_dist",
       "return_type": "float4",
       "arguments": "text, text",
       "type": "FUNCTION"
     },
     {
-      "name": "public.word_similarity_dist_op",
-      "return_type": "float4",
-      "arguments": "text, text",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.word_similarity_dist_commutator_op",
-      "return_type": "float4",
-      "arguments": "text, text",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gtrgm_in",
-      "return_type": "gtrgm",
-      "arguments": "cstring",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gtrgm_out",
-      "return_type": "cstring",
-      "arguments": "gtrgm",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gtrgm_consistent",
+      "name": "public.similarity_op",
       "return_type": "bool",
-      "arguments": "internal, text, smallint, oid, internal",
+      "arguments": "text, text",
       "type": "FUNCTION"
     },
     {
-      "name": "public.gtrgm_distance",
+      "name": "public.sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "sparsevec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_cmp",
+      "return_type": "int4",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_eq",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_ge",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_gt",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_in",
+      "return_type": "sparsevec",
+      "arguments": "cstring, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_l2_squared_distance",
       "return_type": "float8",
-      "arguments": "internal, text, smallint, oid, internal",
+      "arguments": "sparsevec, sparsevec",
       "type": "FUNCTION"
     },
     {
-      "name": "public.gtrgm_compress",
-      "return_type": "internal",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gtrgm_decompress",
-      "return_type": "internal",
-      "arguments": "internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gtrgm_penalty",
-      "return_type": "internal",
-      "arguments": "internal, internal, internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gtrgm_picksplit",
-      "return_type": "internal",
-      "arguments": "internal, internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gtrgm_union",
-      "return_type": "gtrgm",
-      "arguments": "internal, internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gtrgm_same",
-      "return_type": "internal",
-      "arguments": "gtrgm, gtrgm, internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gin_extract_value_trgm",
-      "return_type": "internal",
-      "arguments": "text, internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gin_extract_query_trgm",
-      "return_type": "internal",
-      "arguments": "text, internal, smallint, internal, internal, internal, internal",
-      "type": "FUNCTION"
-    },
-    {
-      "name": "public.gin_trgm_consistent",
+      "name": "public.sparsevec_le",
       "return_type": "bool",
-      "arguments": "internal, smallint, text, integer, internal, internal, internal, internal",
+      "arguments": "sparsevec, sparsevec",
       "type": "FUNCTION"
     },
     {
-      "name": "public.gin_trgm_triconsistent",
-      "return_type": "char",
-      "arguments": "internal, smallint, text, integer, internal, internal, internal",
+      "name": "public.sparsevec_lt",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_ne",
+      "return_type": "bool",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_negative_inner_product",
+      "return_type": "float8",
+      "arguments": "sparsevec, sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_out",
+      "return_type": "cstring",
+      "arguments": "sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_recv",
+      "return_type": "sparsevec",
+      "arguments": "internal, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_send",
+      "return_type": "bytea",
+      "arguments": "sparsevec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "sparsevec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_to_vector",
+      "return_type": "vector",
+      "arguments": "sparsevec, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sparsevec_typmod_in",
+      "return_type": "int4",
+      "arguments": "cstring[]",
       "type": "FUNCTION"
     },
     {
       "name": "public.strict_word_similarity",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.strict_word_similarity_commutator_op",
+      "return_type": "bool",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.strict_word_similarity_dist_commutator_op",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.strict_word_similarity_dist_op",
       "return_type": "float4",
       "arguments": "text, text",
       "type": "FUNCTION"
@@ -1628,27 +1446,231 @@
       "type": "FUNCTION"
     },
     {
-      "name": "public.strict_word_similarity_commutator_op",
+      "name": "public.subvector",
+      "return_type": "halfvec",
+      "arguments": "halfvec, integer, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.subvector",
+      "return_type": "vector",
+      "arguments": "vector, integer, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.sum",
+      "return_type": "halfvec",
+      "arguments": "halfvec",
+      "type": "a"
+    },
+    {
+      "name": "public.sum",
+      "return_type": "vector",
+      "arguments": "vector",
+      "type": "a"
+    },
+    {
+      "name": "public.vector",
+      "return_type": "vector",
+      "arguments": "vector, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_accum",
+      "return_type": "_float8",
+      "arguments": "double precision[], vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_add",
+      "return_type": "vector",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_avg",
+      "return_type": "vector",
+      "arguments": "double precision[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_cmp",
+      "return_type": "int4",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_combine",
+      "return_type": "_float8",
+      "arguments": "double precision[], double precision[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_concat",
+      "return_type": "vector",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_dims",
+      "return_type": "int4",
+      "arguments": "halfvec",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_dims",
+      "return_type": "int4",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_eq",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_ge",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_gt",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_in",
+      "return_type": "vector",
+      "arguments": "cstring, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_l2_squared_distance",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_le",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_lt",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_mul",
+      "return_type": "vector",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_ne",
+      "return_type": "bool",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_negative_inner_product",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_norm",
+      "return_type": "float8",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_out",
+      "return_type": "cstring",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_recv",
+      "return_type": "vector",
+      "arguments": "internal, oid, integer",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_send",
+      "return_type": "bytea",
+      "arguments": "vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_spherical_distance",
+      "return_type": "float8",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_sub",
+      "return_type": "vector",
+      "arguments": "vector, vector",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_to_float4",
+      "return_type": "_float4",
+      "arguments": "vector, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_to_halfvec",
+      "return_type": "halfvec",
+      "arguments": "vector, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_to_sparsevec",
+      "return_type": "sparsevec",
+      "arguments": "vector, integer, boolean",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.vector_typmod_in",
+      "return_type": "int4",
+      "arguments": "cstring[]",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.word_similarity",
+      "return_type": "float4",
+      "arguments": "text, text",
+      "type": "FUNCTION"
+    },
+    {
+      "name": "public.word_similarity_commutator_op",
       "return_type": "bool",
       "arguments": "text, text",
       "type": "FUNCTION"
     },
     {
-      "name": "public.strict_word_similarity_dist_op",
+      "name": "public.word_similarity_dist_commutator_op",
       "return_type": "float4",
       "arguments": "text, text",
       "type": "FUNCTION"
     },
     {
-      "name": "public.strict_word_similarity_dist_commutator_op",
+      "name": "public.word_similarity_dist_op",
       "return_type": "float4",
       "arguments": "text, text",
       "type": "FUNCTION"
     },
     {
-      "name": "public.gtrgm_options",
-      "return_type": "void",
-      "arguments": "internal",
+      "name": "public.word_similarity_op",
+      "return_type": "bool",
+      "arguments": "text, text",
       "type": "FUNCTION"
     }
   ],

@@ -3079,6 +3079,15 @@
 </thead>
 <tbody>
 <tr>
+<td>added_at</td>
+<td>timestamp with time zone</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>true</td>
+<td></td>
+<td></td>
+<td>When node was added to working memory</td>
+</tr>
+<tr>
 <td>id</td>
 <td>bigint</td>
 <td>nextval('working_memories_id_seq'::regclass)</td>
@@ -3086,15 +3095,6 @@
 <td></td>
 <td></td>
 <td></td>
-</tr>
-<tr>
-<td>robot_id</td>
-<td>bigint</td>
-<td></td>
-<td>false</td>
-<td></td>
-<td><a href="../public.robots/">public.robots</a></td>
-<td>Robot whose working memory this belongs to</td>
 </tr>
 <tr>
 <td>node_id</td>
@@ -3106,13 +3106,13 @@
 <td>Node currently in working memory</td>
 </tr>
 <tr>
-<td>added_at</td>
-<td>timestamp with time zone</td>
-<td>CURRENT_TIMESTAMP</td>
-<td>true</td>
+<td>robot_id</td>
+<td>bigint</td>
 <td></td>
+<td>false</td>
 <td></td>
-<td>When node was added to working memory</td>
+<td><a href="../public.robots/">public.robots</a></td>
+<td>Robot whose working memory this belongs to</td>
 </tr>
 <tr>
 <td>token_count</td>
@@ -3136,14 +3136,14 @@
 </thead>
 <tbody>
 <tr>
-<td>fk_rails_4b7c3eb07b</td>
-<td>FOREIGN KEY</td>
-<td>FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE</td>
-</tr>
-<tr>
 <td>fk_rails_2c1d8b383c</td>
 <td>FOREIGN KEY</td>
 <td>FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE</td>
+</tr>
+<tr>
+<td>fk_rails_4b7c3eb07b</td>
+<td>FOREIGN KEY</td>
+<td>FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE</td>
 </tr>
 <tr>
 <td>working_memories_pkey</td>
@@ -3162,20 +3162,20 @@
 </thead>
 <tbody>
 <tr>
-<td>working_memories_pkey</td>
-<td>CREATE UNIQUE INDEX working_memories_pkey ON public.working_memories USING btree (id)</td>
+<td>idx_working_memories_node_id</td>
+<td>CREATE INDEX idx_working_memories_node_id ON public.working_memories USING btree (node_id)</td>
 </tr>
 <tr>
 <td>idx_working_memories_robot_id</td>
 <td>CREATE INDEX idx_working_memories_robot_id ON public.working_memories USING btree (robot_id)</td>
 </tr>
 <tr>
-<td>idx_working_memories_node_id</td>
-<td>CREATE INDEX idx_working_memories_node_id ON public.working_memories USING btree (node_id)</td>
-</tr>
-<tr>
 <td>idx_working_memories_unique</td>
 <td>CREATE UNIQUE INDEX idx_working_memories_unique ON public.working_memories USING btree (robot_id, node_id)</td>
+</tr>
+<tr>
+<td>working_memories_pkey</td>
+<td>CREATE UNIQUE INDEX working_memories_pkey ON public.working_memories USING btree (id)</td>
 </tr>
 </tbody>
 </table>

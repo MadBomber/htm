@@ -3079,31 +3079,13 @@
 </thead>
 <tbody>
 <tr>
-<td>id</td>
-<td>bigint</td>
-<td>nextval('robot_nodes_id_seq'::regclass)</td>
-<td>false</td>
+<td>created_at</td>
+<td>timestamp with time zone</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>true</td>
 <td></td>
 <td></td>
 <td></td>
-</tr>
-<tr>
-<td>robot_id</td>
-<td>bigint</td>
-<td></td>
-<td>false</td>
-<td></td>
-<td><a href="../public.robots/">public.robots</a></td>
-<td>ID of the robot that remembered this node</td>
-</tr>
-<tr>
-<td>node_id</td>
-<td>bigint</td>
-<td></td>
-<td>false</td>
-<td></td>
-<td><a href="../public.nodes/">public.nodes</a></td>
-<td>ID of the node being remembered</td>
 </tr>
 <tr>
 <td>first_remembered_at</td>
@@ -3115,6 +3097,15 @@
 <td>When this robot first remembered this content</td>
 </tr>
 <tr>
+<td>id</td>
+<td>bigint</td>
+<td>nextval('robot_nodes_id_seq'::regclass)</td>
+<td>false</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
 <td>last_remembered_at</td>
 <td>timestamp with time zone</td>
 <td>CURRENT_TIMESTAMP</td>
@@ -3122,6 +3113,15 @@
 <td></td>
 <td></td>
 <td>When this robot last tried to remember this content</td>
+</tr>
+<tr>
+<td>node_id</td>
+<td>bigint</td>
+<td></td>
+<td>false</td>
+<td></td>
+<td><a href="../public.nodes/">public.nodes</a></td>
+<td>ID of the node being remembered</td>
 </tr>
 <tr>
 <td>remember_count</td>
@@ -3133,13 +3133,13 @@
 <td>Number of times this robot has tried to remember this content</td>
 </tr>
 <tr>
-<td>created_at</td>
-<td>timestamp with time zone</td>
-<td>CURRENT_TIMESTAMP</td>
-<td>true</td>
+<td>robot_id</td>
+<td>bigint</td>
 <td></td>
+<td>false</td>
 <td></td>
-<td></td>
+<td><a href="../public.robots/">public.robots</a></td>
+<td>ID of the robot that remembered this node</td>
 </tr>
 <tr>
 <td>updated_at</td>
@@ -3163,11 +3163,6 @@
 </thead>
 <tbody>
 <tr>
-<td>robot_nodes_pkey</td>
-<td>PRIMARY KEY</td>
-<td>PRIMARY KEY (id)</td>
-</tr>
-<tr>
 <td>fk_rails_9b003078a8</td>
 <td>FOREIGN KEY</td>
 <td>FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE</td>
@@ -3176,6 +3171,11 @@
 <td>fk_rails_f2fc98d49e</td>
 <td>FOREIGN KEY</td>
 <td>FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE</td>
+</tr>
+<tr>
+<td>robot_nodes_pkey</td>
+<td>PRIMARY KEY</td>
+<td>PRIMARY KEY (id)</td>
 </tr>
 </tbody>
 </table>
@@ -3189,24 +3189,24 @@
 </thead>
 <tbody>
 <tr>
-<td>robot_nodes_pkey</td>
-<td>CREATE UNIQUE INDEX robot_nodes_pkey ON public.robot_nodes USING btree (id)</td>
-</tr>
-<tr>
-<td>idx_robot_nodes_unique</td>
-<td>CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (robot_id, node_id)</td>
-</tr>
-<tr>
-<td>idx_robot_nodes_robot_id</td>
-<td>CREATE INDEX idx_robot_nodes_robot_id ON public.robot_nodes USING btree (robot_id)</td>
+<td>idx_robot_nodes_last_remembered_at</td>
+<td>CREATE INDEX idx_robot_nodes_last_remembered_at ON public.robot_nodes USING btree (last_remembered_at)</td>
 </tr>
 <tr>
 <td>idx_robot_nodes_node_id</td>
 <td>CREATE INDEX idx_robot_nodes_node_id ON public.robot_nodes USING btree (node_id)</td>
 </tr>
 <tr>
-<td>idx_robot_nodes_last_remembered_at</td>
-<td>CREATE INDEX idx_robot_nodes_last_remembered_at ON public.robot_nodes USING btree (last_remembered_at)</td>
+<td>idx_robot_nodes_robot_id</td>
+<td>CREATE INDEX idx_robot_nodes_robot_id ON public.robot_nodes USING btree (robot_id)</td>
+</tr>
+<tr>
+<td>idx_robot_nodes_unique</td>
+<td>CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (robot_id, node_id)</td>
+</tr>
+<tr>
+<td>robot_nodes_pkey</td>
+<td>CREATE UNIQUE INDEX robot_nodes_pkey ON public.robot_nodes USING btree (id)</td>
 </tr>
 </tbody>
 </table>

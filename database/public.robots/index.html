@@ -3079,24 +3079,6 @@
 </thead>
 <tbody>
 <tr>
-<td>id</td>
-<td>bigint</td>
-<td>nextval('robots_id_seq'::regclass)</td>
-<td>false</td>
-<td><a href="../public.robot_nodes/">public.robot_nodes</a> <a href="../public.working_memories/">public.working_memories</a></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>name</td>
-<td>text</td>
-<td></td>
-<td>true</td>
-<td></td>
-<td></td>
-<td>Human-readable name for the robot</td>
-</tr>
-<tr>
 <td>created_at</td>
 <td>timestamp with time zone</td>
 <td>CURRENT_TIMESTAMP</td>
@@ -3106,6 +3088,15 @@
 <td>When the robot was first registered</td>
 </tr>
 <tr>
+<td>id</td>
+<td>bigint</td>
+<td>nextval('robots_id_seq'::regclass)</td>
+<td>false</td>
+<td><a href="../public.robot_nodes/">public.robot_nodes</a> <a href="../public.working_memories/">public.working_memories</a></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
 <td>last_active</td>
 <td>timestamp with time zone</td>
 <td>CURRENT_TIMESTAMP</td>
@@ -3113,6 +3104,15 @@
 <td></td>
 <td></td>
 <td>Last time the robot accessed the system</td>
+</tr>
+<tr>
+<td>name</td>
+<td>text</td>
+<td></td>
+<td>true</td>
+<td></td>
+<td></td>
+<td>Human-readable name for the robot</td>
 </tr>
 </tbody>
 </table>

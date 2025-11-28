@@ -3079,6 +3079,15 @@
 </thead>
 <tbody>
 <tr>
+<td>created_at</td>
+<td>timestamp with time zone</td>
+<td>CURRENT_TIMESTAMP</td>
+<td>true</td>
+<td></td>
+<td></td>
+<td>When this tag was created</td>
+</tr>
+<tr>
 <td>id</td>
 <td>bigint</td>
 <td>nextval('tags_id_seq'::regclass)</td>
@@ -3095,15 +3104,6 @@
 <td></td>
 <td></td>
 <td>Hierarchical tag in format: root:level1:level2 (e.g., database:postgresql:timescaledb)</td>
-</tr>
-<tr>
-<td>created_at</td>
-<td>timestamp with time zone</td>
-<td>CURRENT_TIMESTAMP</td>
-<td>true</td>
-<td></td>
-<td></td>
-<td>When this tag was created</td>
 </tr>
 </tbody>
 </table>
@@ -3134,16 +3134,16 @@
 </thead>
 <tbody>
 <tr>
-<td>tags_pkey</td>
-<td>CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id)</td>
+<td>idx_tags_name_pattern</td>
+<td>CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern_ops)</td>
 </tr>
 <tr>
 <td>idx_tags_name_unique</td>
 <td>CREATE UNIQUE INDEX idx_tags_name_unique ON public.tags USING btree (name)</td>
 </tr>
 <tr>
-<td>idx_tags_name_pattern</td>
-<td>CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern_ops)</td>
+<td>tags_pkey</td>
+<td>CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id)</td>
 </tr>
 </tbody>
 </table>

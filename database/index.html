@@ -2928,15 +2928,21 @@
 </thead>
 <tbody>
 <tr>
-<td><a href="public.robot_nodes/">public.robot_nodes</a></td>
-<td>8</td>
-<td>Join table connecting robots to nodes (many-to-many)</td>
+<td><a href="public.node_tags/">public.node_tags</a></td>
+<td>4</td>
+<td>Join table connecting nodes to tags (many-to-many)</td>
 <td>BASE TABLE</td>
 </tr>
 <tr>
-<td><a href="public.schema_migrations/">public.schema_migrations</a></td>
-<td>1</td>
-<td></td>
+<td><a href="public.nodes/">public.nodes</a></td>
+<td>11</td>
+<td>Core memory storage for conversation messages and context</td>
+<td>BASE TABLE</td>
+</tr>
+<tr>
+<td><a href="public.robot_nodes/">public.robot_nodes</a></td>
+<td>8</td>
+<td>Join table connecting robots to nodes (many-to-many)</td>
 <td>BASE TABLE</td>
 </tr>
 <tr>
@@ -2946,21 +2952,15 @@
 <td>BASE TABLE</td>
 </tr>
 <tr>
-<td><a href="public.nodes/">public.nodes</a></td>
-<td>10</td>
-<td>Core memory storage for conversation messages and context</td>
+<td><a href="public.schema_migrations/">public.schema_migrations</a></td>
+<td>1</td>
+<td></td>
 <td>BASE TABLE</td>
 </tr>
 <tr>
 <td><a href="public.tags/">public.tags</a></td>
 <td>3</td>
 <td>Unique tag names for categorization</td>
-<td>BASE TABLE</td>
-</tr>
-<tr>
-<td><a href="public.node_tags/">public.node_tags</a></td>
-<td>4</td>
-<td>Join table connecting nodes to tags (many-to-many)</td>
 <td>BASE TABLE</td>
 </tr>
 <tr>
@@ -2983,218 +2983,50 @@
 </thead>
 <tbody>
 <tr>
-<td>public.vector_in</td>
-<td>vector</td>
-<td>cstring, oid, integer</td>
+<td>public.array_to_halfvec</td>
+<td>halfvec</td>
+<td>double precision[], integer, boolean</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.vector_out</td>
-<td>cstring</td>
-<td>vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_typmod_in</td>
-<td>int4</td>
-<td>cstring[]</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_recv</td>
-<td>vector</td>
-<td>internal, oid, integer</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_send</td>
-<td>bytea</td>
-<td>vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.l2_distance</td>
-<td>float8</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.inner_product</td>
-<td>float8</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.cosine_distance</td>
-<td>float8</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.l1_distance</td>
-<td>float8</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_dims</td>
-<td>int4</td>
-<td>vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_norm</td>
-<td>float8</td>
-<td>vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.l2_normalize</td>
-<td>vector</td>
-<td>vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.binary_quantize</td>
-<td>bit</td>
-<td>vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.subvector</td>
-<td>vector</td>
-<td>vector, integer, integer</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_add</td>
-<td>vector</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_sub</td>
-<td>vector</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_mul</td>
-<td>vector</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_concat</td>
-<td>vector</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_lt</td>
-<td>bool</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_le</td>
-<td>bool</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_eq</td>
-<td>bool</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_ne</td>
-<td>bool</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_ge</td>
-<td>bool</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_gt</td>
-<td>bool</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_cmp</td>
-<td>int4</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_l2_squared_distance</td>
-<td>float8</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_negative_inner_product</td>
-<td>float8</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_spherical_distance</td>
-<td>float8</td>
-<td>vector, vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_accum</td>
-<td>_float8</td>
-<td>double precision[], vector</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_avg</td>
-<td>vector</td>
-<td>double precision[]</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_combine</td>
-<td>_float8</td>
-<td>double precision[], double precision[]</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.avg</td>
-<td>vector</td>
-<td>vector</td>
-<td>a</td>
-</tr>
-<tr>
-<td>public.sum</td>
-<td>vector</td>
-<td>vector</td>
-<td>a</td>
-</tr>
-<tr>
-<td>public.vector</td>
-<td>vector</td>
-<td>vector, integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.array_to_vector</td>
-<td>vector</td>
+<td>public.array_to_halfvec</td>
+<td>halfvec</td>
 <td>integer[], integer, boolean</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.array_to_vector</td>
-<td>vector</td>
+<td>public.array_to_halfvec</td>
+<td>halfvec</td>
+<td>numeric[], integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.array_to_halfvec</td>
+<td>halfvec</td>
+<td>real[], integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.array_to_sparsevec</td>
+<td>sparsevec</td>
+<td>double precision[], integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.array_to_sparsevec</td>
+<td>sparsevec</td>
+<td>integer[], integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.array_to_sparsevec</td>
+<td>sparsevec</td>
+<td>numeric[], integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.array_to_sparsevec</td>
+<td>sparsevec</td>
 <td>real[], integer, boolean</td>
 <td>FUNCTION</td>
 </tr>
@@ -3207,97 +3039,43 @@
 <tr>
 <td>public.array_to_vector</td>
 <td>vector</td>
+<td>integer[], integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.array_to_vector</td>
+<td>vector</td>
 <td>numeric[], integer, boolean</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.vector_to_float4</td>
-<td>_float4</td>
-<td>vector, integer, boolean</td>
+<td>public.array_to_vector</td>
+<td>vector</td>
+<td>real[], integer, boolean</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.ivfflathandler</td>
-<td>index_am_handler</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.hnswhandler</td>
-<td>index_am_handler</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.ivfflat_halfvec_support</td>
-<td>internal</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.ivfflat_bit_support</td>
-<td>internal</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.hnsw_halfvec_support</td>
-<td>internal</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.hnsw_bit_support</td>
-<td>internal</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.hnsw_sparsevec_support</td>
-<td>internal</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.halfvec_in</td>
+<td>public.avg</td>
 <td>halfvec</td>
-<td>cstring, oid, integer</td>
-<td>FUNCTION</td>
+<td>halfvec</td>
+<td>a</td>
 </tr>
 <tr>
-<td>public.halfvec_out</td>
-<td>cstring</td>
+<td>public.avg</td>
+<td>vector</td>
+<td>vector</td>
+<td>a</td>
+</tr>
+<tr>
+<td>public.binary_quantize</td>
+<td>bit</td>
 <td>halfvec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.halfvec_typmod_in</td>
-<td>int4</td>
-<td>cstring[]</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.halfvec_recv</td>
-<td>halfvec</td>
-<td>internal, oid, integer</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.halfvec_send</td>
-<td>bytea</td>
-<td>halfvec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.l2_distance</td>
-<td>float8</td>
-<td>halfvec, halfvec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.inner_product</td>
-<td>float8</td>
-<td>halfvec, halfvec</td>
+<td>public.binary_quantize</td>
+<td>bit</td>
+<td>vector</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
@@ -3307,39 +3085,117 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.l1_distance</td>
+<td>public.cosine_distance</td>
 <td>float8</td>
-<td>halfvec, halfvec</td>
+<td>sparsevec, sparsevec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.vector_dims</td>
-<td>int4</td>
-<td>halfvec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.l2_norm</td>
+<td>public.cosine_distance</td>
 <td>float8</td>
-<td>halfvec</td>
+<td>vector, vector</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.l2_normalize</td>
-<td>halfvec</td>
-<td>halfvec</td>
+<td>public.gin_extract_query_trgm</td>
+<td>internal</td>
+<td>text, internal, smallint, internal, internal, internal, internal</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.binary_quantize</td>
-<td>bit</td>
-<td>halfvec</td>
+<td>public.gin_extract_value_trgm</td>
+<td>internal</td>
+<td>text, internal</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.subvector</td>
+<td>public.gin_trgm_consistent</td>
+<td>bool</td>
+<td>internal, smallint, text, integer, internal, internal, internal, internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gin_trgm_triconsistent</td>
+<td>char</td>
+<td>internal, smallint, text, integer, internal, internal, internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_compress</td>
+<td>internal</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_consistent</td>
+<td>bool</td>
+<td>internal, text, smallint, oid, internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_decompress</td>
+<td>internal</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_distance</td>
+<td>float8</td>
+<td>internal, text, smallint, oid, internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_in</td>
+<td>gtrgm</td>
+<td>cstring</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_options</td>
+<td>void</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_out</td>
+<td>cstring</td>
+<td>gtrgm</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_penalty</td>
+<td>internal</td>
+<td>internal, internal, internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_picksplit</td>
+<td>internal</td>
+<td>internal, internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_same</td>
+<td>internal</td>
+<td>gtrgm, gtrgm, internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.gtrgm_union</td>
+<td>gtrgm</td>
+<td>internal, internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec</td>
 <td>halfvec</td>
-<td>halfvec, integer, integer</td>
+<td>halfvec, integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec_accum</td>
+<td>_float8</td>
+<td>double precision[], halfvec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
@@ -3349,15 +3205,21 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.halfvec_sub</td>
+<td>public.halfvec_avg</td>
 <td>halfvec</td>
+<td>double precision[]</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec_cmp</td>
+<td>int4</td>
 <td>halfvec, halfvec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.halfvec_mul</td>
-<td>halfvec</td>
-<td>halfvec, halfvec</td>
+<td>public.halfvec_combine</td>
+<td>_float8</td>
+<td>double precision[], double precision[]</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
@@ -3367,25 +3229,7 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.halfvec_lt</td>
-<td>bool</td>
-<td>halfvec, halfvec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.halfvec_le</td>
-<td>bool</td>
-<td>halfvec, halfvec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
 <td>public.halfvec_eq</td>
-<td>bool</td>
-<td>halfvec, halfvec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.halfvec_ne</td>
 <td>bool</td>
 <td>halfvec, halfvec</td>
 <td>FUNCTION</td>
@@ -3403,14 +3247,38 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.halfvec_cmp</td>
-<td>int4</td>
-<td>halfvec, halfvec</td>
+<td>public.halfvec_in</td>
+<td>halfvec</td>
+<td>cstring, oid, integer</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
 <td>public.halfvec_l2_squared_distance</td>
 <td>float8</td>
+<td>halfvec, halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec_le</td>
+<td>bool</td>
+<td>halfvec, halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec_lt</td>
+<td>bool</td>
+<td>halfvec, halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec_mul</td>
+<td>halfvec</td>
+<td>halfvec, halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec_ne</td>
+<td>bool</td>
 <td>halfvec, halfvec</td>
 <td>FUNCTION</td>
 </tr>
@@ -3421,44 +3289,44 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
+<td>public.halfvec_out</td>
+<td>cstring</td>
+<td>halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec_recv</td>
+<td>halfvec</td>
+<td>internal, oid, integer</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.halfvec_send</td>
+<td>bytea</td>
+<td>halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
 <td>public.halfvec_spherical_distance</td>
 <td>float8</td>
 <td>halfvec, halfvec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.halfvec_accum</td>
-<td>_float8</td>
-<td>double precision[], halfvec</td>
+<td>public.halfvec_sub</td>
+<td>halfvec</td>
+<td>halfvec, halfvec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.halfvec_avg</td>
-<td>halfvec</td>
-<td>double precision[]</td>
+<td>public.halfvec_to_float4</td>
+<td>_float4</td>
+<td>halfvec, integer, boolean</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.halfvec_combine</td>
-<td>_float8</td>
-<td>double precision[], double precision[]</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.avg</td>
-<td>halfvec</td>
-<td>halfvec</td>
-<td>a</td>
-</tr>
-<tr>
-<td>public.sum</td>
-<td>halfvec</td>
-<td>halfvec</td>
-<td>a</td>
-</tr>
-<tr>
-<td>public.halfvec</td>
-<td>halfvec</td>
+<td>public.halfvec_to_sparsevec</td>
+<td>sparsevec</td>
 <td>halfvec, integer, boolean</td>
 <td>FUNCTION</td>
 </tr>
@@ -3469,39 +3337,9 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.vector_to_halfvec</td>
-<td>halfvec</td>
-<td>vector, integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.array_to_halfvec</td>
-<td>halfvec</td>
-<td>integer[], integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.array_to_halfvec</td>
-<td>halfvec</td>
-<td>real[], integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.array_to_halfvec</td>
-<td>halfvec</td>
-<td>double precision[], integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.array_to_halfvec</td>
-<td>halfvec</td>
-<td>numeric[], integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.halfvec_to_float4</td>
-<td>_float4</td>
-<td>halfvec, integer, boolean</td>
+<td>public.halfvec_typmod_in</td>
+<td>int4</td>
+<td>cstring[]</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
@@ -3511,45 +3349,33 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.jaccard_distance</td>
+<td>public.hnsw_bit_support</td>
+<td>internal</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.hnsw_halfvec_support</td>
+<td>internal</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.hnsw_sparsevec_support</td>
+<td>internal</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.hnswhandler</td>
+<td>index_am_handler</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.inner_product</td>
 <td>float8</td>
-<td>bit, bit</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_in</td>
-<td>sparsevec</td>
-<td>cstring, oid, integer</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_out</td>
-<td>cstring</td>
-<td>sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_typmod_in</td>
-<td>int4</td>
-<td>cstring[]</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_recv</td>
-<td>sparsevec</td>
-<td>internal, oid, integer</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_send</td>
-<td>bytea</td>
-<td>sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.l2_distance</td>
-<td>float8</td>
-<td>sparsevec, sparsevec</td>
+<td>halfvec, halfvec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
@@ -3559,7 +3385,43 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.cosine_distance</td>
+<td>public.inner_product</td>
+<td>float8</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.ivfflat_bit_support</td>
+<td>internal</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.ivfflat_halfvec_support</td>
+<td>internal</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.ivfflathandler</td>
+<td>index_am_handler</td>
+<td>internal</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.jaccard_distance</td>
+<td>float8</td>
+<td>bit, bit</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.l1_distance</td>
+<td>float8</td>
+<td>halfvec, halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.l1_distance</td>
 <td>float8</td>
 <td>sparsevec, sparsevec</td>
 <td>FUNCTION</td>
@@ -3567,7 +3429,31 @@
 <tr>
 <td>public.l1_distance</td>
 <td>float8</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.l2_distance</td>
+<td>float8</td>
+<td>halfvec, halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.l2_distance</td>
+<td>float8</td>
 <td>sparsevec, sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.l2_distance</td>
+<td>float8</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.l2_norm</td>
+<td>float8</td>
+<td>halfvec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
@@ -3578,116 +3464,20 @@
 </tr>
 <tr>
 <td>public.l2_normalize</td>
-<td>sparsevec</td>
-<td>sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_lt</td>
-<td>bool</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_le</td>
-<td>bool</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_eq</td>
-<td>bool</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_ne</td>
-<td>bool</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_ge</td>
-<td>bool</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_gt</td>
-<td>bool</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_cmp</td>
-<td>int4</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_l2_squared_distance</td>
-<td>float8</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_negative_inner_product</td>
-<td>float8</td>
-<td>sparsevec, sparsevec</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec</td>
-<td>sparsevec</td>
-<td>sparsevec, integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.vector_to_sparsevec</td>
-<td>sparsevec</td>
-<td>vector, integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_to_vector</td>
-<td>vector</td>
-<td>sparsevec, integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.halfvec_to_sparsevec</td>
-<td>sparsevec</td>
-<td>halfvec, integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.sparsevec_to_halfvec</td>
 <td>halfvec</td>
-<td>sparsevec, integer, boolean</td>
+<td>halfvec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.array_to_sparsevec</td>
+<td>public.l2_normalize</td>
 <td>sparsevec</td>
-<td>integer[], integer, boolean</td>
+<td>sparsevec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.array_to_sparsevec</td>
-<td>sparsevec</td>
-<td>real[], integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.array_to_sparsevec</td>
-<td>sparsevec</td>
-<td>double precision[], integer, boolean</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.array_to_sparsevec</td>
-<td>sparsevec</td>
-<td>numeric[], integer, boolean</td>
+<td>public.l2_normalize</td>
+<td>vector</td>
+<td>vector</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
@@ -3715,133 +3505,139 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.similarity_op</td>
-<td>bool</td>
-<td>text, text</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.word_similarity</td>
-<td>float4</td>
-<td>text, text</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.word_similarity_op</td>
-<td>bool</td>
-<td>text, text</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.word_similarity_commutator_op</td>
-<td>bool</td>
-<td>text, text</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
 <td>public.similarity_dist</td>
 <td>float4</td>
 <td>text, text</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.word_similarity_dist_op</td>
-<td>float4</td>
-<td>text, text</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.word_similarity_dist_commutator_op</td>
-<td>float4</td>
-<td>text, text</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gtrgm_in</td>
-<td>gtrgm</td>
-<td>cstring</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gtrgm_out</td>
-<td>cstring</td>
-<td>gtrgm</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gtrgm_consistent</td>
+<td>public.similarity_op</td>
 <td>bool</td>
-<td>internal, text, smallint, oid, internal</td>
+<td>text, text</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.gtrgm_distance</td>
+<td>public.sparsevec</td>
+<td>sparsevec</td>
+<td>sparsevec, integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_cmp</td>
+<td>int4</td>
+<td>sparsevec, sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_eq</td>
+<td>bool</td>
+<td>sparsevec, sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_ge</td>
+<td>bool</td>
+<td>sparsevec, sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_gt</td>
+<td>bool</td>
+<td>sparsevec, sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_in</td>
+<td>sparsevec</td>
+<td>cstring, oid, integer</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_l2_squared_distance</td>
 <td>float8</td>
-<td>internal, text, smallint, oid, internal</td>
+<td>sparsevec, sparsevec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.gtrgm_compress</td>
-<td>internal</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gtrgm_decompress</td>
-<td>internal</td>
-<td>internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gtrgm_penalty</td>
-<td>internal</td>
-<td>internal, internal, internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gtrgm_picksplit</td>
-<td>internal</td>
-<td>internal, internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gtrgm_union</td>
-<td>gtrgm</td>
-<td>internal, internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gtrgm_same</td>
-<td>internal</td>
-<td>gtrgm, gtrgm, internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gin_extract_value_trgm</td>
-<td>internal</td>
-<td>text, internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gin_extract_query_trgm</td>
-<td>internal</td>
-<td>text, internal, smallint, internal, internal, internal, internal</td>
-<td>FUNCTION</td>
-</tr>
-<tr>
-<td>public.gin_trgm_consistent</td>
+<td>public.sparsevec_le</td>
 <td>bool</td>
-<td>internal, smallint, text, integer, internal, internal, internal, internal</td>
+<td>sparsevec, sparsevec</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.gin_trgm_triconsistent</td>
-<td>char</td>
-<td>internal, smallint, text, integer, internal, internal, internal</td>
+<td>public.sparsevec_lt</td>
+<td>bool</td>
+<td>sparsevec, sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_ne</td>
+<td>bool</td>
+<td>sparsevec, sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_negative_inner_product</td>
+<td>float8</td>
+<td>sparsevec, sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_out</td>
+<td>cstring</td>
+<td>sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_recv</td>
+<td>sparsevec</td>
+<td>internal, oid, integer</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_send</td>
+<td>bytea</td>
+<td>sparsevec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_to_halfvec</td>
+<td>halfvec</td>
+<td>sparsevec, integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_to_vector</td>
+<td>vector</td>
+<td>sparsevec, integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sparsevec_typmod_in</td>
+<td>int4</td>
+<td>cstring[]</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
 <td>public.strict_word_similarity</td>
+<td>float4</td>
+<td>text, text</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.strict_word_similarity_commutator_op</td>
+<td>bool</td>
+<td>text, text</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.strict_word_similarity_dist_commutator_op</td>
+<td>float4</td>
+<td>text, text</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.strict_word_similarity_dist_op</td>
 <td>float4</td>
 <td>text, text</td>
 <td>FUNCTION</td>
@@ -3853,27 +3649,231 @@
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.strict_word_similarity_commutator_op</td>
+<td>public.subvector</td>
+<td>halfvec</td>
+<td>halfvec, integer, integer</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.subvector</td>
+<td>vector</td>
+<td>vector, integer, integer</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.sum</td>
+<td>halfvec</td>
+<td>halfvec</td>
+<td>a</td>
+</tr>
+<tr>
+<td>public.sum</td>
+<td>vector</td>
+<td>vector</td>
+<td>a</td>
+</tr>
+<tr>
+<td>public.vector</td>
+<td>vector</td>
+<td>vector, integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_accum</td>
+<td>_float8</td>
+<td>double precision[], vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_add</td>
+<td>vector</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_avg</td>
+<td>vector</td>
+<td>double precision[]</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_cmp</td>
+<td>int4</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_combine</td>
+<td>_float8</td>
+<td>double precision[], double precision[]</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_concat</td>
+<td>vector</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_dims</td>
+<td>int4</td>
+<td>halfvec</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_dims</td>
+<td>int4</td>
+<td>vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_eq</td>
+<td>bool</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_ge</td>
+<td>bool</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_gt</td>
+<td>bool</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_in</td>
+<td>vector</td>
+<td>cstring, oid, integer</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_l2_squared_distance</td>
+<td>float8</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_le</td>
+<td>bool</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_lt</td>
+<td>bool</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_mul</td>
+<td>vector</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_ne</td>
+<td>bool</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_negative_inner_product</td>
+<td>float8</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_norm</td>
+<td>float8</td>
+<td>vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_out</td>
+<td>cstring</td>
+<td>vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_recv</td>
+<td>vector</td>
+<td>internal, oid, integer</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_send</td>
+<td>bytea</td>
+<td>vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_spherical_distance</td>
+<td>float8</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_sub</td>
+<td>vector</td>
+<td>vector, vector</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_to_float4</td>
+<td>_float4</td>
+<td>vector, integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_to_halfvec</td>
+<td>halfvec</td>
+<td>vector, integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_to_sparsevec</td>
+<td>sparsevec</td>
+<td>vector, integer, boolean</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.vector_typmod_in</td>
+<td>int4</td>
+<td>cstring[]</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.word_similarity</td>
+<td>float4</td>
+<td>text, text</td>
+<td>FUNCTION</td>
+</tr>
+<tr>
+<td>public.word_similarity_commutator_op</td>
 <td>bool</td>
 <td>text, text</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.strict_word_similarity_dist_op</td>
+<td>public.word_similarity_dist_commutator_op</td>
 <td>float4</td>
 <td>text, text</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.strict_word_similarity_dist_commutator_op</td>
+<td>public.word_similarity_dist_op</td>
 <td>float4</td>
 <td>text, text</td>
 <td>FUNCTION</td>
 </tr>
 <tr>
-<td>public.gtrgm_options</td>
-<td>void</td>
-<td>internal</td>
+<td>public.word_similarity_op</td>
+<td>bool</td>
+<td>text, text</td>
 <td>FUNCTION</td>
 </tr>
 </tbody>
