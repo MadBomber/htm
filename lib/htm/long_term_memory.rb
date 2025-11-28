@@ -53,8 +53,15 @@ class HTM
     def add(content:, token_count: 0, robot_id:, embedding: nil)
       content_hash = HTM::Models::Node.generate_content_hash(content)
 
-      # Check for existing node with same content
-      existing_node = HTM::Models::Node.find_by(content_hash: content_hash)
+      # Check for existing node with same content (including soft-deleted)
+      # This avoids unique constraint violations on content_hash
+      existing_node = HTM::Models::Node.with_deleted.find_by(content_hash: content_hash)
+
+      # If found but soft-deleted, restore it
+      if existing_node&.deleted?
+        existing_node.restore!
+        HTM.logger.info "Restored soft-deleted node #{existing_node.id} for content match"
+      end
 
       if existing_node
         # Link robot to existing node (or update if already linked)
@@ -369,6 +376,17 @@ class HTM
     def shutdown
       # ActiveRecord handles connection pool shutdown
       # This method kept for API compatibility
+    end
+
+    # Clear the query cache
+    #
+    # Call this after any operation that modifies data (soft delete, restore, etc.)
+    # to ensure subsequent queries see fresh results.
+    #
+    # @return [void]
+    #
+    def clear_cache!
+      invalidate_cache!
     end
 
     # For backwards compatibility with tests/code that expect pool_size

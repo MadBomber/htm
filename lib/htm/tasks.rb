@@ -29,7 +29,14 @@
 #   rake htm:jobs:clear_all          # Clear all embeddings and tags (testing)
 #
 # Tag tasks:
-#   rake htm:tags:tree               # Display tags as a hierarchical tree
+#   rake htm:tags:tree               # Display tags as hierarchical tree
+#   rake htm:tags:tree[prefix]       # Display tags with prefix filter
+#   rake htm:tags:mermaid            # Export all tags to tags.md (Mermaid)
+#   rake htm:tags:mermaid[prefix]    # Export filtered tags to tags.md
+#   rake htm:tags:svg                # Export all tags to tags.svg
+#   rake htm:tags:svg[prefix]        # Export filtered tags to tags.svg
+#   rake htm:tags:export             # Export all tags to tags.txt, tags.md, tags.svg
+#   rake htm:tags:export[prefix]     # Export filtered tags to all formats
 #
 
 if defined?(Rake)

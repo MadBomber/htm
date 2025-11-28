@@ -252,30 +252,105 @@ class HTM
     raw ? nodes : nodes.map { |node| node['content'] }
   end
 
-  # Forget a memory node (explicit deletion)
+  # Forget a memory node (soft delete by default, permanent delete requires confirmation)
   #
-  # @param key [String] Key of the node to delete
-  # @param confirm [Symbol] Must be :confirmed to proceed
+  # By default, performs a soft delete (sets deleted_at timestamp). The node
+  # remains in the database but is excluded from queries. Use soft: false
+  # with confirm: :confirmed for permanent deletion.
+  #
+  # @param node_id [Integer] ID of the node to delete
+  # @param soft [Boolean] If true (default), soft delete; if false, permanent delete
+  # @param confirm [Symbol] Must be :confirmed to proceed with permanent deletion
   # @return [Boolean] true if deleted
-  # @raise [ArgumentError] if confirmation not provided
+  # @raise [ArgumentError] if permanent deletion requested without confirmation
   # @raise [HTM::NotFoundError] if node doesn't exist
   #
-  def forget(node_id, confirm: false)
+  # @example Soft delete (recoverable)
+  #   htm.forget(node_id)
+  #   htm.forget(node_id, soft: true)
+  #
+  # @example Permanent delete (requires confirmation)
+  #   htm.forget(node_id, soft: false, confirm: :confirmed)
+  #
+  def forget(node_id, soft: true, confirm: false)
     # Validate inputs
     raise ArgumentError, "node_id cannot be nil" if node_id.nil?
-    raise ArgumentError, "Must pass confirm: :confirmed to delete" unless confirm == :confirmed
 
-    # Verify node exists
-    unless @long_term_memory.exists?(node_id)
-      raise HTM::NotFoundError, "Node not found: #{node_id}"
+    # Permanent delete requires confirmation
+    if !soft && confirm != :confirmed
+      raise ArgumentError, "Must pass confirm: :confirmed for permanent deletion"
     end
 
-    # Delete the node and remove from working memory
-    @long_term_memory.delete(node_id)
+    # Verify node exists (including soft-deleted for restore scenarios)
+    node = HTM::Models::Node.with_deleted.find_by(id: node_id)
+    raise HTM::NotFoundError, "Node not found: #{node_id}" unless node
+
+    if soft
+      # Soft delete - mark as deleted but keep in database
+      node.soft_delete!
+      @long_term_memory.clear_cache!  # Invalidate cache since node is no longer visible
+      HTM.logger.info "Node #{node_id} soft deleted"
+    else
+      # Permanent delete (also invalidates cache internally)
+      @long_term_memory.delete(node_id)
+      HTM.logger.info "Node #{node_id} permanently deleted"
+    end
+
+    # Remove from working memory either way
     @working_memory.remove(node_id)
 
     update_robot_activity
     true
+  end
+
+  # Restore a soft-deleted memory node
+  #
+  # @param node_id [Integer] ID of the soft-deleted node to restore
+  # @return [Boolean] true if restored
+  # @raise [HTM::NotFoundError] if node doesn't exist or isn't deleted
+  #
+  # @example
+  #   htm.forget(node_id)        # Soft delete
+  #   htm.restore(node_id)       # Bring it back
+  #
+  def restore(node_id)
+    raise ArgumentError, "node_id cannot be nil" if node_id.nil?
+
+    # Find including soft-deleted nodes
+    node = HTM::Models::Node.with_deleted.find_by(id: node_id)
+    raise HTM::NotFoundError, "Node not found: #{node_id}" unless node
+
+    unless node.deleted?
+      raise ArgumentError, "Node #{node_id} is not deleted"
+    end
+
+    node.restore!
+    HTM.logger.info "Node #{node_id} restored"
+
+    update_robot_activity
+    true
+  end
+
+  # Permanently delete all soft-deleted nodes older than specified time
+  #
+  # @param older_than [Time, ActiveSupport::Duration] Purge nodes soft-deleted before this time
+  # @param confirm [Symbol] Must be :confirmed to proceed
+  # @return [Integer] Number of nodes permanently deleted
+  # @raise [ArgumentError] if confirmation not provided
+  #
+  # @example Purge nodes deleted more than 30 days ago
+  #   htm.purge_deleted(older_than: 30.days.ago, confirm: :confirmed)
+  #
+  # @example Purge nodes deleted before a specific date
+  #   htm.purge_deleted(older_than: Time.new(2024, 1, 1), confirm: :confirmed)
+  #
+  def purge_deleted(older_than:, confirm: false)
+    raise ArgumentError, "Must pass confirm: :confirmed to purge" unless confirm == :confirmed
+
+    count = HTM::Models::Node.purge_deleted(older_than: older_than)
+    HTM.logger.info "Purged #{count} soft-deleted nodes older than #{older_than}"
+
+    count
   end
 
   private

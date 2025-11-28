@@ -52,19 +52,64 @@ class IntegrationTest < Minitest::Test
     assert_instance_of Array, results
   end
 
-  def test_forget_with_confirmation
+  def test_forget_soft_delete_by_default
     # Add a node
-    node_id = @htm.remember("Content to forget")
+    node_id = @htm.remember("Content to soft delete")
 
-    # Should require confirmation
+    # Soft delete should work without confirmation (default)
+    result = @htm.forget(node_id)
+    assert result
+
+    # Node should still exist in database but be marked deleted
+    node = HTM::Models::Node.with_deleted.find(node_id)
+    refute_nil node.deleted_at, "Node should have deleted_at timestamp"
+
+    # Node should NOT appear in default queries
+    assert_nil HTM::Models::Node.find_by(id: node_id), "Soft-deleted node should not appear in default queries"
+  end
+
+  def test_forget_permanent_delete_requires_confirmation
+    # Add a node
+    node_id = @htm.remember("Content for permanent delete")
+
+    # Permanent delete without confirmation should raise error
     error = assert_raises(ArgumentError) do
-      @htm.forget(node_id)
+      @htm.forget(node_id, soft: false)
     end
     assert_match(/confirm/, error.message.downcase)
 
-    # Should work with confirmation
-    result = @htm.forget(node_id, confirm: :confirmed)
+    # Permanent delete with confirmation should work
+    result = @htm.forget(node_id, soft: false, confirm: :confirmed)
     assert result
+
+    # Node should be completely gone
+    assert_nil HTM::Models::Node.with_deleted.find_by(id: node_id), "Node should be permanently deleted"
+  end
+
+  def test_restore_soft_deleted_node
+    # Add and soft-delete a node
+    node_id = @htm.remember("Content to restore")
+    @htm.forget(node_id)
+
+    # Node should be deleted
+    assert_nil HTM::Models::Node.find_by(id: node_id)
+
+    # Restore it
+    result = @htm.restore(node_id)
+    assert result
+
+    # Node should be back
+    node = HTM::Models::Node.find(node_id)
+    refute_nil node
+    assert_nil node.deleted_at, "Restored node should have nil deleted_at"
+  end
+
+  def test_purge_deleted_requires_confirmation
+    # Should require confirmation
+    error = assert_raises(ArgumentError) do
+      @htm.purge_deleted(older_than: 30.days.ago)
+    end
+    assert_match(/confirm/, error.message.downcase)
   end
 
   # Tests extracted from one-off scripts

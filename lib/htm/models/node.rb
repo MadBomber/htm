@@ -43,12 +43,30 @@ class HTM
       before_save :update_timestamps
 
       # Scopes
+      # Soft delete - by default, only show non-deleted nodes
+      default_scope { where(deleted_at: nil) }
+
       scope :by_robot, ->(robot_id) { joins(:robot_nodes).where(robot_nodes: { robot_id: robot_id }) }
       scope :recent, -> { order(created_at: :desc) }
       scope :in_timeframe, ->(start_time, end_time) { where(created_at: start_time..end_time) }
       scope :with_embeddings, -> { where.not(embedding: nil) }
 
+      # Soft delete scopes
+      scope :deleted, -> { unscoped.where.not(deleted_at: nil) }
+      scope :with_deleted, -> { unscoped }
+      scope :deleted_before, ->(time) { deleted.where('deleted_at < ?', time) }
+
       # Class methods
+
+      # Permanently delete all soft-deleted nodes older than the specified time
+      #
+      # @param older_than [Time, ActiveSupport::Duration] Delete nodes soft-deleted before this time
+      #   Can be a Time object or a duration like 30.days.ago
+      # @return [Integer] Number of nodes permanently deleted
+      #
+      def self.purge_deleted(older_than:)
+        deleted_before(older_than).destroy_all.count
+      end
 
       # Find a node by content hash, or return nil
       #
@@ -116,6 +134,30 @@ class HTM
         return unless tag
 
         node_tags.where(tag_id: tag.id).destroy_all
+      end
+
+      # Soft delete - mark node as deleted without removing from database
+      #
+      # @return [Boolean] true if soft deleted successfully
+      #
+      def soft_delete!
+        update!(deleted_at: Time.current)
+      end
+
+      # Restore a soft-deleted node
+      #
+      # @return [Boolean] true if restored successfully
+      #
+      def restore!
+        update!(deleted_at: nil)
+      end
+
+      # Check if node is soft-deleted
+      #
+      # @return [Boolean] true if deleted_at is set
+      #
+      def deleted?
+        deleted_at.present?
       end
 
       private

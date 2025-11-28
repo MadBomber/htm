@@ -282,7 +282,8 @@ class HTM
 
       # Generate database documentation using tbls
       #
-      # Creates comprehensive database documentation in dbdoc/ directory including:
+      # Uses .tbls.yml configuration file for output directory and settings.
+      # Creates comprehensive database documentation including:
       # - Entity-relationship diagrams
       # - Table schemas with comments
       # - Index information
@@ -292,23 +293,6 @@ class HTM
       # @return [void]
       #
       def generate_docs(db_url = nil)
-        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
-        raise "Database configuration not found" unless config
-
-        dbdoc_dir = File.expand_path('../../dbdoc', __dir__)
-
-        puts "Generating database documentation in #{dbdoc_dir}..."
-
-        # Create dbdoc directory if it doesn't exist
-        Dir.mkdir(dbdoc_dir) unless Dir.exist?(dbdoc_dir)
-
-        # Build PostgreSQL connection string for tbls
-        pg_url = if config[:password]
-          "postgresql://#{config[:user]}:#{config[:password]}@#{config[:host]}:#{config[:port]}/#{config[:dbname]}?sslmode=#{config[:sslmode] || 'prefer'}"
-        else
-          "postgresql://#{config[:user]}@#{config[:host]}:#{config[:port]}/#{config[:dbname]}?sslmode=#{config[:sslmode] || 'prefer'}"
-        end
-
         # Check if tbls is installed
         unless system('which tbls > /dev/null 2>&1')
           puts "✗ Error: 'tbls' is not installed"
@@ -322,9 +306,31 @@ class HTM
           exit 1
         end
 
-        # Run tbls doc command with --force to allow updates
+        # Find the project root (where .tbls.yml should be)
+        project_root = File.expand_path('../..', __dir__)
+        tbls_config = File.join(project_root, '.tbls.yml')
+
+        unless File.exist?(tbls_config)
+          puts "✗ Error: .tbls.yml not found at #{tbls_config}"
+          exit 1
+        end
+
+        # Get database URL
+        dsn = db_url || ENV['HTM_DBURL']
+        raise "Database configuration not found. Set HTM_DBURL environment variable." unless dsn
+
+        # Ensure sslmode is set for local development (tbls requires it)
+        unless dsn.include?('sslmode=')
+          separator = dsn.include?('?') ? '&' : '?'
+          dsn = "#{dsn}#{separator}sslmode=disable"
+        end
+
+        puts "Generating database documentation using #{tbls_config}..."
+
+        # Run tbls doc command with config file and DSN override
+        # The --dsn flag overrides the dsn in .tbls.yml but other settings are preserved
         require 'open3'
-        cmd = ['tbls', 'doc', '--force', pg_url, dbdoc_dir]
+        cmd = ['tbls', 'doc', '--config', tbls_config, '--dsn', dsn, '--force']
 
         stdout, stderr, status = Open3.capture3(*cmd)
 
@@ -336,15 +342,18 @@ class HTM
         end
 
         puts stdout if stdout && !stdout.empty?
+
+        # Read docPath from config to show correct output location
+        doc_path = 'docs/database'  # default from .tbls.yml
         puts "✓ Database documentation generated successfully"
         puts ""
         puts "Documentation files:"
-        puts "  #{dbdoc_dir}/README.md       - Main documentation"
-        puts "  #{dbdoc_dir}/schema.svg      - ER diagram (if generated)"
-        puts "  #{dbdoc_dir}/*.md            - Individual table documentation"
+        puts "  #{doc_path}/README.md       - Main documentation"
+        puts "  #{doc_path}/schema.svg      - ER diagram"
+        puts "  #{doc_path}/*.md            - Individual table documentation"
         puts ""
         puts "View documentation:"
-        puts "  open #{dbdoc_dir}/README.md"
+        puts "  open #{doc_path}/README.md"
       end
 
       # Show database info

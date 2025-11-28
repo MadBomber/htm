@@ -8,9 +8,9 @@ Unique tag names for categorization
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
+| created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this tag was created |
 | id | bigint | nextval('tags_id_seq'::regclass) | false | [public.node_tags](public.node_tags.md) |  |  |
 | name | text |  | false |  |  | Hierarchical tag in format: root:level1:level2 (e.g., database:postgresql:timescaledb) |
-| created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this tag was created |
 
 ## Constraints
 
@@ -22,9 +22,9 @@ Unique tag names for categorization
 
 | Name | Definition |
 | ---- | ---------- |
-| tags_pkey | CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id) |
-| idx_tags_name_unique | CREATE UNIQUE INDEX idx_tags_name_unique ON public.tags USING btree (name) |
 | idx_tags_name_pattern | CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern_ops) |
+| idx_tags_name_unique | CREATE UNIQUE INDEX idx_tags_name_unique ON public.tags USING btree (name) |
+| tags_pkey | CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id) |
 
 ## Relations
 

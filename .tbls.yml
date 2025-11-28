@@ -2,7 +2,8 @@
 # https://github.com/k1LoW/tbls
 
 # Database connection - uses HTM_DBURL environment variable
-dsn: env://HTM_DBURL
+# tbls expands environment variables with $VAR or ${VAR} syntax
+dsn: $HTM_DBURL
 
 # Output documentation to docs/database directory
 docPath: docs/database

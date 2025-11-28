@@ -90,6 +90,7 @@ CREATE TABLE public.nodes (
     embedding public.vector(2000),
     embedding_dimension integer,
     content_hash character varying(64),
+    deleted_at timestamp with time zone,
     CONSTRAINT check_embedding_dimension CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension > 0) AND (embedding_dimension <= 2000))))
 );
 
@@ -152,6 +153,12 @@ COMMENT ON COLUMN public.nodes.embedding_dimension IS 'Actual number of dimensio
 --
 
 COMMENT ON COLUMN public.nodes.content_hash IS 'SHA-256 hash of content for deduplication';
+
+--
+-- Name: COLUMN nodes.deleted_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.nodes.deleted_at IS 'Soft delete timestamp - node is considered deleted when set';
 
 --
 -- Name: nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -536,6 +543,12 @@ CREATE INDEX idx_nodes_content_trgm ON public.nodes USING gin (content public.gi
 CREATE INDEX idx_nodes_created_at ON public.nodes USING btree (created_at);
 
 --
+-- Name: idx_nodes_deleted_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_nodes_deleted_at ON public.nodes USING btree (deleted_at);
+
+--
 -- Name: idx_nodes_embedding; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -546,6 +559,12 @@ CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding public.ve
 --
 
 CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed);
+
+--
+-- Name: idx_nodes_not_deleted_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_nodes_not_deleted_created_at ON public.nodes USING btree (created_at) WHERE (deleted_at IS NULL);
 
 --
 -- Name: idx_nodes_updated_at; Type: INDEX; Schema: public; Owner: -
@@ -653,4 +672,4 @@ ALTER TABLE ONLY public.robot_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 6qynyffXXn5BTZM7u0DVZKV2Nc24dPezkY3OOwzriuYfchXNsoQuf114yBOqrIb
+\unrestrict 9OxzIC2R222maGue4M7m0meTOiCuf0eBnNxhwD5mdCfWQopqVja0AFeYJfsHSmf

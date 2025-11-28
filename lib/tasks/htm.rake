@@ -141,7 +141,7 @@ namespace :htm do
   end
 
   namespace :doc do
-    desc "Generate/update database documentation in dbdoc/"
+    desc "Generate/update database documentation in docs/database/ (uses .tbls.yml)"
     task :db do
       unless system("which tbls > /dev/null 2>&1")
         puts "Error: 'tbls' is not installed."

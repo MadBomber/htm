@@ -72,6 +72,63 @@ class HTM
         format_tree_branch(tree)
       end
 
+      # Returns a Mermaid flowchart representation of the tag tree
+      # Example: puts Tag.all.tree_mermaid
+      # Example: Tag.all.tree_mermaid(direction: 'LR') # Left to right
+      #
+      # @param direction [String] Flow direction: 'TD' (top-down), 'LR' (left-right), 'BT', 'RL'
+      # @return [String] Mermaid flowchart syntax
+      #
+      def self.tree_mermaid(direction: 'TD')
+        tree_data = tree
+        return "flowchart #{direction}\n  empty[No tags]" if tree_data.empty?
+
+        lines = ["flowchart #{direction}"]
+        node_id = 0
+        node_ids = {}
+
+        # Generate Mermaid nodes and connections
+        generate_mermaid_nodes(tree_data, nil, lines, node_ids, node_id)
+
+        lines.join("\n")
+      end
+
+      # Returns an SVG representation of the tag tree
+      # Uses dark theme with transparent background
+      # Example: File.write('tags.svg', Tag.all.tree_svg)
+      #
+      # @param title [String] Optional title for the SVG
+      # @return [String] SVG markup
+      #
+      def self.tree_svg(title: 'HTM Tag Hierarchy')
+        tree_data = tree
+        return empty_tree_svg(title) if tree_data.empty?
+
+        # Calculate dimensions based on tree structure
+        stats = calculate_tree_stats(tree_data)
+        node_count = stats[:total_nodes]
+        max_depth = stats[:max_depth]
+
+        # Layout constants
+        node_width = 140
+        node_height = 30
+        h_spacing = 180
+        v_spacing = 50
+        padding = 40
+
+        # Calculate positions for all nodes
+        positions = {}
+        y_offset = [0]  # Use array to allow mutation in closure
+        calculate_node_positions(tree_data, 0, positions, y_offset, h_spacing, v_spacing)
+
+        # Calculate SVG dimensions
+        width = (max_depth * h_spacing) + node_width + (padding * 2)
+        height = (y_offset[0] * v_spacing) + node_height + (padding * 2)
+
+        # Generate SVG
+        generate_tree_svg(tree_data, positions, width, height, padding, node_width, node_height, title)
+      end
+
       # Format a tree branch recursively (internal helper)
       def self.format_tree_branch(node, is_last_array = [])
         result = ''
@@ -95,6 +152,125 @@ class HTM
         end
 
         result
+      end
+
+      # Generate Mermaid nodes recursively (internal helper)
+      def self.generate_mermaid_nodes(node, parent_path, lines, node_ids, counter)
+        node.keys.sort.each do |key|
+          current_path = parent_path ? "#{parent_path}:#{key}" : key
+
+          # Create unique node ID
+          node_id = "n#{counter}"
+          node_ids[current_path] = node_id
+          counter += 1
+
+          # Add node definition with styling
+          lines << "  #{node_id}[\"#{key}\"]"
+
+          # Add connection from parent
+          if parent_path && node_ids[parent_path]
+            lines << "  #{node_ids[parent_path]} --> #{node_id}"
+          end
+
+          # Recurse into children
+          children = node[key]
+          counter = generate_mermaid_nodes(children, current_path, lines, node_ids, counter) unless children.empty?
+        end
+
+        counter
+      end
+
+      # Calculate tree statistics (internal helper)
+      def self.calculate_tree_stats(node, depth = 0)
+        return { total_nodes: 0, max_depth: depth } if node.empty?
+
+        total = node.keys.size
+        max = depth + 1
+
+        node.each_value do |children|
+          child_stats = calculate_tree_stats(children, depth + 1)
+          total += child_stats[:total_nodes]
+          max = [max, child_stats[:max_depth]].max
+        end
+
+        { total_nodes: total, max_depth: max }
+      end
+
+      # Calculate node positions for SVG layout (internal helper)
+      def self.calculate_node_positions(node, depth, positions, y_offset, h_spacing, v_spacing, parent_path = nil)
+        node.keys.sort.each do |key|
+          current_path = parent_path ? "#{parent_path}:#{key}" : key
+
+          positions[current_path] = {
+            x: depth,
+            y: y_offset[0],
+            label: key
+          }
+          y_offset[0] += 1
+
+          children = node[key]
+          calculate_node_positions(children, depth + 1, positions, y_offset, h_spacing, v_spacing, current_path) unless children.empty?
+        end
+      end
+
+      # Generate SVG for empty tree (internal helper)
+      def self.empty_tree_svg(title)
+        <<~SVG
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
+            <rect width="100%" height="100%" fill="transparent"/>
+            <text x="150" y="30" text-anchor="middle" fill="#9CA3AF" font-family="system-ui, sans-serif" font-size="14" font-weight="bold">#{title}</text>
+            <text x="150" y="60" text-anchor="middle" fill="#6B7280" font-family="system-ui, sans-serif" font-size="12">No tags found</text>
+          </svg>
+        SVG
+      end
+
+      # Generate SVG tree visualization (internal helper)
+      def self.generate_tree_svg(tree_data, positions, width, height, padding, node_width, node_height, title)
+        # Color palette for different depths (dark theme)
+        colors = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#6366F1']
+
+        svg_lines = []
+        svg_lines << %(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 #{width} #{height + 40}">)
+        svg_lines << '  <rect width="100%" height="100%" fill="transparent"/>'
+
+        # Title
+        svg_lines << %Q(  <text x="#{width / 2}" y="25" text-anchor="middle" fill="#F3F4F6" font-family="system-ui, sans-serif" font-size="16" font-weight="bold">#{title}</text>)
+
+        # Draw connections first (so they appear behind nodes)
+        positions.each do |path, pos|
+          parent_path = path.include?(':') ? path.split(':')[0..-2].join(':') : nil
+          next unless parent_path && positions[parent_path]
+
+          parent_pos = positions[parent_path]
+          x1 = padding + (parent_pos[:x] * (node_width + 40)) + node_width
+          y1 = 40 + padding + (parent_pos[:y] * (node_height + 20)) + (node_height / 2)
+          x2 = padding + (pos[:x] * (node_width + 40))
+          y2 = 40 + padding + (pos[:y] * (node_height + 20)) + (node_height / 2)
+
+          # Curved connection line
+          mid_x = (x1 + x2) / 2
+          svg_lines << %Q(  <path d="M#{x1},#{y1} C#{mid_x},#{y1} #{mid_x},#{y2} #{x2},#{y2}" stroke="#4B5563" stroke-width="2" fill="none"/>)
+        end
+
+        # Draw nodes
+        positions.each do |path, pos|
+          depth = path.count(':')
+          color = colors[depth % colors.size]
+
+          x = padding + (pos[:x] * (node_width + 40))
+          y = 40 + padding + (pos[:y] * (node_height + 20))
+
+          # Node rectangle with rounded corners
+          svg_lines << %Q(  <rect x="#{x}" y="#{y}" width="#{node_width}" height="#{node_height}" rx="6" fill="#{color}" opacity="0.9"/>)
+
+          # Node label
+          text_x = x + (node_width / 2)
+          text_y = y + (node_height / 2) + 4
+          svg_lines << %Q(  <text x="#{text_x}" y="#{text_y}" text-anchor="middle" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="11" font-weight="500">#{pos[:label]}</text>)
+        end
+
+        svg_lines << '</svg>'
+        svg_lines.join("\n")
       end
 
       # Instance methods
