@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2025-11-28
+
+### Added
+- **Markdown file loader** - Load markdown files into long-term memory
+  - `FileSource` model to track loaded files with metadata and sync status
+  - `MarkdownLoader` with YAML frontmatter extraction
+  - `ParagraphChunker` for splitting content into semantic chunks
+  - DELTA_TIME tolerance (5 seconds) for reliable file change detection
+- **New HTM API methods** for file operations:
+  - `htm.load_file(path, force: false)` - Load single markdown file
+  - `htm.load_directory(path, pattern: '**/*.md', force: false)` - Load directory
+  - `htm.nodes_from_file(path)` - Query nodes from a loaded file
+  - `htm.unload_file(path)` - Unload file and soft-delete its chunks
+- **File loading rake tasks**:
+  - `htm:files:load[path]` - Load a markdown file
+  - `htm:files:load_dir[path,pattern]` - Load directory with glob pattern
+  - `htm:files:list` - List all loaded file sources
+  - `htm:files:info[path]` - Show details for a loaded file
+  - `htm:files:unload[path]` - Unload a file from memory
+  - `htm:files:sync` - Re-sync all loaded files (reload changed files)
+  - `htm:files:stats` - Show file loading statistics
+- **FileSource model features**:
+  - `needs_sync?(mtime)` with DELTA_TIME tolerance for mtime comparison
+  - `frontmatter_tags`, `title`, `author` accessors for frontmatter data
+  - `soft_delete_chunks!` for bulk soft-delete of associated nodes
+  - `by_path` scope for path-based lookups
+- **New example**: `examples/file_loader_usage.rb` demonstrating all file operations
+- **New tests**: FileSource model tests (19) and MarkdownLoader tests (18)
+
+### Changed
+- Node model now has optional `source_id` foreign key to FileSource
+- Node model has `chunk_position` column for ordering chunks within a file
+
 ## [0.0.2] - 2025-11-28
 
 ### Added
@@ -188,6 +221,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/madbomber/htm/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/madbomber/htm/releases/tag/v0.1.0
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/madbomber/htm/compare/v0.0.2...v0.0.4
+[0.0.2]: https://github.com/madbomber/htm/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/madbomber/htm/releases/tag/v0.0.1
