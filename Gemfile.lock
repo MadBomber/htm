@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    htm (0.0.2)
+    htm (0.0.3)
       activerecord
       lru_redux
       neighbor

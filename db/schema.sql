@@ -24,6 +24,81 @@ CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
 --
 
 --
+-- Name: file_sources; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.file_sources (
+    id bigint NOT NULL,
+    file_path text NOT NULL,
+    file_hash character varying(64),
+    mtime timestamp with time zone,
+    file_size integer,
+    frontmatter jsonb DEFAULT '{}'::jsonb,
+    last_synced_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+--
+-- Name: TABLE file_sources; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.file_sources IS 'Source file metadata for loaded documents';
+
+--
+-- Name: COLUMN file_sources.file_path; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.file_sources.file_path IS 'Absolute path to source file';
+
+--
+-- Name: COLUMN file_sources.file_hash; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.file_sources.file_hash IS 'SHA-256 hash of file content';
+
+--
+-- Name: COLUMN file_sources.mtime; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.file_sources.mtime IS 'File modification time';
+
+--
+-- Name: COLUMN file_sources.file_size; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.file_sources.file_size IS 'File size in bytes';
+
+--
+-- Name: COLUMN file_sources.frontmatter; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.file_sources.frontmatter IS 'Parsed YAML frontmatter';
+
+--
+-- Name: COLUMN file_sources.last_synced_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.file_sources.last_synced_at IS 'When file was last synced to HTM';
+
+--
+-- Name: file_sources_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.file_sources_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+--
+-- Name: file_sources_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.file_sources_id_seq OWNED BY public.file_sources.id;
+
+--
 -- Name: node_tags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -91,6 +166,8 @@ CREATE TABLE public.nodes (
     embedding_dimension integer,
     content_hash character varying(64),
     deleted_at timestamp with time zone,
+    source_id bigint,
+    chunk_position integer,
     CONSTRAINT check_embedding_dimension CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension > 0) AND (embedding_dimension <= 2000))))
 );
 
@@ -159,6 +236,18 @@ COMMENT ON COLUMN public.nodes.content_hash IS 'SHA-256 hash of content for dedu
 --
 
 COMMENT ON COLUMN public.nodes.deleted_at IS 'Soft delete timestamp - node is considered deleted when set';
+
+--
+-- Name: COLUMN nodes.source_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.nodes.source_id IS 'Reference to source file (for file-loaded nodes)';
+
+--
+-- Name: COLUMN nodes.chunk_position; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.nodes.chunk_position IS 'Position within source file (0-indexed)';
 
 --
 -- Name: nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -410,6 +499,12 @@ CREATE SEQUENCE public.working_memories_id_seq
 ALTER SEQUENCE public.working_memories_id_seq OWNED BY public.working_memories.id;
 
 --
+-- Name: file_sources id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file_sources ALTER COLUMN id SET DEFAULT nextval('public.file_sources_id_seq'::regclass);
+
+--
 -- Name: node_tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -444,6 +539,13 @@ ALTER TABLE ONLY public.tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id
 --
 
 ALTER TABLE ONLY public.working_memories ALTER COLUMN id SET DEFAULT nextval('public.working_memories_id_seq'::regclass);
+
+--
+-- Name: file_sources file_sources_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file_sources
+    ADD CONSTRAINT file_sources_pkey PRIMARY KEY (id);
 
 --
 -- Name: node_tags node_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -493,6 +595,24 @@ ALTER TABLE ONLY public.tags
 
 ALTER TABLE ONLY public.working_memories
     ADD CONSTRAINT working_memories_pkey PRIMARY KEY (id);
+
+--
+-- Name: idx_file_sources_hash; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_file_sources_hash ON public.file_sources USING btree (file_hash);
+
+--
+-- Name: idx_file_sources_last_synced; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_file_sources_last_synced ON public.file_sources USING btree (last_synced_at);
+
+--
+-- Name: idx_file_sources_path_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_file_sources_path_unique ON public.file_sources USING btree (file_path);
 
 --
 -- Name: idx_node_tags_node_id; Type: INDEX; Schema: public; Owner: -
@@ -565,6 +685,18 @@ CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed)
 --
 
 CREATE INDEX idx_nodes_not_deleted_created_at ON public.nodes USING btree (created_at) WHERE (deleted_at IS NULL);
+
+--
+-- Name: idx_nodes_source_chunk_position; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_nodes_source_chunk_position ON public.nodes USING btree (source_id, chunk_position);
+
+--
+-- Name: idx_nodes_source_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_nodes_source_id ON public.nodes USING btree (source_id);
 
 --
 -- Name: idx_nodes_updated_at; Type: INDEX; Schema: public; Owner: -
@@ -641,6 +773,13 @@ ALTER TABLE ONLY public.working_memories
     ADD CONSTRAINT fk_rails_4b7c3eb07b FOREIGN KEY (robot_id) REFERENCES public.robots(id) ON DELETE CASCADE;
 
 --
+-- Name: nodes fk_rails_920ad16d08; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.nodes
+    ADD CONSTRAINT fk_rails_920ad16d08 FOREIGN KEY (source_id) REFERENCES public.file_sources(id) ON DELETE SET NULL;
+
+--
 -- Name: robot_nodes fk_rails_9b003078a8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -672,4 +811,4 @@ ALTER TABLE ONLY public.robot_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 9OxzIC2R222maGue4M7m0meTOiCuf0eBnNxhwD5mdCfWQopqVja0AFeYJfsHSmf
+\unrestrict s4jsX5wR10TU2eF9mgKNmfoA7UWE9rP9bvSd2qOgnmpvonNwLASTfp4PU2GPy9d

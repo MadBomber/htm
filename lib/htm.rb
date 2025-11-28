@@ -12,6 +12,8 @@ require_relative "htm/tag_service"
 require_relative "htm/job_adapter"
 require_relative "htm/jobs/generate_embedding_job"
 require_relative "htm/jobs/generate_tags_job"
+require_relative "htm/loaders/paragraph_chunker"
+require_relative "htm/loaders/markdown_loader"
 
 require "pg"
 require "securerandom"
@@ -350,6 +352,98 @@ class HTM
     count = HTM::Models::Node.purge_deleted(older_than: older_than)
     HTM.logger.info "Purged #{count} soft-deleted nodes older than #{older_than}"
 
+    count
+  end
+
+  # Load a single file into long-term memory
+  #
+  # Reads a text-based file (starting with markdown), chunks it by paragraph,
+  # and stores each chunk as a node. YAML frontmatter is preserved as metadata
+  # on the first chunk.
+  #
+  # @param path [String] Path to file
+  # @param force [Boolean] Force re-sync even if mtime unchanged (default: false)
+  # @return [Hash] Result with keys:
+  #   - :file_path [String] Absolute path to file
+  #   - :chunks_created [Integer] Number of new chunks created
+  #   - :chunks_updated [Integer] Number of existing chunks updated
+  #   - :chunks_deleted [Integer] Number of chunks soft-deleted
+  #   - :skipped [Boolean] True if file was unchanged and skipped
+  #
+  # @example Load a markdown file
+  #   result = htm.load_file('/path/to/doc.md')
+  #   # => { file_path: '/path/to/doc.md', chunks_created: 5, ... }
+  #
+  # @example Force re-sync even if unchanged
+  #   result = htm.load_file('/path/to/doc.md', force: true)
+  #
+  def load_file(path, force: false)
+    loader = HTM::Loaders::MarkdownLoader.new(self)
+    result = loader.load_file(path, force: force)
+
+    update_robot_activity unless result[:skipped]
+    result
+  end
+
+  # Load all matching files from a directory into long-term memory
+  #
+  # @param path [String] Directory path
+  # @param pattern [String] Glob pattern (default: '**/*.md')
+  # @param force [Boolean] Force re-sync even if unchanged (default: false)
+  # @return [Array<Hash>] Results for each file
+  #
+  # @example Load all markdown files recursively
+  #   results = htm.load_directory('/path/to/docs')
+  #
+  # @example Load only top-level markdown files
+  #   results = htm.load_directory('/path/to/docs', pattern: '*.md')
+  #
+  def load_directory(path, pattern: '**/*.md', force: false)
+    loader = HTM::Loaders::MarkdownLoader.new(self)
+    results = loader.load_directory(path, pattern: pattern, force: force)
+
+    # Update activity if any files were processed
+    if results.any? { |r| !r[:skipped] && !r[:error] }
+      update_robot_activity
+    end
+
+    results
+  end
+
+  # Get all nodes loaded from a specific file
+  #
+  # @param file_path [String] Path to the source file
+  # @return [ActiveRecord::Relation] Nodes from this file, ordered by chunk_position
+  #
+  # @example
+  #   nodes = htm.nodes_from_file('/path/to/doc.md')
+  #   nodes.each { |node| puts node.content }
+  #
+  def nodes_from_file(file_path)
+    source = HTM::Models::FileSource.find_by(file_path: File.expand_path(file_path))
+    return HTM::Models::Node.none unless source
+
+    HTM::Models::Node.from_source(source.id)
+  end
+
+  # Unload a file (soft-delete all its chunks and remove source record)
+  #
+  # @param file_path [String] Path to the source file
+  # @return [Integer] Number of nodes soft-deleted
+  #
+  # @example
+  #   count = htm.unload_file('/path/to/doc.md')
+  #   puts "Unloaded #{count} chunks"
+  #
+  def unload_file(file_path)
+    source = HTM::Models::FileSource.find_by(file_path: File.expand_path(file_path))
+    return 0 unless source
+
+    count = source.soft_delete_chunks!
+    @long_term_memory.clear_cache!
+    source.destroy
+
+    update_robot_activity
     count
   end
 

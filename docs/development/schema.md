@@ -38,6 +38,7 @@ For detailed table definitions, columns, indexes, and constraints, see the auto-
 | [nodes](../database/public.nodes.md) | Core memory storage for conversation messages and context | Vector embeddings, full-text search, deduplication |
 | [tags](../database/public.tags.md) | Unique hierarchical tag names for categorization | Colon-separated namespaces (e.g., `ai:llm:embeddings`) |
 | [working_memories](../database/public.working_memories.md) | Per-robot working memory state | Optional persistence for token-limited context |
+| file_sources | Source file metadata for loaded documents | Path, mtime, frontmatter, sync tracking |
 
 ### Join Tables
 
@@ -76,6 +77,35 @@ Query by prefix to find all related tags:
 ```sql
 SELECT * FROM tags WHERE name LIKE 'database:%';  -- All database-related tags
 SELECT * FROM tags WHERE name LIKE 'ai:llm:%';    -- All LLM-related tags
+```
+
+### File Source Tracking
+
+The `file_sources` table tracks loaded documents for re-sync support:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint | Primary key |
+| `file_path` | text | Absolute path to the source file |
+| `file_hash` | varchar(64) | SHA-256 hash of file contents |
+| `mtime` | timestamptz | File modification time for change detection |
+| `file_size` | integer | File size in bytes |
+| `frontmatter` | jsonb | Parsed YAML frontmatter metadata |
+| `last_synced_at` | timestamptz | When file was last synced |
+| `created_at` | timestamptz | When source was first loaded |
+| `updated_at` | timestamptz | When source was last updated |
+
+Nodes loaded from files have:
+- `source_id` - Foreign key to file_sources (nullable, ON DELETE SET NULL)
+- `chunk_position` - Integer position within the file (0-indexed)
+
+Query nodes from a file:
+```sql
+SELECT n.*
+FROM nodes n
+JOIN file_sources fs ON n.source_id = fs.id
+WHERE fs.file_path = '/path/to/file.md'
+ORDER BY n.chunk_position;
 ```
 
 ### Remember Tracking
@@ -278,6 +308,8 @@ The schema is managed through ActiveRecord migrations located in `db/migrate/`:
 1. `20250101000001_create_robots.rb` - Creates robots table
 2. `20250101000002_create_nodes.rb` - Creates nodes table with all indexes
 3. `20250101000005_create_tags.rb` - Creates tags and nodes_tags tables
+4. `20251128000002_create_file_sources.rb` - Creates file_sources table for document tracking
+5. `20251128000003_add_source_to_nodes.rb` - Adds source_id and chunk_position to nodes
 
 To apply migrations:
 ```bash

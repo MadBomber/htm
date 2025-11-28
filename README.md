@@ -62,6 +62,12 @@
     - Tag-based categorization
     - Hierarchical tag structures
 
+- **File Loading**
+    - Load markdown files into long-term memory
+    - Automatic paragraph-based chunking
+    - Source file tracking with re-sync support
+    - YAML frontmatter extraction as metadata
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -262,6 +268,42 @@ memories = htm.recall(
 
 # Forget (explicit deletion only)
 htm.forget(node_id, confirm: :confirmed)
+```
+
+### Loading Files
+
+HTM can load text-based files (currently markdown) into long-term memory with automatic chunking and source tracking.
+
+```ruby
+htm = HTM.new(robot_name: "Document Loader")
+
+# Load a single markdown file
+result = htm.load_file("docs/guide.md")
+# => { file_source_id: 1, chunks_created: 5, chunks_updated: 0, chunks_deleted: 0 }
+
+# Load all markdown files in a directory
+results = htm.load_directory("docs/", pattern: "**/*.md")
+
+# Get nodes from a specific file
+nodes = htm.nodes_from_file("docs/guide.md")
+
+# Unload a file (soft deletes chunks)
+htm.unload_file("docs/guide.md")
+```
+
+**Features:**
+- **Paragraph chunking**: Text split by blank lines, code blocks preserved
+- **Source tracking**: Files tracked with mtime for automatic re-sync
+- **YAML frontmatter**: Extracted and stored as metadata
+- **Duplicate detection**: Content hash prevents duplicate nodes
+
+**Rake tasks:**
+```bash
+rake 'htm:files:load[docs/guide.md]'   # Load a single file
+rake 'htm:files:load_dir[docs/]'       # Load all markdown files from directory
+rake htm:files:list                     # List all loaded file sources
+rake htm:files:sync                     # Sync all files (reload changed)
+rake htm:files:stats                    # Show file loading statistics
 ```
 
 ### Automatic Tag Extraction

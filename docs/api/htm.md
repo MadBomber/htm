@@ -410,6 +410,166 @@ end
 
 ---
 
+### `load_file(path, force: false)` {: #load_file }
+
+Load a markdown file into long-term memory with automatic chunking and source tracking.
+
+```ruby
+load_file(path, force: false)
+```
+
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `path` | String | *required* | Path to the markdown file to load |
+| `force` | Boolean | `false` | Force re-sync even if file hasn't changed |
+
+#### Returns
+
+- `Hash` with keys:
+  - `file_source_id` - ID of the FileSource record
+  - `chunks_created` - Number of new nodes created
+  - `chunks_updated` - Number of existing nodes updated
+  - `chunks_deleted` - Number of nodes soft-deleted
+
+#### Side Effects
+
+- Creates or updates a FileSource record for tracking
+- Parses YAML frontmatter and stores as metadata
+- Chunks content by paragraph, preserving code blocks
+- Creates nodes for each chunk with `source_id` linking to file
+- Triggers async embedding and tag extraction for new nodes
+
+#### Examples
+
+```ruby
+# Load a file
+result = htm.load_file("docs/guide.md")
+# => { file_source_id: 1, chunks_created: 5, chunks_updated: 0, chunks_deleted: 0 }
+
+# Force reload even if unchanged
+result = htm.load_file("docs/guide.md", force: true)
+
+# File with frontmatter
+# ---
+# title: User Guide
+# tags: [documentation, tutorial]
+# ---
+# Content here...
+result = htm.load_file("docs/guide.md")
+# Frontmatter stored in FileSource.frontmatter
+```
+
+---
+
+### `load_directory(path, pattern: '**/*.md', force: false)` {: #load_directory }
+
+Load all matching files in a directory into long-term memory.
+
+```ruby
+load_directory(path, pattern: '**/*.md', force: false)
+```
+
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `path` | String | *required* | Directory path to scan |
+| `pattern` | String | `'**/*.md'` | Glob pattern for matching files |
+| `force` | Boolean | `false` | Force re-sync all files |
+
+#### Returns
+
+- `Array<Hash>` - Results for each file loaded, each containing:
+  - `file_path` - Path of the loaded file
+  - `file_source_id` - ID of the FileSource record
+  - `chunks_created` - Number of new nodes created
+  - `chunks_updated` - Number of existing nodes updated
+  - `chunks_deleted` - Number of nodes soft-deleted
+
+#### Examples
+
+```ruby
+# Load all markdown files
+results = htm.load_directory("docs/")
+
+# Load with custom pattern
+results = htm.load_directory("content/", pattern: "**/*.md")
+
+# Force reload all
+results = htm.load_directory("docs/", force: true)
+```
+
+---
+
+### `nodes_from_file(file_path)` {: #nodes_from_file }
+
+Get all nodes loaded from a specific file.
+
+```ruby
+nodes_from_file(file_path)
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `file_path` | String | Path of the source file |
+
+#### Returns
+
+- `Array<HTM::Models::Node>` - Nodes from the file, ordered by chunk position
+
+#### Examples
+
+```ruby
+nodes = htm.nodes_from_file("docs/guide.md")
+nodes.each do |node|
+  puts "Chunk #{node.chunk_position}: #{node.content[0..50]}..."
+end
+```
+
+---
+
+### `unload_file(file_path)` {: #unload_file }
+
+Remove a file from memory by soft-deleting all its chunks and the file source.
+
+```ruby
+unload_file(file_path)
+```
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `file_path` | String | Path of the source file to unload |
+
+#### Returns
+
+- `true` if file was found and unloaded
+- `false` if file was not found
+
+#### Side Effects
+
+- Soft-deletes all nodes from the file (sets `deleted_at`)
+- Destroys the FileSource record
+
+#### Examples
+
+```ruby
+# Unload a file
+htm.unload_file("docs/guide.md")
+
+# Check if file is loaded
+if htm.nodes_from_file("docs/guide.md").empty?
+  puts "File not loaded"
+end
+```
+
+---
+
 ## Error Handling
 
 ### ArgumentError

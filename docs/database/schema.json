@@ -2,6 +2,114 @@
   "name": "htm_development",
   "tables": [
     {
+      "name": "public.file_sources",
+      "type": "BASE TABLE",
+      "comment": "Source file metadata for loaded documents",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "file_hash",
+          "type": "varchar(64)",
+          "nullable": true,
+          "comment": "SHA-256 hash of file content"
+        },
+        {
+          "name": "file_path",
+          "type": "text",
+          "nullable": false,
+          "comment": "Absolute path to source file"
+        },
+        {
+          "name": "file_size",
+          "type": "integer",
+          "nullable": true,
+          "comment": "File size in bytes"
+        },
+        {
+          "name": "frontmatter",
+          "type": "jsonb",
+          "nullable": true,
+          "default": "'{}'::jsonb",
+          "comment": "Parsed YAML frontmatter"
+        },
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "default": "nextval('file_sources_id_seq'::regclass)"
+        },
+        {
+          "name": "last_synced_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "comment": "When file was last synced to HTM"
+        },
+        {
+          "name": "mtime",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "comment": "File modification time"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "file_sources_pkey",
+          "def": "CREATE UNIQUE INDEX file_sources_pkey ON public.file_sources USING btree (id)",
+          "table": "public.file_sources",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_file_sources_hash",
+          "def": "CREATE INDEX idx_file_sources_hash ON public.file_sources USING btree (file_hash)",
+          "table": "public.file_sources",
+          "columns": [
+            "file_hash"
+          ]
+        },
+        {
+          "name": "idx_file_sources_last_synced",
+          "def": "CREATE INDEX idx_file_sources_last_synced ON public.file_sources USING btree (last_synced_at)",
+          "table": "public.file_sources",
+          "columns": [
+            "last_synced_at"
+          ]
+        },
+        {
+          "name": "idx_file_sources_path_unique",
+          "def": "CREATE UNIQUE INDEX idx_file_sources_path_unique ON public.file_sources USING btree (file_path)",
+          "table": "public.file_sources",
+          "columns": [
+            "file_path"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "file_sources_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.file_sources",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
       "name": "public.node_tags",
       "type": "BASE TABLE",
       "comment": "Join table connecting nodes to tags (many-to-many)",
@@ -119,6 +227,12 @@
           "comment": "Number of times this node has been accessed/retrieved"
         },
         {
+          "name": "chunk_position",
+          "type": "integer",
+          "nullable": true,
+          "comment": "Position within source file (0-indexed)"
+        },
+        {
           "name": "content",
           "type": "text",
           "nullable": false,
@@ -167,6 +281,12 @@
           "nullable": true,
           "default": "CURRENT_TIMESTAMP",
           "comment": "When this memory was last accessed"
+        },
+        {
+          "name": "source_id",
+          "type": "bigint",
+          "nullable": true,
+          "comment": "Reference to source file (for file-loaded nodes)"
         },
         {
           "name": "token_count",
@@ -256,6 +376,23 @@
           ]
         },
         {
+          "name": "idx_nodes_source_chunk_position",
+          "def": "CREATE INDEX idx_nodes_source_chunk_position ON public.nodes USING btree (source_id, chunk_position)",
+          "table": "public.nodes",
+          "columns": [
+            "source_id",
+            "chunk_position"
+          ]
+        },
+        {
+          "name": "idx_nodes_source_id",
+          "def": "CREATE INDEX idx_nodes_source_id ON public.nodes USING btree (source_id)",
+          "table": "public.nodes",
+          "columns": [
+            "source_id"
+          ]
+        },
+        {
           "name": "idx_nodes_updated_at",
           "def": "CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at)",
           "table": "public.nodes",
@@ -281,6 +418,19 @@
           "referenced_table": "",
           "columns": [
             "embedding_dimension"
+          ]
+        },
+        {
+          "name": "fk_rails_920ad16d08",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (source_id) REFERENCES file_sources(id) ON DELETE SET NULL",
+          "table": "public.nodes",
+          "referenced_table": "file_sources",
+          "columns": [
+            "source_id"
+          ],
+          "referenced_columns": [
+            "id"
           ]
         },
         {
@@ -724,6 +874,19 @@
       ],
       "parent_cardinality": "exactly_one",
       "def": "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.nodes",
+      "columns": [
+        "source_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.file_sources",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "zero_or_one",
+      "def": "FOREIGN KEY (source_id) REFERENCES file_sources(id) ON DELETE SET NULL"
     },
     {
       "table": "public.robot_nodes",

@@ -90,6 +90,12 @@ ruby enable_extensions.rb
 
 **HTM::Configuration** (`lib/htm/configuration.rb`): Multi-provider LLM configuration via RubyLLM. Supports OpenAI, Anthropic, Gemini, Azure, Ollama (default), HuggingFace, OpenRouter, Bedrock, and DeepSeek. Manages API keys, model selection, and timeouts.
 
+**HTM::Models::FileSource** (`lib/htm/models/file_source.rb`): Tracks source files loaded into memory. Stores file path, mtime for re-sync detection, YAML frontmatter metadata, and links to chunked nodes via `source_id` foreign key.
+
+**HTM::Loaders::MarkdownLoader** (`lib/htm/loaders/markdown_loader.rb`): Loads markdown files into long-term memory. Extracts YAML frontmatter, chunks text by paragraph, tracks source file for re-sync, and handles duplicate detection via content hash.
+
+**HTM::Loaders::ParagraphChunker** (`lib/htm/loaders/paragraph_chunker.rb`): Splits text into paragraph-based chunks. Preserves fenced code blocks (``` and ~~~), splits by blank lines, and merges very short fragments.
+
 ### Database Schema
 
 Located in `db/schema.sql`:
@@ -98,12 +104,14 @@ Located in `db/schema.sql`:
 - **nodes**: Primary memory storage with vector embeddings (up to 2000 dimensions), full-text search, fuzzy matching, and soft delete support (`deleted_at` column)
 - **tags**: Hierarchical tag system using colon-separated namespaces (e.g., `database:postgresql:extensions`)
 - **nodes_tags**: Join table implementing many-to-many relationship between nodes and tags
+- **file_sources**: Source file metadata for loaded documents (path, mtime, frontmatter, sync status)
 
 The schema uses PostgreSQL 17 with pgvector and pg_trgm extensions. ActiveRecord models are available:
 - `HTM::Models::Robot`
 - `HTM::Models::Node`
 - `HTM::Models::Tag`
 - `HTM::Models::NodeTag`
+- `HTM::Models::FileSource`
 
 ### Memory Types
 
@@ -397,6 +405,81 @@ node.restore!      # Restore a specific node
 node.soft_delete!  # Soft delete a specific node
 ```
 
+### Loading Files into Memory
+
+HTM can load text-based files (currently markdown) into long-term memory with automatic chunking, source tracking, and re-sync support.
+
+**Load a single file**:
+```ruby
+htm = HTM.new(robot_name: "Document Loader")
+
+# Load a markdown file - chunks by paragraph, extracts frontmatter
+result = htm.load_file("docs/guide.md")
+# => { file_source_id: 1, chunks_created: 5, chunks_updated: 0, chunks_deleted: 0 }
+
+# Force re-sync even if file hasn't changed
+result = htm.load_file("docs/guide.md", force: true)
+```
+
+**Load a directory**:
+```ruby
+# Load all markdown files in a directory (recursive)
+results = htm.load_directory("docs/")
+# => [{ file_path: "docs/guide.md", ... }, { file_path: "docs/api.md", ... }]
+
+# Custom glob pattern
+results = htm.load_directory("content/", pattern: "**/*.md")
+```
+
+**Query nodes from a file**:
+```ruby
+# Get all nodes loaded from a specific file
+nodes = htm.nodes_from_file("docs/guide.md")
+# => [#<HTM::Models::Node>, #<HTM::Models::Node>, ...]
+```
+
+**Unload a file**:
+```ruby
+# Soft delete all nodes from a file and remove file source
+htm.unload_file("docs/guide.md")
+```
+
+**Re-sync behavior**:
+- Files are tracked by path with mtime-based change detection
+- If file hasn't changed, `load_file` returns early (unless `force: true`)
+- Changed files are re-synced: new chunks created, unchanged chunks kept, removed chunks soft-deleted
+- YAML frontmatter is extracted and stored as metadata on the file source
+
+**Chunking strategy**:
+- Text is split by paragraph (blank lines)
+- Fenced code blocks (``` and ~~~) are preserved as single chunks
+- Very short fragments (<10 chars) are merged with neighbors
+- Each chunk becomes a node with `source_id` linking back to the file
+
+**FileSource model**:
+```ruby
+source = HTM::Models::FileSource.find_by(file_path: "docs/guide.md")
+source.needs_sync?      # Check if file changed since last load
+source.chunks           # Get all nodes from this file (ordered by position)
+source.frontmatter      # Get parsed YAML frontmatter hash
+source.frontmatter_tags # Get tags from frontmatter (if present)
+```
+
+**Rake tasks for file loading**:
+```bash
+rake 'htm:files:load[docs/guide.md]'      # Load a single file
+rake 'htm:files:load_dir[docs/]'          # Load all markdown files from directory
+rake 'htm:files:load_dir[docs/,**/*.md]'  # Load with custom glob pattern
+rake htm:files:list                        # List all loaded file sources
+rake 'htm:files:info[docs/guide.md]'      # Show details for a loaded file
+rake 'htm:files:unload[docs/guide.md]'    # Unload a file from memory
+rake htm:files:sync                        # Sync all loaded files (reload changed)
+rake htm:files:stats                       # Show file loading statistics
+
+# Use FORCE=true to reload even if file hasn't changed
+FORCE=true rake 'htm:files:load[docs/guide.md]'
+```
+
 ## Architecture Framework
 
 HTM uses the [ai-software-architect](https://github.com/codenamev/ai-software-architect) framework for managing architectural decisions and reviews.
@@ -467,5 +550,6 @@ The architecture review team (defined in `.architecture/members.yml`) includes:
 - Token counting uses Tiktoken with GPT-3.5-turbo encoding
 - Architecture decisions are documented in ADRs (see `.architecture/decisions/adrs/`)
 - **Key ADRs**: 001 (PostgreSQL), 013 (ActiveRecord+Tags), **016 (Async Jobs)** [supersedes 014, 015]
+- **File Loading**: Load markdown files into memory with `load_file()`, `load_directory()`, `unload_file()` methods
 - backward-compatibility is not necessary.
 - backward compatibility is never a consideration

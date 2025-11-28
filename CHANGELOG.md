@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2025-11-28
+
 ### Added
+- **Soft delete for memory nodes** - `forget()` now soft deletes by default (recoverable)
+  - `restore(node_id)` to recover soft-deleted nodes
+  - `purge_deleted(older_than:, confirm:)` to permanently remove old deleted nodes
+  - Permanent delete requires `soft: false, confirm: :confirmed`
+  - `deleted_at` column and scopes: `Node.deleted`, `Node.with_deleted`
+- **Tag hierarchy visualization** - Export tag trees in multiple formats
+  - `Tag.all.tree` returns nested hash structure
+  - `Tag.all.tree_string` returns directory-style text tree
+  - `Tag.all.tree_mermaid` generates Mermaid flowchart syntax
+  - `Tag.all.tree_svg` generates SVG with dark theme, transparent background
+  - Rake tasks: `htm:tags:tree`, `htm:tags:mermaid`, `htm:tags:svg`, `htm:tags:export`
+  - All rake tasks accept optional prefix filter parameter
+- **Per-robot working memory persistence** - Optional database-backed working memory
+  - New `working_memories` table for state restoration after process restart
+  - `WorkingMemoryEntry` model with `sync`, `load`, `clear` methods
+  - Enables cross-robot observability in hive mind architecture
+- **Temporal filtering in recall** - Parse timeframe strings (seconds/minutes/hours)
+- **Integration tests** for embeddings, vector search, and recall options
 - **Multi-provider LLM support via RubyLLM** - HTM now supports 9 LLM providers:
   - OpenAI (`text-embedding-3-small`, `gpt-4o-mini`)
   - Anthropic (`claude-3-haiku-20240307`)
@@ -18,41 +38,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - OpenRouter
   - AWS Bedrock
   - DeepSeek
-- Provider-specific configuration attributes:
-  - `openai_api_key`, `openai_organization`, `openai_project`
-  - `anthropic_api_key`
-  - `gemini_api_key`
-  - `azure_api_key`, `azure_endpoint`, `azure_api_version`
-  - `ollama_url`
-  - `huggingface_api_key`
-  - `openrouter_api_key`
-  - `bedrock_access_key`, `bedrock_secret_key`, `bedrock_region`
-  - `deepseek_api_key`
+- Provider-specific configuration attributes for all supported providers
 - `HTM::Configuration#configure_ruby_llm` method for provider credential setup
 - `SUPPORTED_PROVIDERS` constant listing all available providers
 - `DEFAULT_DIMENSIONS` hash with typical embedding dimensions per provider
 - Architecture documentation using ai-software-architect framework
-- Comprehensive ADRs (Architecture Decision Records):
-  - ADR-001: PostgreSQL with TimescaleDB for storage
-  - ADR-002: Two-tier memory architecture (working + long-term)
-  - ADR-003: Ollama as default embedding provider
-  - ADR-004: Multi-robot shared memory (hive mind)
-  - ADR-005: RAG-based retrieval with hybrid search
-  - ADR-006: Context assembly strategies (recent, important, balanced)
-  - ADR-007: Working memory eviction strategy (hybrid importance + recency)
-  - ADR-008: Robot identification system (UUID + name)
-  - ADR-009: Never-forget philosophy with explicit deletion
-- Architecture review team with 8 specialist perspectives
-- Had the robot convert my notss and system analysis documentation into Architectural Decision Records (ADR)
+- Comprehensive ADRs (Architecture Decision Records) for all major design decisions
 
 ### Changed
 - **Embedding generator now uses `RubyLLM.embed()`** instead of raw HTTP calls to Ollama
 - **Tag extractor now uses `RubyLLM.chat()`** instead of raw HTTP calls to Ollama
+- **Sinatra integration moved** to `lib/htm/integrations/sinatra.rb` (require path changed)
+- **Hybrid search includes nodes without embeddings** using 0.5 default similarity
 - Configuration validation now checks provider is in `SUPPORTED_PROVIDERS`
+- MkDocs documentation reorganized with tbls schema docs integration
 - Updated CLAUDE.md with multi-provider documentation and examples
-- Environment variables section expanded with all provider API keys
 
-## [0.1.0] - 2025-10-25
+### Removed
+- Unused `nodes.in_working_memory` column (was never set to true)
+- Unused `robots.metadata` column (never referenced in codebase)
+- One-off test scripts replaced with proper Minitest integration tests
+
+### Fixed
+- Sinatra session secret error (Rack requires 64+ bytes)
+- Thread-safe database connection in Sinatra integration
+- tbls database documentation rake task configuration
+
+## [0.0.1] - 2025-10-25
 
 ### Added
 - Initial release of HTM (Hierarchical Temporary Memory)
@@ -176,5 +188,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/madbomber/htm/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/madbomber/htm/releases/tag/v0.1.0

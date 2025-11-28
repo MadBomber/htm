@@ -38,12 +38,22 @@
 #   rake htm:tags:export             # Export all tags to tags.txt, tags.md, tags.svg
 #   rake htm:tags:export[prefix]     # Export filtered tags to all formats
 #
+# File loading tasks:
+#   rake htm:files:load[path]        # Load a markdown file into memory
+#   rake htm:files:load_dir[path]    # Load all markdown files from a directory
+#   rake htm:files:list              # List all loaded file sources
+#   rake htm:files:info[path]        # Show details for a loaded file
+#   rake htm:files:unload[path]      # Unload a file from memory
+#   rake htm:files:sync              # Sync all loaded files (reload changed files)
+#   rake htm:files:stats             # Show file loading statistics
+#
 
 if defined?(Rake)
   # Load the rake tasks
   load File.expand_path('../tasks/htm.rake', __dir__)
   load File.expand_path('../tasks/jobs.rake', __dir__)
   load File.expand_path('../tasks/tags.rake', __dir__)
+  load File.expand_path('../tasks/files.rake', __dir__)
 else
   warn "HTM tasks not loaded: Rake is not available"
 end

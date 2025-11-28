@@ -29,6 +29,10 @@ class HTM
       has_many :node_tags, class_name: 'HTM::Models::NodeTag', dependent: :destroy
       has_many :tags, through: :node_tags, class_name: 'HTM::Models::Tag'
 
+      # Optional source file association (for nodes loaded from files)
+      belongs_to :file_source, class_name: 'HTM::Models::FileSource',
+                 foreign_key: :source_id, optional: true
+
       # Neighbor - vector similarity search
       has_neighbors :embedding
 
@@ -50,6 +54,7 @@ class HTM
       scope :recent, -> { order(created_at: :desc) }
       scope :in_timeframe, ->(start_time, end_time) { where(created_at: start_time..end_time) }
       scope :with_embeddings, -> { where.not(embedding: nil) }
+      scope :from_source, ->(source_id) { where(source_id: source_id).order(:chunk_position) }
 
       # Soft delete scopes
       scope :deleted, -> { unscoped.where.not(deleted_at: nil) }
