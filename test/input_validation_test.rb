@@ -28,7 +28,7 @@ class InputValidationTest < Minitest::Test
     error = assert_raises(HTM::ValidationError) do
       @htm.recall("test", timeframe: 123)
     end
-    assert_match(/Timeframe must be a Range or String/, error.message)
+    assert_match(/Invalid timeframe type/, error.message)
   end
 
   def test_recall_rejects_invalid_limit

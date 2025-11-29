@@ -9,6 +9,8 @@ require_relative "htm/long_term_memory"
 require_relative "htm/working_memory"
 require_relative "htm/embedding_service"
 require_relative "htm/tag_service"
+require_relative "htm/timeframe_extractor"
+require_relative "htm/timeframe"
 require_relative "htm/job_adapter"
 require_relative "htm/jobs/generate_embedding_job"
 require_relative "htm/jobs/generate_tags_job"
@@ -167,7 +169,14 @@ class HTM
   # Recall memories from a timeframe and topic
   #
   # @param topic [String] Topic to search for (required)
-  # @param timeframe [String, Range, nil] Time range (default: last 7 days). Examples: "last week", 7.days.ago..Time.now
+  # @param timeframe [nil, Range, Array<Range>, Date, DateTime, Time, String, Symbol] Time filter
+  #   - nil: No time filter (search all memories)
+  #   - Range: Time range (e.g., 7.days.ago..Time.now)
+  #   - Array<Range>: Multiple time windows (OR'd together)
+  #   - Date: Entire day
+  #   - DateTime/Time: Entire day containing that moment
+  #   - String: Natural language (e.g., "last week", "few days ago")
+  #   - :auto: Extract timeframe from topic query automatically
   # @param limit [Integer] Maximum number of nodes to retrieve (default: 20)
   # @param strategy [Symbol] Search strategy (:vector, :fulltext, :hybrid) (default: :vector)
   # @param with_relevance [Boolean] Include dynamic relevance scores (default: false)
@@ -175,42 +184,45 @@ class HTM
   # @param raw [Boolean] Return full node hashes (true) or just content strings (false) (default: false)
   # @return [Array<String>, Array<Hash>] Content strings (raw: false) or full node hashes (raw: true)
   #
-  # @example Basic usage (returns content strings)
+  # @example Basic usage - no time filter (returns content strings)
   #   memories = htm.recall("PostgreSQL")
   #   # => ["PostgreSQL is great for time-series data", "PostgreSQL with TimescaleDB..."]
   #
-  # @example Get full node hashes
-  #   nodes = htm.recall("PostgreSQL", raw: true)
-  #   # => [{"id" => 1, "content" => "...", "created_at" => "...", ...}, ...]
-  #
-  # @example With timeframe
+  # @example With explicit timeframe
   #   memories = htm.recall("PostgreSQL", timeframe: "last week")
+  #   memories = htm.recall("PostgreSQL", timeframe: Date.today)
+  #   memories = htm.recall("PostgreSQL", timeframe: 7.days.ago..Time.now)
   #
-  # @example With all options
-  #   memories = htm.recall("PostgreSQL",
-  #     timeframe: "last month",
-  #     limit: 50,
-  #     strategy: :hybrid,
-  #     with_relevance: true,
-  #     query_tags: ["database", "timeseries"])
+  # @example Auto-extract timeframe from query
+  #   memories = htm.recall("what did we discuss last week about PostgreSQL", timeframe: :auto)
+  #   # Extracts "last week" as timeframe, searches for "what did we discuss about PostgreSQL"
+  #
+  # @example Multiple time windows
+  #   memories = htm.recall("meetings", timeframe: [last_monday, last_friday])
   #
   def recall(topic, timeframe: nil, limit: 20, strategy: :vector, with_relevance: false, query_tags: [], raw: false)
-    # Use default timeframe if not provided (last 7 days)
-    timeframe ||= "last 7 days"
-
     # Validate inputs
     validate_timeframe!(timeframe)
     validate_positive_integer!(limit, "limit")
     validate_recall_strategy!(strategy)
     validate_array!(query_tags, "query_tags")
 
-    parsed_timeframe = parse_timeframe(timeframe)
+    # Normalize timeframe and potentially extract from query
+    search_query = topic
+    normalized_timeframe = if timeframe == :auto
+      result = HTM::Timeframe.normalize(:auto, query: topic)
+      search_query = result.query  # Use cleaned query for search
+      HTM.logger.debug "Auto-extracted timeframe: #{result.extracted.inspect}" if result.extracted
+      result.timeframe
+    else
+      HTM::Timeframe.normalize(timeframe)
+    end
 
     # Use relevance-based search if requested
     if with_relevance
       nodes = @long_term_memory.search_with_relevance(
-        timeframe: parsed_timeframe,
-        query: topic,
+        timeframe: normalized_timeframe,
+        query: search_query,
         query_tags: query_tags,
         limit: limit,
         embedding_service: (strategy == :vector || strategy == :hybrid) ? HTM : nil
@@ -221,22 +233,22 @@ class HTM
       when :vector
         # Vector search using query embedding
         @long_term_memory.search(
-          timeframe: parsed_timeframe,
-          query: topic,
+          timeframe: normalized_timeframe,
+          query: search_query,
           limit: limit,
           embedding_service: HTM
         )
       when :fulltext
         @long_term_memory.search_fulltext(
-          timeframe: parsed_timeframe,
-          query: topic,
+          timeframe: normalized_timeframe,
+          query: search_query,
           limit: limit
         )
       when :hybrid
         # Hybrid search combining vector + fulltext
         @long_term_memory.search_hybrid(
-          timeframe: parsed_timeframe,
-          query: topic,
+          timeframe: normalized_timeframe,
+          query: search_query,
           limit: limit,
           embedding_service: HTM
         )
@@ -533,58 +545,13 @@ class HTM
 
 
   def validate_timeframe!(timeframe)
-    return if timeframe.is_a?(Range) || timeframe.is_a?(String)
-    raise ValidationError, "Timeframe must be a Range or String, got #{timeframe.class}"
+    return if HTM::Timeframe.valid?(timeframe)
+    raise ValidationError, "Invalid timeframe type: #{timeframe.class}. " \
+      "Expected nil, Range, Array<Range>, Date, DateTime, Time, String, or :auto"
   end
 
   def validate_positive_integer!(value, name)
     raise ValidationError, "#{name} must be a positive Integer" unless value.is_a?(Integer) && value > 0
   end
 
-  # Timeframe parsing methods
-
-  def parse_timeframe(timeframe)
-    case timeframe
-    when Range
-      timeframe
-    when String
-      parse_natural_timeframe(timeframe)
-    else
-      raise ArgumentError, "Invalid timeframe: #{timeframe}"
-    end
-  end
-
-  def parse_natural_timeframe(text)
-    now = Time.now
-
-    case text.downcase
-    when /last week/
-      (now - 7 * 24 * 3600)..now
-    when /yesterday/
-      start_of_yesterday = Time.new(now.year, now.month, now.day - 1)
-      start_of_yesterday..(start_of_yesterday + 24 * 3600)
-    when /last (\d+) days?/
-      days = $1.to_i
-      (now - days * 24 * 3600)..now
-    when /last (\d+) seconds?/
-      seconds = $1.to_i
-      (now - seconds)..now
-    when /last (\d+) minutes?/
-      minutes = $1.to_i
-      (now - minutes * 60)..now
-    when /last (\d+) hours?/
-      hours = $1.to_i
-      (now - hours * 3600)..now
-    when /this month/
-      start_of_month = Time.new(now.year, now.month, 1)
-      start_of_month..now
-    when /last month/
-      start_of_last_month = Time.new(now.year, now.month - 1, 1)
-      end_of_last_month = Time.new(now.year, now.month, 1) - 1
-      start_of_last_month..end_of_last_month
-    else
-      # Default to last 24 hours
-      (now - 24 * 3600)..now
-    end
-  end
 end

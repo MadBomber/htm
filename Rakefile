@@ -28,6 +28,11 @@ task :example do
   ruby "examples/basic_usage.rb"
 end
 
+desc "Run timeframe demo"
+task :timeframe_demo do
+  ruby "examples/timeframe_demo.rb"
+end
+
 desc "Show gem stats"
 task :stats do
   puts "\nHTM Gem Statistics:"

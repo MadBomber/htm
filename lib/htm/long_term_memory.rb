@@ -190,7 +190,7 @@ class HTM
 
     # Vector similarity search
     #
-    # @param timeframe [Range] Time range to search
+    # @param timeframe [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object] Service to generate embeddings
@@ -523,7 +523,7 @@ class HTM
     #
     # Returns nodes with calculated relevance scores based on query context
     #
-    # @param timeframe [Range] Time range to search
+    # @param timeframe [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)
     # @param query [String, nil] Search query
     # @param query_tags [Array<String>] Tags to match
     # @param limit [Integer] Maximum results
@@ -539,12 +539,10 @@ class HTM
         # Full-text search
         search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 2)
       else
-        # Time-range only
-        HTM::Models::Node
-          .where(created_at: timeframe)
-          .order(created_at: :desc)
-          .limit(limit * 2)
-          .map(&:attributes)
+        # Time-range only (or no filter if timeframe is nil)
+        scope = HTM::Models::Node.where(deleted_at: nil)
+        scope = apply_timeframe_scope(scope, timeframe)
+        scope.order(created_at: :desc).limit(limit * 2).map(&:attributes)
       end
 
       # Calculate relevance for each candidate
@@ -727,20 +725,76 @@ class HTM
 
     private
 
+    # Build SQL condition for timeframe filtering
+    #
+    # @param timeframe [nil, Range, Array<Range>] Time range(s)
+    # @param table_alias [String] Table alias (default: none)
+    # @return [String, nil] SQL condition or nil for no filter
+    #
+    def build_timeframe_condition(timeframe, table_alias: nil)
+      return nil if timeframe.nil?
+
+      prefix = table_alias ? "#{table_alias}." : ""
+      column = "#{prefix}created_at"
+
+      case timeframe
+      when Range
+        "(#{column} BETWEEN '#{timeframe.begin.iso8601}' AND '#{timeframe.end.iso8601}')"
+      when Array
+        conditions = timeframe.map do |range|
+          "(#{column} BETWEEN '#{range.begin.iso8601}' AND '#{range.end.iso8601}')"
+        end
+        "(#{conditions.join(' OR ')})"
+      else
+        nil
+      end
+    end
+
+    # Build ActiveRecord where clause for timeframe
+    #
+    # @param scope [ActiveRecord::Relation] Base scope
+    # @param timeframe [nil, Range, Array<Range>] Time range(s)
+    # @return [ActiveRecord::Relation] Scoped query
+    #
+    def apply_timeframe_scope(scope, timeframe)
+      return scope if timeframe.nil?
+
+      case timeframe
+      when Range
+        scope.where(created_at: timeframe)
+      when Array
+        # Build OR conditions for multiple ranges
+        conditions = timeframe.map { |range| scope.where(created_at: range) }
+        conditions.reduce { |result, condition| result.or(condition) }
+      else
+        scope
+      end
+    end
+
     # Generate cache key for query
     #
     # @param method [Symbol] Search method name
-    # @param timeframe [Range] Time range
+    # @param timeframe [nil, Range, Array<Range>] Time range(s)
     # @param query [String] Search query
     # @param limit [Integer] Result limit
     # @param args [Array] Additional arguments
     # @return [String] Cache key
     #
     def cache_key_for(method, timeframe, query, limit, *args)
+      timeframe_key = case timeframe
+      when nil
+        "nil"
+      when Range
+        "#{timeframe.begin.to_i}-#{timeframe.end.to_i}"
+      when Array
+        timeframe.map { |r| "#{r.begin.to_i}-#{r.end.to_i}" }.join(',')
+      else
+        timeframe.to_s
+      end
+
       key_parts = [
         method,
-        timeframe.begin.to_i,
-        timeframe.end.to_i,
+        timeframe_key,
         query,
         limit,
         *args
@@ -813,7 +867,7 @@ class HTM
     #
     # Generates query embedding client-side and performs vector search in database.
     #
-    # @param timeframe [Range] Time range to search
+    # @param timeframe [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object] Service to generate query embedding
@@ -831,13 +885,20 @@ class HTM
       # Convert to PostgreSQL vector format
       embedding_str = "[#{query_embedding.join(',')}]"
 
+      # Build timeframe condition
+      timeframe_condition = build_timeframe_condition(timeframe)
+      where_clause = if timeframe_condition
+        "WHERE #{timeframe_condition} AND embedding IS NOT NULL AND deleted_at IS NULL"
+      else
+        "WHERE embedding IS NOT NULL AND deleted_at IS NULL"
+      end
+
       result = ActiveRecord::Base.connection.select_all(
         <<~SQL,
           SELECT id, content, access_count, created_at, token_count,
                  1 - (embedding <=> '#{embedding_str}'::vector) as similarity
           FROM nodes
-          WHERE created_at BETWEEN '#{timeframe.begin.iso8601}' AND '#{timeframe.end.iso8601}'
-          AND embedding IS NOT NULL
+          #{where_clause}
           ORDER BY embedding <=> '#{embedding_str}'::vector
           LIMIT #{limit.to_i}
         SQL
@@ -852,24 +913,29 @@ class HTM
 
     # Uncached full-text search
     #
-    # @param timeframe [Range] Time range to search
+    # @param timeframe [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
     # @return [Array<Hash>] Matching nodes
     #
     def search_fulltext_uncached(timeframe:, query:, limit:)
+      # Build timeframe condition
+      timeframe_condition = build_timeframe_condition(timeframe)
+      timeframe_sql = timeframe_condition ? "AND #{timeframe_condition}" : ""
+
       result = ActiveRecord::Base.connection.select_all(
         ActiveRecord::Base.sanitize_sql_array([
           <<~SQL,
             SELECT id, content, access_count, created_at, token_count,
                    ts_rank(to_tsvector('english', content), plainto_tsquery('english', ?)) as rank
             FROM nodes
-            WHERE created_at BETWEEN ? AND ?
+            WHERE deleted_at IS NULL
             AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
+            #{timeframe_sql}
             ORDER BY rank DESC
             LIMIT ?
           SQL
-          query, timeframe.begin, timeframe.end, query, limit
+          query, query, limit
         ])
       )
 
@@ -887,7 +953,7 @@ class HTM
     # 2. Tag matching for categorical relevance
     # 3. Vector similarity for semantic ranking
     #
-    # @param timeframe [Range] Time range to search
+    # @param timeframe [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object] Service to generate query embedding
@@ -906,6 +972,14 @@ class HTM
       # Convert to PostgreSQL vector format
       embedding_str = "[#{query_embedding.join(',')}]"
 
+      # Build timeframe condition
+      timeframe_condition = build_timeframe_condition(timeframe, table_alias: 'n')
+      timeframe_sql = timeframe_condition ? "AND #{timeframe_condition}" : ""
+
+      # Same for non-aliased queries
+      timeframe_condition_bare = build_timeframe_condition(timeframe)
+      timeframe_sql_bare = timeframe_condition_bare ? "AND #{timeframe_condition_bare}" : ""
+
       # Find tags that match query terms
       matching_tags = find_query_matching_tags(query)
 
@@ -914,10 +988,7 @@ class HTM
       # NOTE: Hybrid search includes nodes without embeddings using a default
       # similarity score of 0.5. This allows newly created nodes to appear in
       # search results immediately (via fulltext matching) before their embeddings
-      # are generated by background jobs. Useful for demos with short timeframes
-      # (seconds) where async embedding generation hasn't completed yet.
-      # In production with longer timeframes, embeddings are typically ready
-      # within 1-5 seconds, so this fallback is rarely used.
+      # are generated by background jobs.
 
       if matching_tags.any?
         # Escape tag names for SQL
@@ -929,8 +1000,9 @@ class HTM
                 -- Nodes matching full-text search (with or without embeddings)
                 SELECT DISTINCT n.id, n.content, n.access_count, n.created_at, n.token_count, n.embedding
                 FROM nodes n
-                WHERE n.created_at BETWEEN ? AND ?
+                WHERE n.deleted_at IS NULL
                 AND to_tsvector('english', n.content) @@ plainto_tsquery('english', ?)
+                #{timeframe_sql}
                 LIMIT ?
               ),
               tag_candidates AS (
@@ -939,8 +1011,9 @@ class HTM
                 FROM nodes n
                 JOIN node_tags nt ON nt.node_id = n.id
                 JOIN tags t ON t.id = nt.tag_id
-                WHERE n.created_at BETWEEN ? AND ?
+                WHERE n.deleted_at IS NULL
                 AND t.name IN (#{tag_list})
+                #{timeframe_sql}
                 LIMIT ?
               ),
               all_candidates AS (
@@ -970,8 +1043,8 @@ class HTM
               ORDER BY combined_score DESC
               LIMIT ?
             SQL
-            timeframe.begin, timeframe.end, query, prefilter_limit,
-            timeframe.begin, timeframe.end, prefilter_limit,
+            query, prefilter_limit,
+            prefilter_limit,
             matching_tags.length.to_f,
             limit
           ])
@@ -985,8 +1058,9 @@ class HTM
               WITH candidates AS (
                 SELECT id, content, access_count, created_at, token_count, embedding
                 FROM nodes
-                WHERE created_at BETWEEN ? AND ?
+                WHERE deleted_at IS NULL
                 AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
+                #{timeframe_sql_bare}
                 LIMIT ?
               )
               SELECT id, content, access_count, created_at, token_count,
@@ -1003,7 +1077,7 @@ class HTM
               ORDER BY combined_score DESC
               LIMIT ?
             SQL
-            timeframe.begin, timeframe.end, query, prefilter_limit, limit
+            query, prefilter_limit, limit
           ])
         )
       end

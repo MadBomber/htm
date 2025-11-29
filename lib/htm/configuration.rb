@@ -63,6 +63,7 @@ class HTM
     attr_accessor :embedding_timeout, :tag_timeout, :connection_timeout
     attr_accessor :logger
     attr_accessor :job_backend
+    attr_accessor :week_start
 
     # Provider-specific API keys and endpoints
     attr_accessor :openai_api_key, :openai_organization, :openai_project
@@ -131,6 +132,10 @@ class HTM
       # Auto-detect job backend based on environment
       @job_backend = detect_job_backend
 
+      # Timeframe parsing configuration
+      # :sunday (default) or :monday for week start day
+      @week_start = :sunday
+
       # Set default implementations
       reset_to_defaults
     end
@@ -162,6 +167,10 @@ class HTM
 
       unless [:active_job, :sidekiq, :inline, :thread].include?(@job_backend)
         raise HTM::ValidationError, "job_backend must be one of: :active_job, :sidekiq, :inline, :thread (got #{@job_backend.inspect})"
+      end
+
+      unless [:sunday, :monday].include?(@week_start)
+        raise HTM::ValidationError, "week_start must be :sunday or :monday (got #{@week_start.inspect})"
       end
 
       # Validate provider if specified

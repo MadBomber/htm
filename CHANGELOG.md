@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6] - 2025-11-28
+
+### Added
+- **Automatic timeframe extraction from queries** - No LLM required
+  - `TimeframeExtractor` service parses natural language time expressions
+  - Uses `chronic` gem for robust date/time parsing
+  - Supports standard expressions: "yesterday", "last week", "this morning", etc.
+  - `FEW` constant (3) maps "few", "a few", "several" to numeric values
+  - "recently"/"recent" without units defaults to 3 days
+  - Custom weekend handling: "weekend before last", "N weekends ago"
+  - Returns cleaned query with temporal expression removed
+- **Flexible `timeframe` parameter in `recall` method** - Multiple input types:
+  - `nil` - No time filter (searches all time)
+  - `Date` / `DateTime` / `Time` - Entire day (00:00:00 to 23:59:59)
+  - `Range` - Exact time window
+  - `String` - Natural language parsing via Chronic
+  - `:auto` - Extract timeframe from query text automatically
+  - `Array<Range>` - Multiple time windows OR'd together
+- **`HTM::Timeframe` normalizer class** - Converts all input types to Range or Array<Range>
+  - `Timeframe.normalize(input, query:)` handles all conversions
+  - `Timeframe.valid?(input)` validates timeframe input
+  - Returns `Result` struct with `:timeframe`, `:query`, `:extracted` when using `:auto`
+- **Configurable week start** - `HTM.configuration.week_start`
+  - Options: `:sunday` (default) or `:monday`
+  - Passed to Chronic for "last week" and similar expressions
+- **Timeframe demo** - `examples/timeframe_demo.rb` showcasing all input types
+  - Run with `rake timeframe_demo`
+- **New rake task**: `rake timeframe_demo` to run the demo
+
+### Changed
+- **`recall` method** now accepts all new timeframe input types
+- **`validate_timeframe!`** uses `HTM::Timeframe.valid?` for validation
+- **`LongTermMemory` search methods** support `nil` and `Array<Range>` timeframes
+  - `apply_timeframe_scope` handles OR conditions for multiple ranges
+
+### Dependencies
+- Added `chronic` gem for natural language date parsing
+
 ## [0.0.5] - 2025-11-28
 
 ### Added
@@ -256,7 +294,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.6...HEAD
+[0.0.6]: https://github.com/madbomber/htm/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/madbomber/htm/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/madbomber/htm/compare/v0.0.2...v0.0.4
 [0.0.2]: https://github.com/madbomber/htm/compare/v0.0.1...v0.0.2

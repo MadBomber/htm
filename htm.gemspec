@@ -43,6 +43,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby_llm"
   spec.add_dependency "lru_redux"
   spec.add_dependency "ruby-progressbar"
+  spec.add_dependency "chronic"
 
   # Optional runtime dependencies for different job backends
   # - ActiveJob (bundled with Rails)
