@@ -28,14 +28,14 @@ require_relative "htm/railtie" if defined?(Rails::Railtie)
 #
 # HTM implements a two-tier memory system:
 # - Working Memory: Token-limited, active context for immediate LLM use
-# - Long-term Memory: Durable PostgreSQL/TimescaleDB storage for permanent knowledge
+# - Long-term Memory: Durable PostgreSQL storage with pgvector for permanent knowledge
 #
 # Key Features:
-# - Never forgets unless explicitly told
-# - RAG-based retrieval (temporal + semantic search)
+# - Never forgets unless explicitly told (soft delete by default)
+# - RAG-based retrieval (temporal + semantic search via pgvector)
 # - Multi-robot "hive mind" - all robots share global memory
-# - Relationship graphs for knowledge connections
-# - Time-series optimized with TimescaleDB
+# - Hierarchical tagging system for knowledge organization
+# - Async background processing for embeddings and tags
 #
 # @example Basic usage
 #   htm = HTM.new(robot_name: "Code Helper")
@@ -102,13 +102,10 @@ class HTM
   # Stores content in long-term memory and adds it to working memory.
   # Embeddings and hierarchical tags are automatically extracted by LLM in the background.
   #
-  # If content is empty, returns the ID of the most recent node without creating a duplicate.
-  # Nil values for content or source are converted to empty strings.
-  #
-  # @param content [String, nil] The information to remember
-  # @param source [String, nil] Where this content came from (defaults to empty string if not provided)
+  # @param content [String] The information to remember (required, cannot be nil or empty)
   # @param tags [Array<String>] Manual tags to assign (optional, in addition to auto-extracted tags)
   # @return [Integer] Database ID of the memory node
+  # @raise [ValidationError] If content is nil, empty, or exceeds maximum size
   #
   # @example Remember with source
   #   node_id = htm.remember("PostgreSQL is great for HTM")
@@ -117,14 +114,24 @@ class HTM
   #   node_id = htm.remember("Time-series data", tags: ["database:timescaledb"])
   #
   def remember(content, tags: [])
-    # Convert nil to empty string
-    content = content.to_s
+    # Validate inputs
+    raise ValidationError, "Content cannot be nil" if content.nil?
 
-    # If content is empty, return the last node ID without creating a new entry
-    if content.empty?
-      last_node = HTM::Models::Node.order(created_at: :desc).first
-      return last_node&.id || 0
+    content_str = content.to_s.strip
+    raise ValidationError, "Content cannot be empty" if content_str.empty?
+
+    if content_str.bytesize > MAX_VALUE_LENGTH
+      raise ValidationError, "Content exceeds maximum size (#{MAX_VALUE_LENGTH} bytes)"
     end
+
+    validate_array!(tags, "tags")
+    tags.each do |tag|
+      unless tag.is_a?(String) && tag.match?(/\A[a-z0-9\-]+(:[a-z0-9\-]+)*\z/)
+        raise ValidationError, "Invalid tag format: #{tag.inspect}. Tags must be lowercase alphanumeric with hyphens, separated by colons."
+      end
+    end
+
+    content = content_str
 
     # Calculate token count using configured counter
     token_count = HTM.count_tokens(content)
@@ -288,11 +295,11 @@ class HTM
   #
   def forget(node_id, soft: true, confirm: false)
     # Validate inputs
-    raise ArgumentError, "node_id cannot be nil" if node_id.nil?
+    raise ArgumentError, "Node ID cannot be nil" if node_id.nil?
 
     # Permanent delete requires confirmation
     if !soft && confirm != :confirmed
-      raise ArgumentError, "Must pass confirm: :confirmed for permanent deletion"
+      raise ArgumentError, "Permanent deletion requires confirm: :confirmed"
     end
 
     # Verify node exists (including soft-deleted for restore scenarios)
@@ -328,14 +335,14 @@ class HTM
   #   htm.restore(node_id)       # Bring it back
   #
   def restore(node_id)
-    raise ArgumentError, "node_id cannot be nil" if node_id.nil?
+    raise ArgumentError, "Node ID cannot be nil" if node_id.nil?
 
     # Find including soft-deleted nodes
     node = HTM::Models::Node.with_deleted.find_by(id: node_id)
     raise HTM::NotFoundError, "Node not found: #{node_id}" unless node
 
     unless node.deleted?
-      raise ArgumentError, "Node #{node_id} is not deleted"
+      raise ArgumentError, "Node #{node_id} is not soft-deleted"
     end
 
     node.restore!
@@ -359,7 +366,7 @@ class HTM
   #   htm.purge_deleted(older_than: Time.new(2024, 1, 1), confirm: :confirmed)
   #
   def purge_deleted(older_than:, confirm: false)
-    raise ArgumentError, "Must pass confirm: :confirmed to purge" unless confirm == :confirmed
+    raise ArgumentError, "Purge requires confirm: :confirmed" unless confirm == :confirmed
 
     count = HTM::Models::Node.purge_deleted(older_than: older_than)
     HTM.logger.info "Purged #{count} soft-deleted nodes older than #{older_than}"

@@ -23,6 +23,7 @@ class HTM
     #
     class MarkdownLoader
       FRONTMATTER_REGEX = /\A---\s*\n(.*?)\n---\s*\n/m
+      MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB maximum file size
 
       # @param htm_instance [HTM] The HTM instance to use for storing nodes
       def initialize(htm_instance)
@@ -52,8 +53,22 @@ class HTM
           raise ArgumentError, "Not a file: #{path}"
         end
 
-        # Read file and get metadata
-        content = File.read(expanded_path, encoding: 'UTF-8')
+        # Validate file size before reading
+        file_size = File.size(expanded_path)
+        if file_size > MAX_FILE_SIZE
+          raise ArgumentError, "File too large: #{path} (#{file_size} bytes). Maximum size is #{MAX_FILE_SIZE} bytes (10 MB)."
+        end
+
+        # Read file with encoding detection and fallback
+        # Try UTF-8 first, then fall back to binary if encoding errors occur
+        begin
+          content = File.read(expanded_path, encoding: 'UTF-8')
+        rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
+          # Try reading as binary and force encoding to UTF-8, replacing invalid chars
+          content = File.read(expanded_path, encoding: 'BINARY')
+          content = content.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
+          HTM.logger.warn "File #{path} has non-UTF-8 encoding, some characters may be replaced"
+        end
         stat = File.stat(expanded_path)
         file_hash = Digest::SHA256.hexdigest(content)
 

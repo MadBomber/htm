@@ -36,6 +36,7 @@ class HTM
       if cache_size > 0
         @query_cache = LruRedux::TTL::ThreadSafeCache.new(cache_size, cache_ttl)
         @cache_stats = { hits: 0, misses: 0 }
+        @cache_stats_mutex = Mutex.new  # Thread-safety for cache statistics
       end
     end
 
@@ -53,62 +54,65 @@ class HTM
     def add(content:, token_count: 0, robot_id:, embedding: nil)
       content_hash = HTM::Models::Node.generate_content_hash(content)
 
-      # Check for existing node with same content (including soft-deleted)
-      # This avoids unique constraint violations on content_hash
-      existing_node = HTM::Models::Node.with_deleted.find_by(content_hash: content_hash)
+      # Wrap in transaction to ensure data consistency
+      ActiveRecord::Base.transaction do
+        # Check for existing node with same content (including soft-deleted)
+        # This avoids unique constraint violations on content_hash
+        existing_node = HTM::Models::Node.with_deleted.find_by(content_hash: content_hash)
 
-      # If found but soft-deleted, restore it
-      if existing_node&.deleted?
-        existing_node.restore!
-        HTM.logger.info "Restored soft-deleted node #{existing_node.id} for content match"
-      end
-
-      if existing_node
-        # Link robot to existing node (or update if already linked)
-        robot_node = link_robot_to_node(robot_id: robot_id, node: existing_node)
-
-        # Update the node's updated_at timestamp
-        existing_node.touch
-
-        {
-          node_id: existing_node.id,
-          is_new: false,
-          robot_node: robot_node
-        }
-      else
-        # Prepare embedding if provided
-        embedding_str = nil
-        if embedding
-          # Pad embedding to 2000 dimensions if needed
-          actual_dimension = embedding.length
-          padded_embedding = if actual_dimension < 2000
-            embedding + Array.new(2000 - actual_dimension, 0.0)
-          else
-            embedding
-          end
-          embedding_str = "[#{padded_embedding.join(',')}]"
+        # If found but soft-deleted, restore it
+        if existing_node&.deleted?
+          existing_node.restore!
+          HTM.logger.info "Restored soft-deleted node #{existing_node.id} for content match"
         end
 
-        # Create new node
-        node = HTM::Models::Node.create!(
-          content: content,
-          content_hash: content_hash,
-          token_count: token_count,
-          embedding: embedding_str,
-          embedding_dimension: embedding&.length
-        )
+        if existing_node
+          # Link robot to existing node (or update if already linked)
+          robot_node = link_robot_to_node(robot_id: robot_id, node: existing_node)
 
-        # Link robot to new node
-        robot_node = link_robot_to_node(robot_id: robot_id, node: node)
+          # Update the node's updated_at timestamp
+          existing_node.touch
 
-        # Invalidate cache since database content changed
-        invalidate_cache!
+          {
+            node_id: existing_node.id,
+            is_new: false,
+            robot_node: robot_node
+          }
+        else
+          # Prepare embedding if provided
+          embedding_str = nil
+          if embedding
+            # Pad embedding to 2000 dimensions if needed
+            actual_dimension = embedding.length
+            padded_embedding = if actual_dimension < 2000
+              embedding + Array.new(2000 - actual_dimension, 0.0)
+            else
+              embedding
+            end
+            embedding_str = "[#{padded_embedding.join(',')}]"
+          end
 
-        {
-          node_id: node.id,
-          is_new: true,
-          robot_node: robot_node
-        }
+          # Create new node
+          node = HTM::Models::Node.create!(
+            content: content,
+            content_hash: content_hash,
+            token_count: token_count,
+            embedding: embedding_str,
+            embedding_dimension: embedding&.length
+          )
+
+          # Link robot to new node
+          robot_node = link_robot_to_node(robot_id: robot_id, node: node)
+
+          # Invalidate cache since database content changed
+          invalidate_cache!
+
+          {
+            node_id: node.id,
+            is_new: true,
+            robot_node: robot_node
+          }
+        end
       end
     end
 
@@ -197,26 +201,9 @@ class HTM
     # @return [Array<Hash>] Matching nodes
     #
     def search(timeframe:, query:, limit:, embedding_service:)
-      # Return uncached if cache disabled
-      return search_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service) unless @query_cache
-
-      # Generate cache key
-      cache_key = cache_key_for(:search, timeframe, query, limit)
-
-      # Try to get from cache
-      cached = @query_cache[cache_key]
-      if cached
-        @cache_stats[:hits] += 1
-        return cached
+      cached_query(:search, timeframe, query, limit) do
+        search_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service)
       end
-
-      # Cache miss - execute query
-      @cache_stats[:misses] += 1
-      result = search_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service)
-
-      # Store in cache
-      @query_cache[cache_key] = result
-      result
     end
 
     # Full-text search
@@ -227,26 +214,9 @@ class HTM
     # @return [Array<Hash>] Matching nodes
     #
     def search_fulltext(timeframe:, query:, limit:)
-      # Return uncached if cache disabled
-      return search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit) unless @query_cache
-
-      # Generate cache key
-      cache_key = cache_key_for(:fulltext, timeframe, query, limit)
-
-      # Try to get from cache
-      cached = @query_cache[cache_key]
-      if cached
-        @cache_stats[:hits] += 1
-        return cached
+      cached_query(:fulltext, timeframe, query, limit) do
+        search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit)
       end
-
-      # Cache miss - execute query
-      @cache_stats[:misses] += 1
-      result = search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit)
-
-      # Store in cache
-      @query_cache[cache_key] = result
-      result
     end
 
     # Hybrid search (full-text + vector)
@@ -259,26 +229,9 @@ class HTM
     # @return [Array<Hash>] Matching nodes
     #
     def search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit: 100)
-      # Return uncached if cache disabled
-      return search_hybrid_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service, prefilter_limit: prefilter_limit) unless @query_cache
-
-      # Generate cache key
-      cache_key = cache_key_for(:hybrid, timeframe, query, limit, prefilter_limit)
-
-      # Try to get from cache
-      cached = @query_cache[cache_key]
-      if cached
-        @cache_stats[:hits] += 1
-        return cached
+      cached_query(:hybrid, timeframe, query, limit, prefilter_limit) do
+        search_hybrid_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service, prefilter_limit: prefilter_limit)
       end
-
-      # Cache miss - execute query
-      @cache_stats[:misses] += 1
-      result = search_hybrid_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service, prefilter_limit: prefilter_limit)
-
-      # Store in cache
-      @query_cache[cache_key] = result
-      result
     end
 
     # Add a tag to a node
@@ -439,19 +392,24 @@ class HTM
     # @return [Array<Hash>] Topic relationships
     #
     def topic_relationships(min_shared_nodes: 2, limit: 50)
-      result = ActiveRecord::Base.connection.select_all(
-        <<~SQL,
-          SELECT t1.name AS topic1, t2.name AS topic2, COUNT(DISTINCT nt1.node_id) AS shared_nodes
-          FROM tags t1
-          JOIN node_tags nt1 ON t1.id = nt1.tag_id
-          JOIN node_tags nt2 ON nt1.node_id = nt2.node_id
-          JOIN tags t2 ON nt2.tag_id = t2.id
-          WHERE t1.name < t2.name
-          GROUP BY t1.name, t2.name
-          HAVING COUNT(DISTINCT nt1.node_id) >= #{min_shared_nodes.to_i}
-          ORDER BY shared_nodes DESC
-          LIMIT #{limit.to_i}
-        SQL
+      # Use parameterized query to prevent SQL injection
+      sql = <<~SQL
+        SELECT t1.name AS topic1, t2.name AS topic2, COUNT(DISTINCT nt1.node_id) AS shared_nodes
+        FROM tags t1
+        JOIN node_tags nt1 ON t1.id = nt1.tag_id
+        JOIN node_tags nt2 ON nt1.node_id = nt2.node_id
+        JOIN tags t2 ON nt2.tag_id = t2.id
+        WHERE t1.name < t2.name
+        GROUP BY t1.name, t2.name
+        HAVING COUNT(DISTINCT nt1.node_id) >= $1
+        ORDER BY shared_nodes DESC
+        LIMIT $2
+      SQL
+
+      result = ActiveRecord::Base.connection.exec_query(
+        sql,
+        'topic_relationships',
+        [[nil, min_shared_nodes.to_i], [nil, limit.to_i]]
       )
       result.to_a
     end
@@ -480,9 +438,10 @@ class HTM
     # @param node [Hash] Node data with similarity, tags, created_at, access_count
     # @param query_tags [Array<String>] Tags associated with the query
     # @param vector_similarity [Float, nil] Pre-computed vector similarity (0-1)
+    # @param node_tags [Array<String>, nil] Pre-loaded tags for this node (avoids N+1 query)
     # @return [Float] Composite relevance score (0-10)
     #
-    def calculate_relevance(node:, query_tags: [], vector_similarity: nil)
+    def calculate_relevance(node:, query_tags: [], vector_similarity: nil, node_tags: nil)
       # 1. Vector similarity (semantic match) - weight: 0.5
       semantic_score = if vector_similarity
         vector_similarity
@@ -493,7 +452,8 @@ class HTM
       end
 
       # 2. Tag overlap (categorical relevance) - weight: 0.3
-      node_tags = get_node_tags(node['id'])
+      # Use pre-loaded tags if provided, otherwise fetch (for backward compatibility)
+      node_tags ||= get_node_tags(node['id'])
       tag_score = if query_tags.any? && node_tags.any?
         weighted_hierarchical_jaccard(query_tags, node_tags)
       else
@@ -545,17 +505,24 @@ class HTM
         scope.order(created_at: :desc).limit(limit * 2).map(&:attributes)
       end
 
+      # Batch load all tags for candidates (fixes N+1 query)
+      node_ids = candidates.map { |n| n['id'] }
+      tags_by_node = batch_load_node_tags(node_ids)
+
       # Calculate relevance for each candidate
       scored_nodes = candidates.map do |node|
+        node_tags = tags_by_node[node['id']] || []
+
         relevance = calculate_relevance(
           node: node,
           query_tags: query_tags,
-          vector_similarity: node['similarity']&.to_f
+          vector_similarity: node['similarity']&.to_f,
+          node_tags: node_tags
         )
 
         node.merge({
           'relevance' => relevance,
-          'tags' => get_node_tags(node['id'])
+          'tags' => node_tags
         })
       end
 
@@ -575,8 +542,30 @@ class HTM
         .joins(:node_tags)
         .where(node_tags: { node_id: node_id })
         .pluck(:name)
-    rescue
+    rescue ActiveRecord::ActiveRecordError => e
+      HTM.logger.error("Failed to retrieve tags for node #{node_id}: #{e.message}")
       []
+    end
+
+    # Batch load tags for multiple nodes (avoids N+1 queries)
+    #
+    # @param node_ids [Array<Integer>] Node database IDs
+    # @return [Hash<Integer, Array<String>>] Map of node_id to array of tag names
+    #
+    def batch_load_node_tags(node_ids)
+      return {} if node_ids.empty?
+
+      # Single query to get all tags for all nodes
+      results = HTM::Models::NodeTag
+        .joins(:tag)
+        .where(node_id: node_ids)
+        .pluck(:node_id, 'tags.name')
+
+      # Group by node_id
+      results.group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
+    rescue ActiveRecord::ActiveRecordError => e
+      HTM.logger.error("Failed to batch load tags: #{e.message}")
+      {}
     end
 
     # Search nodes by tags
@@ -725,6 +714,23 @@ class HTM
 
     private
 
+    # Sanitize embedding for SQL use
+    #
+    # Validates that all values are numeric and converts to safe PostgreSQL vector format.
+    # This prevents SQL injection by ensuring only valid numeric values are included.
+    #
+    # @param embedding [Array<Numeric>] Embedding vector
+    # @return [String] Sanitized vector string for PostgreSQL (e.g., "[0.1,0.2,0.3]")
+    # @raise [ArgumentError] If embedding contains non-numeric values
+    #
+    def sanitize_embedding_for_sql(embedding)
+      unless embedding.is_a?(Array) && embedding.all? { |v| v.is_a?(Numeric) && v.finite? }
+        raise ArgumentError, "Embedding must be an array of finite numeric values"
+      end
+
+      "[#{embedding.map { |v| v.to_f }.join(',')}]"
+    end
+
     # Build SQL condition for timeframe filtering
     #
     # @param timeframe [nil, Range, Array<Range>] Time range(s)
@@ -736,13 +742,19 @@ class HTM
 
       prefix = table_alias ? "#{table_alias}." : ""
       column = "#{prefix}created_at"
+      conn = ActiveRecord::Base.connection
 
       case timeframe
       when Range
-        "(#{column} BETWEEN '#{timeframe.begin.iso8601}' AND '#{timeframe.end.iso8601}')"
+        # Use quote to safely escape timestamp values
+        begin_quoted = conn.quote(timeframe.begin.iso8601)
+        end_quoted = conn.quote(timeframe.end.iso8601)
+        "(#{column} BETWEEN #{begin_quoted} AND #{end_quoted})"
       when Array
         conditions = timeframe.map do |range|
-          "(#{column} BETWEEN '#{range.begin.iso8601}' AND '#{range.end.iso8601}')"
+          begin_quoted = conn.quote(range.begin.iso8601)
+          end_quoted = conn.quote(range.end.iso8601)
+          "(#{column} BETWEEN #{begin_quoted} AND #{end_quoted})"
         end
         "(#{conditions.join(' OR ')})"
       else
@@ -863,6 +875,29 @@ class HTM
       @query_cache.clear if @query_cache
     end
 
+    # Execute a query with caching
+    #
+    # @param method [Symbol] Search method name for cache key
+    # @param args [Array] Arguments for cache key (timeframe, query, limit, etc.)
+    # @yield Block that executes the actual query
+    # @return [Array<Hash>] Query results (from cache or freshly executed)
+    #
+    def cached_query(method, *args, &block)
+      return yield unless @query_cache
+
+      cache_key = cache_key_for(method, *args)
+
+      if (cached = @query_cache[cache_key])
+        @cache_stats_mutex.synchronize { @cache_stats[:hits] += 1 }
+        return cached
+      end
+
+      @cache_stats_mutex.synchronize { @cache_stats[:misses] += 1 }
+      result = yield
+      @query_cache[cache_key] = result
+      result
+    end
+
     # Uncached vector similarity search
     #
     # Generates query embedding client-side and performs vector search in database.
@@ -882,8 +917,8 @@ class HTM
         query_embedding = query_embedding + Array.new(2000 - query_embedding.length, 0.0)
       end
 
-      # Convert to PostgreSQL vector format
-      embedding_str = "[#{query_embedding.join(',')}]"
+      # Sanitize embedding for safe SQL use (validates all values are numeric)
+      embedding_str = sanitize_embedding_for_sql(query_embedding)
 
       # Build timeframe condition
       timeframe_condition = build_timeframe_condition(timeframe)
@@ -893,13 +928,16 @@ class HTM
         "WHERE embedding IS NOT NULL AND deleted_at IS NULL"
       end
 
+      # Use quote to safely escape the embedding string in the query
+      quoted_embedding = ActiveRecord::Base.connection.quote(embedding_str)
+
       result = ActiveRecord::Base.connection.select_all(
         <<~SQL,
           SELECT id, content, access_count, created_at, token_count,
-                 1 - (embedding <=> '#{embedding_str}'::vector) as similarity
+                 1 - (embedding <=> #{quoted_embedding}::vector) as similarity
           FROM nodes
           #{where_clause}
-          ORDER BY embedding <=> '#{embedding_str}'::vector
+          ORDER BY embedding <=> #{quoted_embedding}::vector
           LIMIT #{limit.to_i}
         SQL
       )
@@ -969,8 +1007,9 @@ class HTM
         query_embedding = query_embedding + Array.new(2000 - query_embedding.length, 0.0)
       end
 
-      # Convert to PostgreSQL vector format
-      embedding_str = "[#{query_embedding.join(',')}]"
+      # Sanitize embedding for safe SQL use (validates all values are numeric)
+      embedding_str = sanitize_embedding_for_sql(query_embedding)
+      quoted_embedding = ActiveRecord::Base.connection.quote(embedding_str)
 
       # Build timeframe condition
       timeframe_condition = build_timeframe_condition(timeframe, table_alias: 'n')
@@ -1025,7 +1064,7 @@ class HTM
                 SELECT
                   ac.id, ac.content, ac.access_count, ac.created_at, ac.token_count,
                   CASE
-                    WHEN ac.embedding IS NOT NULL THEN 1 - (ac.embedding <=> '#{embedding_str}'::vector)
+                    WHEN ac.embedding IS NOT NULL THEN 1 - (ac.embedding <=> #{quoted_embedding}::vector)
                     ELSE 0.5  -- Default similarity for nodes without embeddings
                   END as similarity,
                   COALESCE((
@@ -1065,12 +1104,12 @@ class HTM
               )
               SELECT id, content, access_count, created_at, token_count,
                      CASE
-                       WHEN embedding IS NOT NULL THEN 1 - (embedding <=> '#{embedding_str}'::vector)
+                       WHEN embedding IS NOT NULL THEN 1 - (embedding <=> #{quoted_embedding}::vector)
                        ELSE 0.5  -- Default similarity for nodes without embeddings
                      END as similarity,
                      0.0 as tag_boost,
                      CASE
-                       WHEN embedding IS NOT NULL THEN 1 - (embedding <=> '#{embedding_str}'::vector)
+                       WHEN embedding IS NOT NULL THEN 1 - (embedding <=> #{quoted_embedding}::vector)
                        ELSE 0.5  -- Default score for nodes without embeddings (fulltext matched)
                      END as combined_score
               FROM candidates
@@ -1114,160 +1153,5 @@ class HTM
 
       [similarity, depth_weight]
     end
-
-#######################################
-=begin
-
-# Enhanced hierarchical similarity (with term_bonus for deep term matches like "country-music")
-# Replaces your private calculate_hierarchical_similarity
-def calculate_hierarchical_similarity(tag_a, tag_b, max_depth: 5)
-  return [0.0, 1.0] if tag_a.empty? || tag_b.empty?  # [similarity, weight]
-
-  parts_a = tag_a.split(':').reject(&:empty?)
-  parts_b = tag_b.split(':').reject(&:empty?)
-  return [0.0, 1.0] if parts_a.empty? || parts_b.empty?
-
-  # Prefix similarity
-  local_max = [parts_a.length, parts_b.length].max
-  common_levels = 0
-  (0...local_max).each do |i|
-    if i < parts_a.length && i < parts_b.length && parts_a[i] == parts_b[i]
-      common_levels += 1
-    else
-      break
-    end
-  end
-  prefix_sim = local_max > 0 ? common_levels.to_f / local_max : 0.0
-
-  # Term bonus: Shared terms weighted by avg depth
-  common_terms = parts_a.to_set & parts_b.to_set
-  term_bonus = 0.0
-  common_terms.each do |term|
-    depth_a = parts_a.index(term) + 1
-    depth_b = parts_b.index(term) + 1
-    avg_depth = (depth_a + depth_b) / 2.0
-    depth_weight = avg_depth / max_depth.to_f
-    term_bonus += depth_weight * 0.8  # Increased from 0.5 for more aggression
-  end
-  term_bonus = [1.0, term_bonus].min
-
-  # Combined similarity (your weight now favors deeper via local_max)
-  sim = (prefix_sim + term_bonus) / 2.0
-  weight = local_max.to_f / max_depth  # Deeper = higher weight (flipped from your 1/max)
-
-  [sim, weight]
-end
-
-# Enhanced weighted_hierarchical_jaccard (uses new similarity; adds max_pairs fallback)
-# Replaces your private weighted_hierarchical_jaccard
-def weighted_hierarchical_jaccard(set_a, set_b, max_depth: 5, max_pairs: 1000)
-  return 0.0 if set_a.empty? || set_b.empty?
-
-  # Fallback to flat Jaccard for large sets (your jaccard_similarity)
-  if set_a.size * set_b.size > max_pairs
-    terms_a = set_a.flat_map { |tag| tag.split(':').reject(&:empty?) }.to_set
-    terms_b = set_b.flat_map { |tag| tag.split(':').reject(&:empty?) }.to_set
-    return jaccard_similarity(terms_a.to_a, terms_b.to_a)
-  end
-
-  total_weighted_similarity = 0.0
-  total_weights = 0.0
-  set_a.each do |tag_a|
-    set_b.each do |tag_b|
-      similarity, weight = calculate_hierarchical_similarity(tag_a, tag_b, max_depth: max_depth)
-      total_weighted_similarity += similarity * weight
-      total_weights += weight
-    end
-  end
-  total_weights > 0 ? total_weighted_similarity / total_weights : 0.0
-end
-
-# Updated calculate_relevance (adds ont_weight param; scales to 0-100 option)
-# Enhances your existing method
-def calculate_relevance(node:, query_tags: [], vector_similarity: nil, ont_weight: 1.0, scale_to_100: false)
-  # 1. Vector similarity (semantic) - weight: 0.5
-  semantic_score = if vector_similarity
-    vector_similarity
-  elsif node['similarity']
-    node['similarity'].to_f
-  else
-    0.5
-  end
-
-  # 2. Tag overlap (ontology) - weight: 0.3, boosted by ont_weight
-  node_tags = get_node_tags(node['id'])
-  tag_score = if query_tags.any? && node_tags.any?
-    weighted_hierarchical_jaccard(query_tags, node_tags) * ont_weight
-  else
-    0.5
-  end
-  tag_score = [tag_score, 1.0].min  # Cap boosted score
-
-  # 3. Recency - weight: 0.1
-  age_hours = (Time.current - Time.parse(node['created_at'].to_s)) / 3600.0
-  recency_score = Math.exp(-age_hours / 168.0)
-
-  # 4. Access frequency - weight: 0.1
-  access_count = node['access_count'] || 0
-  access_score = Math.log(1 + access_count) / 10.0
-
-  # Weighted composite (0-10 base)
-  relevance_0_10 = (
-    (semantic_score * 0.5) +
-    (tag_score * 0.3) +
-    (recency_score * 0.1) +
-    (access_score * 0.1)
-  ).clamp(0.0, 10.0)
-
-  # Scale to 0-100 if requested
-  final_relevance = scale_to_100 ? (relevance_0_10 * 10.0).round(2) : relevance_0_10
-
-  final_relevance
-end
-
-# Updated search_with_relevance (adds threshold: for 0-100 filtering; ont_weight)
-# Enhances your existing method
-def search_with_relevance(timeframe:, query: nil, query_tags: [], limit: 20, embedding_service: nil, threshold: nil, ont_weight: 1.0, scale_to_100: true)
-  # Get candidates (your logic)
-  candidates = if query && embedding_service
-    search_uncached(timeframe: timeframe, query: query, limit: limit * 3, embedding_service: embedding_service)  # Oversample more for thresholds
-  elsif query
-    search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 3)
-  else
-    HTM::Models::Node
-      .where(created_at: timeframe)
-      .order(created_at: :desc)
-      .limit(limit * 3)
-      .map(&:attributes)
-  end
-
-  # Score and enrich
-  scored_nodes = candidates.map do |node|
-    relevance = calculate_relevance(
-      node: node,
-      query_tags: query_tags,
-      vector_similarity: node['similarity']&.to_f,
-      ont_weight: ont_weight,
-      scale_to_100: scale_to_100
-    )
-    node.merge({
-      'relevance' => relevance,
-      'tags' => get_node_tags(node['id'])
-    })
-  end
-
-  # Filter by threshold if provided (e.g., >=80 for 0-100 scale)
-  scored_nodes = scored_nodes.select { |n| threshold.nil? || n['relevance'] >= threshold }
-
-  # Sort by relevance DESC, take limit (or all if threshold used)
-  scored_nodes
-    .sort_by { |n| -n['relevance'] }
-    .take(limit)
-end
-
-=end
-
-
-
   end
 end

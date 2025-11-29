@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.7] - 2025-11-28
+
+### Security
+- **Fixed SQL injection vulnerabilities** in multiple locations:
+  - `LongTermMemory#build_timeframe_condition` - Now uses `connection.quote`
+  - `LongTermMemory#topic_relationships` - Now uses parameterized queries ($1, $2)
+  - `Node#similarity_to` - Added embedding validation and proper quoting
+  - `Database#run_activerecord_migrations` - Uses `sanitize_sql_array`
+- **Removed hardcoded database credentials** from default configuration
+
+### Added
+- **Thread-safe cache statistics** - Added `Mutex` synchronization for `@cache_stats`
+- **Input validation for `remember` method** - Validates content size and tag format
+- **URL format validation** - `Database.parse_connection_url` now validates scheme, host, and database name
+- **Encoding fallback in MarkdownLoader** - UTF-8 with binary fallback for non-UTF-8 files
+- **File size validation** - MarkdownLoader enforces 10 MB maximum file size
+- **New test suites**:
+  - `test/configuration_test.rb` - Configuration validation tests
+  - `test/working_memory_test.rb` - Working memory operations and eviction tests
+  - `test/tag_service_test.rb` - Tag validation and extraction tests
+
+### Changed
+- **Wrapped `LongTermMemory#add` in transaction** - Ensures atomicity for node creation
+- **Updated documentation** - Removed outdated TimescaleDB references, added pgvector and async processing info
+- **Defensive copies in WorkingMemory** - Uses `.dup` in `assemble_context` to prevent mutation
+- **Embedding validation** - `Node#similarity_to` validates embedding is array of finite numbers
+
+### Fixed
+- **N+1 query in `search_with_relevance`** - Added `batch_load_node_tags` helper
+- **Bare rescue in `get_node_tags`** - Now catches specific `ActiveRecord::RecordNotFound`
+
 ## [0.0.6] - 2025-11-28
 
 ### Added
@@ -294,7 +325,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.6...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.7...HEAD
+[0.0.7]: https://github.com/madbomber/htm/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/madbomber/htm/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/madbomber/htm/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/madbomber/htm/compare/v0.0.2...v0.0.4

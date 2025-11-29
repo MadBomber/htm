@@ -114,11 +114,20 @@ class HTM
         query_embedding = other.is_a?(Node) ? other.embedding : other
         return nil unless embedding.present? && query_embedding.present?
 
+        # Validate embedding is an array of finite numeric values
+        unless query_embedding.is_a?(Array) && query_embedding.all? { |v| v.is_a?(Numeric) && v.finite? }
+          return nil
+        end
+
         # Calculate cosine similarity: 1 - (embedding <=> query_embedding)
-        # Format the array as a PostgreSQL vector literal: '[0.1,0.2,0.3]'
-        vector_str = "[#{query_embedding.join(',')}]"
-        result = self.class.connection.select_value(
-          "SELECT 1 - (embedding <=> '#{vector_str}'::vector) FROM nodes WHERE id = #{id}"
+        # Safely format the array as a PostgreSQL vector literal
+        vector_str = "[#{query_embedding.map { |v| v.to_f }.join(',')}]"
+        conn = self.class.connection
+        quoted_vector = conn.quote(vector_str)
+        quoted_id = conn.quote(id)
+
+        result = conn.select_value(
+          "SELECT 1 - (embedding <=> #{quoted_vector}::vector) FROM nodes WHERE id = #{quoted_id}"
         )
         result&.to_f
       end

@@ -110,13 +110,14 @@ class HTM
     def assemble_context(strategy:, max_tokens: nil)
       max = max_tokens || @max_tokens
 
+      # Make defensive copies of nodes to prevent external mutation of internal state
       nodes = case strategy
       when :recent
         # Most recently accessed (LRU)
-        @access_order.reverse.map { |k| @nodes[k] }
+        @access_order.reverse.map { |k| @nodes[k].dup }
       when :frequent
         # Most frequently accessed (LFU)
-        @nodes.sort_by { |k, v| -(v[:access_count] || 0) }.map(&:last)
+        @nodes.sort_by { |k, v| -(v[:access_count] || 0) }.map { |_, v| v.dup }
       when :balanced
         # Combined frequency × recency
         @nodes.sort_by { |k, v|
@@ -126,7 +127,7 @@ class HTM
 
           # Higher score = more relevant
           -(Math.log(1 + access_frequency) * recency_factor)
-        }.map(&:last)
+        }.map { |_, v| v.dup }
       else
         raise ArgumentError, "Unknown strategy: #{strategy}. Use :recent, :frequent, or :balanced"
       end

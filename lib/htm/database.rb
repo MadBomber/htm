@@ -414,23 +414,41 @@ class HTM
 
       # Parse database connection URL
       #
-      # @param url [String] Connection URL
+      # @param url [String] Connection URL (e.g., postgresql://user:pass@host:port/dbname)
       # @return [Hash, nil] Connection configuration hash
+      # @raise [ArgumentError] If URL format is invalid
       #
       def parse_connection_url(url)
         return nil unless url
 
         uri = URI.parse(url)
+
+        # Validate URL format
+        unless uri.scheme&.match?(/\Apostgres(?:ql)?\z/i)
+          raise ArgumentError, "Invalid database URL scheme: #{uri.scheme}. Expected 'postgresql' or 'postgres'."
+        end
+
+        unless uri.host && !uri.host.empty?
+          raise ArgumentError, "Database URL must include a host"
+        end
+
+        dbname = uri.path&.slice(1..-1)  # Remove leading /
+        if dbname.nil? || dbname.empty?
+          raise ArgumentError, "Database URL must include a database name (path segment)"
+        end
+
         params = URI.decode_www_form(uri.query || '').to_h
 
         {
           host: uri.host,
-          port: uri.port,
-          dbname: uri.path[1..-1],  # Remove leading /
+          port: uri.port || 5432,
+          dbname: dbname,
           user: uri.user,
           password: uri.password,
           sslmode: params['sslmode'] || 'prefer'
         }
+      rescue URI::InvalidURIError => e
+        raise ArgumentError, "Invalid database URL format: #{e.message}"
       end
 
       # Build config from individual environment variables
@@ -441,12 +459,12 @@ class HTM
         return nil unless ENV['HTM_DBNAME']
 
         {
-          host: ENV['HTM_DBHOST'] || 'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com',
-          port: (ENV['HTM_DBPORT'] || 37807).to_i,
+          host: ENV['HTM_DBHOST'] || 'localhost',
+          port: (ENV['HTM_DBPORT'] || 5432).to_i,
           dbname: ENV['HTM_DBNAME'],
           user: ENV['HTM_DBUSER'],
           password: ENV['HTM_DBPASS'],
-          sslmode: 'require'
+          sslmode: ENV['HTM_DBSSLMODE'] || 'prefer'
         }
       end
 
@@ -515,9 +533,11 @@ class HTM
           version = File.basename(file).split('_').first
           name = File.basename(file, '.rb')
 
-          # Check if already run
+          # Check if already run (use parameterized query to prevent SQL injection)
           already_run = conn.select_value(
-            "SELECT COUNT(*) FROM schema_migrations WHERE version = '#{version}'"
+            ActiveRecord::Base.sanitize_sql_array(
+              ["SELECT COUNT(*) FROM schema_migrations WHERE version = ?", version]
+            )
           ).to_i > 0
 
           if already_run
@@ -534,9 +554,11 @@ class HTM
             migration = migration_class.new
             migration.migrate(:up)
 
-            # Record in schema_migrations
+            # Record in schema_migrations (use parameterized query to prevent SQL injection)
             conn.execute(
-              "INSERT INTO schema_migrations (version) VALUES ('#{version}')"
+              ActiveRecord::Base.sanitize_sql_array(
+                ["INSERT INTO schema_migrations (version) VALUES (?)", version]
+              )
             )
 
             puts "    ✓ Completed"
