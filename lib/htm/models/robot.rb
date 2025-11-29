@@ -27,15 +27,31 @@ class HTM
       scope :by_name, ->(name) { where(name: name) }
 
       # Class methods
+
+      # Find or create a robot by name
+      #
+      # @param robot_name [String] Name of the robot
+      # @return [Robot] The found or created robot
+      #
       def self.find_or_create_by_name(robot_name)
         find_or_create_by(name: robot_name)
       end
 
       # Instance methods
+
+      # Get the total number of nodes associated with this robot
+      #
+      # @return [Integer] Number of nodes
+      #
       def node_count
         nodes.count
       end
 
+      # Get the most recent nodes for this robot
+      #
+      # @param limit [Integer] Maximum number of nodes to return (default: 10)
+      # @return [ActiveRecord::Relation] Recent nodes ordered by created_at desc
+      #
       def recent_nodes(limit = 10)
         nodes.recent.limit(limit)
       end
@@ -60,6 +76,13 @@ class HTM
           end
       end
 
+      # Get a summary of this robot's memory state
+      #
+      # @return [Hash] Summary including:
+      #   - :total_nodes [Integer] Total nodes associated with this robot
+      #   - :in_working_memory [Integer] Nodes currently in working memory
+      #   - :with_embeddings [Integer] Nodes that have embeddings generated
+      #
       def memory_summary
         {
           total_nodes: nodes.count,

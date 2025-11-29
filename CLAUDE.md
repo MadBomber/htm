@@ -107,10 +107,17 @@ ruby enable_extensions.rb
 Located in `db/schema.sql`:
 
 - **robots**: Registry of all LLM agents using the HTM system with metadata
-- **nodes**: Primary memory storage with vector embeddings (up to 2000 dimensions), full-text search, fuzzy matching, and soft delete support (`deleted_at` column)
+- **nodes**: Primary memory storage with vector embeddings (up to 2000 dimensions), full-text search, fuzzy matching, JSONB metadata, and soft delete support (`deleted_at` column)
 - **tags**: Hierarchical tag system using colon-separated namespaces (e.g., `database:postgresql:extensions`)
 - **nodes_tags**: Join table implementing many-to-many relationship between nodes and tags
 - **file_sources**: Source file metadata for loaded documents (path, mtime, frontmatter, sync status)
+
+**Nodes table key columns:**
+- `content`: The memory content (text)
+- `embedding`: Vector embedding for semantic search (up to 2000 dimensions)
+- `metadata`: JSONB column for arbitrary key-value data with GIN index
+- `content_hash`: SHA-256 hash for deduplication
+- `deleted_at`: Soft delete timestamp (null = active)
 
 The schema uses PostgreSQL 17 with pgvector and pg_trgm extensions. ActiveRecord models are available:
 - `HTM::Models::Robot`
@@ -331,6 +338,39 @@ node = htm.add_message("PostgreSQL supports vector search via pgvector")
 3. **Dimensions**: Stored in `embedding_dimension` column, max 2000 dimensions (padded automatically)
 4. **Error handling**: Failures logged, node remains without embedding
 5. **Search behavior**: Vector search excludes nodes without embeddings
+
+### Working with Metadata
+
+Nodes have a `metadata` JSONB column for flexible key-value storage:
+
+**Storing metadata:**
+```ruby
+# Store with metadata
+htm.remember("User prefers dark mode", metadata: { category: "preference", priority: "high" })
+
+# Combine with tags
+htm.remember(
+  "API rate limit is 1000 req/min",
+  tags: ["api:rate-limiting"],
+  metadata: { environment: "production", version: 2 }
+)
+```
+
+**Querying by metadata:**
+```ruby
+# Filter by metadata in recall
+htm.recall("settings", metadata: { priority: "high" })
+htm.recall("API config", metadata: { environment: "production", version: 2 })
+
+# Combine with other filters
+htm.recall("database", timeframe: "last month", strategy: :hybrid, metadata: { reviewed: true })
+```
+
+**Metadata features:**
+- Stored as JSONB with GIN index for efficient queries
+- Uses PostgreSQL `@>` containment operator (node must contain all specified keys)
+- Supports any JSON type: strings, numbers, booleans, arrays, objects
+- Validation ensures keys are strings or symbols
 
 ### Working with Tags
 1. **Async extraction**: `GenerateTagsJob` uses LLM to extract hierarchical tags
@@ -553,6 +593,7 @@ The architecture review team (defined in `.architecture/members.yml`) includes:
 - All robots share global memory (hive mind architecture)
 - **Soft Delete**: `forget()` performs soft delete by default (recoverable via `restore()`); permanent delete requires `soft: false, confirm: :confirmed`
 - Working memory eviction moves nodes to long-term storage, never deletes them
+- **Metadata**: Nodes have a JSONB `metadata` column for flexible key-value storage; filter with `recall(..., metadata: {...})`
 - **Tag Visualization**: Export tag hierarchy as text tree, Mermaid flowchart, or SVG (dark theme)
 - Token counting uses Tiktoken with GPT-3.5-turbo encoding
 - Architecture decisions are documented in ADRs (see `.architecture/decisions/adrs/`)

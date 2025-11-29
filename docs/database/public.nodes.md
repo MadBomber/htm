@@ -18,6 +18,7 @@ Core memory storage for conversation messages and context
 | embedding_dimension | integer |  | true |  |  | Actual number of dimensions used in the embedding vector (max 2000) |
 | id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.node_tags](public.node_tags.md) [public.robot_nodes](public.robot_nodes.md) [public.working_memories](public.working_memories.md) |  |  |
 | last_accessed | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was last accessed |
+| metadata | jsonb | '{}' | false |  |  | Flexible metadata storage (memory_type, importance, source, etc.) |
 | source_id | bigint |  | true |  | [public.file_sources](public.file_sources.md) | Reference to source file (for file-loaded nodes) |
 | token_count | integer |  | true |  |  | Number of tokens in the content (for context budget management) |
 | updated_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was last modified |
@@ -42,6 +43,7 @@ Core memory storage for conversation messages and context
 | idx_nodes_deleted_at | CREATE INDEX idx_nodes_deleted_at ON public.nodes USING btree (deleted_at) |
 | idx_nodes_embedding | CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64') |
 | idx_nodes_last_accessed | CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed) |
+| idx_nodes_metadata | CREATE INDEX idx_nodes_metadata ON public.nodes USING gin (metadata) |
 | idx_nodes_not_deleted_created_at | CREATE INDEX idx_nodes_not_deleted_created_at ON public.nodes USING btree (created_at) WHERE (deleted_at IS NULL) |
 | idx_nodes_source_chunk_position | CREATE INDEX idx_nodes_source_chunk_position ON public.nodes USING btree (source_id, chunk_position) |
 | idx_nodes_source_id | CREATE INDEX idx_nodes_source_id ON public.nodes USING btree (source_id) |

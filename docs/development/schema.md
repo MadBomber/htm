@@ -66,6 +66,40 @@ Content deduplication is enforced via SHA-256 hashing in the `nodes` table:
 3. A new `robot_nodes` association is created (or updated if it already exists)
 4. This ensures identical memories are stored once but can be "remembered" by multiple robots
 
+### JSONB Metadata
+
+The `nodes` table includes a `metadata` JSONB column for flexible key-value storage:
+
+| Column | Type | Default | Description |
+|--------|------|---------|-------------|
+| `metadata` | jsonb | `{}` | Arbitrary key-value data |
+
+**Features:**
+- Stores any valid JSON data (strings, numbers, booleans, arrays, objects)
+- GIN index (`idx_nodes_metadata`) for efficient containment queries
+- Queried using PostgreSQL's `@>` containment operator
+
+**Query examples:**
+```sql
+-- Find nodes with specific metadata
+SELECT * FROM nodes WHERE metadata @> '{"priority": "high"}'::jsonb;
+
+-- Find nodes with nested metadata
+SELECT * FROM nodes WHERE metadata @> '{"user": {"role": "admin"}}'::jsonb;
+
+-- Find nodes with multiple conditions
+SELECT * FROM nodes WHERE metadata @> '{"environment": "production", "version": 2}'::jsonb;
+```
+
+**Ruby usage:**
+```ruby
+# Store with metadata
+htm.remember("API config", metadata: { environment: "production", version: 2 })
+
+# Recall filtering by metadata
+htm.recall("config", metadata: { environment: "production" })
+```
+
 ### Hierarchical Tags
 
 Tags use colon-separated hierarchies for organization:

@@ -7,7 +7,7 @@ This guide covers everything you need to know about storing information in HTM e
 The primary method for adding memories is `remember`:
 
 ```ruby
-node_id = htm.remember(content, tags: [])
+node_id = htm.remember(content, tags: [], metadata: {})
 ```
 
 **Parameters:**
@@ -16,6 +16,7 @@ node_id = htm.remember(content, tags: [])
 |-----------|------|---------|-------------|
 | `content` | String | *required* | The information to remember |
 | `tags` | Array\<String\> | `[]` | Manual tags to assign (in addition to auto-extracted tags) |
+| `metadata` | Hash | `{}` | Arbitrary key-value metadata stored as JSONB |
 
 The method returns the database ID of the created node.
 
@@ -160,6 +161,86 @@ When a node is created, a background job (GenerateTagsJob) automatically extract
 htm.remember("We're using Redis for session caching with a 24-hour TTL")
 # Background job might extract: ["database:redis", "caching:session", "performance"]
 ```
+
+## Using Metadata
+
+Metadata provides flexible key-value storage for arbitrary data that doesn't fit into tags. Unlike tags (which are for hierarchical categorization), metadata is for structured data like version numbers, priorities, source systems, or any custom attributes.
+
+### Basic Metadata Usage
+
+```ruby
+# Store with metadata
+htm.remember(
+  "User prefers dark mode",
+  metadata: { category: "preference", priority: "high" }
+)
+
+# Multiple metadata fields
+htm.remember(
+  "API endpoint changed from /v1 to /v2",
+  metadata: {
+    category: "migration",
+    version: 2,
+    breaking_change: true,
+    affected_services: ["web", "mobile"]
+  }
+)
+```
+
+### Metadata vs Tags
+
+| Feature | Tags | Metadata |
+|---------|------|----------|
+| Structure | Hierarchical (colon-separated) | Flat key-value pairs |
+| Type | String only | Any JSON type (string, number, boolean, array, object) |
+| Search | Prefix matching (`LIKE 'ai:%'`) | JSONB containment (`@>`) |
+| Purpose | Categorization & navigation | Arbitrary attributes & filtering |
+| Auto-extraction | Yes (via LLM) | No (always explicit) |
+
+### Common Metadata Patterns
+
+```ruby
+# Version tracking
+htm.remember("API uses OAuth 2.0", metadata: { version: 3, deprecated: false })
+
+# Source tracking
+htm.remember("Error rate is 0.1%", metadata: { source: "monitoring", dashboard: "errors" })
+
+# Priority/importance
+htm.remember("Deploy to prod on Fridays is forbidden", metadata: { priority: "critical" })
+
+# Environment-specific
+htm.remember("Database connection limit is 100", metadata: { environment: "production" })
+
+# Combining with tags
+htm.remember(
+  "Use connection pooling for better performance",
+  tags: ["database:postgresql", "performance"],
+  metadata: { priority: "high", reviewed: true, author: "dba-team" }
+)
+```
+
+### Querying by Metadata
+
+Use the `metadata` parameter in `recall()` to filter by metadata:
+
+```ruby
+# Find all high-priority items
+htm.recall("settings", metadata: { priority: "high" })
+
+# Find production-specific configurations
+htm.recall("database", metadata: { environment: "production" })
+
+# Combine with other filters
+htm.recall(
+  "API changes",
+  timeframe: "last month",
+  metadata: { breaking_change: true },
+  strategy: :hybrid
+)
+```
+
+Metadata filtering uses PostgreSQL's JSONB containment operator (`@>`), which means the node's metadata must contain all the key-value pairs you specify.
 
 ## Content Deduplication
 
@@ -355,13 +436,14 @@ htm.remember(
   "Alice Thompson is a senior software engineer specializing in distributed systems"
 )
 
-# Add a preference
+# Add a preference with metadata
 htm.remember(
-  "Alice prefers Vim for editing and tmux for terminal management"
+  "Alice prefers Vim for editing and tmux for terminal management",
+  metadata: { category: "preference", source: "user-interview" }
 )
 
-# Add a decision with context
-htm.remember(<<~DECISION, tags: ["architecture", "messaging"])
+# Add a decision with context, tags, and metadata
+htm.remember(<<~DECISION, tags: ["architecture", "messaging"], metadata: { priority: "high", approved: true, version: 1 })
   Decision: Use RabbitMQ for async job processing
 
   Rationale:
@@ -374,8 +456,8 @@ htm.remember(<<~DECISION, tags: ["architecture", "messaging"])
   - Kafka (overkill for our scale)
 DECISION
 
-# Add implementation code
-htm.remember(<<~RUBY, tags: ["code:ruby", "messaging:rabbitmq"])
+# Add implementation code with metadata
+htm.remember(<<~RUBY, tags: ["code:ruby", "messaging:rabbitmq"], metadata: { language: "ruby", tested: true })
   require 'bunny'
 
   connection = Bunny.new(ENV['RABBITMQ_URL'])
@@ -387,4 +469,8 @@ RUBY
 
 puts "Added memories with relationships and rich metadata"
 puts "Stats: #{HTM::Models::Node.count} total nodes"
+
+# Query by metadata
+high_priority = htm.recall("decisions", metadata: { priority: "high" })
+puts "High priority decisions: #{high_priority.count}"
 ```

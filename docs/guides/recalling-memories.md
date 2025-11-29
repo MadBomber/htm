@@ -390,9 +390,43 @@ results = htm.recall(topic: "JWT authentication", strategy: :fulltext)
 results = htm.recall(topic: "user validation methods", strategy: :vector)
 ```
 
+## Filtering by Metadata
+
+HTM supports metadata filtering directly in the `recall()` method. This is more efficient than post-filtering because the database does the work.
+
+```ruby
+# Filter by single metadata field
+memories = htm.recall(
+  topic: "user settings",
+  metadata: { category: "preference" }
+)
+# => Returns only nodes with metadata containing { category: "preference" }
+
+# Filter by multiple metadata fields
+memories = htm.recall(
+  topic: "API configuration",
+  metadata: { environment: "production", version: 2 }
+)
+# => Returns nodes with BOTH environment: "production" AND version: 2
+
+# Combine with other filters
+memories = htm.recall(
+  topic: "database changes",
+  timeframe: "last month",
+  strategy: :hybrid,
+  metadata: { breaking_change: true },
+  limit: 10
+)
+```
+
+Metadata filtering uses PostgreSQL's JSONB containment operator (`@>`), which means:
+- The node's metadata must contain ALL the key-value pairs you specify
+- The node's metadata can have additional fields (they're ignored)
+- Nested objects work: `metadata: { user: { role: "admin" } }` matches `{ user: { role: "admin", name: "..." } }`
+
 ## Combining Search with Filters
 
-While `recall` handles timeframes and topics, you can filter results further:
+While `recall` handles timeframes, topics, and metadata, you can filter results further:
 
 ```ruby
 # Recall memories
@@ -622,6 +656,7 @@ memory = {
   'created_at' => "2024-01-15 10:30:00", # Timestamp
   'robot_id' => "uuid...",               # Which robot added it
   'token_count' => 150,                  # Token count
+  'metadata' => { 'priority' => 'high', 'version' => 2 },  # JSONB metadata
   'similarity' => 0.85                   # Similarity score (vector/hybrid)
   # or 'rank' for fulltext
 }

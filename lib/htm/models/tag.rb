@@ -29,10 +29,28 @@ class HTM
       scope :root_level, -> { where("name NOT LIKE '%:%'") }
 
       # Class methods
+
+      # Find tags with a given prefix (hierarchical query)
+      #
+      # @param prefix [String] Tag prefix to match (e.g., "database" matches "database:postgresql")
+      # @return [ActiveRecord::Relation] Tags matching the prefix
+      #
+      # @example Find all database-related tags
+      #   Tag.find_by_topic_prefix("database")
+      #   # => [#<Tag name: "database:postgresql">, #<Tag name: "database:mysql">]
+      #
       def self.find_by_topic_prefix(prefix)
         where("name LIKE ?", "#{prefix}%")
       end
 
+      # Get the most frequently used tags
+      #
+      # @param limit [Integer] Maximum number of tags to return (default: 10)
+      # @return [ActiveRecord::Relation] Tags with usage_count attribute
+      #
+      # @example Get top 5 most used tags
+      #   Tag.popular_tags(5).each { |t| puts "#{t.name}: #{t.usage_count}" }
+      #
       def self.popular_tags(limit = 10)
         joins(:node_tags)
           .select('tags.*, COUNT(node_tags.id) as usage_count')
@@ -41,13 +59,27 @@ class HTM
           .limit(limit)
       end
 
+      # Find or create a tag by name
+      #
+      # @param name [String] Hierarchical tag name (e.g., "database:postgresql")
+      # @return [Tag] The found or created tag
+      #
       def self.find_or_create_by_name(name)
         find_or_create_by(name: name)
       end
 
       # Returns a nested hash tree structure from the current scope
-      # Example: Tag.all.tree => { "database" => { "postgresql" => {} } }
-      # Example: Tag.with_prefix("database").tree => { "database" => { "postgresql" => {} } }
+      #
+      # @return [Hash] Nested hash representing the tag hierarchy
+      #
+      # @example Get all tags as a tree
+      #   Tag.all.tree
+      #   # => { "database" => { "postgresql" => {}, "mysql" => {} }, "ai" => { "llm" => {} } }
+      #
+      # @example Get filtered tags as a tree
+      #   Tag.with_prefix("database").tree
+      #   # => { "database" => { "postgresql" => {} } }
+      #
       def self.tree
         tree = {}
 
@@ -65,9 +97,18 @@ class HTM
       end
 
       # Returns a formatted string representation of the tag tree
+      #
       # Uses directory-style formatting with ├── and └── characters
-      # Example: puts Tag.all.tree_string
-      # Example: puts Tag.with_prefix("database").tree_string
+      #
+      # @return [String] Formatted tree string
+      #
+      # @example Display all tags as a tree
+      #   puts Tag.all.tree_string
+      #   # ├── ai
+      #   # │   └── llm
+      #   # └── database
+      #   #     └── postgresql
+      #
       def self.tree_string
         format_tree_branch(tree)
       end
@@ -274,22 +315,55 @@ class HTM
       end
 
       # Instance methods
+
+      # Get the root (top-level) topic of this tag
+      #
+      # @return [String] The first segment of the hierarchical tag
+      #
+      # @example
+      #   tag = Tag.find_by(name: "database:postgresql:extensions")
+      #   tag.root_topic  # => "database"
+      #
       def root_topic
         name.split(':').first
       end
 
+      # Get all hierarchy levels of this tag
+      #
+      # @return [Array<String>] Array of topic segments
+      #
+      # @example
+      #   tag = Tag.find_by(name: "database:postgresql:extensions")
+      #   tag.topic_levels  # => ["database", "postgresql", "extensions"]
+      #
       def topic_levels
         name.split(':')
       end
 
+      # Get the depth (number of levels) of this tag
+      #
+      # @return [Integer] Number of hierarchy levels
+      #
+      # @example
+      #   Tag.find_by(name: "database").depth           # => 1
+      #   Tag.find_by(name: "database:postgresql").depth  # => 2
+      #
       def depth
         topic_levels.length
       end
 
+      # Check if this tag is hierarchical (has child levels)
+      #
+      # @return [Boolean] True if tag contains colons (hierarchy separators)
+      #
       def hierarchical?
         name.include?(':')
       end
 
+      # Get the number of nodes using this tag
+      #
+      # @return [Integer] Count of nodes with this tag
+      #
       def usage_count
         node_tags.count
       end

@@ -131,10 +131,25 @@ class HTM
         result&.to_f
       end
 
+      # Get all tag names associated with this node
+      #
+      # @return [Array<String>] Array of hierarchical tag names (e.g., ["database:postgresql", "ai:llm"])
+      #
       def tag_names
         tags.pluck(:name)
       end
 
+      # Add tags to this node (creates tags if they don't exist)
+      #
+      # @param tag_names [Array<String>, String] Tag name(s) to add
+      # @return [void]
+      #
+      # @example Add a single tag
+      #   node.add_tags("database:postgresql")
+      #
+      # @example Add multiple tags
+      #   node.add_tags(["database:postgresql", "ai:embeddings"])
+      #
       def add_tags(tag_names)
         Array(tag_names).each do |tag_name|
           tag = HTM::Models::Tag.find_or_create_by(name: tag_name)
@@ -142,6 +157,11 @@ class HTM
         end
       end
 
+      # Remove a tag from this node
+      #
+      # @param tag_name [String] Tag name to remove
+      # @return [void]
+      #
       def remove_tag(tag_name)
         tag = HTM::Models::Tag.find_by(name: tag_name)
         return unless tag

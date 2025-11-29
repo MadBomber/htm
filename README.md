@@ -27,7 +27,7 @@
 
 - **Client-Side Embeddings**
     - Automatic embedding generation before database insertion
-    - Supports Ollama (local, default) and OpenAI
+    - Uses the [ruby_llm](https://ruby_llm.com) gem for LLM access
     - Configurable embedding providers and models
 
 - **Two-Tier Memory Architecture**
@@ -560,13 +560,14 @@ HTM provides a minimal, focused API with only 3 core instance methods for memory
 
 ### Core Memory Operations
 
-#### `remember(content, source: "")`
+#### `remember(content, source: "", metadata: {})`
 
 Store information in memory. Embeddings and tags are automatically generated asynchronously.
 
 **Parameters:**
 - `content` (String, required) - The information to remember. Converted to string if nil. Returns ID of last node if empty.
 - `source` (String, optional) - Where the content came from (e.g., "user", "assistant", "system"). Defaults to empty string.
+- `metadata` (Hash, optional) - Arbitrary key-value metadata stored as JSONB. Keys must be strings or symbols. Defaults to `{}`.
 
 **Returns:** Integer - The node ID of the stored memory
 
@@ -578,6 +579,12 @@ node_id = htm.remember("PostgreSQL is excellent for vector search with pgvector"
 # Store without source (uses default empty string)
 node_id = htm.remember("HTM uses two-tier memory architecture")
 
+# Store with metadata
+node_id = htm.remember(
+  "User prefers dark mode",
+  metadata: { category: "preference", priority: "high", version: 2 }
+)
+
 # Nil/empty handling
 node_id = htm.remember(nil)  # Returns ID of last node without creating duplicate
 node_id = htm.remember("")   # Returns ID of last node without creating duplicate
@@ -585,7 +592,7 @@ node_id = htm.remember("")   # Returns ID of last node without creating duplicat
 
 ---
 
-#### `recall(topic, timeframe: nil, limit: 20, strategy: :vector, with_relevance: false, query_tags: [])`
+#### `recall(topic, timeframe: nil, limit: 20, strategy: :vector, with_relevance: false, query_tags: [], metadata: {})`
 
 Retrieve memories using temporal filtering and semantic/keyword search.
 
@@ -601,8 +608,9 @@ Retrieve memories using temporal filtering and semantic/keyword search.
   - `:hybrid` - Weighted combination (70% vector, 30% full-text)
 - `with_relevance` (Boolean, optional) - Include dynamic relevance scores. Default: false
 - `query_tags` (Array<String>, optional) - Filter results by tags. Default: []
+- `metadata` (Hash, optional) - Filter results by metadata using JSONB containment (`@>`). Default: `{}`
 
-**Returns:** Array<Hash> - Matching memories with fields: `id`, `content`, `source`, `created_at`, `access_count`, (optionally `relevance`)
+**Returns:** Array<Hash> - Matching memories with fields: `id`, `content`, `source`, `created_at`, `access_count`, `metadata`, (optionally `relevance`)
 
 **Example:**
 ```ruby
@@ -628,6 +636,21 @@ memories = htm.recall(
   query_tags: ["architecture"]
 )
 # => [{ "id" => 123, "content" => "...", "relevance" => 0.92, ... }, ...]
+
+# Filter by metadata
+memories = htm.recall(
+  "user preferences",
+  metadata: { category: "preference" }
+)
+# => Returns only nodes with metadata containing { category: "preference" }
+
+# Combine metadata with other filters
+memories = htm.recall(
+  "settings",
+  timeframe: "last month",
+  strategy: :hybrid,
+  metadata: { priority: "high", version: 2 }
+)
 ```
 
 ---
@@ -1354,9 +1377,15 @@ See [htm_teamwork.md](htm_teamwork.md) for detailed design documentation and pla
 ### Database Schema
 
 - `robots`: Robot registry for all LLM agents using HTM
-- `nodes`: Main memory storage with vector embeddings (pgvector), full-text search (tsvector), metadata
+- `nodes`: Main memory storage with vector embeddings (pgvector), full-text search (tsvector), JSONB metadata
 - `tags`: Hierarchical tag ontology (format: `root:level1:level2:level3`)
 - `node_tags`: Join table implementing many-to-many relationship between nodes and tags
+
+**Nodes Table Key Columns:**
+- `content`: The memory content
+- `embedding`: Vector embedding for semantic search (up to 2000 dimensions)
+- `metadata`: JSONB column for arbitrary key-value data (filterable via `@>` containment operator)
+- `content_hash`: SHA-256 hash for deduplication
 
 ### Service Architecture
 

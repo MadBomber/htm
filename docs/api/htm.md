@@ -141,12 +141,12 @@ htm.long_term_memory.stats  # => {...}
 
 ## Public Methods
 
-### `remember(content, tags:)` {: #remember }
+### `remember(content, tags:, metadata:)` {: #remember }
 
 Remember new information by storing it in long-term memory.
 
 ```ruby
-remember(content, tags: [])
+remember(content, tags: [], metadata: {})
 ```
 
 #### Parameters
@@ -155,6 +155,7 @@ remember(content, tags: [])
 |-----------|------|---------|-------------|
 | `content` | String | *required* | The information to remember |
 | `tags` | Array\<String\> | `[]` | Manual tags to assign (in addition to auto-extracted tags) |
+| `metadata` | Hash | `{}` | Arbitrary key-value metadata stored as JSONB. Keys must be strings or symbols. |
 
 #### Returns
 
@@ -190,6 +191,19 @@ node_id = htm.remember(
   tags: ["database:timescaledb", "performance"]
 )
 
+# With metadata
+node_id = htm.remember(
+  "User prefers dark mode for all interfaces",
+  metadata: { category: "preference", priority: "high", source_app: "settings" }
+)
+
+# With both tags and metadata
+node_id = htm.remember(
+  "API rate limit is 1000 requests per minute",
+  tags: ["api:rate-limiting", "infrastructure"],
+  metadata: { environment: "production", version: 2 }
+)
+
 # Multiple robots remembering the same content
 robot1 = HTM.new(robot_name: "assistant_1")
 robot2 = HTM.new(robot_name: "assistant_2")
@@ -205,6 +219,7 @@ robot2.remember("Ruby 3.3 was released in December 2023")
 - Embeddings and hierarchical tags are generated asynchronously via background jobs
 - Empty content returns the ID of the most recent node without creating a duplicate
 - Token count is calculated automatically using the configured token counter
+- Metadata is stored in a JSONB column with a GIN index for efficient queries
 
 ---
 
@@ -220,6 +235,7 @@ recall(
   strategy: :vector,
   with_relevance: false,
   query_tags: [],
+  metadata: {},
   raw: false
 )
 ```
@@ -234,6 +250,7 @@ recall(
 | `strategy` | Symbol | `:vector` | Search strategy (`:vector`, `:fulltext`, `:hybrid`) |
 | `with_relevance` | Boolean | `false` | Include dynamic relevance scores |
 | `query_tags` | Array\<String\> | `[]` | Tags to boost relevance |
+| `metadata` | Hash | `{}` | Filter results by metadata (uses JSONB `@>` containment) |
 | `raw` | Boolean | `false` | Return full node hashes instead of content strings |
 
 #### Timeframe Formats
@@ -284,6 +301,7 @@ When `raw: true`, each hash contains:
   "access_count" => 5,            # Times accessed
   "created_at" => "2025-01-15...", # Creation timestamp
   "token_count" => 125,           # Token count
+  "metadata" => { "category" => "preference", "priority" => "high" },  # JSONB metadata
   "similarity" => 0.87,           # Similarity score (hybrid/vector)
   "tag_boost" => 0.3,             # Tag boost score (hybrid only)
   "combined_score" => 0.79        # Combined score (hybrid only)
@@ -344,6 +362,23 @@ memories = htm.recall(
   timeframe: start_time..end_time,
   limit: 50
 )
+
+# Filter by metadata
+memories = htm.recall(
+  "user preferences",
+  metadata: { category: "preference" }
+)
+# => Returns only nodes with metadata containing { category: "preference" }
+
+# Combine metadata with other filters
+memories = htm.recall(
+  "API configuration",
+  timeframe: "last month",
+  strategy: :hybrid,
+  metadata: { environment: "production", version: 2 },
+  raw: true
+)
+# => Returns production configs with version 2, sorted by relevance
 ```
 
 #### Performance Notes

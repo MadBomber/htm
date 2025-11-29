@@ -25,6 +25,23 @@ class HTM
 
     attr_reader :query_timeout
 
+    # Initialize long-term memory storage
+    #
+    # @param config [Hash] Database configuration (host, port, dbname, user, password)
+    # @param pool_size [Integer, nil] Connection pool size (uses ActiveRecord default if nil)
+    # @param query_timeout [Integer] Query timeout in milliseconds (default: 30000)
+    # @param cache_size [Integer] Number of query results to cache (default: 1000, use 0 to disable)
+    # @param cache_ttl [Integer] Cache time-to-live in seconds (default: 300)
+    #
+    # @example Initialize with defaults
+    #   ltm = LongTermMemory.new(HTM::Database.default_config)
+    #
+    # @example Initialize with custom cache settings
+    #   ltm = LongTermMemory.new(config, cache_size: 500, cache_ttl: 600)
+    #
+    # @example Disable caching
+    #   ltm = LongTermMemory.new(config, cache_size: 0)
+    #
     def initialize(config, pool_size: nil, query_timeout: DEFAULT_QUERY_TIMEOUT, cache_size: DEFAULT_CACHE_SIZE, cache_ttl: DEFAULT_CACHE_TTL)
       @config = config
       @query_timeout = query_timeout  # in milliseconds
