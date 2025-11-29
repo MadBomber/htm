@@ -3169,6 +3169,15 @@
 <td>When this memory was last accessed</td>
 </tr>
 <tr>
+<td>metadata</td>
+<td>jsonb</td>
+<td>'{}'</td>
+<td>false</td>
+<td></td>
+<td></td>
+<td>Flexible metadata storage (memory_type, importance, source, etc.)</td>
+</tr>
+<tr>
 <td>source_id</td>
 <td>bigint</td>
 <td></td>
@@ -3264,6 +3273,10 @@
 <tr>
 <td>idx_nodes_last_accessed</td>
 <td>CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed)</td>
+</tr>
+<tr>
+<td>idx_nodes_metadata</td>
+<td>CREATE INDEX idx_nodes_metadata ON public.nodes USING gin (metadata)</td>
 </tr>
 <tr>
 <td>idx_nodes_not_deleted_created_at</td>
