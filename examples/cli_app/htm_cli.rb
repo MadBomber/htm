@@ -19,6 +19,20 @@
 
 require_relative '../../lib/htm'
 require 'io/console'
+require 'ruby_llm'
+
+PROVIDER = :ollama
+MODEL    = 'gpt-oss:latest'
+
+# Configure RubyLLM for Ollama provider (same pattern as HTM uses)
+RubyLLM.configure do |config|
+  ollama_url = ENV.fetch('OLLAMA_URL', 'http://localhost:11434')
+  ollama_api_base = ollama_url.end_with?('/v1') ? ollama_url : "#{ollama_url}/v1"
+  config.ollama_api_base = ollama_api_base
+end
+
+# Create chat with Ollama model - use assume_model_exists to bypass registry check
+# AI = RubyLLM.chat(model: MODEL, provider: PROVIDER, assume_model_exists: true)
 
 class HTMCli
   def initialize
@@ -42,6 +56,9 @@ class HTMCli
         end
       end
     end
+
+    # Initialize RubyLLM chat for context-aware responses
+    @chat = RubyLLM.chat(model: MODEL, provider: PROVIDER)
 
     # Initialize HTM instance
     @htm = HTM.new(robot_name: "cli_assistant")
@@ -146,12 +163,27 @@ class HTMCli
     puts "\nSearching for: \"#{topic}\""
     puts "Strategy: hybrid (vector + fulltext + tags)"
 
-    # Show which tags match the query
-    matching_tags = @htm.long_term_memory.find_query_matching_tags(topic)
-    if matching_tags.any?
-      puts "Matching tags: #{matching_tags.join(', ')}"
+    # Show tags extracted from query and which ones matched
+    tag_result = @htm.long_term_memory.find_query_matching_tags(topic, include_extracted: true)
+
+    if tag_result[:extracted].any?
+      puts "Extracted tags: #{tag_result[:extracted].join(', ')}"
+
+      # Show what was actually searched (exact + prefixes)
+      searched = tag_result[:extracted].dup
+      tag_result[:extracted].each do |tag|
+        levels = tag.split(':')
+        (1...levels.size).each { |i| searched << levels[0, i].join(':') }
+      end
+      puts "Searched for:   #{searched.uniq.join(', ')}"
+
+      if tag_result[:matched].any?
+        puts "Matched in DB:  #{tag_result[:matched].join(', ')}"
+      else
+        puts "Matched in DB:  (none)"
+      end
     else
-      puts "Matching tags: (none found)"
+      puts "Extracted tags: (none)"
     end
 
     start_time = Time.now
@@ -191,6 +223,34 @@ class HTMCli
       else
         puts "   Tags: (none)"
       end
+    end
+
+    # Build LLM prompt with context from retrieved memories
+    context_content = memories.map { |m| m['content'] }.join("\n\n")
+
+    llm_prompt = <<~PROMPT
+      #{topic}
+      Your response should highlight information also found in the
+      following context:
+      <CONTEXT>
+      #{context_content}
+      </CONTEXT>
+    PROMPT
+
+    puts "\n" + "=" * 60
+    puts "Generating response for this prompt..."
+    puts llm_prompt
+    puts "=" * 60
+
+    begin
+      response = @chat.ask(llm_prompt)
+      puts "\n#{response.content}"
+
+      # Remember the LLM response in long-term memory
+      node_id = @htm.remember(response.content)
+      puts "\n[✓] Response stored as node #{node_id}"
+    rescue StandardError => e
+      puts "[✗] LLM Error: #{e.message}"
     end
   end
 

@@ -42,6 +42,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "tiktoken_ruby"
   spec.add_dependency "ruby_llm"
   spec.add_dependency "lru_redux"
+  spec.add_dependency "ruby-progressbar"
 
   # Optional runtime dependencies for different job backends
   # - ActiveJob (bundled with Rails)

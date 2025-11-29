@@ -1,11 +1,12 @@
 PATH
   remote: .
   specs:
-    htm (0.0.3)
+    htm (0.0.4)
       activerecord
       lru_redux
       neighbor
       pg (>= 1.5.0)
+      ruby-progressbar
       ruby_llm
       tiktoken_ruby
 

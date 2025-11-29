@@ -68,6 +68,12 @@ rake release
 # Show code statistics
 rake stats
 
+# Show database table record counts and statistics
+rake htm:db:stats
+
+# Rebuild all embeddings (clears and regenerates via LLM)
+rake htm:db:rebuild:embeddings
+
 # Enable PostgreSQL extensions (if needed)
 ruby enable_extensions.rb
 ```
@@ -355,7 +361,7 @@ File.write('tags.svg', HTM::Models::Tag.all.tree_svg)
 File.write('tags.svg', HTM::Models::Tag.all.tree_svg(title: 'My Tags'))
 ```
 
-**Rake tasks for tag export**:
+**Rake tasks for tag management**:
 ```bash
 rake htm:tags:tree                    # Display text tree (all tags)
 rake 'htm:tags:tree[database]'        # Display tags with prefix 'database'
@@ -365,6 +371,7 @@ rake htm:tags:svg                     # Export to tags.svg
 rake 'htm:tags:svg[web]'              # Export tags with prefix 'web' to tags.svg
 rake htm:tags:export                  # Export all formats (tags.txt, tags.md, tags.svg)
 rake 'htm:tags:export[database]'      # Export filtered tags to all formats
+rake htm:tags:rebuild                 # Rebuild all tags (clears and regenerates via LLM)
 ```
 
 ### Soft Delete and Memory Recovery

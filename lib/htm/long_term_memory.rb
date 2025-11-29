@@ -651,25 +651,78 @@ class HTM
     # Searches the tags table for tags where any hierarchy level matches
     # query words. For example, query "PostgreSQL database" would match
     # tags like "database:postgresql", "database:sql", etc.
+    # Find tags matching a query using semantic extraction
     #
     # @param query [String] Search query
-    # @return [Array<String>] Matching tag names
+    # @param include_extracted [Boolean] If true, returns hash with :extracted and :matched keys
+    # @return [Array<String>] Matching tag names (default)
+    # @return [Hash] If include_extracted: { extracted: [...], matched: [...] }
     #
-    def find_query_matching_tags(query)
-      return [] if query.nil? || query.strip.empty?
+    def find_query_matching_tags(query, include_extracted: false)
+      empty_result = include_extracted ? { extracted: [], matched: [] } : []
+      return empty_result if query.nil? || query.strip.empty?
 
-      # Extract words from query (lowercase, 3+ chars)
-      words = query.downcase.split(/\s+/).select { |w| w.length >= 3 }
-      return [] if words.empty?
+      # Use the tag extractor to generate semantic tags from the query
+      # This uses the same LLM process as when storing nodes
+      existing_tags = HTM::Models::Tag.pluck(:name).sample(50)
+      extracted_tags = HTM::TagService.extract(query, existing_ontology: existing_tags)
 
-      # Build LIKE conditions for each word
-      # Match tags where any part of the hierarchy contains the word
-      conditions = words.map { |w| "name ILIKE ?" }
-      values = words.map { |w| "%#{w}%" }
+      if extracted_tags.empty?
+        return include_extracted ? { extracted: [], matched: [] } : []
+      end
 
-      HTM::Models::Tag
-        .where(conditions.join(' OR '), *values)
-        .pluck(:name)
+      # Step 1: Try exact matches
+      exact_matches = HTM::Models::Tag.where(name: extracted_tags).pluck(:name)
+
+      if exact_matches.any?
+        return include_extracted ? { extracted: extracted_tags, matched: exact_matches } : exact_matches
+      end
+
+      # Step 2: Try matching on parent/prefix levels
+      # For "person:human:character:popeye", try "person:human:character", "person:human", "person"
+      prefix_candidates = extracted_tags.flat_map do |tag|
+        levels = tag.split(':')
+        (1...levels.size).map { |i| levels[0, i].join(':') }
+      end.uniq
+
+      if prefix_candidates.any?
+        prefix_matches = HTM::Models::Tag.where(name: prefix_candidates).pluck(:name)
+        if prefix_matches.any?
+          return include_extracted ? { extracted: extracted_tags, matched: prefix_matches } : prefix_matches
+        end
+      end
+
+      # Step 3: Try matching individual components, starting from rightmost (most specific)
+      # For "person:human:character:popeye", try "popeye", then "character", then "human", then "person"
+      # Search for tags that contain this component at any level
+      all_components = extracted_tags.flat_map { |tag| tag.split(':') }.uniq
+
+      # Order by specificity: components that appear at deeper levels first
+      component_depths = Hash.new(0)
+      extracted_tags.each do |tag|
+        levels = tag.split(':')
+        levels.each_with_index { |comp, idx| component_depths[comp] = [component_depths[comp], idx].max }
+      end
+      ordered_components = all_components.sort_by { |c| -component_depths[c] }
+
+      # Try each component, starting with most specific (rightmost)
+      ordered_components.each do |component|
+        # Find tags where this component appears at any level
+        component_matches = HTM::Models::Tag
+          .where("name = ? OR name LIKE ? OR name LIKE ? OR name LIKE ?",
+                 component,           # exact match (single-level tag)
+                 "#{component}:%",    # starts with component
+                 "%:#{component}",    # ends with component
+                 "%:#{component}:%")  # component in middle
+          .pluck(:name)
+
+        if component_matches.any?
+          return include_extracted ? { extracted: extracted_tags, matched: component_matches } : component_matches
+        end
+      end
+
+      # No matches found at any level
+      include_extracted ? { extracted: extracted_tags, matched: [] } : []
     end
 
     private

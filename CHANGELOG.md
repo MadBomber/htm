@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2025-11-28
+
+### Added
+- **Semantic tag matching for queries** - Query tags are now extracted using LLM
+  - Uses same `TagService.extract()` process as node storage
+  - 3-step search strategy: exact match → prefix match → component match
+  - Component matching searches right-to-left (most specific first)
+  - Replaces naive keyword substring matching
+- **New rake tasks for database maintenance**:
+  - `htm:db:stats` - Show record counts for all HTM tables with breakdowns
+  - `htm:db:rebuild:embeddings` - Clear and regenerate all embeddings with progress bar
+  - `htm:tags:rebuild` - Clear and regenerate all tags with progress bar
+- **Progress bar support** - Added `ruby-progressbar` gem for long-running rake tasks
+- **CLI demo enhancements** (`examples/cli_app/htm_cli.rb`):
+  - Shows extracted tags, searched tags, and matched tags during recall
+  - Generates context-aware responses using RubyLLM with Ollama
+  - Stores LLM responses in long-term memory for learning
+
+### Changed
+- **Improved tag extraction prompt** with CRITICAL CONSTRAINTS to prevent:
+  - Circular references (concept at both root and leaf)
+  - Self-containment (parent containing itself as descendant)
+  - Duplicate segments in hierarchy path
+  - Redundant duplicates across branches
+- **TagService validation** now programmatically enforces:
+  - Self-containment detection (root == leaf)
+  - Duplicate segment detection in hierarchy path
+  - Maximum depth reduced from 5 to 4 levels
+- **`find_query_matching_tags` method** completely rewritten:
+  - Now uses LLM-based semantic extraction instead of keyword matching
+  - Returns both extracted and matched tags via `include_extracted: true` option
+
+### Fixed
+- Tag search no longer matches unrelated tags via substring (e.g., "man" matching "management")
+
 ## [0.0.4] - 2025-11-28
 
 ### Added
@@ -221,7 +256,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/madbomber/htm/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/madbomber/htm/compare/v0.0.2...v0.0.4
 [0.0.2]: https://github.com/madbomber/htm/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/madbomber/htm/releases/tag/v0.0.1

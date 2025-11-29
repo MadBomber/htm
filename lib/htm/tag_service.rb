@@ -14,7 +14,7 @@ class HTM
   # The actual LLM call is delegated to HTM.configuration.tag_extractor
   #
   class TagService
-    MAX_DEPTH = 5  # Maximum hierarchy depth (4 colons)
+    MAX_DEPTH = 4  # Maximum hierarchy depth (3 colons)
     TAG_FORMAT = /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/  # Validation regex
 
     # Extract tags with validation and processing
@@ -87,6 +87,21 @@ class HTM
           next
         end
 
+        # Parse hierarchy for ontological validation
+        levels = tag.split(':')
+
+        # Check for self-containment (root == leaf creates circular reference)
+        if levels.size > 1 && levels.first == levels.last
+          HTM.logger.warn "TagService: Self-containment detected (root == leaf), skipping: #{tag}"
+          next
+        end
+
+        # Check for duplicate segments in path (indicates circular/redundant hierarchy)
+        if levels.size != levels.uniq.size
+          HTM.logger.warn "TagService: Duplicate segment in hierarchy, skipping: #{tag}"
+          next
+        end
+
         # Tag is valid
         valid_tags << tag
       end
@@ -104,6 +119,11 @@ class HTM
       return false if tag.empty?
       return false unless tag.match?(TAG_FORMAT)
       return false if tag.count(':') >= MAX_DEPTH
+
+      # Ontological validation
+      levels = tag.split(':')
+      return false if levels.size > 1 && levels.first == levels.last  # Self-containment
+      return false if levels.size != levels.uniq.size  # Duplicate segments
 
       true
     end

@@ -394,18 +394,43 @@ class HTM
 
           Rules:
           - Use lowercase letters, numbers, and hyphens only
-          - Maximum depth: 5 levels
+          - Maximum depth: 4 levels (to prevent excessive nesting)
           - Return 2-5 tags per text
           - Tags should be reusable and consistent
           - Prefer existing ontology tags when applicable
           - Use hyphens for multi-word terms (e.g., natural-language-processing)
 
-          Text: #{text}
+          CRITICAL CONSTRAINTS:
+          - NO CIRCULAR REFERENCES: A concept cannot appear at both the root and leaf of the same path
+          - NO REDUNDANT DUPLICATES: Do not create the same concept in multiple branches
+            Example (WRONG): database:postgresql vs database-management:relational-databases:postgresql
+            Example (RIGHT): Choose ONE primary location
+          - CONSISTENT DEPTH: Similar concept types should be at similar depth levels
+            Example (WRONG): age:numeric vs name:individual:specific-name:john
+            Example (RIGHT): Both should be at similar depths under personal-data
+          - NO SELF-CONTAINMENT: A parent concept should never contain itself as a descendant
+            Example (WRONG): age:personal-information:personal-data:age
+            Example (RIGHT): personal-information:personal-data:age
+          - AVOID AMBIGUOUS CROSS-DOMAIN CONCEPTS: Each concept should have ONE primary parent
+            If a concept truly belongs in multiple domains, use the most specific/primary domain
+
+          TEXT: #{text}
 
           Return ONLY the topic tags, one per line, no explanations.
         PROMPT
 
-        system_prompt = 'You are a precise topic extraction system. Output only topic tags in hierarchical format: root:subtopic:detail'
+        system_prompt = <<~SYSTEM.strip
+          You are a precise topic extraction system that prevents ontological errors.
+
+          Your job is to:
+          1. Extract hierarchical tags in format: root:subtopic:detail
+          2. Maintain consistency with existing ontology (no duplicates)
+          3. Prevent circular references and self-containing concepts
+          4. Keep hierarchies at consistent depth levels
+          5. Choose PRIMARY locations for concepts (no multi-parent confusion)
+
+          Output ONLY topic tags, one per line.
+        SYSTEM
 
         # Use RubyLLM chat for tag extraction
         chat = RubyLLM.chat(model: model)
@@ -423,8 +448,8 @@ class HTM
           tag =~ /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/
         end
 
-        # Limit depth to 5 levels (4 colons maximum)
-        valid_tags.select { |tag| tag.count(':') < 5 }
+        # Limit depth to 4 levels (3 colons maximum)
+        valid_tags.select { |tag| tag.count(':') < 4 }
       end
     end
 

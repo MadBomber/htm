@@ -77,6 +77,84 @@ namespace :htm do
       puts "Tags exported: #{count}#{args[:prefix] ? " (prefix: #{args[:prefix]})" : ''}"
     end
 
+    desc "Rebuild all tags from node content. Clears existing tags and regenerates using LLM."
+    task :rebuild do
+      require 'htm'
+
+      # Ensure database connection
+      HTM::ActiveRecordConfig.establish_connection!
+
+      # Node uses default_scope for active (non-deleted) nodes
+      node_count = HTM::Models::Node.count
+      tag_count = HTM::Models::Tag.count
+      node_tag_count = HTM::Models::NodeTag.count
+
+      puts "\nHTM Tags Rebuild"
+      puts "=" * 40
+      puts "This will:"
+      puts "  - Delete #{node_tag_count} node-tag associations"
+      puts "  - Delete #{tag_count} tags"
+      puts "  - Regenerate tags for #{node_count} nodes using LLM"
+      puts "\nThis operation cannot be undone."
+      print "\nType 'yes' to confirm: "
+
+      confirmation = $stdin.gets&.strip
+      unless confirmation == 'yes'
+        puts "Aborted."
+        next
+      end
+
+      puts "\nClearing existing tags..."
+
+      # Clear join table first (foreign key constraint)
+      deleted_associations = HTM::Models::NodeTag.delete_all
+      puts "  Deleted #{deleted_associations} node-tag associations"
+
+      # Clear tags table
+      deleted_tags = HTM::Models::Tag.delete_all
+      puts "  Deleted #{deleted_tags} tags"
+
+      puts "\nRegenerating tags for #{node_count} nodes..."
+      puts "(This may take a while depending on your LLM provider)\n"
+
+      require 'ruby-progressbar'
+
+      # Create progress bar with ETA
+      progressbar = ProgressBar.create(
+        total: node_count,
+        format: '%t: |%B| %c/%C (%p%%) %e',
+        title: 'Processing',
+        output: $stdout,
+        smoothing: 0.5
+      )
+
+      # Process each active node (default_scope excludes deleted)
+      errors = 0
+
+      HTM::Models::Node.find_each do |node|
+        begin
+          HTM::Jobs::GenerateTagsJob.perform(node_id: node.id)
+        rescue StandardError => e
+          errors += 1
+          progressbar.log "  Error on node #{node.id}: #{e.message}"
+        end
+
+        progressbar.increment
+      end
+
+      progressbar.finish
+
+      # Final stats
+      new_tag_count = HTM::Models::Tag.count
+      new_association_count = HTM::Models::NodeTag.count
+
+      puts "\nRebuild complete!"
+      puts "  Nodes processed: #{node_count}"
+      puts "  Errors: #{errors}"
+      puts "  Tags created: #{new_tag_count}"
+      puts "  Node-tag associations: #{new_association_count}"
+    end
+
     desc "Export tags in all formats (tags.txt, tags.md, tags.svg). Optional prefix filter."
     task :export, [:prefix] do |_t, args|
       require 'htm'
