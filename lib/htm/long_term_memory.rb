@@ -49,9 +49,10 @@ class HTM
     # @param token_count [Integer] Token count
     # @param robot_id [Integer] Robot identifier
     # @param embedding [Array<Float>, nil] Pre-generated embedding vector
+    # @param metadata [Hash] Flexible metadata for the node (default: {})
     # @return [Hash] { node_id:, is_new:, robot_node: }
     #
-    def add(content:, token_count: 0, robot_id:, embedding: nil)
+    def add(content:, token_count: 0, robot_id:, embedding: nil, metadata: {})
       content_hash = HTM::Models::Node.generate_content_hash(content)
 
       # Wrap in transaction to ensure data consistency
@@ -97,7 +98,8 @@ class HTM
             content: content,
             content_hash: content_hash,
             token_count: token_count,
-            embedding: embedding_str
+            embedding: embedding_str,
+            metadata: metadata
           )
 
           # Link robot to new node
@@ -197,11 +199,12 @@ class HTM
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object] Service to generate embeddings
+    # @param metadata [Hash] Filter by metadata fields (default: {})
     # @return [Array<Hash>] Matching nodes
     #
-    def search(timeframe:, query:, limit:, embedding_service:)
-      cached_query(:search, timeframe, query, limit) do
-        search_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service)
+    def search(timeframe:, query:, limit:, embedding_service:, metadata: {})
+      cached_query(:search, timeframe, query, limit, metadata) do
+        search_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service, metadata: metadata)
       end
     end
 
@@ -210,11 +213,12 @@ class HTM
     # @param timeframe [Range] Time range to search
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
+    # @param metadata [Hash] Filter by metadata fields (default: {})
     # @return [Array<Hash>] Matching nodes
     #
-    def search_fulltext(timeframe:, query:, limit:)
-      cached_query(:fulltext, timeframe, query, limit) do
-        search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit)
+    def search_fulltext(timeframe:, query:, limit:, metadata: {})
+      cached_query(:fulltext, timeframe, query, limit, metadata) do
+        search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit, metadata: metadata)
       end
     end
 
@@ -225,11 +229,12 @@ class HTM
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object] Service to generate embeddings
     # @param prefilter_limit [Integer] Candidates to consider (default: 100)
+    # @param metadata [Hash] Filter by metadata fields (default: {})
     # @return [Array<Hash>] Matching nodes
     #
-    def search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit: 100)
-      cached_query(:hybrid, timeframe, query, limit, prefilter_limit) do
-        search_hybrid_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service, prefilter_limit: prefilter_limit)
+    def search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit: 100, metadata: {})
+      cached_query(:hybrid, timeframe, query, limit, prefilter_limit, metadata) do
+        search_hybrid_uncached(timeframe: timeframe, query: query, limit: limit, embedding_service: embedding_service, prefilter_limit: prefilter_limit, metadata: metadata)
       end
     end
 
@@ -487,20 +492,22 @@ class HTM
     # @param query_tags [Array<String>] Tags to match
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object, nil] Service to generate embeddings
+    # @param metadata [Hash] Filter by metadata fields (default: {})
     # @return [Array<Hash>] Nodes with relevance scores
     #
-    def search_with_relevance(timeframe:, query: nil, query_tags: [], limit: 20, embedding_service: nil)
+    def search_with_relevance(timeframe:, query: nil, query_tags: [], limit: 20, embedding_service: nil, metadata: {})
       # Get candidates from appropriate search method
       candidates = if query && embedding_service
         # Vector search
-        search_uncached(timeframe: timeframe, query: query, limit: limit * 2, embedding_service: embedding_service)
+        search_uncached(timeframe: timeframe, query: query, limit: limit * 2, embedding_service: embedding_service, metadata: metadata)
       elsif query
         # Full-text search
-        search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 2)
+        search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 2, metadata: metadata)
       else
         # Time-range only (or no filter if timeframe is nil)
         scope = HTM::Models::Node.where(deleted_at: nil)
         scope = apply_timeframe_scope(scope, timeframe)
+        scope = apply_metadata_scope(scope, metadata)
         scope.order(created_at: :desc).limit(limit * 2).map(&:attributes)
       end
 
@@ -788,6 +795,38 @@ class HTM
       end
     end
 
+    # Build SQL condition for metadata filtering (JSONB containment)
+    #
+    # @param metadata [Hash] Metadata to filter by
+    # @param table_alias [String] Table alias (default: none)
+    # @return [String, nil] SQL condition or nil for no filter
+    #
+    def build_metadata_condition(metadata, table_alias: nil)
+      return nil if metadata.nil? || metadata.empty?
+
+      prefix = table_alias ? "#{table_alias}." : ""
+      column = "#{prefix}metadata"
+      conn = ActiveRecord::Base.connection
+
+      # Use JSONB containment operator @>
+      # This matches if the metadata column contains all key-value pairs in the filter
+      quoted_metadata = conn.quote(metadata.to_json)
+      "(#{column} @> #{quoted_metadata}::jsonb)"
+    end
+
+    # Build ActiveRecord where clause for metadata
+    #
+    # @param scope [ActiveRecord::Relation] Base scope
+    # @param metadata [Hash] Metadata to filter by
+    # @return [ActiveRecord::Relation] Scoped query
+    #
+    def apply_metadata_scope(scope, metadata)
+      return scope if metadata.nil? || metadata.empty?
+
+      # Use JSONB containment operator
+      scope.where("metadata @> ?::jsonb", metadata.to_json)
+    end
+
     # Generate cache key for query
     #
     # @param method [Symbol] Search method name
@@ -911,9 +950,10 @@ class HTM
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object] Service to generate query embedding
+    # @param metadata [Hash] Filter by metadata fields (default: {})
     # @return [Array<Hash>] Matching nodes
     #
-    def search_uncached(timeframe:, query:, limit:, embedding_service:)
+    def search_uncached(timeframe:, query:, limit:, embedding_service:, metadata: {})
       # Generate query embedding client-side
       query_embedding = embedding_service.embed(query)
 
@@ -925,13 +965,15 @@ class HTM
       # Sanitize embedding for safe SQL use (validates all values are numeric)
       embedding_str = sanitize_embedding_for_sql(query_embedding)
 
-      # Build timeframe condition
+      # Build filter conditions
       timeframe_condition = build_timeframe_condition(timeframe)
-      where_clause = if timeframe_condition
-        "WHERE #{timeframe_condition} AND embedding IS NOT NULL AND deleted_at IS NULL"
-      else
-        "WHERE embedding IS NOT NULL AND deleted_at IS NULL"
-      end
+      metadata_condition = build_metadata_condition(metadata)
+
+      conditions = ["embedding IS NOT NULL", "deleted_at IS NULL"]
+      conditions << timeframe_condition if timeframe_condition
+      conditions << metadata_condition if metadata_condition
+
+      where_clause = "WHERE #{conditions.join(' AND ')}"
 
       # Use quote to safely escape the embedding string in the query
       quoted_embedding = ActiveRecord::Base.connection.quote(embedding_str)
@@ -959,12 +1001,18 @@ class HTM
     # @param timeframe [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)
     # @param query [String] Search query
     # @param limit [Integer] Maximum results
+    # @param metadata [Hash] Filter by metadata fields (default: {})
     # @return [Array<Hash>] Matching nodes
     #
-    def search_fulltext_uncached(timeframe:, query:, limit:)
-      # Build timeframe condition
+    def search_fulltext_uncached(timeframe:, query:, limit:, metadata: {})
+      # Build filter conditions
       timeframe_condition = build_timeframe_condition(timeframe)
-      timeframe_sql = timeframe_condition ? "AND #{timeframe_condition}" : ""
+      metadata_condition = build_metadata_condition(metadata)
+
+      additional_conditions = []
+      additional_conditions << timeframe_condition if timeframe_condition
+      additional_conditions << metadata_condition if metadata_condition
+      additional_sql = additional_conditions.any? ? "AND #{additional_conditions.join(' AND ')}" : ""
 
       result = ActiveRecord::Base.connection.select_all(
         ActiveRecord::Base.sanitize_sql_array([
@@ -974,7 +1022,7 @@ class HTM
             FROM nodes
             WHERE deleted_at IS NULL
             AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
-            #{timeframe_sql}
+            #{additional_sql}
             ORDER BY rank DESC
             LIMIT ?
           SQL
@@ -1001,9 +1049,10 @@ class HTM
     # @param limit [Integer] Maximum results
     # @param embedding_service [Object] Service to generate query embedding
     # @param prefilter_limit [Integer] Candidates to consider
+    # @param metadata [Hash] Filter by metadata fields (default: {})
     # @return [Array<Hash>] Matching nodes with similarity and tag_boost scores
     #
-    def search_hybrid_uncached(timeframe:, query:, limit:, embedding_service:, prefilter_limit:)
+    def search_hybrid_uncached(timeframe:, query:, limit:, embedding_service:, prefilter_limit:, metadata: {})
       # Generate query embedding client-side
       query_embedding = embedding_service.embed(query)
 
@@ -1016,13 +1065,23 @@ class HTM
       embedding_str = sanitize_embedding_for_sql(query_embedding)
       quoted_embedding = ActiveRecord::Base.connection.quote(embedding_str)
 
-      # Build timeframe condition
+      # Build filter conditions (with table alias for CTEs)
       timeframe_condition = build_timeframe_condition(timeframe, table_alias: 'n')
-      timeframe_sql = timeframe_condition ? "AND #{timeframe_condition}" : ""
+      metadata_condition = build_metadata_condition(metadata, table_alias: 'n')
+
+      additional_conditions = []
+      additional_conditions << timeframe_condition if timeframe_condition
+      additional_conditions << metadata_condition if metadata_condition
+      additional_sql = additional_conditions.any? ? "AND #{additional_conditions.join(' AND ')}" : ""
 
       # Same for non-aliased queries
       timeframe_condition_bare = build_timeframe_condition(timeframe)
-      timeframe_sql_bare = timeframe_condition_bare ? "AND #{timeframe_condition_bare}" : ""
+      metadata_condition_bare = build_metadata_condition(metadata)
+
+      additional_conditions_bare = []
+      additional_conditions_bare << timeframe_condition_bare if timeframe_condition_bare
+      additional_conditions_bare << metadata_condition_bare if metadata_condition_bare
+      additional_sql_bare = additional_conditions_bare.any? ? "AND #{additional_conditions_bare.join(' AND ')}" : ""
 
       # Find tags that match query terms
       matching_tags = find_query_matching_tags(query)
@@ -1046,7 +1105,7 @@ class HTM
                 FROM nodes n
                 WHERE n.deleted_at IS NULL
                 AND to_tsvector('english', n.content) @@ plainto_tsquery('english', ?)
-                #{timeframe_sql}
+                #{additional_sql}
                 LIMIT ?
               ),
               tag_candidates AS (
@@ -1057,7 +1116,7 @@ class HTM
                 JOIN tags t ON t.id = nt.tag_id
                 WHERE n.deleted_at IS NULL
                 AND t.name IN (#{tag_list})
-                #{timeframe_sql}
+                #{additional_sql}
                 LIMIT ?
               ),
               all_candidates AS (
@@ -1104,7 +1163,7 @@ class HTM
                 FROM nodes
                 WHERE deleted_at IS NULL
                 AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
-                #{timeframe_sql_bare}
+                #{additional_sql_bare}
                 LIMIT ?
               )
               SELECT id, content, access_count, created_at, token_count,

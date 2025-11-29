@@ -15,6 +15,7 @@ class CreateNodes < ActiveRecord::Migration[7.1]
       t.timestamptz :deleted_at, comment: 'Soft delete timestamp - node is considered deleted when set'
       t.bigint :source_id, comment: 'Reference to source file (for file-loaded nodes)'
       t.integer :chunk_position, comment: 'Position within source file (0-indexed)'
+      t.jsonb :metadata, default: {}, null: false, comment: 'Flexible metadata storage (memory_type, importance, source, etc.)'
     end
 
     # Basic indexes for common queries
@@ -29,6 +30,9 @@ class CreateNodes < ActiveRecord::Migration[7.1]
 
     # Partial index for efficiently querying non-deleted nodes
     add_index :nodes, :created_at, name: 'idx_nodes_not_deleted_created_at', where: 'deleted_at IS NULL'
+
+    # GIN index for JSONB metadata queries
+    add_index :nodes, :metadata, using: :gin, name: 'idx_nodes_metadata'
 
     # Vector similarity search index (HNSW for better performance)
     execute <<-SQL

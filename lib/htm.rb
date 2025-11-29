@@ -115,7 +115,10 @@ class HTM
   # @example Remember with manual tags
   #   node_id = htm.remember("Time-series data", tags: ["database:timescaledb"])
   #
-  def remember(content, tags: [])
+  # @example Remember with metadata
+  #   node_id = htm.remember("User prefers dark mode", metadata: { source: "user", confidence: 0.95 })
+  #
+  def remember(content, tags: [], metadata: {})
     # Validate inputs
     raise ValidationError, "Content cannot be nil" if content.nil?
 
@@ -133,6 +136,8 @@ class HTM
       end
     end
 
+    validate_metadata!(metadata)
+
     content = content_str
 
     # Calculate token count using configured counter
@@ -144,7 +149,8 @@ class HTM
       content: content,
       token_count: token_count,
       robot_id: @robot_id,
-      embedding: nil  # Will be generated in background
+      embedding: nil,  # Will be generated in background
+      metadata: metadata
     )
 
     node_id = result[:node_id]
@@ -191,6 +197,7 @@ class HTM
   # @param with_relevance [Boolean] Include dynamic relevance scores (default: false)
   # @param query_tags [Array<String>] Tags to boost relevance (default: [])
   # @param raw [Boolean] Return full node hashes (true) or just content strings (false) (default: false)
+  # @param metadata [Hash] Filter by metadata fields using JSONB containment (default: {})
   # @return [Array<String>, Array<Hash>] Content strings (raw: false) or full node hashes (raw: true)
   #
   # @example Basic usage - no time filter (returns content strings)
@@ -209,12 +216,17 @@ class HTM
   # @example Multiple time windows
   #   memories = htm.recall("meetings", timeframe: [last_monday, last_friday])
   #
-  def recall(topic, timeframe: nil, limit: 20, strategy: :vector, with_relevance: false, query_tags: [], raw: false)
+  # @example Filter by metadata
+  #   memories = htm.recall("preferences", metadata: { source: "user" })
+  #   memories = htm.recall("decisions", metadata: { confidence: 0.9, type: "architectural" })
+  #
+  def recall(topic, timeframe: nil, limit: 20, strategy: :vector, with_relevance: false, query_tags: [], raw: false, metadata: {})
     # Validate inputs
     validate_timeframe!(timeframe)
     validate_positive_integer!(limit, "limit")
     validate_recall_strategy!(strategy)
     validate_array!(query_tags, "query_tags")
+    validate_metadata!(metadata)
 
     # Normalize timeframe and potentially extract from query
     search_query = topic
@@ -234,7 +246,8 @@ class HTM
         query: search_query,
         query_tags: query_tags,
         limit: limit,
-        embedding_service: (strategy == :vector || strategy == :hybrid) ? HTM : nil
+        embedding_service: (strategy == :vector || strategy == :hybrid) ? HTM : nil,
+        metadata: metadata
       )
     else
       # Perform standard RAG-based retrieval
@@ -245,13 +258,15 @@ class HTM
           timeframe: normalized_timeframe,
           query: search_query,
           limit: limit,
-          embedding_service: HTM
+          embedding_service: HTM,
+          metadata: metadata
         )
       when :fulltext
         @long_term_memory.search_fulltext(
           timeframe: normalized_timeframe,
           query: search_query,
-          limit: limit
+          limit: limit,
+          metadata: metadata
         )
       when :hybrid
         # Hybrid search combining vector + fulltext
@@ -259,7 +274,8 @@ class HTM
           timeframe: normalized_timeframe,
           query: search_query,
           limit: limit,
-          embedding_service: HTM
+          embedding_service: HTM,
+          metadata: metadata
         )
       end
     end
@@ -559,6 +575,17 @@ class HTM
 
   def validate_positive_integer!(value, name)
     raise ValidationError, "#{name} must be a positive Integer" unless value.is_a?(Integer) && value > 0
+  end
+
+  def validate_metadata!(metadata)
+    raise ValidationError, "Metadata must be a Hash" unless metadata.is_a?(Hash)
+
+    # Ensure all keys are strings or symbols (will be converted to strings in JSON)
+    metadata.each_key do |key|
+      unless key.is_a?(String) || key.is_a?(Symbol)
+        raise ValidationError, "Metadata keys must be strings or symbols"
+      end
+    end
   end
 
 end

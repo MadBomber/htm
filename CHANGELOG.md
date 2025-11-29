@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **JSONB metadata column on nodes** - Flexible key-value storage for arbitrary node metadata
+  - Added `metadata` JSONB column to nodes table with `{}` default
+  - GIN index for efficient JSONB containment queries
+- **Metadata parameter for `remember` and `recall`** - Filter memories by metadata
+  - `htm.remember(content, metadata: {source: "api", version: 2})`
+  - `htm.recall(topic, metadata: {source: "api"})` filters using PostgreSQL `@>` containment
+  - Metadata filtering works with all search strategies (vector, fulltext, hybrid)
+  - Validation ensures metadata is a Hash with string/symbol keys
+- **IRB configuration file** - `.irbrc` with useful HTM and RubyLLM objects for interactive testing
+  - Pre-configured robot instances: `htm`, `user`, `assistant`, `researcher`, `coder`
+  - RubyLLM shortcuts and model constants
+  - Helper methods for tag and node exploration
+
 ### Security
 - **Fixed SQL injection vulnerability in `Observability.extension_installed?`** - Now uses parameterized query with `sanitize_sql_array` instead of string interpolation
 

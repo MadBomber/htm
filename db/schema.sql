@@ -168,6 +168,7 @@ CREATE TABLE public.nodes (
     deleted_at timestamp with time zone,
     source_id bigint,
     chunk_position integer,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
     CONSTRAINT check_embedding_dimension CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension > 0) AND (embedding_dimension <= 2000))))
 );
 
@@ -248,6 +249,12 @@ COMMENT ON COLUMN public.nodes.source_id IS 'Reference to source file (for file-
 --
 
 COMMENT ON COLUMN public.nodes.chunk_position IS 'Position within source file (0-indexed)';
+
+--
+-- Name: COLUMN nodes.metadata; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.nodes.metadata IS 'Flexible metadata storage (memory_type, importance, source, etc.)';
 
 --
 -- Name: nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -681,6 +688,12 @@ CREATE INDEX idx_nodes_embedding ON public.nodes USING hnsw (embedding public.ve
 CREATE INDEX idx_nodes_last_accessed ON public.nodes USING btree (last_accessed);
 
 --
+-- Name: idx_nodes_metadata; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_nodes_metadata ON public.nodes USING gin (metadata);
+
+--
 -- Name: idx_nodes_not_deleted_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -811,4 +824,4 @@ ALTER TABLE ONLY public.robot_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict s4jsX5wR10TU2eF9mgKNmfoA7UWE9rP9bvSd2qOgnmpvonNwLASTfp4PU2GPy9d
+\unrestrict DUrF24Zrve4qSBwlDrJ4qAzzZhvhX5s2S57oHYVJ0ZPbaDC4ItMZ29Pv9oI3Q9d
