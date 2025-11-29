@@ -209,4 +209,152 @@ class IntegrationTest < Minitest::Test
       assert result.key?("id") || result.key?(:id), "Raw result should include id"
     end
   end
+
+  # Additional integration tests for comprehensive coverage
+
+  def test_tag_operations
+    # Add a node with manual tags
+    node_id = @htm.remember("Database migrations are important", tags: ["database:migrations"])
+
+    # Verify tags were added
+    node = HTM::Models::Node.find(node_id)
+    assert node.tag_names.include?("database:migrations"), "Manual tag should be present"
+
+    # Add more tags
+    node.add_tags(["database:postgresql", "best-practices"])
+    assert node.tag_names.include?("database:postgresql")
+    assert node.tag_names.include?("best-practices")
+
+    # Remove a tag
+    node.remove_tag("best-practices")
+    refute node.tag_names.include?("best-practices")
+  end
+
+  def test_working_memory_eviction
+    # Create HTM with small working memory
+    small_htm = HTM.new(
+      robot_name: "Small Memory Robot",
+      working_memory_size: 100  # Very small
+    )
+
+    # Add content that exceeds working memory
+    small_htm.remember("This is a test message that should trigger eviction")
+    small_htm.remember("Another message to potentially cause eviction")
+
+    # Working memory should have evicted older content to stay under limit
+    assert small_htm.working_memory.token_count <= 100
+  end
+
+  def test_hybrid_search
+    # Add test data
+    @htm.remember("PostgreSQL supports vector search via pgvector extension")
+    @htm.remember("TimescaleDB extends PostgreSQL for time-series data")
+    @htm.remember("Ruby on Rails is a web framework")
+
+    # Hybrid search combines fulltext and vector
+    results = @htm.recall("PostgreSQL vector", strategy: :hybrid)
+
+    assert_instance_of Array, results
+  end
+
+  def test_recall_with_relevance_scoring
+    # Add test data
+    @htm.remember("PostgreSQL is great for production databases")
+    @htm.remember("Development databases can use SQLite")
+
+    # Recall with relevance scoring
+    results = @htm.recall("PostgreSQL", strategy: :fulltext, with_relevance: true, raw: true)
+
+    assert_instance_of Array, results
+    if results.any?
+      result = results.first
+      assert result.key?('relevance'), "Result should include relevance score"
+      assert result['relevance'].is_a?(Numeric), "Relevance should be numeric"
+    end
+  end
+
+  def test_observability_during_operations
+    # Reset metrics
+    HTM::Observability.reset_metrics!
+
+    # Perform some operations
+    @htm.remember("Test content for observability")
+    @htm.recall("observability", strategy: :fulltext)
+
+    # Check connection pool stats
+    pool_stats = HTM::Observability.connection_pool_stats
+
+    assert pool_stats[:status] == :healthy || pool_stats[:status] == :warning,
+           "Pool should be healthy or warning status"
+    assert pool_stats[:connections] >= 0
+  end
+
+  def test_circuit_breaker_state_accessible
+    # Reset circuit breakers
+    HTM::EmbeddingService.reset_circuit_breaker!
+    HTM::TagService.reset_circuit_breaker!
+
+    # Verify circuit breakers are closed (healthy)
+    embedding_cb = HTM::EmbeddingService.circuit_breaker
+    tag_cb = HTM::TagService.circuit_breaker
+
+    assert_equal :closed, embedding_cb.state
+    assert_equal :closed, tag_cb.state
+  end
+
+  def test_health_check_integration
+    health = HTM::Observability.health_check
+
+    assert health[:checks][:database], "Database should be connected"
+    assert health[:checks][:connection_pool], "Connection pool should be healthy"
+
+    # Circuit breakers should be healthy
+    if health[:checks].key?(:embedding_circuit)
+      assert health[:checks][:embedding_circuit], "Embedding circuit should be closed"
+    end
+    if health[:checks].key?(:tag_circuit)
+      assert health[:checks][:tag_circuit], "Tag circuit should be closed"
+    end
+  end
+
+  def test_search_by_tags
+    # Add nodes with specific tags
+    @htm.remember("PostgreSQL database setup guide", tags: ["database:postgresql"])
+    @htm.remember("MySQL database configuration", tags: ["database:mysql"])
+    @htm.remember("Ruby development tips", tags: ["programming:ruby"])
+
+    # Search by tag
+    results = @htm.long_term_memory.search_by_tags(tags: ["database:postgresql"])
+
+    assert results.any? { |r| r['content']&.include?('PostgreSQL') }
+  end
+
+  def test_popular_tags
+    # Add nodes with various tags
+    3.times { @htm.remember("PostgreSQL content #{rand(1000)}", tags: ["database:postgresql"]) }
+    2.times { @htm.remember("Ruby content #{rand(1000)}", tags: ["programming:ruby"]) }
+    1.times { @htm.remember("Python content #{rand(1000)}", tags: ["programming:python"]) }
+
+    # Get popular tags
+    popular = @htm.long_term_memory.popular_tags(limit: 10)
+
+    assert_instance_of Array, popular
+  end
+
+  def test_cache_invalidation_on_forget
+    # Add a node
+    node_id = @htm.remember("Content to be forgotten")
+
+    # Recall to populate cache
+    @htm.recall("forgotten", strategy: :fulltext)
+
+    # Forget the node (soft delete)
+    @htm.forget(node_id)
+
+    # Cache should be invalidated - subsequent recall shouldn't find it
+    results = @htm.recall("forgotten", strategy: :fulltext)
+
+    # The forgotten node shouldn't appear in results
+    refute results.any? { |r| r.include?("Content to be forgotten") }
+  end
 end

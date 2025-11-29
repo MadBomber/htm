@@ -97,8 +97,7 @@ class HTM
             content: content,
             content_hash: content_hash,
             token_count: token_count,
-            embedding: embedding_str,
-            embedding_dimension: embedding&.length
+            embedding: embedding_str
           )
 
           # Link robot to new node

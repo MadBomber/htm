@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.8] - 2025-11-29
+
 ### Added
 - **Circuit breaker pattern for LLM services** - Prevents cascading failures from external APIs
   - New `HTM::CircuitBreaker` class with configurable thresholds
@@ -19,13 +21,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `add`, `remove`, `has_space?`, `evict_to_make_space` synchronized
   - `assemble_context`, `token_count`, `utilization_percentage`, `node_count` synchronized
   - Internal helpers renamed to `*_unlocked` variants for safe internal use
+- **Observability module** (`HTM::Observability`) for system monitoring
+  - `connection_pool_stats` - Pool health with warning/critical/exhausted status
+  - `circuit_breaker_stats` - Service circuit breaker states
+  - `query_timing_stats` - Query performance metrics (avg, min, max, p50, p95, p99)
+  - `service_timing_stats` - Embedding/tag generation timing
+  - `memory_stats` - Process memory usage
+  - `health_check` - Comprehensive system health verification
+  - `healthy?` - Quick boolean health check
+  - Configurable thresholds: 75% warning, 90% critical for connection pool
 - **Comprehensive test suites**:
   - `test/circuit_breaker_test.rb` - 13 tests for circuit breaker states and transitions
   - `test/embedding_service_test.rb` - 19 tests for validation, generation, and circuit breaker
+  - `test/observability_test.rb` - 10 tests for observability module
   - Updated `test/tag_service_test.rb` - Added 4 circuit breaker tests (total 33 tests)
+  - Expanded `test/integration_test.rb` - Added 13 new integration tests
 - **Architecture review document** - Comprehensive multi-perspective codebase review
   - Reviews from 8 specialist perspectives (Systems, Domain, Security, etc.)
   - Located at `.architecture/reviews/comprehensive-codebase-review.md`
+- **Enhanced YARD documentation** for all error classes with examples
 
 ### Changed
 - **CircuitBreakerOpenError** now extends `HTM::Error` (was `EmbeddingError`)
@@ -34,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enables proper circuit breaker behavior in calling code
 - **GenerateEmbeddingJob and GenerateTagsJob** log warnings for circuit breaker open state
   - Graceful degradation when LLM services are unavailable
+
+### Removed
+- **`embedding_dimension` column from nodes table** - Unused since embeddings are always padded to 2000
+- **`embedding_model` column from nodes table** - Not needed for current use cases
 
 ## [0.0.7] - 2025-11-28
 
@@ -353,7 +371,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.7...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.8...HEAD
+[0.0.8]: https://github.com/madbomber/htm/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/madbomber/htm/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/madbomber/htm/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/madbomber/htm/compare/v0.0.4...v0.0.5

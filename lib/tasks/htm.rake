@@ -232,7 +232,7 @@ namespace :htm do
         end
 
         puts "\nClearing existing embeddings..."
-        cleared = HTM::Models::Node.where.not(embedding: nil).update_all(embedding: nil, embedding_dimension: nil)
+        cleared = HTM::Models::Node.where.not(embedding: nil).update_all(embedding: nil)
         puts "  Cleared #{cleared} embeddings"
 
         puts "\nGenerating embeddings for #{node_count} nodes..."
@@ -256,10 +256,7 @@ namespace :htm do
             # Generate embedding directly (not via job since we cleared them)
             result = HTM::EmbeddingService.generate(node.content)
 
-            node.update!(
-              embedding: result[:storage_embedding],
-              embedding_dimension: result[:dimension]
-            )
+            node.update!(embedding: result[:storage_embedding])
             success += 1
           rescue StandardError => e
             errors += 1

@@ -17,6 +17,7 @@ require_relative "htm/jobs/generate_embedding_job"
 require_relative "htm/jobs/generate_tags_job"
 require_relative "htm/loaders/paragraph_chunker"
 require_relative "htm/loaders/markdown_loader"
+require_relative "htm/observability"
 
 require "pg"
 require "securerandom"

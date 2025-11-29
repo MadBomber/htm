@@ -43,10 +43,7 @@ class HTM
           result = HTM::EmbeddingService.generate(node.content)
 
           # Update node with processed embedding
-          node.update!(
-            embedding: result[:storage_embedding],
-            embedding_dimension: result[:dimension]
-          )
+          node.update!(embedding: result[:storage_embedding])
 
           HTM.logger.info "GenerateEmbeddingJob: Successfully generated embedding for node #{node_id} (#{result[:dimension]} dimensions)"
 

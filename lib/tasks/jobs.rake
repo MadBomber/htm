@@ -88,10 +88,7 @@ namespace :htm do
         begin
           # Use the service class directly (same as job)
           result = HTM::EmbeddingService.generate(node.content)
-          node.update!(
-            embedding: result[:storage_embedding],
-            embedding_dimension: result[:dimension]
-          )
+          node.update!(embedding: result[:storage_embedding])
           processed += 1
           print "\rProcessed: #{processed}/#{total}"
         rescue StandardError => e
@@ -191,10 +188,7 @@ namespace :htm do
         begin
           # Use the service class directly to regenerate
           result = HTM::EmbeddingService.generate(node.content)
-          node.update!(
-            embedding: result[:storage_embedding],
-            embedding_dimension: result[:dimension]
-          )
+          node.update!(embedding: result[:storage_embedding])
           processed += 1
           print "\rProcessed: #{processed}/#{total}"
         rescue StandardError => e
@@ -274,7 +268,7 @@ namespace :htm do
       HTM::ActiveRecordConfig.establish_connection!
 
       puts "Clearing embeddings..."
-      HTM::Models::Node.update_all(embedding: nil, embedding_dimension: nil)
+      HTM::Models::Node.update_all(embedding: nil)
 
       puts "Clearing tags..."
       HTM::Models::NodeTag.delete_all

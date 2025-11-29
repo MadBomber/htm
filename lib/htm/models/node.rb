@@ -39,7 +39,6 @@ class HTM
       # Validations
       validates :content, presence: true
       validates :content_hash, presence: true, uniqueness: true
-      validates :embedding_dimension, numericality: { greater_than: 0, less_than_or_equal_to: 2000 }, allow_nil: true
 
       # Callbacks
       before_validation :set_content_hash, if: -> { content_hash.blank? && content.present? }
