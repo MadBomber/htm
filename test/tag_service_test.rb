@@ -4,6 +4,12 @@ require "test_helper"
 
 class TagServiceTest < Minitest::Test
   def setup
+    # Reset circuit breaker before each test
+    HTM::TagService.reset_circuit_breaker!
+
+    # Store original extractor
+    @original_extractor = HTM.configuration.tag_extractor
+
     # Configure HTM with mock tag extractor for tests
     HTM.configure do |config|
       config.job_backend = :inline
@@ -20,6 +26,8 @@ class TagServiceTest < Minitest::Test
   end
 
   def teardown
+    HTM.configuration.tag_extractor = @original_extractor
+    HTM::TagService.reset_circuit_breaker!
     reset_htm_configuration
   end
 
@@ -210,5 +218,71 @@ class TagServiceTest < Minitest::Test
     assert "valid-tag".match?(HTM::TagService::TAG_FORMAT)
     assert "a:b:c".match?(HTM::TagService::TAG_FORMAT)
     refute "Invalid".match?(HTM::TagService::TAG_FORMAT)
+  end
+
+  # Circuit breaker tests
+
+  def test_circuit_breaker_exists
+    breaker = HTM::TagService.circuit_breaker
+
+    assert_kind_of HTM::CircuitBreaker, breaker
+    assert_equal 'tag_service', breaker.name
+  end
+
+  def test_circuit_breaker_opens_after_failures
+    HTM.configure do |config|
+      config.job_backend = :inline
+      config.tag_extractor = ->(_text, _ontology) {
+        raise StandardError, "API unavailable"
+      }
+    end
+
+    # Trigger failures up to threshold (errors wrapped in TagError)
+    5.times do
+      assert_raises(HTM::TagError) do
+        HTM::TagService.extract("test content")
+      end
+    end
+
+    # Next call should fail fast with CircuitBreakerOpenError
+    assert_raises(HTM::CircuitBreakerOpenError) do
+      HTM::TagService.extract("test content")
+    end
+  end
+
+  def test_circuit_breaker_can_be_reset
+    HTM.configure do |config|
+      config.job_backend = :inline
+      config.tag_extractor = ->(_text, _ontology) {
+        raise StandardError, "API unavailable"
+      }
+    end
+
+    # Open the circuit (errors wrapped in TagError)
+    5.times do
+      assert_raises(HTM::TagError) do
+        HTM::TagService.extract("test")
+      end
+    end
+
+    # Reset circuit breaker
+    HTM::TagService.reset_circuit_breaker!
+
+    # Should allow calls again (will fail but not with circuit breaker error)
+    assert_raises(HTM::TagError) do
+      HTM::TagService.extract("test")
+    end
+  end
+
+  def test_extract_raises_tag_error_for_invalid_response_type
+    HTM.configure do |config|
+      config.job_backend = :inline
+      config.tag_extractor = ->(_text, _ontology) { 12345 }
+    end
+
+    error = assert_raises(HTM::TagError) do
+      HTM::TagService.extract("test content")
+    end
+    assert_match(/Array or String/, error.message)
   end
 end

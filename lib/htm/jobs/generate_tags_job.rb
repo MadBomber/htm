@@ -63,6 +63,10 @@ class HTM
 
           HTM.logger.info "GenerateTagsJob: Successfully generated #{tag_names.length} tags for node #{node_id}: #{tag_names.join(', ')}"
 
+        rescue HTM::CircuitBreakerOpenError => e
+          # Circuit breaker is open - service is unavailable, will retry later
+          HTM.logger.warn "GenerateTagsJob: Circuit breaker open for node #{node_id}, will retry when service recovers"
+
         rescue HTM::TagError => e
           # Log tag-specific errors
           HTM.logger.error "GenerateTagsJob: Tag generation failed for node #{node_id}: #{e.message}"

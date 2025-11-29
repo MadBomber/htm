@@ -10,6 +10,7 @@ class HTM
   # - Format validation (lowercase, alphanumeric, hyphens, colons)
   # - Depth validation (max 5 levels)
   # - Ontology consistency
+  # - Circuit breaker protection for external LLM failures
   #
   # The actual LLM call is delegated to HTM.configuration.tag_extractor
   #
@@ -17,18 +18,51 @@ class HTM
     MAX_DEPTH = 4  # Maximum hierarchy depth (3 colons)
     TAG_FORMAT = /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/  # Validation regex
 
+    # Circuit breaker for tag extraction API calls
+    @circuit_breaker = nil
+    @circuit_breaker_mutex = Mutex.new
+
+    class << self
+      # Get or create the circuit breaker for tag service
+      #
+      # @return [HTM::CircuitBreaker] The circuit breaker instance
+      #
+      def circuit_breaker
+        @circuit_breaker_mutex.synchronize do
+          @circuit_breaker ||= HTM::CircuitBreaker.new(
+            name: 'tag_service',
+            failure_threshold: 5,
+            reset_timeout: 60
+          )
+        end
+      end
+
+      # Reset the circuit breaker (useful for testing)
+      #
+      # @return [void]
+      #
+      def reset_circuit_breaker!
+        @circuit_breaker_mutex.synchronize do
+          @circuit_breaker&.reset!
+        end
+      end
+    end
+
     # Extract tags with validation and processing
     #
     # @param content [String] Text to analyze
     # @param existing_ontology [Array<String>] Sample of existing tags for context
     # @return [Array<String>] Validated tag names
+    # @raise [CircuitBreakerOpenError] If circuit breaker is open
     #
     def self.extract(content, existing_ontology: [])
       HTM.logger.debug "TagService: Extracting tags from #{content.length} chars"
       HTM.logger.debug "TagService: Using ontology with #{existing_ontology.size} existing tags"
 
-      # Call configured tag extractor
-      raw_tags = HTM.configuration.tag_extractor.call(content, existing_ontology)
+      # Use circuit breaker to protect against cascading failures
+      raw_tags = circuit_breaker.call do
+        HTM.configuration.tag_extractor.call(content, existing_ontology)
+      end
 
       # Parse response (may be string or array)
       parsed_tags = parse_tags(raw_tags)
@@ -40,6 +74,9 @@ class HTM
 
       valid_tags
 
+    rescue HTM::CircuitBreakerOpenError
+      # Re-raise circuit breaker errors without wrapping
+      raise
     rescue HTM::TagError
       raise
     rescue StandardError => e

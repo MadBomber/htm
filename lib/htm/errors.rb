@@ -29,6 +29,6 @@ class HTM
   # Authorization errors
   class AuthorizationError < Error; end
 
-  # Circuit breaker errors
-  class CircuitBreakerOpenError < EmbeddingError; end
+  # Circuit breaker errors (base class for both embedding and tag services)
+  class CircuitBreakerOpenError < Error; end
 end

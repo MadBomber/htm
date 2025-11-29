@@ -10,11 +10,42 @@ class HTM
   # - Dimension handling (padding/truncation)
   # - Error handling and logging
   # - Storage formatting
+  # - Circuit breaker protection for external LLM failures
   #
   # The actual LLM call is delegated to HTM.configuration.embedding_generator
   #
   class EmbeddingService
     MAX_DIMENSION = 2000  # Maximum dimension for pgvector HNSW index
+
+    # Circuit breaker for embedding API calls
+    @circuit_breaker = nil
+    @circuit_breaker_mutex = Mutex.new
+
+    class << self
+      # Get or create the circuit breaker for embedding service
+      #
+      # @return [HTM::CircuitBreaker] The circuit breaker instance
+      #
+      def circuit_breaker
+        @circuit_breaker_mutex.synchronize do
+          @circuit_breaker ||= HTM::CircuitBreaker.new(
+            name: 'embedding_service',
+            failure_threshold: 5,
+            reset_timeout: 60
+          )
+        end
+      end
+
+      # Reset the circuit breaker (useful for testing)
+      #
+      # @return [void]
+      #
+      def reset_circuit_breaker!
+        @circuit_breaker_mutex.synchronize do
+          @circuit_breaker&.reset!
+        end
+      end
+    end
 
     # Generate embedding with validation and processing
     #
@@ -26,12 +57,15 @@ class HTM
     #     storage_embedding: String,         # Formatted for database storage
     #     storage_dimension: Integer         # Padded dimension (2000)
     #   }
+    # @raise [CircuitBreakerOpenError] If circuit breaker is open
     #
     def self.generate(text)
       HTM.logger.debug "EmbeddingService: Generating embedding for #{text.length} chars"
 
-      # Call configured embedding generator
-      raw_embedding = HTM.configuration.embedding_generator.call(text)
+      # Use circuit breaker to protect against cascading failures
+      raw_embedding = circuit_breaker.call do
+        HTM.configuration.embedding_generator.call(text)
+      end
 
       # Validate response
       validate_embedding!(raw_embedding)
@@ -61,6 +95,9 @@ class HTM
         storage_dimension: MAX_DIMENSION
       }
 
+    rescue HTM::CircuitBreakerOpenError
+      # Re-raise circuit breaker errors without wrapping
+      raise
     rescue HTM::EmbeddingError
       raise
     rescue StandardError => e

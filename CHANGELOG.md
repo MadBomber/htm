@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Circuit breaker pattern for LLM services** - Prevents cascading failures from external APIs
+  - New `HTM::CircuitBreaker` class with configurable thresholds
+  - Three states: `:closed` (normal), `:open` (failing fast), `:half_open` (testing recovery)
+  - Configurable `failure_threshold` (default: 5), `reset_timeout` (default: 60s)
+  - Thread-safe implementation with Mutex protection
+  - Integrated into `EmbeddingService` and `TagService`
+  - Background jobs handle `CircuitBreakerOpenError` gracefully
+- **Thread-safe WorkingMemory** - All public methods now protected by Mutex
+  - `add`, `remove`, `has_space?`, `evict_to_make_space` synchronized
+  - `assemble_context`, `token_count`, `utilization_percentage`, `node_count` synchronized
+  - Internal helpers renamed to `*_unlocked` variants for safe internal use
+- **Comprehensive test suites**:
+  - `test/circuit_breaker_test.rb` - 13 tests for circuit breaker states and transitions
+  - `test/embedding_service_test.rb` - 19 tests for validation, generation, and circuit breaker
+  - Updated `test/tag_service_test.rb` - Added 4 circuit breaker tests (total 33 tests)
+- **Architecture review document** - Comprehensive multi-perspective codebase review
+  - Reviews from 8 specialist perspectives (Systems, Domain, Security, etc.)
+  - Located at `.architecture/reviews/comprehensive-codebase-review.md`
+
+### Changed
+- **CircuitBreakerOpenError** now extends `HTM::Error` (was `EmbeddingError`)
+  - Allows both EmbeddingService and TagService to use it
+- **EmbeddingService and TagService** re-raise `CircuitBreakerOpenError` without wrapping
+  - Enables proper circuit breaker behavior in calling code
+- **GenerateEmbeddingJob and GenerateTagsJob** log warnings for circuit breaker open state
+  - Graceful degradation when LLM services are unavailable
+
 ## [0.0.7] - 2025-11-28
 
 ### Security

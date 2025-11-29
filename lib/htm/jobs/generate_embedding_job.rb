@@ -50,6 +50,10 @@ class HTM
 
           HTM.logger.info "GenerateEmbeddingJob: Successfully generated embedding for node #{node_id} (#{result[:dimension]} dimensions)"
 
+        rescue HTM::CircuitBreakerOpenError => e
+          # Circuit breaker is open - service is unavailable, will retry later
+          HTM.logger.warn "GenerateEmbeddingJob: Circuit breaker open for node #{node_id}, will retry when service recovers"
+
         rescue HTM::EmbeddingError => e
           # Log embedding-specific errors
           HTM.logger.error "GenerateEmbeddingJob: Embedding generation failed for node #{node_id}: #{e.message}"

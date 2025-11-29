@@ -3,6 +3,7 @@
 require_relative "htm/version"
 require_relative "htm/errors"
 require_relative "htm/configuration"
+require_relative "htm/circuit_breaker"
 require_relative "htm/active_record_config"
 require_relative "htm/database"
 require_relative "htm/long_term_memory"
