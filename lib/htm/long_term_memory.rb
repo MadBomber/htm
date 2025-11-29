@@ -597,16 +597,22 @@ class HTM
       # Get results
       nodes = query.limit(limit).map(&:attributes)
 
+      # Batch load all tags for nodes (fixes N+1 query)
+      node_ids = nodes.map { |n| n['id'] }
+      tags_by_node = batch_load_node_tags(node_ids)
+
       # Calculate relevance and enrich with tags
       nodes.map do |node|
+        node_tags = tags_by_node[node['id']] || []
         relevance = calculate_relevance(
           node: node,
-          query_tags: tags
+          query_tags: tags,
+          node_tags: node_tags
         )
 
         node.merge({
           'relevance' => relevance,
-          'tags' => get_node_tags(node['id'])
+          'tags' => node_tags
         })
       end.sort_by { |n| -n['relevance'] }
     end

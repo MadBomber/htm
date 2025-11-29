@@ -536,8 +536,6 @@ class HTM
     end
   end
 
-  private
-
   # Validation helper methods
 
   def validate_array!(array, name, max_size: MAX_ARRAY_SIZE)

@@ -136,6 +136,10 @@ class HTM
       # :sunday (default) or :monday for week start day
       @week_start = :sunday
 
+      # Thread-safe Ollama model refresh tracking
+      @ollama_models_refreshed = false
+      @ollama_refresh_mutex = Mutex.new
+
       # Set default implementations
       reset_to_defaults
     end
@@ -310,10 +314,14 @@ class HTM
         # Configure RubyLLM for the embedding provider
         configure_ruby_llm(@embedding_provider)
 
-        # Refresh models for Ollama to discover local models
-        if @embedding_provider == :ollama && !@ollama_models_refreshed
-          RubyLLM.models.refresh!
-          @ollama_models_refreshed = true
+        # Refresh models for Ollama to discover local models (thread-safe)
+        if @embedding_provider == :ollama
+          @ollama_refresh_mutex.synchronize do
+            unless @ollama_models_refreshed
+              RubyLLM.models.refresh!
+              @ollama_models_refreshed = true
+            end
+          end
         end
 
         # Normalize Ollama model name (ensure it has a tag like :latest)
@@ -378,10 +386,14 @@ class HTM
         # Configure RubyLLM for the tag provider
         configure_ruby_llm(@tag_provider)
 
-        # Refresh models for Ollama to discover local models
-        if @tag_provider == :ollama && !@ollama_models_refreshed
-          RubyLLM.models.refresh!
-          @ollama_models_refreshed = true
+        # Refresh models for Ollama to discover local models (thread-safe)
+        if @tag_provider == :ollama
+          @ollama_refresh_mutex.synchronize do
+            unless @ollama_models_refreshed
+              RubyLLM.models.refresh!
+              @ollama_models_refreshed = true
+            end
+          end
         end
 
         # Normalize Ollama model name (ensure it has a tag like :latest)

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **Fixed SQL injection vulnerability in `Observability.extension_installed?`** - Now uses parameterized query with `sanitize_sql_array` instead of string interpolation
+
+### Fixed
+- **Fixed N+1 query in `LongTermMemory#search_by_tags`** - Now uses `batch_load_node_tags` for bulk tag loading instead of individual queries per node
+- **Fixed thread safety issue in `Configuration`** - Added mutex protection for `@ollama_models_refreshed` flag in embedding generator and tag extractor lambdas
+- **Removed duplicate `private` declaration in `HTM` class** - Removed redundant private keyword at line 539
+- **Updated stale table list in `Database.drop` and `Database.info`** - Added missing tables (`robot_nodes`, `working_memories`, `file_sources`, `node_tags`), removed non-existent `operations_log`
+
 ## [0.0.9] - 2025-11-29
 
 ### Changed

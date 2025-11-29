@@ -324,7 +324,9 @@ class HTM
       # Check if a PostgreSQL extension is installed
       def extension_installed?(name)
         result = ActiveRecord::Base.connection.select_value(
-          "SELECT COUNT(*) FROM pg_extension WHERE extname = '#{name}'"
+          ActiveRecord::Base.sanitize_sql_array(
+            ["SELECT COUNT(*) FROM pg_extension WHERE extname = ?", name]
+          )
         )
         result.to_i > 0
       end

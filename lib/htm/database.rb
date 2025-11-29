@@ -116,7 +116,7 @@ class HTM
 
         conn = PG.connect(config)
 
-        tables = ['nodes', 'node_tags', 'tags', 'robots', 'operations_log', 'schema_migrations']
+        tables = ['nodes', 'node_tags', 'tags', 'robots', 'robot_nodes', 'working_memories', 'file_sources', 'schema_migrations']
 
         puts "Dropping HTM tables..."
         tables.each do |table|
@@ -391,7 +391,7 @@ class HTM
 
         # Table info
         puts "\nHTM Tables:"
-        tables = ['nodes', 'tags', 'robots', 'operations_log', 'schema_migrations']
+        tables = ['nodes', 'node_tags', 'tags', 'robots', 'robot_nodes', 'working_memories', 'file_sources', 'schema_migrations']
         tables.each do |table|
           begin
             count = conn.exec("SELECT COUNT(*) FROM #{table}").first['count']
