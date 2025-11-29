@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.9] - 2025-11-29
+
+### Changed
+- **Consolidated database migrations** - Reduced 14 migrations to 8 clean migrations
+  - Each migration now handles exactly one table
+  - Removed incremental add/remove column migrations
+  - All indexes, constraints, and foreign keys included in table creation
+  - Migrations ordered by dependencies (extensions, then tables with FKs)
+  - Migration files now use simple numeric prefixes (00001-00008)
+
+### Migration Files
+| Migration | Table | Description |
+|-----------|-------|-------------|
+| `00001_enable_extensions.rb` | (extensions) | Enables vector and pg_trgm |
+| `00002_create_robots.rb` | `robots` | Robot registry |
+| `00003_create_file_sources.rb` | `file_sources` | Source file metadata |
+| `00004_create_nodes.rb` | `nodes` | Core memory storage |
+| `00005_create_tags.rb` | `tags` | Tag names |
+| `00006_create_node_tags.rb` | `node_tags` | Node-tag join table |
+| `00007_create_robot_nodes.rb` | `robot_nodes` | Robot-node join table |
+| `00008_create_working_memories.rb` | `working_memories` | Per-robot working memory |
+
 ## [0.0.8] - 2025-11-29
 
 ### Added
@@ -371,7 +393,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.8...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.9...HEAD
+[0.0.9]: https://github.com/madbomber/htm/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/madbomber/htm/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/madbomber/htm/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/madbomber/htm/compare/v0.0.5...v0.0.6
