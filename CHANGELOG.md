@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.10] - 2025-12-02
 
+### Added
+- **Robot groups example with multi-process synchronization** - New `examples/robot_groups/` directory
+  - `RobotGroup` class for coordinating multiple robots with shared working memory
+  - `WorkingMemoryChannel` for real-time sync via PostgreSQL LISTEN/NOTIFY
+  - `same_process.rb` - Single-process demo of robot groups with failover
+  - `multi_process.rb` - Cross-process coordination with separate Ruby processes
+  - `robot_worker.rb` - Worker process for multi-process demo
+  - Demonstrates high-availability patterns: active/passive roles, warm standby, instant failover
+- **Examples directory README** - Comprehensive documentation for all example programs
+  - Describes 9 example programs across standalone scripts and application examples
+  - Usage instructions, features, and directory structure
+  - Quick reference table for choosing the right example
+
+### Changed
+- **YARD documentation updates** - Added documentation for metadata parameter support
+
+
 ### Changed
 - **Refactored working memory persistence to robot_nodes join table** - Simpler, more efficient schema
   - Added `working_memory` boolean column to `robot_nodes` table (default: false)

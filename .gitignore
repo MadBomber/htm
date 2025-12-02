@@ -12,6 +12,10 @@
 
 /site/
 
+temp.md
+.aigcm_msg
+
+
 # Used by dotenv library to load environment variables.
 # .env
 
