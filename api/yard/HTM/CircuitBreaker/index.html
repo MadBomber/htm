@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4201,11 +4171,11 @@ when calling external LLM APIs for embeddings or tag extraction.</p>
 *   :closed - Normal operation, requests flow through
 *   :open - Circuit tripped, requests fail fast with CircuitBreakerOpenError
 *   :half_open - Testing if service recovered, allows limited requests</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">breaker</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">CircuitBreaker</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;embedding&#39;</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">breaker</span><span class="o">.</span><span class="n">call</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">external_api_call</span><span class="w"> </span><span class="p">}</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">breaker</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">CircuitBreaker</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;tag_extraction&#39;</span><span class="p">,</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="ss">failure_threshold</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
@@ -4213,43 +4183,43 @@ when calling external LLM APIs for embeddings or tag extraction.</p>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">)</span>
 </span></code></pre></div></p>
 <h1 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h1>
-<h2 id="failure_countrw">failure_count[RW] <a href="#attribute-i-failure_count"></a><a class="headerlink" href="#failure_countrw" title="Permanent link">&para;</a></h2>
+<h2 id="attribute-i-failure_count">failure_count[RW]<a class="headerlink" href="#attribute-i-failure_count" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute failure_count.</p>
-<h2 id="last_failure_timerw">last_failure_time[RW] <a href="#attribute-i-last_failure_time"></a><a class="headerlink" href="#last_failure_timerw" title="Permanent link">&para;</a></h2>
+<h2 id="attribute-i-last_failure_time">last_failure_time[RW]<a class="headerlink" href="#attribute-i-last_failure_time" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute last_failure_time.</p>
-<h2 id="namerw">name[RW] <a href="#attribute-i-name"></a><a class="headerlink" href="#namerw" title="Permanent link">&para;</a></h2>
+<h2 id="attribute-i-name">name[RW]<a class="headerlink" href="#attribute-i-name" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute name.</p>
-<h2 id="staterw">state[RW] <a href="#attribute-i-state"></a><a class="headerlink" href="#staterw" title="Permanent link">&para;</a></h2>
+<h2 id="attribute-i-state">state[RW]<a class="headerlink" href="#attribute-i-state" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute state.</p>
 <h1 id="instance-methods">Instance Methods<a class="headerlink" href="#instance-methods" title="Permanent link">&para;</a></h1>
-<h2 id="call">call() <a href="#method-i-call"></a><a class="headerlink" href="#call" title="Permanent link">&para;</a></h2>
+<h2 id="method-i-call">call()<a class="headerlink" href="#method-i-call" title="Permanent link">&para;</a></h2>
 <p>Execute a block with circuit breaker protection</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/raise" title="GitHub User: raise">@raise</a></strong> [CircuitBreakerOpenError] If circuit is open</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/raise" title="GitHub User: raise">@raise</a></strong> [StandardError] If the block raises an error (after recording failure)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Object] Result of the block if successful</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/yield" title="GitHub User: yield">@yield</a></strong> [] Block containing the protected operation</p>
-<h2 id="closed">closed?() <a href="#method-i-closed?"></a><a class="headerlink" href="#closed" title="Permanent link">&para;</a></h2>
+<p><strong><code>@raise</code></strong> [CircuitBreakerOpenError] If circuit is open</p>
+<p><strong><code>@raise</code></strong> [StandardError] If the block raises an error (after recording failure)</p>
+<p><strong><code>@return</code></strong> [Object] Result of the block if successful</p>
+<p><strong><code>@yield</code></strong> [] Block containing the protected operation</p>
+<h2 id="method-i-closed?">closed?()<a class="headerlink" href="#method-i-closed?" title="Permanent link">&para;</a></h2>
 <p>Check if circuit is currently closed (normal operation)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] true if circuit is closed</p>
-<h2 id="half_open">half_open?() <a href="#method-i-half_open?"></a><a class="headerlink" href="#half_open" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [Boolean] true if circuit is closed</p>
+<h2 id="method-i-half_open?">half_open?()<a class="headerlink" href="#method-i-half_open?" title="Permanent link">&para;</a></h2>
 <p>Check if circuit is in half-open state (testing recovery)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] true if circuit is half-open</p>
-<h2 id="initializename-failure_thresholddefault_failure_threshold-reset_timeoutdefault_reset_timeout-half_open_max_callsdefault_half_open_max_calls">initialize(name:, failure_threshold:DEFAULT_FAILURE_THRESHOLD, reset_timeout:DEFAULT_RESET_TIMEOUT, half_open_max_calls:DEFAULT_HALF_OPEN_MAX_CALLS) <a href="#method-i-initialize"></a><a class="headerlink" href="#initializename-failure_thresholddefault_failure_threshold-reset_timeoutdefault_reset_timeout-half_open_max_callsdefault_half_open_max_calls" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [Boolean] true if circuit is half-open</p>
+<h2 id="method-i-initialize">initialize(name:, failure_threshold:DEFAULT_FAILURE_THRESHOLD, reset_timeout:DEFAULT_RESET_TIMEOUT, half_open_max_calls:DEFAULT_HALF_OPEN_MAX_CALLS)<a class="headerlink" href="#method-i-initialize" title="Permanent link">&para;</a></h2>
 <p>Initialize a new circuit breaker</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Identifier for this circuit breaker (for logging)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Number of failures before opening circuit</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Seconds to wait before attempting recovery</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Successful calls needed to close circuit</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [CircuitBreaker] a new instance of CircuitBreaker</p>
-<h2 id="open">open?() <a href="#method-i-open?"></a><a class="headerlink" href="#open" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [String] Identifier for this circuit breaker (for logging)</p>
+<p><strong><code>@param</code></strong> [Integer] Number of failures before opening circuit</p>
+<p><strong><code>@param</code></strong> [Integer] Seconds to wait before attempting recovery</p>
+<p><strong><code>@param</code></strong> [Integer] Successful calls needed to close circuit</p>
+<p><strong><code>@return</code></strong> [CircuitBreaker] a new instance of CircuitBreaker</p>
+<h2 id="method-i-open?">open?()<a class="headerlink" href="#method-i-open?" title="Permanent link">&para;</a></h2>
 <p>Check if circuit is currently open</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] true if circuit is open</p>
-<h2 id="reset">reset!() <a href="#method-i-reset!"></a><a class="headerlink" href="#reset" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [Boolean] true if circuit is open</p>
+<h2 id="method-i-reset!">reset!()<a class="headerlink" href="#method-i-reset!" title="Permanent link">&para;</a></h2>
 <p>Manually reset the circuit breaker to closed state</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="stats">stats() <a href="#method-i-stats"></a><a class="headerlink" href="#stats" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-stats">stats()<a class="headerlink" href="#method-i-stats" title="Permanent link">&para;</a></h2>
 <p>Get current circuit breaker statistics</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Statistics including state, failure count, etc.</p>
+<p><strong><code>@return</code></strong> [Hash] Statistics including state, failure count, etc.</p>
 
 
 

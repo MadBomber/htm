@@ -3245,8 +3245,6 @@
       
         
       
-        
-      
     
     
     
@@ -3391,34 +3389,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4177,14 +4147,14 @@
 <p>HTM (Hierarchical Temporary Memory) error classes</p>
 <p>All HTM errors inherit from HTM::Error, allowing you to catch all HTM-related
 errors with a single rescue clause.</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">begin</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="s2">&quot;some content&quot;</span><span class="p">)</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Error</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">e</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="w"> </span><span class="s2">&quot;HTM error: </span><span class="si">#{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">end</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">begin</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="n">htm</span><span class="o">.</span><span class="n">forget</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span><span class="w"> </span><span class="ss">soft</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">)</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">rescue</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">NotFoundError</span>
@@ -4194,40 +4164,41 @@ errors with a single rescue clause.</p>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">end</span>
 </span></code></pre></div></p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
-<h2 id="configure">configure() <a href="#method-c-configure"></a><a class="headerlink" href="#configure" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-configure">configure()<a class="headerlink" href="#method-c-configure" title="Permanent link">&para;</a></h2>
 <p>Configure HTM
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/yield" title="GitHub User: yield">@yield</a></strong> [config] Configuration object</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/yieldparam" title="GitHub User: yieldparam">@yieldparam</a></strong> [HTM::Configuration] </p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<strong><code>@yield</code></strong> [config] Configuration object</p>
+<p><strong><code>@yieldparam</code></strong> [HTM::Configuration] </p>
+<p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="no">HTM</span><span class="o">.</span><span class="n">configure</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">config</span><span class="o">|</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="n">config</span><span class="o">.</span><span class="n">embedding_generator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="no">MyEmbedder</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="n">config</span><span class="o">.</span><span class="n">tag_extractor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="n">ontology</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="no">MyTagger</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="n">ontology</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">end</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
-<code>ruby
-HTM.configure  # Uses RubyLLM defaults</code>## count_tokens(text ) <a href="#method-c-count_tokens"></a>
-Count tokens using configured counter
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Text to count tokens for</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Integer] Token count</p>
-<h2 id="embedtext">embed(text ) <a href="#method-c-embed"></a><a class="headerlink" href="#embedtext" title="Permanent link">&para;</a></h2>
+<strong><code>@example</code></strong>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="no">HTM</span><span class="o">.</span><span class="n">configure</span><span class="w">  </span><span class="c1"># Uses RubyLLM defaults</span>
+</span></code></pre></div></p>
+<h2 id="method-c-count_tokens">count_tokens(text )<a class="headerlink" href="#method-c-count_tokens" title="Permanent link">&para;</a></h2>
+<p>Count tokens using configured counter
+<strong><code>@param</code></strong> [String] Text to count tokens for</p>
+<p><strong><code>@return</code></strong> [Integer] Token count</p>
+<h2 id="method-c-embed">embed(text )<a class="headerlink" href="#method-c-embed" title="Permanent link">&para;</a></h2>
 <p>Generate embedding using EmbeddingService
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Text to embed</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Float>] Embedding vector (original, not padded)</p>
-<h2 id="extract_tagstext-existing_ontology">extract_tags(text , existing_ontology: []) <a href="#method-c-extract_tags"></a><a class="headerlink" href="#extract_tagstext-existing_ontology" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Text to embed</p>
+<p><strong><code>@return</code></strong> [Array<Float>] Embedding vector (original, not padded)</p>
+<h2 id="method-c-extract_tags">extract_tags(text , existing_ontology: [])<a class="headerlink" href="#method-c-extract_tags" title="Permanent link">&para;</a></h2>
 <p>Extract tags using TagService
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Text to analyze</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<String>] Sample of existing tags for context</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<String>] Extracted and validated tag names</p>
-<h2 id="logger">logger() <a href="#method-c-logger"></a><a class="headerlink" href="#logger" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Text to analyze</p>
+<p><strong><code>@param</code></strong> [Array<String>] Sample of existing tags for context</p>
+<p><strong><code>@return</code></strong> [Array<String>] Extracted and validated tag names</p>
+<h2 id="method-c-logger">logger()<a class="headerlink" href="#method-c-logger" title="Permanent link">&para;</a></h2>
 <p>Get configured logger
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Logger] Configured logger instance</p>
-<h2 id="reset_configuration">reset_configuration!() <a href="#method-c-reset_configuration!"></a><a class="headerlink" href="#reset_configuration" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [Logger] Configured logger instance</p>
+<h2 id="method-c-reset_configuration!">reset_configuration!()<a class="headerlink" href="#method-c-reset_configuration!" title="Permanent link">&para;</a></h2>
 <p>Reset configuration to defaults</p>
 <h1 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h1>
-<h2 id="configurationrw">configuration[RW] <a href="#attribute-c-configuration"></a><a class="headerlink" href="#configurationrw" title="Permanent link">&para;</a></h2>
+<h2 id="attribute-c-configuration">configuration[RW]<a class="headerlink" href="#attribute-c-configuration" title="Permanent link">&para;</a></h2>
 <p>Get current configuration</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [HTM::Configuration] </p>
+<p><strong><code>@return</code></strong> [HTM::Configuration] </p>
 
 
 

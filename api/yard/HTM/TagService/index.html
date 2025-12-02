@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4203,19 +4173,19 @@
 *   Circuit breaker protection for external LLM failures</p>
 <p>The actual LLM call is delegated to HTM.configuration.tag_extractor</p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
-<h2 id="circuit_breaker">circuit_breaker() <a href="#method-c-circuit_breaker"></a><a class="headerlink" href="#circuit_breaker" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-circuit_breaker">circuit_breaker()<a class="headerlink" href="#method-c-circuit_breaker" title="Permanent link">&para;</a></h2>
 <p>Get or create the circuit breaker for tag service
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [HTM::CircuitBreaker] The circuit breaker instance</p>
-<h2 id="extractcontent-existing_ontology">extract(content , existing_ontology: []) <a href="#method-c-extract"></a><a class="headerlink" href="#extractcontent-existing_ontology" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [HTM::CircuitBreaker] The circuit breaker instance</p>
+<h2 id="method-c-extract">extract(content , existing_ontology: [])<a class="headerlink" href="#method-c-extract" title="Permanent link">&para;</a></h2>
 <p>Extract tags with validation and processing
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Text to analyze</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<String>] Sample of existing tags for context</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/raise" title="GitHub User: raise">@raise</a></strong> [CircuitBreakerOpenError] If circuit breaker is open</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<String>] Validated tag names</p>
-<h2 id="parse_hierarchytag">parse_hierarchy(tag ) <a href="#method-c-parse_hierarchy"></a><a class="headerlink" href="#parse_hierarchytag" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Text to analyze</p>
+<p><strong><code>@param</code></strong> [Array<String>] Sample of existing tags for context</p>
+<p><strong><code>@raise</code></strong> [CircuitBreakerOpenError] If circuit breaker is open</p>
+<p><strong><code>@return</code></strong> [Array<String>] Validated tag names</p>
+<h2 id="method-c-parse_hierarchy">parse_hierarchy(tag )<a class="headerlink" href="#method-c-parse_hierarchy" title="Permanent link">&para;</a></h2>
 <p>Parse hierarchical structure of a tag
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Hierarchical tag (e.g., "ai:llm:embedding")</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Hierarchy structure
+<strong><code>@param</code></strong> [String] Hierarchical tag (e.g., "ai:llm:embedding")</p>
+<p><strong><code>@return</code></strong> [Hash] Hierarchy structure
 {
   full: "ai:llm:embedding",
   root: "ai",
@@ -4223,21 +4193,21 @@
   levels: ["ai", "llm", "embedding"],
   depth: 3
 }</p>
-<h2 id="parse_tagsraw_tags">parse_tags(raw_tags ) <a href="#method-c-parse_tags"></a><a class="headerlink" href="#parse_tagsraw_tags" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-parse_tags">parse_tags(raw_tags )<a class="headerlink" href="#method-c-parse_tags" title="Permanent link">&para;</a></h2>
 <p>Parse tag response (handles string or array input)
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String, Array] Raw response from extractor</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<String>] Parsed tag strings</p>
-<h2 id="reset_circuit_breaker">reset_circuit_breaker!() <a href="#method-c-reset_circuit_breaker!"></a><a class="headerlink" href="#reset_circuit_breaker" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String, Array] Raw response from extractor</p>
+<p><strong><code>@return</code></strong> [Array<String>] Parsed tag strings</p>
+<h2 id="method-c-reset_circuit_breaker!">reset_circuit_breaker!()<a class="headerlink" href="#method-c-reset_circuit_breaker!" title="Permanent link">&para;</a></h2>
 <p>Reset the circuit breaker (useful for testing)
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="valid_tagtag">valid_tag?(tag ) <a href="#method-c-valid_tag?"></a><a class="headerlink" href="#valid_tagtag" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-valid_tag?">valid_tag?(tag )<a class="headerlink" href="#method-c-valid_tag?" title="Permanent link">&para;</a></h2>
 <p>Validate single tag format
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Tag to validate</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] True if valid</p>
-<h2 id="validate_and_filter_tagstags">validate_and_filter_tags(tags ) <a href="#method-c-validate_and_filter_tags"></a><a class="headerlink" href="#validate_and_filter_tagstags" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Tag to validate</p>
+<p><strong><code>@return</code></strong> [Boolean] True if valid</p>
+<h2 id="method-c-validate_and_filter_tags">validate_and_filter_tags(tags )<a class="headerlink" href="#method-c-validate_and_filter_tags" title="Permanent link">&para;</a></h2>
 <p>Validate and filter tags
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<String>] Parsed tags</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<String>] Valid tags only</p>
+<strong><code>@param</code></strong> [Array<String>] Parsed tags</p>
+<p><strong><code>@return</code></strong> [Array<String>] Valid tags only</p>
 
 
 

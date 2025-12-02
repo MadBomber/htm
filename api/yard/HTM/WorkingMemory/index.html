@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4200,53 +4170,53 @@ When full, it evicts less important or older nodes back to long-term storage.</p
 <p>Thread Safety: All public methods are protected by a mutex to ensure safe
 concurrent access from multiple threads.</p>
 <h1 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h1>
-<h2 id="max_tokensrw">max_tokens[RW] <a href="#attribute-i-max_tokens"></a><a class="headerlink" href="#max_tokensrw" title="Permanent link">&para;</a></h2>
+<h2 id="attribute-i-max_tokens">max_tokens[RW]<a class="headerlink" href="#attribute-i-max_tokens" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute max_tokens.</p>
 <h1 id="instance-methods">Instance Methods<a class="headerlink" href="#instance-methods" title="Permanent link">&para;</a></h1>
-<h2 id="addkey-value-token_count-access_count0-last_accessednil-from_recallfalse">add(key, value, token_count:, access_count:0, last_accessed:nil, from_recall:false) <a href="#method-i-add"></a><a class="headerlink" href="#addkey-value-token_count-access_count0-last_accessednil-from_recallfalse" title="Permanent link">&para;</a></h2>
+<h2 id="method-i-add">add(key, value, token_count:, access_count:0, last_accessed:nil, from_recall:false)<a class="headerlink" href="#method-i-add" title="Permanent link">&para;</a></h2>
 <p>Add a node to working memory</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Node identifier</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Node content</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Number of tokens in this node</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Access count from long-term memory (default: 0)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Time, nil] Last access time from long-term memory</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Boolean] Whether this node was recalled from long-term memory</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="assemble_contextstrategy-max_tokensnil">assemble_context(strategy:, max_tokens:nil) <a href="#method-i-assemble_context"></a><a class="headerlink" href="#assemble_contextstrategy-max_tokensnil" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [String] Node identifier</p>
+<p><strong><code>@param</code></strong> [String] Node content</p>
+<p><strong><code>@param</code></strong> [Integer] Number of tokens in this node</p>
+<p><strong><code>@param</code></strong> [Integer] Access count from long-term memory (default: 0)</p>
+<p><strong><code>@param</code></strong> [Time, nil] Last access time from long-term memory</p>
+<p><strong><code>@param</code></strong> [Boolean] Whether this node was recalled from long-term memory</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-assemble_context">assemble_context(strategy:, max_tokens:nil)<a class="headerlink" href="#method-i-assemble_context" title="Permanent link">&para;</a></h2>
 <p>Assemble context string for LLM</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Symbol] Assembly strategy (:recent, :frequent, :balanced)
+<p><strong><code>@param</code></strong> [Symbol] Assembly strategy (:recent, :frequent, :balanced)
 - :recent - Most recently accessed (LRU)
 - :frequent - Most frequently accessed (LFU)
 - :balanced - Combines frequency × recency</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer, nil] Optional token limit</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [String] Assembled context</p>
-<h2 id="evict_to_make_spaceneeded_tokens">evict_to_make_space(needed_tokens) <a href="#method-i-evict_to_make_space"></a><a class="headerlink" href="#evict_to_make_spaceneeded_tokens" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer, nil] Optional token limit</p>
+<p><strong><code>@return</code></strong> [String] Assembled context</p>
+<h2 id="method-i-evict_to_make_space">evict_to_make_space(needed_tokens)<a class="headerlink" href="#method-i-evict_to_make_space" title="Permanent link">&para;</a></h2>
 <p>Evict nodes to make space</p>
 <p>Uses LFU + LRU strategy: Least Frequently Used + Least Recently Used Nodes
 with low access count and old timestamps are evicted first</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Number of tokens needed</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Evicted nodes</p>
-<h2 id="has_spacetoken_count">has_space?(token_count) <a href="#method-i-has_space?"></a><a class="headerlink" href="#has_spacetoken_count" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Number of tokens needed</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Evicted nodes</p>
+<h2 id="method-i-has_space?">has_space?(token_count)<a class="headerlink" href="#method-i-has_space?" title="Permanent link">&para;</a></h2>
 <p>Check if there's space for a node</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Number of tokens needed</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] true if space available</p>
-<h2 id="initializemax_tokens">initialize(max_tokens:) <a href="#method-i-initialize"></a><a class="headerlink" href="#initializemax_tokens" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Number of tokens needed</p>
+<p><strong><code>@return</code></strong> [Boolean] true if space available</p>
+<h2 id="method-i-initialize">initialize(max_tokens:)<a class="headerlink" href="#method-i-initialize" title="Permanent link">&para;</a></h2>
 <p>Initialize working memory</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Maximum tokens allowed in working memory</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [WorkingMemory] a new instance of WorkingMemory</p>
-<h2 id="node_count">node_count() <a href="#method-i-node_count"></a><a class="headerlink" href="#node_count" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Maximum tokens allowed in working memory</p>
+<p><strong><code>@return</code></strong> [WorkingMemory] a new instance of WorkingMemory</p>
+<h2 id="method-i-node_count">node_count()<a class="headerlink" href="#method-i-node_count" title="Permanent link">&para;</a></h2>
 <p>Get node count</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Integer] Number of nodes in working memory</p>
-<h2 id="removekey">remove(key) <a href="#method-i-remove"></a><a class="headerlink" href="#removekey" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [Integer] Number of nodes in working memory</p>
+<h2 id="method-i-remove">remove(key)<a class="headerlink" href="#method-i-remove" title="Permanent link">&para;</a></h2>
 <p>Remove a node from working memory</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Node identifier</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="token_count">token_count() <a href="#method-i-token_count"></a><a class="headerlink" href="#token_count" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [String] Node identifier</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-token_count">token_count()<a class="headerlink" href="#method-i-token_count" title="Permanent link">&para;</a></h2>
 <p>Get current token count</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Integer] Total tokens in working memory</p>
-<h2 id="utilization_percentage">utilization_percentage() <a href="#method-i-utilization_percentage"></a><a class="headerlink" href="#utilization_percentage" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [Integer] Total tokens in working memory</p>
+<h2 id="method-i-utilization_percentage">utilization_percentage()<a class="headerlink" href="#method-i-utilization_percentage" title="Permanent link">&para;</a></h2>
 <p>Get utilization percentage</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Float] Percentage of working memory used</p>
+<p><strong><code>@return</code></strong> [Float] Percentage of working memory used</p>
 
 
 

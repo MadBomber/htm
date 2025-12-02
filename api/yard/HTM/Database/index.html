@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4197,19 +4167,19 @@
 <p>Database setup and configuration for HTM Handles schema creation and database
 initialization</p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
-<h2 id="default_config">default_config() <a href="#method-c-default_config"></a><a class="headerlink" href="#default_config" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-default_config">default_config()<a class="headerlink" href="#method-c-default_config" title="Permanent link">&para;</a></h2>
 <p>Get default database configuration
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash, nil] Connection configuration hash</p>
-<h2 id="dropdb_url-nil">drop(db_url nil) <a href="#method-c-drop"></a><a class="headerlink" href="#dropdb_url-nil" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [Hash, nil] Connection configuration hash</p>
+<h2 id="method-c-drop">drop(db_url nil)<a class="headerlink" href="#method-c-drop" title="Permanent link">&para;</a></h2>
 <p>Drop all HTM tables
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="dump_schemadb_url-nil">dump_schema(db_url nil) <a href="#method-c-dump_schema"></a><a class="headerlink" href="#dump_schemadb_url-nil" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-dump_schema">dump_schema(db_url nil)<a class="headerlink" href="#method-c-dump_schema" title="Permanent link">&para;</a></h2>
 <p>Dump current database schema to db/schema.sql</p>
 <p>Uses pg_dump to create a clean SQL schema file without data
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="generate_docsdb_url-nil">generate_docs(db_url nil) <a href="#method-c-generate_docs"></a><a class="headerlink" href="#generate_docsdb_url-nil" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-generate_docs">generate_docs(db_url nil)<a class="headerlink" href="#method-c-generate_docs" title="Permanent link">&para;</a></h2>
 <p>Generate database documentation using tbls</p>
 <p>Uses .tbls.yml configuration file for output directory and settings. Creates
 comprehensive database documentation including:
@@ -4217,46 +4187,46 @@ comprehensive database documentation including:
 *   Table schemas with comments
 *   Index information
 *   Relationship diagrams
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="infodb_url-nil">info(db_url nil) <a href="#method-c-info"></a><a class="headerlink" href="#infodb_url-nil" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-info">info(db_url nil)<a class="headerlink" href="#method-c-info" title="Permanent link">&para;</a></h2>
 <p>Show database info
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="load_schemadb_url-nil">load_schema(db_url nil) <a href="#method-c-load_schema"></a><a class="headerlink" href="#load_schemadb_url-nil" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-load_schema">load_schema(db_url nil)<a class="headerlink" href="#method-c-load_schema" title="Permanent link">&para;</a></h2>
 <p>Load schema from db/schema.sql</p>
 <p>Uses psql to load the schema file
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="migratedb_url-nil">migrate(db_url nil) <a href="#method-c-migrate"></a><a class="headerlink" href="#migratedb_url-nil" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-migrate">migrate(db_url nil)<a class="headerlink" href="#method-c-migrate" title="Permanent link">&para;</a></h2>
 <p>Run pending database migrations
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="migration_statusdb_url-nil">migration_status(db_url nil) <a href="#method-c-migration_status"></a><a class="headerlink" href="#migration_statusdb_url-nil" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-migration_status">migration_status(db_url nil)<a class="headerlink" href="#method-c-migration_status" title="Permanent link">&para;</a></h2>
 <p>Show migration status
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="parse_connection_params">parse_connection_params() <a href="#method-c-parse_connection_params"></a><a class="headerlink" href="#parse_connection_params" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-parse_connection_params">parse_connection_params()<a class="headerlink" href="#method-c-parse_connection_params" title="Permanent link">&para;</a></h2>
 <p>Build config from individual environment variables
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash, nil] Connection configuration hash</p>
-<h2 id="parse_connection_urlurl">parse_connection_url(url ) <a href="#method-c-parse_connection_url"></a><a class="headerlink" href="#parse_connection_urlurl" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [Hash, nil] Connection configuration hash</p>
+<h2 id="method-c-parse_connection_url">parse_connection_url(url )<a class="headerlink" href="#method-c-parse_connection_url" title="Permanent link">&para;</a></h2>
 <p>Parse database connection URL
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Connection URL (e.g., postgresql://user:pass@host:port/dbname)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/raise" title="GitHub User: raise">@raise</a></strong> [ArgumentError] If URL format is invalid</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash, nil] Connection configuration hash</p>
-<h2 id="seeddb_url-nil">seed(db_url nil) <a href="#method-c-seed"></a><a class="headerlink" href="#seeddb_url-nil" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Connection URL (e.g., postgresql://user:pass@host:port/dbname)</p>
+<p><strong><code>@raise</code></strong> [ArgumentError] If URL format is invalid</p>
+<p><strong><code>@return</code></strong> [Hash, nil] Connection configuration hash</p>
+<h2 id="method-c-seed">seed(db_url nil)<a class="headerlink" href="#method-c-seed" title="Permanent link">&para;</a></h2>
 <p>Seed database with sample data</p>
 <p>Loads and executes db/seeds.rb file following Rails conventions. All seeding
 logic is contained in db/seeds.rb and reads data from markdown files in
 db/seed_data/ directory.
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="setupdb_url-nil-run_migrations-true-dump_schema-false">setup(db_url nil, run_migrations: true, dump_schema: false) <a href="#method-c-setup"></a><a class="headerlink" href="#setupdb_url-nil-run_migrations-true-dump_schema-false" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-setup">setup(db_url nil, run_migrations: true, dump_schema: false)<a class="headerlink" href="#method-c-setup" title="Permanent link">&para;</a></h2>
 <p>Set up the HTM database schema
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Boolean] Whether to run migrations (default: true)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Boolean] Whether to dump schema to db/schema.sql after setup (default: false)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p><strong><code>@param</code></strong> [Boolean] Whether to run migrations (default: true)</p>
+<p><strong><code>@param</code></strong> [Boolean] Whether to dump schema to db/schema.sql after setup (default: false)</p>
+<p><strong><code>@return</code></strong> [void] </p>
 
 
 

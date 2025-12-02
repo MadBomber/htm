@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4201,28 +4171,28 @@ returns both the timeframe and the cleaned query text.</p>
 *   Standard time expressions via Chronic gem ("yesterday", "last week", etc.)
 *   "few" keyword mapped to FEW constant (e.g., "few days ago" → "3 days ago")
 *   "recent/recently" without units defaults to FEW days</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">TimeframeExtractor</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="s2">&quot;what did we discuss last week about PostgreSQL&quot;</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">result</span><span class="o">[</span><span class="ss">:query</span><span class="o">]</span><span class="w">     </span><span class="c1"># =&gt; &quot;what did we discuss about PostgreSQL&quot;</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">result</span><span class="o">[</span><span class="ss">:timeframe</span><span class="o">]</span><span class="w"> </span><span class="c1"># =&gt; #&lt;Range: 2025-11-21..2025-11-28&gt;</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">TimeframeExtractor</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="s2">&quot;show me notes from a few days ago&quot;</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">result</span><span class="o">[</span><span class="ss">:timeframe</span><span class="o">]</span><span class="w"> </span><span class="c1"># =&gt; Time object for 3 days ago</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">TimeframeExtractor</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="s2">&quot;what did we recently discuss&quot;</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">result</span><span class="o">[</span><span class="ss">:timeframe</span><span class="o">]</span><span class="w"> </span><span class="c1"># =&gt; Range from 3 days ago to now</span>
 </span></code></pre></div></p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
-<h2 id="extractquery">extract(query ) <a href="#method-c-extract"></a><a class="headerlink" href="#extractquery" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-extract">extract(query )<a class="headerlink" href="#method-c-extract" title="Permanent link">&para;</a></h2>
 <p>Extract timeframe from a query string
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] The query to parse</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Result] Struct with :query (cleaned), :timeframe, :original_expression</p>
-<h2 id="temporalquery">temporal?(query ) <a href="#method-c-temporal?"></a><a class="headerlink" href="#temporalquery" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [String] The query to parse</p>
+<p><strong><code>@return</code></strong> [Result] Struct with :query (cleaned), :timeframe, :original_expression</p>
+<h2 id="method-c-temporal?">temporal?(query )<a class="headerlink" href="#method-c-temporal?" title="Permanent link">&para;</a></h2>
 <p>Check if query contains a temporal expression
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] The query to check</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] </p>
+<strong><code>@param</code></strong> [String] The query to check</p>
+<p><strong><code>@return</code></strong> [Boolean] </p>
 
 
 

@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4204,190 +4174,192 @@
 *   ActiveRecord ORM for data access
 *   Query result caching for efficiency</p>
 <h1 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h1>
-<h2 id="query_timeoutrw">query_timeout[RW] <a href="#attribute-i-query_timeout"></a><a class="headerlink" href="#query_timeoutrw" title="Permanent link">&para;</a></h2>
+<h2 id="attribute-i-query_timeout">query_timeout[RW]<a class="headerlink" href="#attribute-i-query_timeout" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute query_timeout.</p>
 <h1 id="instance-methods">Instance Methods<a class="headerlink" href="#instance-methods" title="Permanent link">&para;</a></h1>
-<h2 id="addcontent-token_count0-robot_id-embeddingnil-metadata">add(content:, token_count:0, robot_id:, embedding:nil, metadata:{}) <a href="#method-i-add"></a><a class="headerlink" href="#addcontent-token_count0-robot_id-embeddingnil-metadata" title="Permanent link">&para;</a></h2>
+<h2 id="method-i-add">add(content:, token_count:0, robot_id:, embedding:nil, metadata:{})<a class="headerlink" href="#method-i-add" title="Permanent link">&para;</a></h2>
 <p>Add a node to long-term memory (with deduplication)</p>
 <p>If content already exists (by content_hash), links the robot to the existing
 node and updates timestamps. Otherwise creates a new node.</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Conversation message/utterance</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Token count</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Robot identifier</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<Float>, nil] Pre-generated embedding vector</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Hash] Flexible metadata for the node (default: {})</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] { node_id:, is_new:, robot_node: }</p>
-<h2 id="add_tagnode_id-tag">add_tag(node_id:, tag:) <a href="#method-i-add_tag"></a><a class="headerlink" href="#add_tagnode_id-tag" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [String] Conversation message/utterance</p>
+<p><strong><code>@param</code></strong> [Integer] Token count</p>
+<p><strong><code>@param</code></strong> [Integer] Robot identifier</p>
+<p><strong><code>@param</code></strong> [Array<Float>, nil] Pre-generated embedding vector</p>
+<p><strong><code>@param</code></strong> [Hash] Flexible metadata for the node (default: {})</p>
+<p><strong><code>@return</code></strong> [Hash] { node_id:, is_new:, robot_node: }</p>
+<h2 id="method-i-add_tag">add_tag(node_id:, tag:)<a class="headerlink" href="#method-i-add_tag" title="Permanent link">&para;</a></h2>
 <p>Add a tag to a node</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Node database ID</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Tag name</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="batch_load_node_tagsnode_ids">batch_load_node_tags(node_ids) <a href="#method-i-batch_load_node_tags"></a><a class="headerlink" href="#batch_load_node_tagsnode_ids" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
+<p><strong><code>@param</code></strong> [String] Tag name</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-batch_load_node_tags">batch_load_node_tags(node_ids)<a class="headerlink" href="#method-i-batch_load_node_tags" title="Permanent link">&para;</a></h2>
 <p>Batch load tags for multiple nodes (avoids N+1 queries)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<Integer>] Node database IDs</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash<Integer, Array\<String>>] Map of node_id to array of tag names</p>
-<h2 id="calculate_relevancenode-query_tags-vector_similaritynil-node_tagsnil">calculate_relevance(node:, query_tags:[], vector_similarity:nil, node_tags:nil) <a href="#method-i-calculate_relevance"></a><a class="headerlink" href="#calculate_relevancenode-query_tags-vector_similaritynil-node_tagsnil" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Array<Integer>] Node database IDs</p>
+<p><strong><code>@return</code></strong> [Hash<Integer, Array\<String>>] Map of node_id to array of tag names</p>
+<h2 id="method-i-calculate_relevance">calculate_relevance(node:, query_tags:[], vector_similarity:nil, node_tags:nil)<a class="headerlink" href="#method-i-calculate_relevance" title="Permanent link">&para;</a></h2>
 <p>Calculate dynamic relevance score for a node given query context</p>
 <p>Combines multiple signals:
 *   Vector similarity (semantic match)
 *   Tag overlap (categorical match)
 *   Recency (freshness)
 *   Access frequency (popularity/utility)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Hash] Node data with similarity, tags, created_at, access_count</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<String>] Tags associated with the query</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Float, nil] Pre-computed vector similarity (0-1)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<String>, nil] Pre-loaded tags for this node (avoids N+1 query)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Float] Composite relevance score (0-10)</p>
-<h2 id="clear_cache">clear_cache!() <a href="#method-i-clear_cache!"></a><a class="headerlink" href="#clear_cache" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Hash] Node data with similarity, tags, created_at, access_count</p>
+<p><strong><code>@param</code></strong> [Array<String>] Tags associated with the query</p>
+<p><strong><code>@param</code></strong> [Float, nil] Pre-computed vector similarity (0-1)</p>
+<p><strong><code>@param</code></strong> [Array<String>, nil] Pre-loaded tags for this node (avoids N+1 query)</p>
+<p><strong><code>@return</code></strong> [Float] Composite relevance score (0-10)</p>
+<h2 id="method-i-clear_cache!">clear_cache!()<a class="headerlink" href="#method-i-clear_cache!" title="Permanent link">&para;</a></h2>
 <p>Clear the query cache</p>
 <p>Call this after any operation that modifies data (soft delete, restore, etc.)
 to ensure subsequent queries see fresh results.</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="deletenode_id">delete(node_id) <a href="#method-i-delete"></a><a class="headerlink" href="#deletenode_id" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-delete">delete(node_id)<a class="headerlink" href="#method-i-delete" title="Permanent link">&para;</a></h2>
 <p>Delete a node</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Node database ID</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="existsnode_id">exists?(node_id) <a href="#method-i-exists?"></a><a class="headerlink" href="#existsnode_id" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-exists?">exists?(node_id)<a class="headerlink" href="#method-i-exists?" title="Permanent link">&para;</a></h2>
 <p>Check if a node exists</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Node database ID</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] True if node exists</p>
-<h2 id="find_query_matching_tagsquery-include_extractedfalse">find_query_matching_tags(query, include_extracted:false) <a href="#method-i-find_query_matching_tags"></a><a class="headerlink" href="#find_query_matching_tagsquery-include_extractedfalse" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
+<p><strong><code>@return</code></strong> [Boolean] True if node exists</p>
+<h2 id="method-i-find_query_matching_tags">find_query_matching_tags(query, include_extracted:false)<a class="headerlink" href="#method-i-find_query_matching_tags" title="Permanent link">&para;</a></h2>
 <p>Find tags that match terms in the query</p>
 <p>Searches the tags table for tags where any hierarchy level matches query
 words. For example, query "PostgreSQL database" would match tags like
 "database:postgresql", "database:sql", etc. Find tags matching a query using
 semantic extraction</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Search query</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Boolean] If true, returns hash with :extracted and :matched keys</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<String>] Matching tag names (default)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] If include_extracted: { extracted: [...], matched: [...] }</p>
-<h2 id="get_node_tagsnode_id">get_node_tags(node_id) <a href="#method-i-get_node_tags"></a><a class="headerlink" href="#get_node_tagsnode_id" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [String] Search query</p>
+<p><strong><code>@param</code></strong> [Boolean] If true, returns hash with :extracted and :matched keys</p>
+<p><strong><code>@return</code></strong> [Array<String>] Matching tag names (default)</p>
+<p><strong><code>@return</code></strong> [Hash] If include_extracted: { extracted: [...], matched: [...] }</p>
+<h2 id="method-i-get_node_tags">get_node_tags(node_id)<a class="headerlink" href="#method-i-get_node_tags" title="Permanent link">&para;</a></h2>
 <p>Get tags for a specific node</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Node database ID</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<String>] Tag names</p>
-<h2 id="initializeconfig-pool_sizenil-query_timeoutdefault_query_timeout-cache_sizedefault_cache_size-cache_ttldefault_cache_ttl">initialize(config, pool_size:nil, query_timeout:DEFAULT_QUERY_TIMEOUT, cache_size:DEFAULT_CACHE_SIZE, cache_ttl:DEFAULT_CACHE_TTL) <a href="#method-i-initialize"></a><a class="headerlink" href="#initializeconfig-pool_sizenil-query_timeoutdefault_query_timeout-cache_sizedefault_cache_size-cache_ttldefault_cache_ttl" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
+<p><strong><code>@return</code></strong> [Array<String>] Tag names</p>
+<h2 id="method-i-initialize">initialize(config, pool_size:nil, query_timeout:DEFAULT_QUERY_TIMEOUT, cache_size:DEFAULT_CACHE_SIZE, cache_ttl:DEFAULT_CACHE_TTL)<a class="headerlink" href="#method-i-initialize" title="Permanent link">&para;</a></h2>
 <p>Initialize long-term memory storage</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Hash] Database configuration (host, port, dbname, user, password)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer, nil] Connection pool size (uses ActiveRecord default if nil)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Query timeout in milliseconds (default: 30000)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Number of query results to cache (default: 1000, use 0 to disable)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Cache time-to-live in seconds (default: 300)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [LongTermMemory] a new instance of LongTermMemory</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<p><strong><code>@param</code></strong> [Hash] Database configuration (host, port, dbname, user, password)</p>
+<p><strong><code>@param</code></strong> [Integer, nil] Connection pool size (uses ActiveRecord default if nil)</p>
+<p><strong><code>@param</code></strong> [Integer] Query timeout in milliseconds (default: 30000)</p>
+<p><strong><code>@param</code></strong> [Integer] Number of query results to cache (default: 1000, use 0 to disable)</p>
+<p><strong><code>@param</code></strong> [Integer] Cache time-to-live in seconds (default: 300)</p>
+<p><strong><code>@return</code></strong> [LongTermMemory] a new instance of LongTermMemory</p>
+<p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">ltm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">LongTermMemory</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">default_config</span><span class="p">)</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">ltm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">LongTermMemory</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="w"> </span><span class="ss">cache_size</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w"> </span><span class="ss">cache_ttl</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">)</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
-<code>ruby
-ltm = LongTermMemory.new(config, cache_size: 0)</code>## link_robot_to_node(robot_id:, node:) <a href="#method-i-link_robot_to_node"></a>
-Link a robot to a node (create or update robot_node record)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Robot ID</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [HTM::Models::Node] Node to link</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [HTM::Models::RobotNode] The robot_node link record</p>
-<h2 id="mark_evictednode_ids">mark_evicted(node_ids) <a href="#method-i-mark_evicted"></a><a class="headerlink" href="#mark_evictednode_ids" title="Permanent link">&para;</a></h2>
+<strong><code>@example</code></strong>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">ltm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">LongTermMemory</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="w"> </span><span class="ss">cache_size</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span></code></pre></div></p>
+<h2 id="method-i-link_robot_to_node">link_robot_to_node(robot_id:, node:, working_memory:false)<a class="headerlink" href="#method-i-link_robot_to_node" title="Permanent link">&para;</a></h2>
+<p>Link a robot to a node (create or update robot_node record)</p>
+<p><strong><code>@param</code></strong> [Integer] Robot ID</p>
+<p><strong><code>@param</code></strong> [HTM::Models::Node] Node to link</p>
+<p><strong><code>@param</code></strong> [Boolean] Whether node is in working memory (default: false)</p>
+<p><strong><code>@return</code></strong> [HTM::Models::RobotNode] The robot_node link record</p>
+<h2 id="method-i-mark_evicted">mark_evicted(robot_id:, node_ids:)<a class="headerlink" href="#method-i-mark_evicted" title="Permanent link">&para;</a></h2>
 <p>Mark nodes as evicted from working memory</p>
-<p>Working memory state is now tracked per-robot in the working_memories table
-(optional persistence). The in-memory WorkingMemory class handles eviction
-tracking. This method is retained for API compatibility but is a no-op.</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<Integer>] Node IDs (ignored)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="node_topicsnode_id">node_topics(node_id) <a href="#method-i-node_topics"></a><a class="headerlink" href="#node_topicsnode_id" title="Permanent link">&para;</a></h2>
+<p>Sets working_memory = false on the robot_nodes join table for the specified
+robot and node IDs.</p>
+<p><strong><code>@param</code></strong> [Integer] Robot ID whose working memory is being evicted</p>
+<p><strong><code>@param</code></strong> [Array<Integer>] Node IDs to mark as evicted</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-node_topics">node_topics(node_id)<a class="headerlink" href="#method-i-node_topics" title="Permanent link">&para;</a></h2>
 <p>Get topics for a specific node</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Node database ID</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<String>] Topic paths</p>
-<h2 id="nodes_by_topictopic_path-exactfalse-limit50">nodes_by_topic(topic_path, exact:false, limit:50) <a href="#method-i-nodes_by_topic"></a><a class="headerlink" href="#nodes_by_topictopic_path-exactfalse-limit50" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
+<p><strong><code>@return</code></strong> [Array<String>] Topic paths</p>
+<h2 id="method-i-nodes_by_topic">nodes_by_topic(topic_path, exact:false, limit:50)<a class="headerlink" href="#method-i-nodes_by_topic" title="Permanent link">&para;</a></h2>
 <p>Retrieve nodes by ontological topic</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Topic hierarchy path</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Boolean] Exact match or prefix match</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Maximum results</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Matching nodes</p>
-<h2 id="ontology_structure">ontology_structure() <a href="#method-i-ontology_structure"></a><a class="headerlink" href="#ontology_structure" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [String] Topic hierarchy path</p>
+<p><strong><code>@param</code></strong> [Boolean] Exact match or prefix match</p>
+<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes</p>
+<h2 id="method-i-ontology_structure">ontology_structure()<a class="headerlink" href="#method-i-ontology_structure" title="Permanent link">&para;</a></h2>
 <p>Get ontology structure view</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Ontology structure</p>
-<h2 id="pool_size">pool_size() <a href="#method-i-pool_size"></a><a class="headerlink" href="#pool_size" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [Array<Hash>] Ontology structure</p>
+<h2 id="method-i-pool_size">pool_size()<a class="headerlink" href="#method-i-pool_size" title="Permanent link">&para;</a></h2>
 <p>For backwards compatibility with tests/code that expect pool_size</p>
-<h2 id="popular_tagslimit20-timeframenil">popular_tags(limit:20, timeframe:nil) <a href="#method-i-popular_tags"></a><a class="headerlink" href="#popular_tagslimit20-timeframenil" title="Permanent link">&para;</a></h2>
+<h2 id="method-i-popular_tags">popular_tags(limit:20, timeframe:nil)<a class="headerlink" href="#method-i-popular_tags" title="Permanent link">&para;</a></h2>
 <p>Get most popular tags</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Number of tags to return</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Range, nil] Optional time range filter</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Tags with usage counts</p>
-<h2 id="register_robotrobot_name">register_robot(robot_name) <a href="#method-i-register_robot"></a><a class="headerlink" href="#register_robotrobot_name" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Number of tags to return</p>
+<p><strong><code>@param</code></strong> [Range, nil] Optional time range filter</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Tags with usage counts</p>
+<h2 id="method-i-register_robot">register_robot(robot_name)<a class="headerlink" href="#method-i-register_robot" title="Permanent link">&para;</a></h2>
 <p>Register a robot</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Robot identifier</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Robot name</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="retrievenode_id">retrieve(node_id) <a href="#method-i-retrieve"></a><a class="headerlink" href="#retrievenode_id" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [String] Robot identifier</p>
+<p><strong><code>@param</code></strong> [String] Robot name</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-retrieve">retrieve(node_id)<a class="headerlink" href="#method-i-retrieve" title="Permanent link">&para;</a></h2>
 <p>Retrieve a node by ID</p>
 <p>Automatically tracks access by incrementing access_count and updating
 last_accessed</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Node database ID</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash, nil] Node data or nil</p>
-<h2 id="searchtimeframe-query-limit-embedding_service-metadata">search(timeframe:, query:, limit:, embedding_service:, metadata:{}) <a href="#method-i-search"></a><a class="headerlink" href="#searchtimeframe-query-limit-embedding_service-metadata" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
+<p><strong><code>@return</code></strong> [Hash, nil] Node data or nil</p>
+<h2 id="method-i-search">search(timeframe:, query:, limit:, embedding_service:, metadata:{})<a class="headerlink" href="#method-i-search" title="Permanent link">&para;</a></h2>
 <p>Vector similarity search</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Search query</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Maximum results</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Object] Service to generate embeddings</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Hash] Filter by metadata fields (default: {})</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Matching nodes</p>
-<h2 id="search_by_tagstags-match_allfalse-timeframenil-limit20">search_by_tags(tags:, match_all:false, timeframe:nil, limit:20) <a href="#method-i-search_by_tags"></a><a class="headerlink" href="#search_by_tagstags-match_allfalse-timeframenil-limit20" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)</p>
+<p><strong><code>@param</code></strong> [String] Search query</p>
+<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
+<p><strong><code>@param</code></strong> [Object] Service to generate embeddings</p>
+<p><strong><code>@param</code></strong> [Hash] Filter by metadata fields (default: {})</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes</p>
+<h2 id="method-i-search_by_tags">search_by_tags(tags:, match_all:false, timeframe:nil, limit:20)<a class="headerlink" href="#method-i-search_by_tags" title="Permanent link">&para;</a></h2>
 <p>Search nodes by tags</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<String>] Tags to search for</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Boolean] If true, match ALL tags; if false, match ANY tag</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Range, nil] Optional time range filter</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Maximum results</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Matching nodes with relevance scores</p>
-<h2 id="search_fulltexttimeframe-query-limit-metadata">search_fulltext(timeframe:, query:, limit:, metadata:{}) <a href="#method-i-search_fulltext"></a><a class="headerlink" href="#search_fulltexttimeframe-query-limit-metadata" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Array<String>] Tags to search for</p>
+<p><strong><code>@param</code></strong> [Boolean] If true, match ALL tags; if false, match ANY tag</p>
+<p><strong><code>@param</code></strong> [Range, nil] Optional time range filter</p>
+<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes with relevance scores</p>
+<h2 id="method-i-search_fulltext">search_fulltext(timeframe:, query:, limit:, metadata:{})<a class="headerlink" href="#method-i-search_fulltext" title="Permanent link">&para;</a></h2>
 <p>Full-text search</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Range] Time range to search</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Search query</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Maximum results</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Hash] Filter by metadata fields (default: {})</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Matching nodes</p>
-<h2 id="search_hybridtimeframe-query-limit-embedding_service-prefilter_limit100-metadata">search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit:100, metadata:{}) <a href="#method-i-search_hybrid"></a><a class="headerlink" href="#search_hybridtimeframe-query-limit-embedding_service-prefilter_limit100-metadata" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Range] Time range to search</p>
+<p><strong><code>@param</code></strong> [String] Search query</p>
+<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
+<p><strong><code>@param</code></strong> [Hash] Filter by metadata fields (default: {})</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes</p>
+<h2 id="method-i-search_hybrid">search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit:100, metadata:{})<a class="headerlink" href="#method-i-search_hybrid" title="Permanent link">&para;</a></h2>
 <p>Hybrid search (full-text + vector)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Range] Time range to search</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Search query</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Maximum results</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Object] Service to generate embeddings</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Candidates to consider (default: 100)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Hash] Filter by metadata fields (default: {})</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Matching nodes</p>
-<h2 id="search_with_relevancetimeframe-querynil-query_tags-limit20-embedding_servicenil-metadata">search_with_relevance(timeframe:, query:nil, query_tags:[], limit:20, embedding_service:nil, metadata:{}) <a href="#method-i-search_with_relevance"></a><a class="headerlink" href="#search_with_relevancetimeframe-querynil-query_tags-limit20-embedding_servicenil-metadata" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Range] Time range to search</p>
+<p><strong><code>@param</code></strong> [String] Search query</p>
+<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
+<p><strong><code>@param</code></strong> [Object] Service to generate embeddings</p>
+<p><strong><code>@param</code></strong> [Integer] Candidates to consider (default: 100)</p>
+<p><strong><code>@param</code></strong> [Hash] Filter by metadata fields (default: {})</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes</p>
+<h2 id="method-i-search_with_relevance">search_with_relevance(timeframe:, query:nil, query_tags:[], limit:20, embedding_service:nil, metadata:{})<a class="headerlink" href="#method-i-search_with_relevance" title="Permanent link">&para;</a></h2>
 <p>Search with dynamic relevance scoring</p>
 <p>Returns nodes with calculated relevance scores based on query context</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String, nil] Search query</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<String>] Tags to match</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Maximum results</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Object, nil] Service to generate embeddings</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Hash] Filter by metadata fields (default: {})</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Nodes with relevance scores</p>
-<h2 id="shutdown">shutdown() <a href="#method-i-shutdown"></a><a class="headerlink" href="#shutdown" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)</p>
+<p><strong><code>@param</code></strong> [String, nil] Search query</p>
+<p><strong><code>@param</code></strong> [Array<String>] Tags to match</p>
+<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
+<p><strong><code>@param</code></strong> [Object, nil] Service to generate embeddings</p>
+<p><strong><code>@param</code></strong> [Hash] Filter by metadata fields (default: {})</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Nodes with relevance scores</p>
+<h2 id="method-i-shutdown">shutdown()<a class="headerlink" href="#method-i-shutdown" title="Permanent link">&para;</a></h2>
 <p>Shutdown - no-op with ActiveRecord (connection pool managed by ActiveRecord)</p>
-<h2 id="stats">stats() <a href="#method-i-stats"></a><a class="headerlink" href="#stats" title="Permanent link">&para;</a></h2>
+<h2 id="method-i-stats">stats()<a class="headerlink" href="#method-i-stats" title="Permanent link">&para;</a></h2>
 <p>Get memory statistics</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Statistics</p>
-<h2 id="topic_relationshipsmin_shared_nodes2-limit50">topic_relationships(min_shared_nodes:2, limit:50) <a href="#method-i-topic_relationships"></a><a class="headerlink" href="#topic_relationshipsmin_shared_nodes2-limit50" title="Permanent link">&para;</a></h2>
+<p><strong><code>@return</code></strong> [Hash] Statistics</p>
+<h2 id="method-i-topic_relationships">topic_relationships(min_shared_nodes:2, limit:50)<a class="headerlink" href="#method-i-topic_relationships" title="Permanent link">&para;</a></h2>
 <p>Get topic relationships (co-occurrence)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Minimum shared nodes</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Maximum relationships</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Hash>] Topic relationships</p>
-<h2 id="track_accessnode_ids">track_access(node_ids) <a href="#method-i-track_access"></a><a class="headerlink" href="#track_accessnode_ids" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Minimum shared nodes</p>
+<p><strong><code>@param</code></strong> [Integer] Maximum relationships</p>
+<p><strong><code>@return</code></strong> [Array<Hash>] Topic relationships</p>
+<h2 id="method-i-track_access">track_access(node_ids)<a class="headerlink" href="#method-i-track_access" title="Permanent link">&para;</a></h2>
 <p>Track access for multiple nodes (bulk operation)</p>
 <p>Updates access_count and last_accessed for all nodes in the array</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<Integer>] Node IDs that were accessed</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="update_last_accessednode_id">update_last_accessed(node_id) <a href="#method-i-update_last_accessed"></a><a class="headerlink" href="#update_last_accessednode_id" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Array<Integer>] Node IDs that were accessed</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-update_last_accessed">update_last_accessed(node_id)<a class="headerlink" href="#method-i-update_last_accessed" title="Permanent link">&para;</a></h2>
 <p>Update last_accessed timestamp</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Integer] Node database ID</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="update_robot_activityrobot_id">update_robot_activity(robot_id) <a href="#method-i-update_robot_activity"></a><a class="headerlink" href="#update_robot_activityrobot_id" title="Permanent link">&para;</a></h2>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-update_robot_activity">update_robot_activity(robot_id)<a class="headerlink" href="#method-i-update_robot_activity" title="Permanent link">&para;</a></h2>
 <p>Update robot activity timestamp</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Robot identifier</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
+<p><strong><code>@param</code></strong> [String] Robot identifier</p>
+<p><strong><code>@return</code></strong> [void] </p>
 
 
 

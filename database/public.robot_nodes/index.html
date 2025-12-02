@@ -3235,8 +3235,6 @@
       
         
       
-        
-      
     
     
     
@@ -3381,34 +3379,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4438,6 +4408,15 @@
 <td></td>
 <td></td>
 </tr>
+<tr>
+<td>working_memory</td>
+<td>boolean</td>
+<td>false</td>
+<td>false</td>
+<td></td>
+<td></td>
+<td>True if this node is currently in the robot working memory</td>
+</tr>
 </tbody>
 </table>
 <h2 id="constraints">Constraints<a class="headerlink" href="#constraints" title="Permanent link">&para;</a></h2>
@@ -4491,6 +4470,10 @@
 <tr>
 <td>idx_robot_nodes_unique</td>
 <td>CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (robot_id, node_id)</td>
+</tr>
+<tr>
+<td>idx_robot_nodes_working_memory</td>
+<td>CREATE INDEX idx_robot_nodes_working_memory ON public.robot_nodes USING btree (robot_id, working_memory) WHERE (working_memory = true)</td>
 </tr>
 <tr>
 <td>robot_nodes_pkey</td>

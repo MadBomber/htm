@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4200,17 +4170,17 @@
 *   Cache efficiency tracking
 *   Service health checks
 *   Memory usage statistics</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Observability</span><span class="o">.</span><span class="n">collect_all</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">puts</span><span class="w"> </span><span class="n">stats</span><span class="o">[</span><span class="ss">:connection_pool</span><span class="o">][</span><span class="ss">:status</span><span class="o">]</span><span class="w">  </span><span class="c1"># =&gt; :healthy</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">pool_stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Observability</span><span class="o">.</span><span class="n">connection_pool_stats</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">if</span><span class="w"> </span><span class="n">pool_stats</span><span class="o">[</span><span class="ss">:status</span><span class="o">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="ss">:exhausted</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="w"> </span><span class="s2">&quot;Connection pool exhausted!&quot;</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">end</span>
 </span></code></pre></div>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">if</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Observability</span><span class="o">.</span><span class="n">healthy?</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;All systems operational&quot;</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">else</span>
@@ -4218,26 +4188,26 @@
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">end</span>
 </span></code></pre></div></p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
-<h2 id="cache_stats">cache_stats() <a href="#method-c-cache_stats"></a><a class="headerlink" href="#cache_stats" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-cache_stats">cache_stats()<a class="headerlink" href="#method-c-cache_stats" title="Permanent link">&para;</a></h2>
 <p>Get query cache statistics
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash, nil] Cache stats or nil if unavailable</p>
-<h2 id="circuit_breaker_stats">circuit_breaker_stats() <a href="#method-c-circuit_breaker_stats"></a><a class="headerlink" href="#circuit_breaker_stats" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [Hash, nil] Cache stats or nil if unavailable</p>
+<h2 id="method-c-circuit_breaker_stats">circuit_breaker_stats()<a class="headerlink" href="#method-c-circuit_breaker_stats" title="Permanent link">&para;</a></h2>
 <p>Get circuit breaker states for all services
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Circuit breaker states:
+<strong><code>@return</code></strong> [Hash] Circuit breaker states:
 - :embedding_service - State and failure count
 - :tag_service - State and failure count</p>
-<h2 id="collect_all">collect_all() <a href="#method-c-collect_all"></a><a class="headerlink" href="#collect_all" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-collect_all">collect_all()<a class="headerlink" href="#method-c-collect_all" title="Permanent link">&para;</a></h2>
 <p>Collect all observability metrics
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Comprehensive metrics including:
+<strong><code>@return</code></strong> [Hash] Comprehensive metrics including:
 - :connection_pool - Pool stats with health status
 - :cache - Query cache hit rates and size
 - :circuit_breakers - Service circuit breaker states
 - :query_timings - Recent query performance
 - :service_timings - Embedding/tag generation times
 - :memory_usage - System memory stats</p>
-<h2 id="connection_pool_stats">connection_pool_stats() <a href="#method-c-connection_pool_stats"></a><a class="headerlink" href="#connection_pool_stats" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-connection_pool_stats">connection_pool_stats()<a class="headerlink" href="#method-c-connection_pool_stats" title="Permanent link">&para;</a></h2>
 <p>Get connection pool statistics with health status
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Pool statistics including:
+<strong><code>@return</code></strong> [Hash] Pool statistics including:
 - :size - Maximum pool size
 - :connections - Current total connections
 - :in_use - Connections currently checked out
@@ -4245,37 +4215,37 @@
 - :utilization - Usage percentage (0.0-1.0)
 - :status - Health status (:healthy, :warning, :critical, :exhausted)
 - :wait_timeout - Connection wait timeout (ms)</p>
-<h2 id="health_check">health_check() <a href="#method-c-health_check"></a><a class="headerlink" href="#health_check" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-health_check">health_check()<a class="headerlink" href="#method-c-health_check" title="Permanent link">&para;</a></h2>
 <p>Perform comprehensive health check
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Health check results:
+<strong><code>@return</code></strong> [Hash] Health check results:
 - :healthy - Boolean overall health status
 - :checks - Individual check results
 - :issues - Array of identified issues</p>
-<h2 id="healthy">healthy?() <a href="#method-c-healthy?"></a><a class="headerlink" href="#healthy" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-healthy?">healthy?()<a class="headerlink" href="#method-c-healthy?" title="Permanent link">&para;</a></h2>
 <p>Quick health check - returns boolean
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] true if system is healthy</p>
-<h2 id="memory_stats">memory_stats() <a href="#method-c-memory_stats"></a><a class="headerlink" href="#memory_stats" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [Boolean] true if system is healthy</p>
+<h2 id="method-c-memory_stats">memory_stats()<a class="headerlink" href="#method-c-memory_stats" title="Permanent link">&para;</a></h2>
 <p>Get memory usage statistics
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Memory stats</p>
-<h2 id="query_timing_stats">query_timing_stats() <a href="#method-c-query_timing_stats"></a><a class="headerlink" href="#query_timing_stats" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [Hash] Memory stats</p>
+<h2 id="method-c-query_timing_stats">query_timing_stats()<a class="headerlink" href="#method-c-query_timing_stats" title="Permanent link">&para;</a></h2>
 <p>Get query timing statistics
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Timing statistics including avg, min, max, p95</p>
-<h2 id="record_embedding_timingduration_ms">record_embedding_timing(duration_ms ) <a href="#method-c-record_embedding_timing"></a><a class="headerlink" href="#record_embedding_timingduration_ms" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [Hash] Timing statistics including avg, min, max, p95</p>
+<h2 id="method-c-record_embedding_timing">record_embedding_timing(duration_ms )<a class="headerlink" href="#method-c-record_embedding_timing" title="Permanent link">&para;</a></h2>
 <p>Record embedding generation timing
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Float] Generation duration in milliseconds</p>
-<h2 id="record_query_timingduration_ms-query_type-unknown">record_query_timing(duration_ms , query_type: :unknown) <a href="#method-c-record_query_timing"></a><a class="headerlink" href="#record_query_timingduration_ms-query_type-unknown" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [Float] Generation duration in milliseconds</p>
+<h2 id="method-c-record_query_timing">record_query_timing(duration_ms , query_type: :unknown)<a class="headerlink" href="#method-c-record_query_timing" title="Permanent link">&para;</a></h2>
 <p>Record query timing for metrics
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Float] Query duration in milliseconds</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Symbol] Type of query (:vector, :fulltext, :hybrid)</p>
-<h2 id="record_tag_timingduration_ms">record_tag_timing(duration_ms ) <a href="#method-c-record_tag_timing"></a><a class="headerlink" href="#record_tag_timingduration_ms" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [Float] Query duration in milliseconds</p>
+<p><strong><code>@param</code></strong> [Symbol] Type of query (:vector, :fulltext, :hybrid)</p>
+<h2 id="method-c-record_tag_timing">record_tag_timing(duration_ms )<a class="headerlink" href="#method-c-record_tag_timing" title="Permanent link">&para;</a></h2>
 <p>Record tag extraction timing
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Float] Extraction duration in milliseconds</p>
-<h2 id="reset_metrics">reset_metrics!() <a href="#method-c-reset_metrics!"></a><a class="headerlink" href="#reset_metrics" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [Float] Extraction duration in milliseconds</p>
+<h2 id="method-c-reset_metrics!">reset_metrics!()<a class="headerlink" href="#method-c-reset_metrics!" title="Permanent link">&para;</a></h2>
 <p>Clear all collected timing metrics
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="service_timing_stats">service_timing_stats() <a href="#method-c-service_timing_stats"></a><a class="headerlink" href="#service_timing_stats" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-service_timing_stats">service_timing_stats()<a class="headerlink" href="#method-c-service_timing_stats" title="Permanent link">&para;</a></h2>
 <p>Get service timing statistics (embedding and tag extraction)
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Timing stats for embedding and tag services</p>
+<strong><code>@return</code></strong> [Hash] Timing stats for embedding and tag services</p>
 
 
 

@@ -3742,8 +3742,6 @@
       
         
       
-        
-      
     
     
     
@@ -3888,34 +3886,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -5165,11 +5135,6 @@
 <td>Colon-separated namespaces (e.g., <code>ai:llm:embeddings</code>)</td>
 </tr>
 <tr>
-<td><a href="../database/public.working_memories.md">working_memories</a></td>
-<td>Per-robot working memory state</td>
-<td>Optional persistence for token-limited context</td>
-</tr>
-<tr>
 <td>file_sources</td>
 <td>Source file metadata for loaded documents</td>
 <td>Path, mtime, frontmatter, sync tracking</td>
@@ -5189,7 +5154,7 @@
 <tr>
 <td><a href="../../database/public.robot_nodes/">robot_nodes</a></td>
 <td>Links robots to nodes (many-to-many)</td>
-<td>Enables "hive mind" shared memory architecture</td>
+<td>Enables "hive mind" shared memory; includes <code>working_memory</code> boolean for per-robot working memory state</td>
 </tr>
 <tr>
 <td><a href="../../database/public.node_tags/">node_tags</a></td>

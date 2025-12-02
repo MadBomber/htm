@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4199,7 +4169,7 @@
 *   nil (no timeframe filter)
 *   Range (single time window)
 *   Array<Range> (multiple time windows, OR'd together)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/example" title="GitHub User: example">@example</a></strong>
+<p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="no">Timeframe</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="kp">nil</span><span class="p">)</span><span class="w">                    </span><span class="c1"># =&gt; nil (no filter)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="no">Timeframe</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="no">Date</span><span class="o">.</span><span class="n">today</span><span class="p">)</span><span class="w">             </span><span class="c1"># =&gt; Range for entire day</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="no">Timeframe</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="p">)</span><span class="w">               </span><span class="c1"># =&gt; Range for entire day</span>
@@ -4209,16 +4179,16 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="no">Timeframe</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="o">[</span><span class="n">range1</span><span class="p">,</span><span class="w"> </span><span class="n">range2</span><span class="o">]</span><span class="p">)</span><span class="w">       </span><span class="c1"># =&gt; Array of ranges</span>
 </span></code></pre></div></p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
-<h2 id="normalizeinput-query-nil">normalize(input , query: nil) <a href="#method-c-normalize"></a><a class="headerlink" href="#normalizeinput-query-nil" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-normalize">normalize(input , query: nil)<a class="headerlink" href="#method-c-normalize" title="Permanent link">&para;</a></h2>
 <p>Normalize a timeframe input to nil, Range, or Array<Range>
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [nil, Range, Array, Date, DateTime, Time, String, Symbol] Timeframe specification</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String, nil] Query text (required when input is :auto)</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [nil, Range, Array<Range>] Normalized timeframe</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Result] When input is :auto, returns Result with :timeframe, :query, :extracted</p>
-<h2 id="validinput">valid?(input ) <a href="#method-c-valid?"></a><a class="headerlink" href="#validinput" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [nil, Range, Array, Date, DateTime, Time, String, Symbol] Timeframe specification</p>
+<p><strong><code>@param</code></strong> [String, nil] Query text (required when input is :auto)</p>
+<p><strong><code>@return</code></strong> [nil, Range, Array<Range>] Normalized timeframe</p>
+<p><strong><code>@return</code></strong> [Result] When input is :auto, returns Result with :timeframe, :query, :extracted</p>
+<h2 id="method-c-valid?">valid?(input )<a class="headerlink" href="#method-c-valid?" title="Permanent link">&para;</a></h2>
 <p>Check if a value is a valid timeframe input
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Object] Value to check</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Boolean] </p>
+<strong><code>@param</code></strong> [Object] Value to check</p>
+<p><strong><code>@return</code></strong> [Boolean] </p>
 
 
 

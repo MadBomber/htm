@@ -3247,8 +3247,6 @@
       
         
       
-        
-      
     
     
     
@@ -3393,34 +3391,6 @@
     
   
     File Sources
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../database/public.working_memories.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Working Memories
   
 
     
@@ -4203,35 +4173,35 @@
 *   Circuit breaker protection for external LLM failures</p>
 <p>The actual LLM call is delegated to HTM.configuration.embedding_generator</p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
-<h2 id="circuit_breaker">circuit_breaker() <a href="#method-c-circuit_breaker"></a><a class="headerlink" href="#circuit_breaker" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-circuit_breaker">circuit_breaker()<a class="headerlink" href="#method-c-circuit_breaker" title="Permanent link">&para;</a></h2>
 <p>Get or create the circuit breaker for embedding service
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [HTM::CircuitBreaker] The circuit breaker instance</p>
-<h2 id="format_for_storageembedding">format_for_storage(embedding ) <a href="#method-c-format_for_storage"></a><a class="headerlink" href="#format_for_storageembedding" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [HTM::CircuitBreaker] The circuit breaker instance</p>
+<h2 id="method-c-format_for_storage">format_for_storage(embedding )<a class="headerlink" href="#method-c-format_for_storage" title="Permanent link">&para;</a></h2>
 <p>Format embedding for database storage
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<Float>] Padded embedding</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [String] PostgreSQL array format</p>
-<h2 id="generatetext">generate(text ) <a href="#method-c-generate"></a><a class="headerlink" href="#generatetext" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [Array<Float>] Padded embedding</p>
+<p><strong><code>@return</code></strong> [String] PostgreSQL array format</p>
+<h2 id="method-c-generate">generate(text )<a class="headerlink" href="#method-c-generate" title="Permanent link">&para;</a></h2>
 <p>Generate embedding with validation and processing
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [String] Text to embed</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/raise" title="GitHub User: raise">@raise</a></strong> [CircuitBreakerOpenError] If circuit breaker is open</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Hash] Processed embedding with metadata
+<strong><code>@param</code></strong> [String] Text to embed</p>
+<p><strong><code>@raise</code></strong> [CircuitBreakerOpenError] If circuit breaker is open</p>
+<p><strong><code>@return</code></strong> [Hash] Processed embedding with metadata
 {
   embedding: Array<Float>,           # Original embedding
   dimension: Integer,                # Original dimension
   storage_embedding: String,         # Formatted for database storage
   storage_dimension: Integer         # Padded dimension (2000)
 }</p>
-<h2 id="pad_embeddingembedding">pad_embedding(embedding ) <a href="#method-c-pad_embedding"></a><a class="headerlink" href="#pad_embeddingembedding" title="Permanent link">&para;</a></h2>
+<h2 id="method-c-pad_embedding">pad_embedding(embedding )<a class="headerlink" href="#method-c-pad_embedding" title="Permanent link">&para;</a></h2>
 <p>Pad embedding to MAX_DIMENSION with zeros
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Array<Float>] Original embedding</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [Array<Float>] Padded embedding</p>
-<h2 id="reset_circuit_breaker">reset_circuit_breaker!() <a href="#method-c-reset_circuit_breaker!"></a><a class="headerlink" href="#reset_circuit_breaker" title="Permanent link">&para;</a></h2>
+<strong><code>@param</code></strong> [Array<Float>] Original embedding</p>
+<p><strong><code>@return</code></strong> [Array<Float>] Padded embedding</p>
+<h2 id="method-c-reset_circuit_breaker!">reset_circuit_breaker!()<a class="headerlink" href="#method-c-reset_circuit_breaker!" title="Permanent link">&para;</a></h2>
 <p>Reset the circuit breaker (useful for testing)
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/return" title="GitHub User: return">@return</a></strong> [void] </p>
-<h2 id="validate_embeddingembedding">validate_embedding!(embedding ) <a href="#method-c-validate_embedding!"></a><a class="headerlink" href="#validate_embeddingembedding" title="Permanent link">&para;</a></h2>
+<strong><code>@return</code></strong> [void] </p>
+<h2 id="method-c-validate_embedding!">validate_embedding!(embedding )<a class="headerlink" href="#method-c-validate_embedding!" title="Permanent link">&para;</a></h2>
 <p>Validate embedding response format
-<strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/param" title="GitHub User: param">@param</a></strong> [Object] Raw embedding from generator</p>
-<p><strong><a class="magiclink magiclink-github magiclink-mention" href="https://github.com/raise" title="GitHub User: raise">@raise</a></strong> [HTM::EmbeddingError] if invalid</p>
+<strong><code>@param</code></strong> [Object] Raw embedding from generator</p>
+<p><strong><code>@raise</code></strong> [HTM::EmbeddingError] if invalid</p>
 
 
 
