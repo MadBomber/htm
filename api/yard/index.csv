@@ -164,12 +164,16 @@ query,Attribute,HTM/Timeframe/Result.md#attribute-i-query
 timeframe,Attribute,HTM/Timeframe/Result.md#attribute-i-timeframe
 HTM::WorkingMemory,Class,HTM/WorkingMemory.md
 HTM::WorkingMemory.add,Method,HTM/WorkingMemory.md#method-i-add
+HTM::WorkingMemory.add_from_sync,Method,HTM/WorkingMemory.md#method-i-add_from_sync
 HTM::WorkingMemory.assemble_context,Method,HTM/WorkingMemory.md#method-i-assemble_context
+HTM::WorkingMemory.clear,Method,HTM/WorkingMemory.md#method-i-clear
+HTM::WorkingMemory.clear_from_sync,Method,HTM/WorkingMemory.md#method-i-clear_from_sync
 HTM::WorkingMemory.evict_to_make_space,Method,HTM/WorkingMemory.md#method-i-evict_to_make_space
 HTM::WorkingMemory.has_space?,Method,HTM/WorkingMemory.md#method-i-has_space?
 HTM::WorkingMemory.initialize,Method,HTM/WorkingMemory.md#method-i-initialize
 HTM::WorkingMemory.node_count,Method,HTM/WorkingMemory.md#method-i-node_count
 HTM::WorkingMemory.remove,Method,HTM/WorkingMemory.md#method-i-remove
+HTM::WorkingMemory.remove_from_sync,Method,HTM/WorkingMemory.md#method-i-remove_from_sync
 HTM::WorkingMemory.token_count,Method,HTM/WorkingMemory.md#method-i-token_count
 HTM::WorkingMemory.utilization_percentage,Method,HTM/WorkingMemory.md#method-i-utilization_percentage
 max_tokens,Attribute,HTM/WorkingMemory.md#attribute-i-max_tokens

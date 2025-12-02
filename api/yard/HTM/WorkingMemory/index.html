@@ -4182,6 +4182,15 @@ concurrent access from multiple threads.</p>
 <p><strong><code>@param</code></strong> [Time, nil] Last access time from long-term memory</p>
 <p><strong><code>@param</code></strong> [Boolean] Whether this node was recalled from long-term memory</p>
 <p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-add_from_sync">add_from_sync(id:, content:, token_count:, created_at:)<a class="headerlink" href="#method-i-add_from_sync" title="Permanent link">&para;</a></h2>
+<p>Add a node from sync notification (bypasses normal add flow)</p>
+<p>Called by RobotGroup when another robot adds to working memory. Does not
+trigger notifications to avoid infinite loops.</p>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
+<p><strong><code>@param</code></strong> [String] Node content</p>
+<p><strong><code>@param</code></strong> [Integer] Token count</p>
+<p><strong><code>@param</code></strong> [Time] When node was created</p>
+<p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-i-assemble_context">assemble_context(strategy:, max_tokens:nil)<a class="headerlink" href="#method-i-assemble_context" title="Permanent link">&para;</a></h2>
 <p>Assemble context string for LLM</p>
 <p><strong><code>@param</code></strong> [Symbol] Assembly strategy (:recent, :frequent, :balanced)
@@ -4190,6 +4199,13 @@ concurrent access from multiple threads.</p>
 - :balanced - Combines frequency × recency</p>
 <p><strong><code>@param</code></strong> [Integer, nil] Optional token limit</p>
 <p><strong><code>@return</code></strong> [String] Assembled context</p>
+<h2 id="method-i-clear">clear()<a class="headerlink" href="#method-i-clear" title="Permanent link">&para;</a></h2>
+<p>Clear all nodes from working memory</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-clear_from_sync">clear_from_sync()<a class="headerlink" href="#method-i-clear_from_sync" title="Permanent link">&para;</a></h2>
+<p>Clear all nodes from sync notification</p>
+<p>Called by RobotGroup when another robot clears working memory.</p>
+<p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-i-evict_to_make_space">evict_to_make_space(needed_tokens)<a class="headerlink" href="#method-i-evict_to_make_space" title="Permanent link">&para;</a></h2>
 <p>Evict nodes to make space</p>
 <p>Uses LFU + LRU strategy: Least Frequently Used + Least Recently Used Nodes
@@ -4210,6 +4226,11 @@ with low access count and old timestamps are evicted first</p>
 <h2 id="method-i-remove">remove(key)<a class="headerlink" href="#method-i-remove" title="Permanent link">&para;</a></h2>
 <p>Remove a node from working memory</p>
 <p><strong><code>@param</code></strong> [String] Node identifier</p>
+<p><strong><code>@return</code></strong> [void] </p>
+<h2 id="method-i-remove_from_sync">remove_from_sync(node_id)<a class="headerlink" href="#method-i-remove_from_sync" title="Permanent link">&para;</a></h2>
+<p>Remove a node from sync notification</p>
+<p>Called by RobotGroup when another robot evicts from working memory.</p>
+<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-i-token_count">token_count()<a class="headerlink" href="#method-i-token_count" title="Permanent link">&para;</a></h2>
 <p>Get current token count</p>
