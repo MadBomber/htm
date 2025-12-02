@@ -34,6 +34,22 @@ Add a node to working memory
 
 **`@return`** [void] 
 
+## add_from_sync(id:, content:, token_count:, created_at:) {: #method-i-add_from_sync }
+Add a node from sync notification (bypasses normal add flow)
+
+Called by RobotGroup when another robot adds to working memory. Does not
+trigger notifications to avoid infinite loops.
+
+**`@param`** [Integer] Node database ID
+
+**`@param`** [String] Node content
+
+**`@param`** [Integer] Token count
+
+**`@param`** [Time] When node was created
+
+**`@return`** [void] 
+
 ## assemble_context(strategy:, max_tokens:nil) {: #method-i-assemble_context }
 Assemble context string for LLM
 
@@ -45,6 +61,18 @@ Assemble context string for LLM
 **`@param`** [Integer, nil] Optional token limit
 
 **`@return`** [String] Assembled context
+
+## clear() {: #method-i-clear }
+Clear all nodes from working memory
+
+**`@return`** [void] 
+
+## clear_from_sync() {: #method-i-clear_from_sync }
+Clear all nodes from sync notification
+
+Called by RobotGroup when another robot clears working memory.
+
+**`@return`** [void] 
 
 ## evict_to_make_space(needed_tokens) {: #method-i-evict_to_make_space }
 Evict nodes to make space
@@ -79,6 +107,15 @@ Get node count
 Remove a node from working memory
 
 **`@param`** [String] Node identifier
+
+**`@return`** [void] 
+
+## remove_from_sync(node_id) {: #method-i-remove_from_sync }
+Remove a node from sync notification
+
+Called by RobotGroup when another robot evicts from working memory.
+
+**`@param`** [Integer] Node database ID
 
 **`@return`** [void] 
 
