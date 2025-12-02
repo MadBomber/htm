@@ -8,7 +8,7 @@ Default timeout is 30 seconds. Configure via db_query_timeout parameter when
 initializing HTM.
 
 
-**@example**
+**`@example`**
 ```ruby
 begin
   htm.recall("complex query", strategy: :hybrid)

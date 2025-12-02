@@ -37,14 +37,13 @@ For detailed table definitions, columns, indexes, and constraints, see the auto-
 | [robots](../database/public.robots.md) | Registry of all LLM robots using the HTM system | Stores robot metadata and activity tracking |
 | [nodes](../database/public.nodes.md) | Core memory storage for conversation messages and context | Vector embeddings, full-text search, deduplication |
 | [tags](../database/public.tags.md) | Unique hierarchical tag names for categorization | Colon-separated namespaces (e.g., `ai:llm:embeddings`) |
-| [working_memories](../database/public.working_memories.md) | Per-robot working memory state | Optional persistence for token-limited context |
 | file_sources | Source file metadata for loaded documents | Path, mtime, frontmatter, sync tracking |
 
 ### Join Tables
 
 | Table | Description | Details |
 |-------|-------------|---------|
-| [robot_nodes](../database/public.robot_nodes.md) | Links robots to nodes (many-to-many) | Enables "hive mind" shared memory architecture |
+| [robot_nodes](../database/public.robot_nodes.md) | Links robots to nodes (many-to-many) | Enables "hive mind" shared memory; includes `working_memory` boolean for per-robot working memory state |
 | [node_tags](../database/public.node_tags.md) | Links nodes to tags (many-to-many) | Flexible multi-tag categorization |
 
 ### System Tables

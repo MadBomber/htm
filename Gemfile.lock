@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    htm (0.0.9)
+    htm (0.0.10)
       activerecord
       chronic
       lru_redux

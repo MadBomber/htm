@@ -400,6 +400,29 @@ class HTM
     count
   end
 
+  # Clear all nodes from working memory
+  #
+  # Marks all nodes as evicted from working memory (in database) and clears
+  # the in-memory cache. Nodes remain in long-term memory.
+  #
+  # @return [Integer] Number of nodes cleared from working memory
+  #
+  # @example
+  #   htm.clear_working_memory  # => 5
+  #
+  def clear_working_memory
+    # Clear in-memory cache
+    @working_memory.clear
+
+    # Update database: mark all as evicted from working memory
+    count = HTM::Models::RobotNode
+      .where(robot_id: @robot_id, working_memory: true)
+      .update_all(working_memory: false)
+
+    HTM.logger.info "Cleared #{count} nodes from working memory"
+    count
+  end
+
   # Load a single file into long-term memory
   #
   # Reads a text-based file (starting with markdown), chunks it by paragraph,

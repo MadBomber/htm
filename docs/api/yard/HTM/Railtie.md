@@ -11,12 +11,12 @@ This railtie automatically configures HTM when Rails boots:
 *   Configures test environment for synchronous jobs
 
 
-**@example**
+**`@example`**
 ```ruby
 # HTM is automatically configured on Rails boot
 # No additional setup required
 ```
-**@example**
+**`@example`**
 ```ruby
 # config/initializers/htm.rb
 HTM.configure do |config|

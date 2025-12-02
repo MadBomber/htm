@@ -515,6 +515,13 @@
           "type": "timestamp with time zone",
           "nullable": true,
           "default": "CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "working_memory",
+          "type": "boolean",
+          "nullable": false,
+          "default": "false",
+          "comment": "True if this node is currently in the robot working memory"
         }
       ],
       "indexes": [
@@ -549,6 +556,15 @@
           "columns": [
             "robot_id",
             "node_id"
+          ]
+        },
+        {
+          "name": "idx_robot_nodes_working_memory",
+          "def": "CREATE INDEX idx_robot_nodes_working_memory ON public.robot_nodes USING btree (robot_id, working_memory) WHERE (working_memory = true)",
+          "table": "public.robot_nodes",
+          "columns": [
+            "robot_id",
+            "working_memory"
           ]
         },
         {
@@ -750,117 +766,6 @@
           ]
         }
       ]
-    },
-    {
-      "name": "public.working_memories",
-      "type": "BASE TABLE",
-      "comment": "Per-robot working memory state (optional persistence)",
-      "columns": [
-        {
-          "name": "added_at",
-          "type": "timestamp with time zone",
-          "nullable": true,
-          "default": "CURRENT_TIMESTAMP",
-          "comment": "When node was added to working memory"
-        },
-        {
-          "name": "id",
-          "type": "bigint",
-          "nullable": false,
-          "default": "nextval('working_memories_id_seq'::regclass)"
-        },
-        {
-          "name": "node_id",
-          "type": "bigint",
-          "nullable": false,
-          "comment": "Node currently in working memory"
-        },
-        {
-          "name": "robot_id",
-          "type": "bigint",
-          "nullable": false,
-          "comment": "Robot whose working memory this belongs to"
-        },
-        {
-          "name": "token_count",
-          "type": "integer",
-          "nullable": true,
-          "comment": "Cached token count for budget tracking"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "idx_working_memories_node_id",
-          "def": "CREATE INDEX idx_working_memories_node_id ON public.working_memories USING btree (node_id)",
-          "table": "public.working_memories",
-          "columns": [
-            "node_id"
-          ]
-        },
-        {
-          "name": "idx_working_memories_robot_id",
-          "def": "CREATE INDEX idx_working_memories_robot_id ON public.working_memories USING btree (robot_id)",
-          "table": "public.working_memories",
-          "columns": [
-            "robot_id"
-          ]
-        },
-        {
-          "name": "idx_working_memories_unique",
-          "def": "CREATE UNIQUE INDEX idx_working_memories_unique ON public.working_memories USING btree (robot_id, node_id)",
-          "table": "public.working_memories",
-          "columns": [
-            "robot_id",
-            "node_id"
-          ]
-        },
-        {
-          "name": "working_memories_pkey",
-          "def": "CREATE UNIQUE INDEX working_memories_pkey ON public.working_memories USING btree (id)",
-          "table": "public.working_memories",
-          "columns": [
-            "id"
-          ]
-        }
-      ],
-      "constraints": [
-        {
-          "name": "fk_rails_2c1d8b383c",
-          "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
-          "table": "public.working_memories",
-          "referenced_table": "nodes",
-          "columns": [
-            "node_id"
-          ],
-          "referenced_columns": [
-            "id"
-          ]
-        },
-        {
-          "name": "fk_rails_4b7c3eb07b",
-          "type": "FOREIGN KEY",
-          "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
-          "table": "public.working_memories",
-          "referenced_table": "robots",
-          "columns": [
-            "robot_id"
-          ],
-          "referenced_columns": [
-            "id"
-          ]
-        },
-        {
-          "name": "working_memories_pkey",
-          "type": "PRIMARY KEY",
-          "def": "PRIMARY KEY (id)",
-          "table": "public.working_memories",
-          "referenced_table": "",
-          "columns": [
-            "id"
-          ]
-        }
-      ]
     }
   ],
   "relations": [
@@ -918,32 +823,6 @@
     },
     {
       "table": "public.robot_nodes",
-      "columns": [
-        "node_id"
-      ],
-      "cardinality": "zero_or_more",
-      "parent_table": "public.nodes",
-      "parent_columns": [
-        "id"
-      ],
-      "parent_cardinality": "exactly_one",
-      "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
-    },
-    {
-      "table": "public.working_memories",
-      "columns": [
-        "robot_id"
-      ],
-      "cardinality": "zero_or_more",
-      "parent_table": "public.robots",
-      "parent_columns": [
-        "id"
-      ],
-      "parent_cardinality": "exactly_one",
-      "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
-    },
-    {
-      "table": "public.working_memories",
       "columns": [
         "node_id"
       ],

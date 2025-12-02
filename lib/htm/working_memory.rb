@@ -189,6 +189,78 @@ class HTM
       end
     end
 
+    # Clear all nodes from working memory
+    #
+    # @return [void]
+    #
+    def clear
+      @mutex.synchronize do
+        @nodes.clear
+        @access_order.clear
+      end
+    end
+
+    # ===========================================================================
+    # Sync Methods (for inter-robot coordination via LISTEN/NOTIFY)
+    # ===========================================================================
+
+    # Add a node from sync notification (bypasses normal add flow)
+    #
+    # Called by RobotGroup when another robot adds to working memory.
+    # Does not trigger notifications to avoid infinite loops.
+    #
+    # @param id [Integer] Node database ID
+    # @param content [String] Node content
+    # @param token_count [Integer] Token count
+    # @param created_at [Time] When node was created
+    # @return [void]
+    #
+    def add_from_sync(id:, content:, token_count:, created_at:)
+      @mutex.synchronize do
+        key = id.to_s
+        return if @nodes.key?(key)  # Already have this node
+
+        @nodes[key] = {
+          value: content,
+          token_count: token_count,
+          access_count: 0,
+          last_accessed: Time.now,
+          added_at: created_at,
+          from_recall: false,
+          from_sync: true
+        }
+        update_access_unlocked(key)
+      end
+    end
+
+    # Remove a node from sync notification
+    #
+    # Called by RobotGroup when another robot evicts from working memory.
+    #
+    # @param node_id [Integer] Node database ID
+    # @return [void]
+    #
+    def remove_from_sync(node_id)
+      @mutex.synchronize do
+        key = node_id.to_s
+        @nodes.delete(key)
+        @access_order.delete(key)
+      end
+    end
+
+    # Clear all nodes from sync notification
+    #
+    # Called by RobotGroup when another robot clears working memory.
+    #
+    # @return [void]
+    #
+    def clear_from_sync
+      @mutex.synchronize do
+        @nodes.clear
+        @access_order.clear
+      end
+    end
+
     private
 
     # Internal unlocked version - must be called within @mutex.synchronize

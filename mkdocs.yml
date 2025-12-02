@@ -114,6 +114,7 @@ markdown_extensions:
       repo_url_shorthand: true
       user: madbomber
       repo: htm
+      normalize_issue_symbols: true
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.snippets:
@@ -252,7 +253,6 @@ nav:
         - Nodes: database/public.nodes.md
         - Tags: database/public.tags.md
         - File Sources: database/public.file_sources.md
-        - Working Memories: database/public.working_memories.md
       - Join Tables:
         - Node Tags: database/public.node_tags.md
         - Nodes Tags (Legacy): database/public.nodes_tags.md

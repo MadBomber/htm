@@ -13,33 +13,33 @@ Supports:
 *   "recent/recently" without units defaults to FEW days
 
 
-**@example**
+**`@example`**
 ```ruby
 result = TimeframeExtractor.extract("what did we discuss last week about PostgreSQL")
 result[:query]     # => "what did we discuss about PostgreSQL"
 result[:timeframe] # => #<Range: 2025-11-21..2025-11-28>
 ```
-**@example**
+**`@example`**
 ```ruby
 result = TimeframeExtractor.extract("show me notes from a few days ago")
 result[:timeframe] # => Time object for 3 days ago
 ```
-**@example**
+**`@example`**
 ```ruby
 result = TimeframeExtractor.extract("what did we recently discuss")
 result[:timeframe] # => Range from 3 days ago to now
 ```
 # Class Methods
-## extract(query ) [](#method-c-extract)
+## extract(query ) {: #method-c-extract }
 Extract timeframe from a query string
-**@param** [String] The query to parse
+**`@param`** [String] The query to parse
 
-**@return** [Result] Struct with :query (cleaned), :timeframe, :original_expression
+**`@return`** [Result] Struct with :query (cleaned), :timeframe, :original_expression
 
-## temporal?(query ) [](#method-c-temporal?)
+## temporal?(query ) {: #method-c-temporal? }
 Check if query contains a temporal expression
-**@param** [String] The query to check
+**`@param`** [String] The query to check
 
-**@return** [Boolean] 
+**`@return`** [Boolean] 
 
 

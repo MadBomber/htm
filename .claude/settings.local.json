@@ -83,7 +83,8 @@
       "WebSearch",
       "WebFetch(domain:www.barndominiumlife.com)",
       "Bash(git rm:*)",
-      "Bash(HTM_DBURL=\"postgresql://dewayne@localhost:5432/htm_development\" psql -c \"DROP TABLE IF EXISTS working_memories CASCADE;\" htm_development)"
+      "Bash(HTM_DBURL=\"postgresql://dewayne@localhost:5432/htm_development\" psql -c \"DROP TABLE IF EXISTS working_memories CASCADE;\" htm_development)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

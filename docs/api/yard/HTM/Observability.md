@@ -11,19 +11,19 @@ Provides comprehensive monitoring of HTM components including:
 *   Memory usage statistics
 
 
-**@example**
+**`@example`**
 ```ruby
 stats = HTM::Observability.collect_all
 puts stats[:connection_pool][:status]  # => :healthy
 ```
-**@example**
+**`@example`**
 ```ruby
 pool_stats = HTM::Observability.connection_pool_stats
 if pool_stats[:status] == :exhausted
   logger.error "Connection pool exhausted!"
 end
 ```
-**@example**
+**`@example`**
 ```ruby
 if HTM::Observability.healthy?
   puts "All systems operational"
@@ -32,19 +32,19 @@ else
 end
 ```
 # Class Methods
-## cache_stats() [](#method-c-cache_stats)
+## cache_stats() {: #method-c-cache_stats }
 Get query cache statistics
-**@return** [Hash, nil] Cache stats or nil if unavailable
+**`@return`** [Hash, nil] Cache stats or nil if unavailable
 
-## circuit_breaker_stats() [](#method-c-circuit_breaker_stats)
+## circuit_breaker_stats() {: #method-c-circuit_breaker_stats }
 Get circuit breaker states for all services
-**@return** [Hash] Circuit breaker states:
+**`@return`** [Hash] Circuit breaker states:
 - :embedding_service - State and failure count
 - :tag_service - State and failure count
 
-## collect_all() [](#method-c-collect_all)
+## collect_all() {: #method-c-collect_all }
 Collect all observability metrics
-**@return** [Hash] Comprehensive metrics including:
+**`@return`** [Hash] Comprehensive metrics including:
 - :connection_pool - Pool stats with health status
 - :cache - Query cache hit rates and size
 - :circuit_breakers - Service circuit breaker states
@@ -52,9 +52,9 @@ Collect all observability metrics
 - :service_timings - Embedding/tag generation times
 - :memory_usage - System memory stats
 
-## connection_pool_stats() [](#method-c-connection_pool_stats)
+## connection_pool_stats() {: #method-c-connection_pool_stats }
 Get connection pool statistics with health status
-**@return** [Hash] Pool statistics including:
+**`@return`** [Hash] Pool statistics including:
 - :size - Maximum pool size
 - :connections - Current total connections
 - :in_use - Connections currently checked out
@@ -63,45 +63,45 @@ Get connection pool statistics with health status
 - :status - Health status (:healthy, :warning, :critical, :exhausted)
 - :wait_timeout - Connection wait timeout (ms)
 
-## health_check() [](#method-c-health_check)
+## health_check() {: #method-c-health_check }
 Perform comprehensive health check
-**@return** [Hash] Health check results:
+**`@return`** [Hash] Health check results:
 - :healthy - Boolean overall health status
 - :checks - Individual check results
 - :issues - Array of identified issues
 
-## healthy?() [](#method-c-healthy?)
+## healthy?() {: #method-c-healthy? }
 Quick health check - returns boolean
-**@return** [Boolean] true if system is healthy
+**`@return`** [Boolean] true if system is healthy
 
-## memory_stats() [](#method-c-memory_stats)
+## memory_stats() {: #method-c-memory_stats }
 Get memory usage statistics
-**@return** [Hash] Memory stats
+**`@return`** [Hash] Memory stats
 
-## query_timing_stats() [](#method-c-query_timing_stats)
+## query_timing_stats() {: #method-c-query_timing_stats }
 Get query timing statistics
-**@return** [Hash] Timing statistics including avg, min, max, p95
+**`@return`** [Hash] Timing statistics including avg, min, max, p95
 
-## record_embedding_timing(duration_ms ) [](#method-c-record_embedding_timing)
+## record_embedding_timing(duration_ms ) {: #method-c-record_embedding_timing }
 Record embedding generation timing
-**@param** [Float] Generation duration in milliseconds
+**`@param`** [Float] Generation duration in milliseconds
 
-## record_query_timing(duration_ms , query_type: :unknown) [](#method-c-record_query_timing)
+## record_query_timing(duration_ms , query_type: :unknown) {: #method-c-record_query_timing }
 Record query timing for metrics
-**@param** [Float] Query duration in milliseconds
+**`@param`** [Float] Query duration in milliseconds
 
-**@param** [Symbol] Type of query (:vector, :fulltext, :hybrid)
+**`@param`** [Symbol] Type of query (:vector, :fulltext, :hybrid)
 
-## record_tag_timing(duration_ms ) [](#method-c-record_tag_timing)
+## record_tag_timing(duration_ms ) {: #method-c-record_tag_timing }
 Record tag extraction timing
-**@param** [Float] Extraction duration in milliseconds
+**`@param`** [Float] Extraction duration in milliseconds
 
-## reset_metrics!() [](#method-c-reset_metrics!)
+## reset_metrics!() {: #method-c-reset_metrics! }
 Clear all collected timing metrics
-**@return** [void] 
+**`@return`** [void] 
 
-## service_timing_stats() [](#method-c-service_timing_stats)
+## service_timing_stats() {: #method-c-service_timing_stats }
 Get service timing statistics (embedding and tag extraction)
-**@return** [Hash] Timing stats for embedding and tag services
+**`@return`** [Hash] Timing stats for embedding and tag services
 
 

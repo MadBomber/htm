@@ -276,9 +276,8 @@ For detailed database schema documentation, see:
 | [robots](../database/public.robots.md) | Robot registry for multi-robot tracking |
 | [nodes](../database/public.nodes.md) | Primary memory storage with vector embeddings |
 | [tags](../database/public.tags.md) | Hierarchical tag names for categorization |
-| [robot_nodes](../database/public.robot_nodes.md) | Robot-to-node associations (hive mind) |
+| [robot_nodes](../database/public.robot_nodes.md) | Robot-to-node associations (hive mind, working memory) |
 | [node_tags](../database/public.node_tags.md) | Node-to-tag associations |
-| [working_memories](../database/public.working_memories.md) | Per-robot working memory state |
 
 ### Required Extensions
 

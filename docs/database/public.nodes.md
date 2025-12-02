@@ -16,7 +16,7 @@ Core memory storage for conversation messages and context
 | deleted_at | timestamp with time zone |  | true |  |  | Soft delete timestamp - node is considered deleted when set |
 | embedding | vector(2000) |  | true |  |  | Vector embedding (max 2000 dimensions) for semantic search |
 | embedding_dimension | integer |  | true |  |  | Actual number of dimensions used in the embedding vector (max 2000) |
-| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.node_tags](public.node_tags.md) [public.robot_nodes](public.robot_nodes.md) [public.working_memories](public.working_memories.md) |  |  |
+| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.node_tags](public.node_tags.md) [public.robot_nodes](public.robot_nodes.md) |  |  |
 | last_accessed | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was last accessed |
 | metadata | jsonb | '{}'::jsonb | false |  |  | Flexible metadata storage (memory_type, importance, source, etc.) |
 | source_id | bigint |  | true |  | [public.file_sources](public.file_sources.md) | Reference to source file (for file-loaded nodes) |

@@ -36,6 +36,9 @@ namespace :htm do
       system("yard doc #{options.join(' ')}")
 
       if $?.success?
+        # Post-process markdown files for MkDocs compatibility
+        fix_yard_anchors_for_mkdocs(output_dir)
+
         # Create MkDocs index page for the YARD docs
         create_yard_index_page(output_dir)
 
@@ -48,6 +51,75 @@ namespace :htm do
         puts "Failed to build documentation. Make sure YARD and yard-markdown are installed:"
         puts "  gem install yard yard-markdown"
         exit 1
+      end
+    end
+
+    # Convert YARD anchor format to MkDocs-compatible format
+    # YARD generates: ## method_name() [](#method-i-method_name)
+    # MkDocs needs:   ## method_name() {: #method-i-method_name }
+    #
+    # Also escapes YARD annotations (@param, @return, etc.) to prevent
+    # pymdownx.magiclink from treating them as GitHub @mentions
+    def fix_yard_anchors_for_mkdocs(output_dir)
+      files_fixed = 0
+      anchors_fixed = 0
+      mentions_escaped = 0
+
+      Dir.glob(File.join(output_dir, "**/*.md")).each do |file|
+        content = File.read(file)
+        original = content.dup
+
+        # Pattern 0: Fix malformed YARD output where code fence is joined with heading
+        # "```## method_name() [](#anchor)" -> "```\n## method_name() {: #anchor }"
+        content.gsub!(%r{^(```)(\#{1,6}\s+.+?)\s*\[\]\(\#([^)]+)\)\s*$}) do
+          fence = Regexp.last_match(1)
+          heading = Regexp.last_match(2)
+          anchor_id = Regexp.last_match(3)
+          anchors_fixed += 1
+          "#{fence}\n#{heading} {: ##{anchor_id} }"
+        end
+
+        # Pattern 1: Heading with trailing anchor link
+        # "## method_name() [](#anchor-id)" -> "## method_name() {: #anchor-id }"
+        # Use %r{} to avoid # interpolation issues in regex
+        content.gsub!(%r{^(\#{1,6}\s+.+?)\s*\[\]\(\#([^)]+)\)\s*$}) do
+          heading = Regexp.last_match(1)
+          anchor_id = Regexp.last_match(2)
+          anchors_fixed += 1
+          "#{heading} {: ##{anchor_id} }"
+        end
+
+        # Pattern 2: Attribute headings with [RW]/[R]/[W] markers
+        # "## attr_name[RW] [](#attribute-i-attr_name)" -> "## attr_name [RW] {: #attribute-i-attr_name }"
+        content.gsub!(%r{^(\#{1,6}\s+\w+)\[([RW]+)\]\s*\[\]\(\#([^)]+)\)\s*$}) do
+          heading = Regexp.last_match(1)
+          rw_marker = Regexp.last_match(2)
+          anchor_id = Regexp.last_match(3)
+          anchors_fixed += 1
+          "#{heading} [#{rw_marker}] {: ##{anchor_id} }"
+        end
+
+        # Pattern 3: Escape YARD annotations to prevent GitHub @mention linking
+        # "**@param**" -> "**`@param`**" (inline code prevents magiclink processing)
+        # Common YARD tags: @param, @return, @raise, @yield, @yieldparam, @yieldreturn,
+        #                   @option, @overload, @example, @see, @note, @todo, @deprecated
+        yard_tags = %w[param return raise yield yieldparam yieldreturn option overload example see note todo deprecated abstract api author since version private]
+        yard_tags.each do |tag|
+          # Match **@tag** and replace with **`@tag`**
+          if content.gsub!(/\*\*@#{tag}\*\*/i, "**`@#{tag}`**")
+            mentions_escaped += 1
+          end
+        end
+
+        if content != original
+          File.write(file, content)
+          files_fixed += 1
+        end
+      end
+
+      if files_fixed > 0
+        puts "Fixed #{anchors_fixed} anchors in #{files_fixed} files for MkDocs compatibility"
+        puts "Escaped #{mentions_escaped} YARD annotations to prevent @mention linking" if mentions_escaped > 0
       end
     end
 
@@ -185,6 +257,20 @@ namespace :htm do
       puts "YARD Documentation Coverage:"
       puts
       system("yard stats --list-undoc lib/**/*.rb")
+    end
+
+    desc "Fix YARD anchor links for MkDocs compatibility"
+    task :fix_anchors do
+      output_dir = "docs/api/yard"
+
+      unless Dir.exist?(output_dir)
+        puts "YARD output directory not found: #{output_dir}"
+        puts "Run 'rake htm:doc:yard' first to generate documentation"
+        exit 1
+      end
+
+      fix_yard_anchors_for_mkdocs(output_dir)
+      puts "Done! Run 'mkdocs build' to verify no anchor warnings."
     end
 
     desc "Clean generated documentation"

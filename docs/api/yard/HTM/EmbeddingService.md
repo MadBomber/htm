@@ -15,23 +15,23 @@ The actual LLM call is delegated to HTM.configuration.embedding_generator
 
 
 # Class Methods
-## circuit_breaker() [](#method-c-circuit_breaker)
+## circuit_breaker() {: #method-c-circuit_breaker }
 Get or create the circuit breaker for embedding service
-**@return** [HTM::CircuitBreaker] The circuit breaker instance
+**`@return`** [HTM::CircuitBreaker] The circuit breaker instance
 
-## format_for_storage(embedding ) [](#method-c-format_for_storage)
+## format_for_storage(embedding ) {: #method-c-format_for_storage }
 Format embedding for database storage
-**@param** [Array<Float>] Padded embedding
+**`@param`** [Array<Float>] Padded embedding
 
-**@return** [String] PostgreSQL array format
+**`@return`** [String] PostgreSQL array format
 
-## generate(text ) [](#method-c-generate)
+## generate(text ) {: #method-c-generate }
 Generate embedding with validation and processing
-**@param** [String] Text to embed
+**`@param`** [String] Text to embed
 
-**@raise** [CircuitBreakerOpenError] If circuit breaker is open
+**`@raise`** [CircuitBreakerOpenError] If circuit breaker is open
 
-**@return** [Hash] Processed embedding with metadata
+**`@return`** [Hash] Processed embedding with metadata
 {
   embedding: Array<Float>,           # Original embedding
   dimension: Integer,                # Original dimension
@@ -39,20 +39,20 @@ Generate embedding with validation and processing
   storage_dimension: Integer         # Padded dimension (2000)
 }
 
-## pad_embedding(embedding ) [](#method-c-pad_embedding)
+## pad_embedding(embedding ) {: #method-c-pad_embedding }
 Pad embedding to MAX_DIMENSION with zeros
-**@param** [Array<Float>] Original embedding
+**`@param`** [Array<Float>] Original embedding
 
-**@return** [Array<Float>] Padded embedding
+**`@return`** [Array<Float>] Padded embedding
 
-## reset_circuit_breaker!() [](#method-c-reset_circuit_breaker!)
+## reset_circuit_breaker!() {: #method-c-reset_circuit_breaker! }
 Reset the circuit breaker (useful for testing)
-**@return** [void] 
+**`@return`** [void] 
 
-## validate_embedding!(embedding ) [](#method-c-validate_embedding!)
+## validate_embedding!(embedding ) {: #method-c-validate_embedding! }
 Validate embedding response format
-**@param** [Object] Raw embedding from generator
+**`@param`** [Object] Raw embedding from generator
 
-**@raise** [HTM::EmbeddingError] if invalid
+**`@raise`** [HTM::EmbeddingError] if invalid
 
 

@@ -17,12 +17,12 @@ Circuit states:
 After a reset timeout (default: 60 seconds), the circuit transitions to
 half-open and tests if the service has recovered.
 
-**@see** [] 
+**`@see`** [] 
 
-**@see** [] 
+**`@see`** [] 
 
 
-**@example**
+**`@example`**
 ```ruby
 begin
   htm.remember("new content")

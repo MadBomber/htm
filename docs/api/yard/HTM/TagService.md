@@ -15,25 +15,25 @@ The actual LLM call is delegated to HTM.configuration.tag_extractor
 
 
 # Class Methods
-## circuit_breaker() [](#method-c-circuit_breaker)
+## circuit_breaker() {: #method-c-circuit_breaker }
 Get or create the circuit breaker for tag service
-**@return** [HTM::CircuitBreaker] The circuit breaker instance
+**`@return`** [HTM::CircuitBreaker] The circuit breaker instance
 
-## extract(content , existing_ontology: []) [](#method-c-extract)
+## extract(content , existing_ontology: []) {: #method-c-extract }
 Extract tags with validation and processing
-**@param** [String] Text to analyze
+**`@param`** [String] Text to analyze
 
-**@param** [Array<String>] Sample of existing tags for context
+**`@param`** [Array<String>] Sample of existing tags for context
 
-**@raise** [CircuitBreakerOpenError] If circuit breaker is open
+**`@raise`** [CircuitBreakerOpenError] If circuit breaker is open
 
-**@return** [Array<String>] Validated tag names
+**`@return`** [Array<String>] Validated tag names
 
-## parse_hierarchy(tag ) [](#method-c-parse_hierarchy)
+## parse_hierarchy(tag ) {: #method-c-parse_hierarchy }
 Parse hierarchical structure of a tag
-**@param** [String] Hierarchical tag (e.g., "ai:llm:embedding")
+**`@param`** [String] Hierarchical tag (e.g., "ai:llm:embedding")
 
-**@return** [Hash] Hierarchy structure
+**`@return`** [Hash] Hierarchy structure
 {
   full: "ai:llm:embedding",
   root: "ai",
@@ -42,26 +42,26 @@ Parse hierarchical structure of a tag
   depth: 3
 }
 
-## parse_tags(raw_tags ) [](#method-c-parse_tags)
+## parse_tags(raw_tags ) {: #method-c-parse_tags }
 Parse tag response (handles string or array input)
-**@param** [String, Array] Raw response from extractor
+**`@param`** [String, Array] Raw response from extractor
 
-**@return** [Array<String>] Parsed tag strings
+**`@return`** [Array<String>] Parsed tag strings
 
-## reset_circuit_breaker!() [](#method-c-reset_circuit_breaker!)
+## reset_circuit_breaker!() {: #method-c-reset_circuit_breaker! }
 Reset the circuit breaker (useful for testing)
-**@return** [void] 
+**`@return`** [void] 
 
-## valid_tag?(tag ) [](#method-c-valid_tag?)
+## valid_tag?(tag ) {: #method-c-valid_tag? }
 Validate single tag format
-**@param** [String] Tag to validate
+**`@param`** [String] Tag to validate
 
-**@return** [Boolean] True if valid
+**`@return`** [Boolean] True if valid
 
-## validate_and_filter_tags(tags ) [](#method-c-validate_and_filter_tags)
+## validate_and_filter_tags(tags ) {: #method-c-validate_and_filter_tags }
 Validate and filter tags
-**@param** [Array<String>] Parsed tags
+**`@param`** [Array<String>] Parsed tags
 
-**@return** [Array<String>] Valid tags only
+**`@return`** [Array<String>] Valid tags only
 
 

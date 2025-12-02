@@ -10,7 +10,7 @@ Common causes:
 *   File source not found
 
 
-**@example**
+**`@example`**
 ```ruby
 htm.forget(999999)  # => raises NotFoundError if node doesn't exist
 ```

@@ -16,6 +16,7 @@ Join table connecting robots to nodes (many-to-many)
 | remember_count | integer | 1 | false |  |  | Number of times this robot has tried to remember this content |
 | robot_id | bigint |  | false |  | [public.robots](public.robots.md) | ID of the robot that remembered this node |
 | updated_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  |  |
+| working_memory | boolean | false | false |  |  | True if this node is currently in the robot working memory |
 
 ## Constraints
 
@@ -33,6 +34,7 @@ Join table connecting robots to nodes (many-to-many)
 | idx_robot_nodes_node_id | CREATE INDEX idx_robot_nodes_node_id ON public.robot_nodes USING btree (node_id) |
 | idx_robot_nodes_robot_id | CREATE INDEX idx_robot_nodes_robot_id ON public.robot_nodes USING btree (robot_id) |
 | idx_robot_nodes_unique | CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (robot_id, node_id) |
+| idx_robot_nodes_working_memory | CREATE INDEX idx_robot_nodes_working_memory ON public.robot_nodes USING btree (robot_id, working_memory) WHERE (working_memory = true) |
 | robot_nodes_pkey | CREATE UNIQUE INDEX robot_nodes_pkey ON public.robot_nodes USING btree (id) |
 
 ## Relations

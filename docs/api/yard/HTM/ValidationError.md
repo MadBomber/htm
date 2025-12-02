@@ -12,7 +12,7 @@ Common causes:
 *   Invalid timeframe format
 
 
-**@example**
+**`@example`**
 ```ruby
 htm.remember("")  # => raises ValidationError
 htm.remember("x", tags: ["INVALID!"])  # => raises ValidationError
