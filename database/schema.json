@@ -283,6 +283,13 @@
           "comment": "When this memory was last accessed"
         },
         {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": false,
+          "default": "'{}'::jsonb",
+          "comment": "Flexible metadata storage (memory_type, importance, source, etc.)"
+        },
+        {
           "name": "source_id",
           "type": "bigint",
           "nullable": true,
@@ -365,6 +372,14 @@
           "table": "public.nodes",
           "columns": [
             "last_accessed"
+          ]
+        },
+        {
+          "name": "idx_nodes_metadata",
+          "def": "CREATE INDEX idx_nodes_metadata ON public.nodes USING gin (metadata)",
+          "table": "public.nodes",
+          "columns": [
+            "metadata"
           ]
         },
         {

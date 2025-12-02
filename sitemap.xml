@@ -2,242 +2,346 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://madbomber.github.io/htm/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database_rake_tasks/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/multi_framework_support/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/setup_local_database/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/using_rake_tasks_in_your_app/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/database/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/embedding-service/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/htm/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/long-term-memory/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/working-memory/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard-reference/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/ActiveRecordConfig/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/AuthorizationError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/CircuitBreaker/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/CircuitBreakerOpenError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Configuration/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Database/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/DatabaseError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/EmbeddingError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/EmbeddingService/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Error/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/JobAdapter/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/NotFoundError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Observability/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/QueryTimeoutError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Railtie/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/ResourceExhaustedError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/TagError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/TagService/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Timeframe/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/TimeframeExtractor/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/ValidationError/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/WorkingMemory/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Timeframe/Result/</loc>
+         <lastmod>2025-12-02</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/TimeframeExtractor/Result/</loc>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/hive-mind/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/overview/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/two-tier-memory/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/001-postgresql-timescaledb/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/002-two-tier-memory/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/003-ollama-embeddings/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/004-hive-mind/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/005-rag-retrieval/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/006-context-assembly/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/007-eviction-strategy/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/008-robot-identification/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/009-never-forget/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/010-redis-working-memory-rejected/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/architecture/adrs/011-pgai-integration/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.file_sources/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.node_stats/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.node_tags/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.nodes/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.nodes_tags/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.ontology_structure/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.operations_log/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.relationships/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.robot_activity/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.robot_nodes/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.robots/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.schema_migrations/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.tags/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/database/public.topic_relationships/</loc>
-         <lastmod>2025-11-29</lastmod>
-    </url>
-    <url>
-         <loc>https://madbomber.github.io/htm/database/public.working_memories/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/development/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/development/contributing/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/development/schema/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/development/setup/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/development/testing/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/getting-started/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/getting-started/installation/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/getting-started/quick-start/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/adding-memories/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/context-assembly/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/getting-started/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/long-term-memory/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/multi-robot/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/recalling-memories/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/search-strategies/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/working-memory/</loc>
-         <lastmod>2025-11-29</lastmod>
+         <lastmod>2025-12-02</lastmod>
     </url>
 </urlset>
