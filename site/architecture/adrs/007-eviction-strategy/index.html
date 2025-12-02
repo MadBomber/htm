@@ -1,0 +1,5266 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Intelligent memory management for LLM robots with two-tier architecture and RAG-based retrieval">
+      
+      
+        <meta name="author" content="Dewayne VanHoozer">
+      
+      
+        <link rel="canonical" href="https://madbomber.github.io/htm/architecture/adrs/007-eviction-strategy/">
+      
+      
+        <link rel="prev" href="../006-context-assembly/">
+      
+      
+        <link rel="next" href="../008-robot-identification/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>ADR-007 Eviction Strategy - HTM - Hierarchical Temporary Memory</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/css/custom.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adr-007-working-memory-eviction-strategy" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="HTM - Hierarchical Temporary Memory" class="md-header__button md-logo" aria-label="HTM - Hierarchical Temporary Memory" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            HTM - Hierarchical Temporary Memory
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ADR-007 Eviction Strategy
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/madbomber/htm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    madbomber/htm
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../getting-started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../guides/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../development/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="HTM - Hierarchical Temporary Memory" class="md-nav__button md-logo" aria-label="HTM - Hierarchical Temporary Memory" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    HTM - Hierarchical Temporary Memory
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/madbomber/htm" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    madbomber/htm
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../getting-started/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Getting Started
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../two-tier-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Two-Tier Memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hive-mind/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Hive Mind
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    ADRs
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3_5" id="__nav_3_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            ADRs
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../001-postgresql-timescaledb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-001 PostgreSQL & TimescaleDB
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../002-two-tier-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-002 Two-Tier Memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../003-ollama-embeddings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-003 Ollama Embeddings
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../004-hive-mind/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-004 Hive Mind
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../005-rag-retrieval/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-005 RAG Retrieval
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../006-context-assembly/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-006 Context Assembly
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    ADR-007 Eviction Strategy
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-007 Eviction Strategy
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      Context
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eviction-challenges" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eviction Challenges
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-eviction-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Alternative Eviction Policies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eviction-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eviction Algorithm
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eviction-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eviction Scoring
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#never-forget-guarantee" class="md-nav__link">
+    <span class="md-ellipsis">
+      Never-Forget Guarantee
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rationale
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rationale">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-hybrid-importance-recency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Hybrid (Importance + Recency)?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-sort-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why This Sort Order?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eviction-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eviction Guarantees
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      Consequences
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positive" class="md-nav__link">
+    <span class="md-ellipsis">
+      Positive
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negative" class="md-nav__link">
+    <span class="md-ellipsis">
+      Negative
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#neutral" class="md-nav__link">
+    <span class="md-ellipsis">
+      Neutral
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-case-1-adding-large-memory-to-full-working-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case 1: Adding Large Memory to Full Working Memory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-case-2-importance-ties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case 2: Importance Ties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-case-3-recall-evicted-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case 3: Recall Evicted Memory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-case-4-high-importance-old-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case 4: High-Importance Old Memory
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-characteristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Characteristics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Characteristics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time-complexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Time Complexity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#space-complexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Space Complexity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typical-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Typical Performance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization-opportunities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimization Opportunities
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Design Decisions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design Decisions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#decision-hybrid-importance-recency-vs-pure-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: Hybrid (Importance + Recency) vs Pure Policies
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-primary-sort-by-importance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: Primary Sort by Importance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-greedy-eviction-stop-when-enough-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: Greedy Eviction (Stop When Enough Space)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-no-access-frequency-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: No Access Frequency Tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-evicted-memories-preserved-in-long-term" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: Evicted Memories Preserved in Long-Term
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risks-and-mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risks and Mitigations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risks and Mitigations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#risk-batch-eviction-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risk: Batch Eviction Cost
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-importance-scoring-inconsistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risk: Importance Scoring Inconsistency
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-no-access-frequency-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risk: No Access Frequency Signal
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-related-memories-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risk: Related Memories Split
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future Enhancements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Future Enhancements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#access-frequency-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access Frequency Tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cluster-aware-eviction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cluster-Aware Eviction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lazy-eviction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lazy Eviction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predicted-need-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      Predicted Need Scoring
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configurable-eviction-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configurable Eviction Policy
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Alternatives Comparison
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Review Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../008-robot-identification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-008 Robot Identification
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../009-never-forget/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-009 Never-Forget Philosophy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../010-redis-working-memory-rejected/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-010 Redis Working Memory (Rejected)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../011-pgai-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ADR-011 pgai Integration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../guides/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Guides
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/adding-memories/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Adding Memories
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/recalling-memories/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Recalling Memories
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/working-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Working Memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/long-term-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Long-Term Memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/multi-robot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Multi-Robot Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/search-strategies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Search Strategies
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guides/context-assembly/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Context Assembly
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/htm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    HTM Class
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/working-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Working Memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/long-term-memory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Long-Term Memory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/embedding-service/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Embedding Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_7" id="__nav_5_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    YARD Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7">
+            <span class="md-nav__icon md-icon"></span>
+            YARD Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    YARD API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    HTM Module
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_7_3" id="__nav_5_7_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Core Classes
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_7_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7_3">
+            <span class="md-nav__icon md-icon"></span>
+            Core Classes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/Configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/Database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/LongTermMemory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LongTermMemory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/WorkingMemory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    WorkingMemory
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_7_4" id="__nav_5_7_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_7_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7_4">
+            <span class="md-nav__icon md-icon"></span>
+            Services
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/EmbeddingService/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    EmbeddingService
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/TagService/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TagService
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/JobAdapter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    JobAdapter
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_7_5" id="__nav_5_7_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Utilities
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_7_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7_5">
+            <span class="md-nav__icon md-icon"></span>
+            Utilities
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/CircuitBreaker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CircuitBreaker
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/Observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Observability
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/Timeframe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Timeframe
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/TimeframeExtractor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TimeframeExtractor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_7_6" id="__nav_5_7_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Internal
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_7_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7_6">
+            <span class="md-nav__icon md-icon"></span>
+            Internal
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/ActiveRecordConfig/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ActiveRecordConfig
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/Railtie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Railtie
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_7_7" id="__nav_5_7_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Errors
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_7_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7_7">
+            <span class="md-nav__icon md-icon"></span>
+            Errors
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/Error/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Error
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/AuthorizationError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AuthorizationError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/CircuitBreakerOpenError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CircuitBreakerOpenError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/DatabaseError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    DatabaseError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/EmbeddingError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    EmbeddingError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/NotFoundError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    NotFoundError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/QueryTimeoutError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    QueryTimeoutError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/ResourceExhaustedError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ResourceExhaustedError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/TagError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TagError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/ValidationError/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ValidationError
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_7_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_7_8" id="__nav_5_7_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Result Types
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_7_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_7_8">
+            <span class="md-nav__icon md-icon"></span>
+            Result Types
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/Timeframe/Result/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Timeframe Result
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/yard/HTM/TimeframeExtractor/Result/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    TimeframeExtractor Result
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../development/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Schema
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../database/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Database Tables
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_6" id="__nav_6_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6">
+            <span class="md-nav__icon md-icon"></span>
+            Database Tables
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_6_2" id="__nav_6_6_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Core Tables
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            Core Tables
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.robots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Robots
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Nodes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tags
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.file_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    File Sources
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.working_memories/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Working Memories
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_6_3" id="__nav_6_6_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Join Tables
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_6_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6_3">
+            <span class="md-nav__icon md-icon"></span>
+            Join Tables
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.node_tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Node Tags
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.nodes_tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Nodes Tags (Legacy)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.robot_nodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Robot Nodes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_6_4" id="__nav_6_6_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Views & Stats
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            Views & Stats
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.node_stats/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Node Stats
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.robot_activity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Robot Activity
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.topic_relationships/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Topic Relationships
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.ontology_structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Ontology Structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.relationships/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Relationships
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_6_5" id="__nav_6_6_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    System
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            System
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.operations_log/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Operations Log
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database/public.schema_migrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Schema Migrations
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../multi_framework_support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Multi-Framework Support
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../database_rake_tasks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Rake Tasks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../using_rake_tasks_in_your_app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Using Rake Tasks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../setup_local_database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup Local Database
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Summary
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      Context
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eviction-challenges" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eviction Challenges
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-eviction-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Alternative Eviction Policies
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#eviction-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eviction Algorithm
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eviction-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eviction Scoring
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#never-forget-guarantee" class="md-nav__link">
+    <span class="md-ellipsis">
+      Never-Forget Guarantee
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rationale" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rationale
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rationale">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-hybrid-importance-recency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why Hybrid (Importance + Recency)?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-sort-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why This Sort Order?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eviction-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eviction Guarantees
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      Consequences
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positive" class="md-nav__link">
+    <span class="md-ellipsis">
+      Positive
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negative" class="md-nav__link">
+    <span class="md-ellipsis">
+      Negative
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#neutral" class="md-nav__link">
+    <span class="md-ellipsis">
+      Neutral
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Cases
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-case-1-adding-large-memory-to-full-working-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case 1: Adding Large Memory to Full Working Memory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-case-2-importance-ties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case 2: Importance Ties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-case-3-recall-evicted-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case 3: Recall Evicted Memory
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-case-4-high-importance-old-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Case 4: High-Importance Old Memory
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-characteristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Characteristics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Characteristics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time-complexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Time Complexity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#space-complexity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Space Complexity
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typical-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Typical Performance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization-opportunities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimization Opportunities
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Design Decisions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design Decisions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#decision-hybrid-importance-recency-vs-pure-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: Hybrid (Importance + Recency) vs Pure Policies
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-primary-sort-by-importance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: Primary Sort by Importance
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-greedy-eviction-stop-when-enough-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: Greedy Eviction (Stop When Enough Space)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-no-access-frequency-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: No Access Frequency Tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#decision-evicted-memories-preserved-in-long-term" class="md-nav__link">
+    <span class="md-ellipsis">
+      Decision: Evicted Memories Preserved in Long-Term
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risks-and-mitigations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risks and Mitigations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Risks and Mitigations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#risk-batch-eviction-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risk: Batch Eviction Cost
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-importance-scoring-inconsistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risk: Importance Scoring Inconsistency
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-no-access-frequency-signal" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risk: No Access Frequency Signal
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-related-memories-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risk: Related Memories Split
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future Enhancements
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Future Enhancements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#access-frequency-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Access Frequency Tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cluster-aware-eviction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cluster-Aware Eviction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lazy-eviction" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lazy Eviction
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#predicted-need-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      Predicted Need Scoring
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configurable-eviction-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configurable Eviction Policy
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      Alternatives Comparison
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#references" class="md-nav__link">
+    <span class="md-ellipsis">
+      References
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Review Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/madbomber/htm/edit/main/docs/architecture/adrs/007-eviction-strategy.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/madbomber/htm/raw/main/docs/architecture/adrs/007-eviction-strategy.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="adr-007-working-memory-eviction-strategy">ADR-007: Working Memory Eviction Strategy<a class="headerlink" href="#adr-007-working-memory-eviction-strategy" title="Permanent link">&para;</a></h1>
+<p><strong>Status</strong>: Accepted</p>
+<p><strong>Date</strong>: 2025-10-25</p>
+<p><strong>Decision Makers</strong>: Dewayne VanHoozer, Claude (Anthropic)</p>
+<hr />
+<h2 id="quick-summary">Quick Summary<a class="headerlink" href="#quick-summary" title="Permanent link">&para;</a></h2>
+<p>HTM implements a <strong>hybrid eviction strategy</strong> that prioritizes memories by both importance and recency, evicting low-importance older memories first when working memory reaches token capacity. Evicted memories are preserved in long-term storage, never deleted.</p>
+<p><strong>Why</strong>: Token limits are hard constraints, but eviction policy determines which context stays active. Hybrid approach balances preserving critical knowledge with maintaining temporal relevance.</p>
+<p><strong>Impact</strong>: Predictable eviction behavior with never-forget guarantees, at the cost of requiring meaningful importance scoring from users.</p>
+<hr />
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>Working memory is token-limited (default 128,000 tokens). When adding new memories that would exceed the token limit, HTM must decide which existing memories to evict.</p>
+<h3 id="eviction-challenges">Eviction Challenges<a class="headerlink" href="#eviction-challenges" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Token limits</strong>: Hard constraint, cannot exceed working memory capacity</li>
+<li><strong>Importance preservation</strong>: Critical memories should remain in working memory</li>
+<li><strong>Recency</strong>: Recent context often more relevant than old context</li>
+<li><strong>Fairness</strong>: Don't always evict the same types of memories</li>
+<li><strong>Performance</strong>: Eviction should be fast (&lt; 10ms)</li>
+<li><strong>Never forget</strong>: Evicted memories must be preserved in long-term memory</li>
+</ul>
+<h3 id="alternative-eviction-policies">Alternative Eviction Policies<a class="headerlink" href="#alternative-eviction-policies" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>FIFO (First-In-First-Out)</strong>: Evict oldest memories</li>
+<li><strong>LRU (Least Recently Used)</strong>: Evict least recently accessed</li>
+<li><strong>LFU (Least Frequently Used)</strong>: Evict least frequently accessed</li>
+<li><strong>Random</strong>: Evict random memories</li>
+<li><strong>Importance-only</strong>: Evict lowest importance first</li>
+<li><strong>Hybrid</strong>: Combine importance and recency with scoring function</li>
+</ol>
+<hr />
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<p>We will implement a <strong>hybrid eviction strategy</strong> that prioritizes memories by both importance and recency, evicting low-importance older memories first.</p>
+<p><svg viewBox="0 0 950 750" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <defs>
+    <style>
+      .flow-box { fill: rgba(33, 150, 243, 0.2); stroke: #2196F3; stroke-width: 2; }
+      .tier-box { fill: rgba(76, 175, 80, 0.2); stroke: #4CAF50; stroke-width: 2; }
+      .tier1-box { fill: rgba(244, 67, 54, 0.3); stroke: #F44336; stroke-width: 2; }
+      .tier2-box { fill: rgba(255, 152, 0, 0.3); stroke: #FF9800; stroke-width: 2; }
+      .tier3-box { fill: rgba(255, 235, 59, 0.3); stroke: #FFEB3B; stroke-width: 2; }
+      .tier4-box { fill: rgba(76, 175, 80, 0.3); stroke: #4CAF50; stroke-width: 2; }
+      .text-header { fill: #E0E0E0; font-size: 18px; font-weight: bold; }
+      .text-label { fill: #E0E0E0; font-size: 14px; font-weight: bold; }
+      .text-small { fill: #B0B0B0; font-size: 11px; }
+      .text-tiny { fill: #A0A0A0; font-size: 10px; }
+      .arrow { stroke: #4A9EFF; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4A9EFF" />
+    </marker>
+  </defs></p>
+<!-- Title -->
+<p><text x="475" y="30" text-anchor="middle" class="text-header">Hybrid Eviction Algorithm</text></p>
+<!-- Algorithm Flow -->
+<p><text x="50" y="65" class="text-label">Eviction Process</text></p>
+<!-- Step 1 -->
+<p><rect x="50" y="80" width="380" height="60" class="flow-box" rx="5"/>
+  <text x="60" y="100" class="text-label">1. Calculate Eviction Score</text>
+  <text x="60" y="120" class="text-small">score = [importance, -recency]</text></p>
+<!-- Step 2 -->
+<p><rect x="50" y="155" width="380" height="60" class="flow-box" rx="5"/>
+  <text x="60" y="175" class="text-label">2. Sort Memories by Score</text>
+  <text x="60" y="195" class="text-small">Primary: importance (asc), Secondary: age (desc)</text></p>
+<!-- Step 3 -->
+<p><rect x="50" y="230" width="380" height="60" class="flow-box" rx="5"/>
+  <text x="60" y="250" class="text-label">3. Greedy Eviction</text>
+  <text x="60" y="270" class="text-small">Evict from front until needed_tokens freed</text></p>
+<!-- Step 4 -->
+<p><rect x="50" y="305" width="380" height="60" class="flow-box" rx="5"/>
+  <text x="60" y="325" class="text-label">4. Mark as Evicted</text>
+  <text x="60" y="345" class="text-small">Set in_working_memory = false in database</text></p>
+<!-- Arrows -->
+<p><path d="M 240 140 L 240 155" class="arrow"/>
+  <path d="M 240 215 L 240 230" class="arrow"/>
+  <path d="M 240 290 L 240 305" class="arrow"/></p>
+<!-- Eviction Tiers -->
+<p><text x="520" y="65" class="text-label">Eviction Priority Tiers</text>
+  <text x="520" y="80" class="text-small">(Lower tier = evicted first)</text></p>
+<!-- Tier 1 -->
+<p><rect x="520" y="100" width="380" height="110" class="tier1-box" rx="5"/>
+  <text x="530" y="120" class="text-label" fill="#F44336">Tier 1: Low Importance + Old</text>
+  <text x="530" y="140" class="text-small">Evicted First</text>
+  <text x="530" y="165" class="text-tiny">importance: 1.0, age: 5 days → evicted 1<sup>st</sup></text>
+  <text x="530" y="180" class="text-tiny">importance: 2.0, age: 3 days → evicted 2<sup>nd</sup></text>
+  <text x="530" y="195" class="text-tiny">Examples: Temporary notes, scratch data</text></p>
+<!-- Tier 2 -->
+<p><rect x="520" y="225" width="380" height="110" class="tier2-box" rx="5"/>
+  <text x="530" y="245" class="text-label" fill="#FF9800">Tier 2: Low Importance + Recent</text>
+  <text x="530" y="265" class="text-small">Evicted Second</text>
+  <text x="530" y="290" class="text-tiny">importance: 1.0, age: 1 hour → evicted 3<sup>rd</sup></text>
+  <text x="530" y="305" class="text-tiny">importance: 2.0, age: 30 min → evicted 4<sup>th</sup></text>
+  <text x="530" y="320" class="text-tiny">Examples: Recent but low-value context</text></p>
+<!-- Tier 3 -->
+<p><rect x="520" y="350" width="380" height="110" class="tier3-box" rx="5"/>
+  <text x="530" y="370" class="text-label" fill="#FDD835">Tier 3: High Importance + Old</text>
+  <text x="530" y="390" class="text-small">Evicted Third</text>
+  <text x="530" y="415" class="text-tiny">importance: 9.0, age: 30 days → evicted 5<sup>th</sup></text>
+  <text x="530" y="430" class="text-tiny">importance: 10.0, age: 90 days → evicted 6<sup>th</sup></text>
+  <text x="530" y="445" class="text-tiny">Examples: Old but critical decisions</text></p>
+<!-- Tier 4 -->
+<p><rect x="520" y="475" width="380" height="110" class="tier4-box" rx="5"/>
+  <text x="530" y="495" class="text-label" fill="#4CAF50">Tier 4: High Importance + Recent</text>
+  <text x="530" y="515" class="text-small">Kept (Evicted Last)</text>
+  <text x="530" y="540" class="text-tiny">importance: 9.0, age: 1 hour → kept longest</text>
+  <text x="530" y="555" class="text-tiny">importance: 10.0, age: 5 min → never evicted (if possible)</text>
+  <text x="530" y="570" class="text-tiny">Examples: Critical + actively used data</text></p>
+<!-- Key Features -->
+<p><text x="50" y="410" class="text-label">Guarantees</text></p>
+<p><rect x="50" y="425" width="170" height="140" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="60" y="450" class="text-small">✓ Never-forget principle</text>
+  <text x="60" y="470" class="text-small">✓ Preserved in long-term</text>
+  <text x="60" y="490" class="text-small">✓ Can be recalled</text>
+  <text x="60" y="510" class="text-small">✓ No data loss</text>
+  <text x="60" y="530" class="text-small">✓ Deterministic order</text>
+  <text x="60" y="550" class="text-small">✓ O(n log n) complexity</text></p>
+<p><rect x="240" y="425" width="190" height="140" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="250" y="450" class="text-small">Performance:</text>
+  <text x="250" y="470" class="text-tiny">• Sort: O(n log n)</text>
+  <text x="250" y="485" class="text-tiny">• Eviction: O(k) greedy</text>
+  <text x="250" y="500" class="text-tiny">• Typical: &lt;10ms</text>
+  <text x="250" y="515" class="text-tiny">• Memory: O(n) temp</text>
+  <text x="250" y="530" class="text-tiny">• Stops when enough</text>
+  <text x="250" y="545" class="text-tiny">  space freed</text></p>
+<!-- Example -->
+<p><text x="50" y="600" class="text-label">Example: Need 5,000 tokens</text></p>
+<p><rect x="50" y="615" width="850" height="110" fill="rgba(33, 150, 243, 0.1)" stroke="#2196F3" stroke-width="1" rx="3"/></p>
+<p><text x="60" y="635" class="text-tiny">Working memory contains:</text>
+  <text x="70" y="655" class="text-tiny" fill="#F44336">• "random_note" (imp: 1.0, 2000 tok, 1 hr ago) → EVICTED (Tier 2)</text>
+  <text x="70" y="670" class="text-tiny" fill="#F44336">• "debug_log" (imp: 2.0, 1500 tok, 2 days ago) → EVICTED (Tier 1)</text>
+  <text x="70" y="685" class="text-tiny" fill="#F44336">• "temp_calc" (imp: 1.5, 1600 tok, 5 days ago) → EVICTED (Tier 1)</text>
+  <text x="70" y="700" class="text-tiny" fill="#4CAF50">• "user_pref" (imp: 8.0, 100 tok, 5 days ago) → KEPT (Tier 3)</text>
+  <text x="70" y="715" class="text-tiny" fill="#4CAF50">• "architecture_decision" (imp: 10.0, 3000 tok, 3 days ago) → KEPT (Tier 3)</text>
+</svg></p>
+<h3 id="eviction-algorithm">Eviction Algorithm<a class="headerlink" href="#eviction-algorithm" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">evict_to_make_space</span><span class="p">(</span><span class="n">needed_tokens</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="c1"># Sort by [importance, -recency]</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="c1"># Lower importance evicted first</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="c1"># Within same importance, older memories evicted first</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="n">candidates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@nodes</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">|</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="n">recency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:added_at</span><span class="o">]</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="ss">:importance</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">recency</span><span class="o">]</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="c1"># Evict from front until enough space</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="n">evicted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[]</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="n">tokens_freed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="n">candidates</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">|</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="k">break</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">tokens_freed</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">needed_tokens</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="n">evicted</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">key</span><span class="p">:</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="ss">value</span><span class="p">:</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:value</span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="n">tokens_freed</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:token_count</span><span class="o">]</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="vi">@nodes</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">    </span><span class="vi">@access_order</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">  </span><span class="n">evicted</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">end</span>
+</span></code></pre></div>
+<h3 id="eviction-scoring">Eviction Scoring<a class="headerlink" href="#eviction-scoring" title="Permanent link">&para;</a></h3>
+<p><strong>Primary sort</strong>: Importance (ascending)</p>
+<ul>
+<li>Importance 1.0 evicted before importance 5.0</li>
+<li>Importance 5.0 evicted before importance 10.0</li>
+</ul>
+<p><strong>Secondary sort</strong>: Recency (descending age)</p>
+<ul>
+<li>Within same importance, older memories evicted first</li>
+<li>Added 5 days ago evicted before added 1 hour ago</li>
+</ul>
+<h3 id="never-forget-guarantee">Never-Forget Guarantee<a class="headerlink" href="#never-forget-guarantee" title="Permanent link">&para;</a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Critical Design Principle</p>
+<p>Evicted memories are NOT deleted. They:</p>
+<ol>
+<li>Remain in long-term memory (PostgreSQL) permanently</li>
+<li>Can be recalled via <code>recall()</code> when needed</li>
+<li>Marked as <code>in_working_memory = FALSE</code> in database</li>
+<li>Automatically reloaded if recalled again</li>
+</ol>
+</div>
+<hr />
+<h2 id="rationale">Rationale<a class="headerlink" href="#rationale" title="Permanent link">&para;</a></h2>
+<h3 id="why-hybrid-importance-recency">Why Hybrid (Importance + Recency)?<a class="headerlink" href="#why-hybrid-importance-recency" title="Permanent link">&para;</a></h3>
+<p><strong>Importance alone is insufficient</strong>:</p>
+<ul>
+<li>All memories might have same importance</li>
+<li>Old important memories eventually become stale</li>
+<li>Doesn't account for temporal relevance</li>
+</ul>
+<p><strong>Recency alone is insufficient</strong>:</p>
+<ul>
+<li>Critical information gets evicted just because it's old</li>
+<li>Architectural decisions disappear after time passes</li>
+<li>Loses important long-term context</li>
+</ul>
+<p><strong>Hybrid balances both</strong>:</p>
+<ul>
+<li>Low-importance recent memories evicted before high-importance old ones</li>
+<li>Within same importance, temporal relevance matters</li>
+<li>Preserves critical knowledge while making space for new context</li>
+</ul>
+<h3 id="why-this-sort-order">Why This Sort Order?<a class="headerlink" href="#why-this-sort-order" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="ss">:importance</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">recency</span><span class="o">]</span>
+</span></code></pre></div>
+<p>This creates tiers:</p>
+<ol>
+<li><strong>Tier 1 (evict first)</strong>: Low importance, old</li>
+<li><strong>Tier 2</strong>: Low importance, recent</li>
+<li><strong>Tier 3</strong>: High importance, old</li>
+<li><strong>Tier 4 (evict last)</strong>: High importance, recent</li>
+</ol>
+<p>Example eviction order:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>importance: 1.0, age: 5 days   → evicted first
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>importance: 1.0, age: 1 hour   → evicted second
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>importance: 5.0, age: 5 days   → evicted third
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>importance: 5.0, age: 1 hour   → evicted fourth
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>importance: 10.0, age: 5 days  → evicted fifth
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>importance: 10.0, age: 1 hour  → kept (evict last)
+</span></code></pre></div>
+<h3 id="eviction-guarantees">Eviction Guarantees<a class="headerlink" href="#eviction-guarantees" title="Permanent link">&para;</a></h3>
+<p><strong>Safety</strong>:</p>
+<ul>
+<li>Evicted memories preserved in long-term storage</li>
+<li>No data loss, only working memory removal</li>
+<li>Can be recalled when needed</li>
+</ul>
+<p><strong>Performance</strong>:</p>
+<ul>
+<li>Greedy eviction: stops as soon as enough space freed</li>
+<li>O(n log n) sorting (one-time cost)</li>
+<li>O(k) eviction where k = nodes evicted</li>
+<li>Typical eviction: &lt; 10ms for 100-node working memory</li>
+</ul>
+<p><strong>Correctness</strong>:</p>
+<ul>
+<li>Always frees enough tokens (or evicts all nodes trying)</li>
+<li>Respects importance ordering</li>
+<li>Deterministic (same state → same evictions)</li>
+</ul>
+<hr />
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<h3 id="positive">Positive<a class="headerlink" href="#positive" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Preserves important context: High-importance memories stay longer</li>
+<li>Temporal relevance: Recent context preferred over old</li>
+<li>Never forgets: Evicted memories remain in long-term storage</li>
+<li>Predictable: Clear eviction order based on importance + recency</li>
+<li>Fast: O(n log n) sort, greedy eviction</li>
+<li>Greedy: Only evicts what's necessary, no over-eviction</li>
+<li>Safe: No data loss, recallable from long-term memory</li>
+</ul>
+<h3 id="negative">Negative<a class="headerlink" href="#negative" title="Permanent link">&para;</a></h3>
+<ul>
+<li>No access frequency: Doesn't track how often memory is used</li>
+<li>No semantic clustering: May split related memories</li>
+<li>Importance subjectivity: Relies on user-assigned importance</li>
+<li>Batch eviction cost: O(n log n) sort on every eviction</li>
+<li>No look-ahead: Doesn't predict which memories will be needed soon</li>
+</ul>
+<h3 id="neutral">Neutral<a class="headerlink" href="#neutral" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Importance matters: Users must assign meaningful importance scores</li>
+<li>Eviction visibility: No notification when memories evicted</li>
+<li>Recall overhead: Need to recall evicted memories if needed again</li>
+</ul>
+<hr />
+<h2 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h2>
+<h3 id="use-case-1-adding-large-memory-to-full-working-memory">Use Case 1: Adding Large Memory to Full Working Memory<a class="headerlink" href="#use-case-1-adding-large-memory-to-full-working-memory" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Working memory: 127,500 / 128,000 tokens (99% full)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># Attempt to add 5,000 token memory</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;new_large_memory&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">large_text</span><span class="p">,</span><span class="w"> </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Eviction needed: 5,000 - 500 = 4,500 tokens</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># Working memory contains:</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="c1"># - &quot;user_pref&quot; (importance: 8.0, 100 tokens, 5 days old)</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1"># - &quot;random_note&quot; (importance: 1.0, 2,000 tokens, 1 hour ago)</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># - &quot;architecture_decision&quot; (importance: 10.0, 3,000 tokens, 3 days ago)</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="c1"># - &quot;debug_log&quot; (importance: 2.0, 1,500 tokens, 2 days ago)</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="c1"># Eviction order:</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="c1"># 1. &quot;random_note&quot; (importance: 1.0) → 2,000 tokens freed</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="c1"># 2. &quot;debug_log&quot; (importance: 2.0) → 3,500 tokens freed</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="c1"># 3. Stop (4,500 &gt; needed)</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="c1"># Result: user_pref and architecture_decision preserved</span>
+</span></code></pre></div>
+<h3 id="use-case-2-importance-ties">Use Case 2: Importance Ties<a class="headerlink" href="#use-case-2-importance-ties" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># All memories have importance: 5.0</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Working memory:</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># - &quot;note_1&quot; (5 days old, 1,000 tokens)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="c1"># - &quot;note_2&quot; (3 days old, 1,000 tokens)</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># - &quot;note_3&quot; (1 hour ago, 1,000 tokens)</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># Need to evict 2,000 tokens</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Eviction order:</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="c1"># 1. &quot;note_1&quot; (oldest) → 1,000 tokens</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># 2. &quot;note_2&quot; (second oldest) → 2,000 tokens</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># 3. Stop</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="c1"># Result: Most recent note preserved</span>
+</span></code></pre></div>
+<h3 id="use-case-3-recall-evicted-memory">Use Case 3: Recall Evicted Memory<a class="headerlink" href="#use-case-3-recall-evicted-memory" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Memory evicted from working memory</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;temp_note&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Some temporary information&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># ... later evicted to make space ...</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Later: recall the evicted memory</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last week&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;temporary information&quot;</span><span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="c1"># Result: Memory retrieved from long-term storage</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1"># And automatically added back to working memory</span>
+</span></code></pre></div>
+<h3 id="use-case-4-high-importance-old-memory">Use Case 4: High-Importance Old Memory<a class="headerlink" href="#use-case-4-high-importance-old-memory" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Critical decision made months ago</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;critical_decision&quot;</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">             </span><span class="s2">&quot;We must never use MongoDB for time-series data&quot;</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">             </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c1"># ... 90 days later, working memory full ...</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1"># Many recent low-importance memories added</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="c1"># Critical decision still in working memory due to importance: 10.0</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="c1"># Eviction: Low-importance recent memories evicted first</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="c1"># Result: Critical decision preserved despite being 90 days old</span>
+</span></code></pre></div>
+<hr />
+<h2 id="performance-characteristics">Performance Characteristics<a class="headerlink" href="#performance-characteristics" title="Permanent link">&para;</a></h2>
+<h3 id="time-complexity">Time Complexity<a class="headerlink" href="#time-complexity" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Sorting</strong>: O(n log n) where n = nodes in working memory</li>
+<li><strong>Eviction</strong>: O(k) where k = nodes evicted</li>
+<li><strong>Total</strong>: O(n log n + k) ≈ O(n log n)</li>
+</ul>
+<h3 id="space-complexity">Space Complexity<a class="headerlink" href="#space-complexity" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Sorted candidates</strong>: O(n) temporary array</li>
+<li><strong>Evicted list</strong>: O(k) returned result</li>
+<li><strong>Total</strong>: O(n) additional memory</li>
+</ul>
+<h3 id="typical-performance">Typical Performance<a class="headerlink" href="#typical-performance" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Working memory size</strong>: 50-200 nodes</li>
+<li><strong>Eviction frequency</strong>: Low (most additions fit without eviction)</li>
+<li><strong>Sort time</strong>: &lt; 5ms for 200 nodes</li>
+<li><strong>Eviction time</strong>: &lt; 1ms (greedy, stops early)</li>
+<li><strong>Total</strong>: &lt; 10ms per eviction event</li>
+</ul>
+<h3 id="optimization-opportunities">Optimization Opportunities<a class="headerlink" href="#optimization-opportunities" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Cache sorted order</strong>: Invalidate on add/remove</li>
+<li><strong>Incremental sort</strong>: Use heap for O(k log n) eviction</li>
+<li><strong>Lazy eviction</strong>: Evict only when space check fails</li>
+</ul>
+<hr />
+<h2 id="design-decisions">Design Decisions<a class="headerlink" href="#design-decisions" title="Permanent link">&para;</a></h2>
+<h3 id="decision-hybrid-importance-recency-vs-pure-policies">Decision: Hybrid (Importance + Recency) vs Pure Policies<a class="headerlink" href="#decision-hybrid-importance-recency-vs-pure-policies" title="Permanent link">&para;</a></h3>
+<p><strong>Rationale</strong>: Balances competing priorities better than any single factor</p>
+<p><strong>Alternative</strong>: Pure LRU (least recently used)</p>
+<p><strong>Rejected</strong>: Loses important long-term context</p>
+<p><strong>Alternative</strong>: Pure importance-based</p>
+<p><strong>Rejected</strong>: All old memories evicted regardless of importance</p>
+<h3 id="decision-primary-sort-by-importance">Decision: Primary Sort by Importance<a class="headerlink" href="#decision-primary-sort-by-importance" title="Permanent link">&para;</a></h3>
+<p><strong>Rationale</strong>: Importance is the stronger signal for retention</p>
+<p><strong>Alternative</strong>: Primary sort by recency</p>
+<p><strong>Rejected</strong>: Would evict critical old memories before trivial recent ones</p>
+<h3 id="decision-greedy-eviction-stop-when-enough-space">Decision: Greedy Eviction (Stop When Enough Space)<a class="headerlink" href="#decision-greedy-eviction-stop-when-enough-space" title="Permanent link">&para;</a></h3>
+<p><strong>Rationale</strong>: Minimize evictions, preserve as much context as possible</p>
+<p><strong>Alternative</strong>: Evict to some threshold (e.g., 80% full)</p>
+<p><strong>Rejected</strong>: Unnecessary evictions, reduces available context</p>
+<h3 id="decision-no-access-frequency-tracking">Decision: No Access Frequency Tracking<a class="headerlink" href="#decision-no-access-frequency-tracking" title="Permanent link">&para;</a></h3>
+<p><strong>Rationale</strong>: Simplicity, access patterns not stable in LLM workflows</p>
+<p><strong>Alternative</strong>: LFU (Least Frequently Used)</p>
+<p><strong>Deferred</strong>: Can add access_count tracking if real-world usage shows value</p>
+<h3 id="decision-evicted-memories-preserved-in-long-term">Decision: Evicted Memories Preserved in Long-Term<a class="headerlink" href="#decision-evicted-memories-preserved-in-long-term" title="Permanent link">&para;</a></h3>
+<p><strong>Rationale</strong>: Never-forget philosophy, safety, recallability</p>
+<p><strong>Alternative</strong>: Truly delete evicted memories</p>
+<p><strong>Rejected</strong>: Violates never-forget principle, data loss</p>
+<hr />
+<h2 id="risks-and-mitigations">Risks and Mitigations<a class="headerlink" href="#risks-and-mitigations" title="Permanent link">&para;</a></h2>
+<h3 id="risk-batch-eviction-cost">Risk: Batch Eviction Cost<a class="headerlink" href="#risk-batch-eviction-cost" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Risk</p>
+<p>O(n log n) sort on every eviction is expensive</p>
+</div>
+<p><strong>Likelihood</strong>: Low (evictions infrequent, n is small)</p>
+<p><strong>Impact</strong>: Low (&lt; 10ms for typical working memory)</p>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Working memory stays small (128K tokens ≈ 50-200 nodes)</li>
+<li>Sort only when eviction needed</li>
+<li>Consider heap-based eviction if profiling shows bottleneck</li>
+</ul>
+<h3 id="risk-importance-scoring-inconsistency">Risk: Importance Scoring Inconsistency<a class="headerlink" href="#risk-importance-scoring-inconsistency" title="Permanent link">&para;</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Risk</p>
+<p>Users assign arbitrary importance, breaks eviction quality</p>
+</div>
+<p><strong>Likelihood</strong>: Medium (subjective scoring)</p>
+<p><strong>Impact</strong>: Medium (suboptimal evictions)</p>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Document importance scoring guidelines</li>
+<li>Provide examples of importance ranges</li>
+<li>Default importance: 1.0 for most memories</li>
+</ul>
+<h3 id="risk-no-access-frequency-signal">Risk: No Access Frequency Signal<a class="headerlink" href="#risk-no-access-frequency-signal" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Risk</p>
+<p>Frequently accessed memories evicted if old and low importance</p>
+</div>
+<p><strong>Likelihood</strong>: Low (frequently accessed → likely important or recent)</p>
+<p><strong>Impact</strong>: Low (can recall from long-term)</p>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Monitor real-world eviction patterns</li>
+<li>Add access_count tracking if needed</li>
+</ul>
+<h3 id="risk-related-memories-split">Risk: Related Memories Split<a class="headerlink" href="#risk-related-memories-split" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Risk</p>
+<p>Semantically related memories evicted separately</p>
+</div>
+<p><strong>Likelihood</strong>: Medium (no clustering)</p>
+<p><strong>Impact</strong>: Low (can recall together with topic search)</p>
+<p><strong>Mitigation</strong>:</p>
+<ul>
+<li>Use relationships to co-recall related memories</li>
+<li>Consider cluster-aware eviction in future</li>
+</ul>
+<hr />
+<h2 id="future-enhancements">Future Enhancements<a class="headerlink" href="#future-enhancements" title="Permanent link">&para;</a></h2>
+<h3 id="access-frequency-tracking">Access Frequency Tracking<a class="headerlink" href="#access-frequency-tracking" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="vi">@nodes</span><span class="o">[</span><span class="n">key</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="o">...</span><span class="p">,</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="ss">access_count</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="k">end</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="k">def</span><span class="w"> </span><span class="nf">evict_to_make_space</span><span class="p">(</span><span class="n">needed_tokens</span><span class="p">)</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="n">candidates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@nodes</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">|</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="n">recency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:added_at</span><span class="o">]</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span><span class="n">access_freq</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:access_count</span><span class="o">]</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">    </span><span class="c1"># Lower score evicted first</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">    </span><span class="n">score</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:importance</span><span class="o">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="no">Math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">access_freq</span><span class="p">))</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">    </span><span class="o">[</span><span class="n">score</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">recency</span><span class="o">]</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="k">end</span>
+</span></code></pre></div>
+<h3 id="cluster-aware-eviction">Cluster-Aware Eviction<a class="headerlink" href="#cluster-aware-eviction" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Keep related memories together</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">evict_to_make_space</span><span class="p">(</span><span class="n">needed_tokens</span><span class="p">)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="c1"># Identify memory clusters</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="n">clusters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">identify_clusters</span><span class="p">(</span><span class="vi">@nodes</span><span class="p">)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="c1"># Evict entire clusters to preserve coherence</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">  </span><span class="n">clusters</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">c</span><span class="o">|</span><span class="w"> </span><span class="n">cluster_score</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">cluster</span><span class="o">|</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span><span class="c1"># Evict full cluster</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="k">end</span>
+</span></code></pre></div>
+<h3 id="lazy-eviction">Lazy Eviction<a class="headerlink" href="#lazy-eviction" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Don&#39;t evict until actually assembling context</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:)</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="c1"># Only NOW evict if needed</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="n">evict_to_fit</span><span class="p">(</span><span class="n">max_tokens</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">token_count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">max_tokens</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">end</span>
+</span></code></pre></div>
+<h3 id="predicted-need-scoring">Predicted Need Scoring<a class="headerlink" href="#predicted-need-scoring" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Use LLM or heuristics to predict which memories will be needed</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">evict_to_make_space</span><span class="p">(</span><span class="n">needed_tokens</span><span class="p">)</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="n">candidates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@nodes</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">|</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="n">predicted_need</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">predict_future_access</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="w">  </span><span class="c1"># ML model or heuristics</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="ss">:importance</span><span class="o">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">predicted_need</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">recency</span><span class="o">]</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="k">end</span>
+</span></code></pre></div>
+<h3 id="configurable-eviction-policy">Configurable Eviction Policy<a class="headerlink" href="#configurable-eviction-policy" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">htm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="ss">eviction_policy</span><span class="p">:</span><span class="w"> </span><span class="ss">:lru</span><span class="w">  </span><span class="c1"># or :importance, :hybrid, :custom</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="alternatives-comparison">Alternatives Comparison<a class="headerlink" href="#alternatives-comparison" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Pros</th>
+<th>Cons</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hybrid (Importance + Recency)</strong></td>
+<td><strong>Balanced retention</strong></td>
+<td><strong>Requires importance</strong></td>
+<td><strong>ACCEPTED</strong></td>
+</tr>
+<tr>
+<td>Pure LRU</td>
+<td>Standard caching, temporal</td>
+<td>Loses important context</td>
+<td>Rejected</td>
+</tr>
+<tr>
+<td>Pure Importance</td>
+<td>Preserves critical info</td>
+<td>No temporal relevance</td>
+<td>Rejected</td>
+</tr>
+<tr>
+<td>LFU</td>
+<td>Captures access patterns</td>
+<td>New memories always evicted</td>
+<td>Rejected</td>
+</tr>
+<tr>
+<td>Random</td>
+<td>Simple, no sorting</td>
+<td>Unpredictable, risky</td>
+<td>Rejected</td>
+</tr>
+<tr>
+<td>Learned Policy</td>
+<td>Optimal for patterns</td>
+<td>Complex, non-deterministic</td>
+<td>Deferred</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Cache_replacement_policies">Cache Replacement Policies</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)">LRU Cache</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Working_memory">Working Memory Management</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Memory_hierarchy">Multi-Level Memory Hierarchies</a></li>
+<li><a href="../002-two-tier-memory/">ADR-002: Two-Tier Memory</a></li>
+<li><a href="../006-context-assembly/">ADR-006: Context Assembly</a></li>
+<li><a href="../009-never-forget/">ADR-009: Never-Forget Philosophy</a></li>
+<li><a href="../../../guides/working-memory/">Working Memory Guide</a></li>
+</ul>
+<hr />
+<h2 id="review-notes">Review Notes<a class="headerlink" href="#review-notes" title="Permanent link">&para;</a></h2>
+<p><strong>Systems Architect</strong>: Hybrid eviction is the right choice. Consider heap-based eviction for better asymptotic complexity.</p>
+<p><strong>Performance Specialist</strong>: O(n log n) is acceptable for n &lt; 200. Monitor real-world eviction frequency.</p>
+<p><strong>Domain Expert</strong>: Never-forget guarantee is essential. Eviction is just working memory management.</p>
+<p><strong>AI Engineer</strong>: Importance + recency works well for LLM context. Consider learned eviction in future.</p>
+<p><strong>Ruby Expert</strong>: Clean implementation. Consider extracting eviction policy to strategy pattern for extensibility.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  <form class="md-feedback" name="feedback" hidden>
+    <fieldset>
+      <legend class="md-feedback__title">
+        Was this page helpful?
+      </legend>
+      <div class="md-feedback__inner">
+        <div class="md-feedback__list">
+          
+            <button class="md-feedback__icon md-icon" type="submit" title="This page was helpful" data-md-value="1">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m7 0c0 .8-.7 1.5-1.5 1.5S14 10.3 14 9.5 14.7 8 15.5 8s1.5.7 1.5 1.5m-5 7.73c-1.75 0-3.29-.73-4.19-1.81L9.23 14c.45.72 1.52 1.23 2.77 1.23s2.32-.51 2.77-1.23l1.42 1.42c-.9 1.08-2.44 1.81-4.19 1.81"/></svg>
+            </button>
+          
+            <button class="md-feedback__icon md-icon" type="submit" title="This page could be improved" data-md-value="0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8m2 0a10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2a10 10 0 0 1 10 10m-6.5-4c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5-1.5-.7-1.5-1.5.7-1.5 1.5-1.5M10 9.5c0 .8-.7 1.5-1.5 1.5S7 10.3 7 9.5 7.7 8 8.5 8s1.5.7 1.5 1.5m2 4.5c1.75 0 3.29.72 4.19 1.81l-1.42 1.42C14.32 16.5 13.25 16 12 16s-2.32.5-2.77 1.23l-1.42-1.42C8.71 14.72 10.25 14 12 14"/></svg>
+            </button>
+          
+        </div>
+        <div class="md-feedback__note">
+          
+            <div data-md-value="1" hidden>
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback!
+            </div>
+          
+            <div data-md-value="0" hidden>
+              
+              
+                
+              
+              
+              
+                
+                
+              
+              Thanks for your feedback! Help us improve by creating an issue.
+            </div>
+          
+        </div>
+      </div>
+    </fieldset>
+  </form>
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../006-context-assembly/" class="md-footer__link md-footer__link--prev" aria-label="Previous: ADR-006 Context Assembly">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                ADR-006 Context Assembly
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../008-robot-identification/" class="md-footer__link md-footer__link--next" aria-label="Next: ADR-008 Robot Identification">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                ADR-008 Robot Identification
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Dewayne VanHoozer
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/madbomber/htm" target="_blank" rel="noopener" title="HTM on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://rubygems.org/gems/htm" target="_blank" rel="noopener" title="HTM on RubyGems" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M116.7 33.8c4.5-6.1 11.7-9.8 19.3-9.8h240c7.6 0 14.8 3.6 19.3 9.8l112 152c6.8 9.2 6.1 21.9-1.5 30.4l-232 256c-4.5 5-11 7.9-17.8 7.9s-13.2-2.9-17.8-7.9l-232-256c-7.7-8.5-8.3-21.2-1.5-30.4zm38.5 39.8c-3.3 2.5-4.2 7-2.1 10.5l57.4 95.7L63.3 192c-4.1.3-7.3 3.8-7.3 8s3.2 7.6 7.3 8l192 16h1.3l192-16c4.1-.3 7.3-3.8 7.3-8s-3.2-7.6-7.3-8l-147.2-12.3 57.4-95.6c2.1-3.5 1.2-8.1-2.1-10.5s-7.9-2-10.7 1l-90 97.6-90.1-97.6c-2.8-3-7.4-3.4-10.7-1"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.50899def.min.js"></script>
+      
+        <script src="../../../assets/js/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,83 @@
+<svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <defs>
+    <style>
+      .critical-box { fill: rgba(244, 67, 54, 0.3); stroke: #F44336; stroke-width: 2; }
+      .high-box { fill: rgba(255, 152, 0, 0.3); stroke: #FF9800; stroke-width: 2; }
+      .medium-box { fill: rgba(255, 235, 59, 0.3); stroke: #FFEB3B; stroke-width: 2; }
+      .low-box { fill: rgba(158, 158, 158, 0.3); stroke: #9E9E9E; stroke-width: 2; }
+      .type-box { fill: rgba(33, 150, 243, 0.2); stroke: #2196F3; stroke-width: 1.5; }
+      .text-header { fill: #E0E0E0; font-size: 18px; font-weight: bold; }
+      .text-label { fill: #E0E0E0; font-size: 13px; font-weight: bold; }
+      .text-small { fill: #B0B0B0; font-size: 11px; }
+      .text-tiny { fill: #A0A0A0; font-size: 10px; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" class="text-header">Importance Scoring Framework</text>
+
+  <!-- Importance Scale -->
+  <text x="50" y="70" class="text-label">Importance Scale (0.0 - 10.0)</text>
+
+  <!-- Critical (9.0-10.0) -->
+  <rect x="50" y="90" width="800" height="80" class="critical-box" rx="5"/>
+  <text x="70" y="115" class="text-label" fill="#F44336">Critical (9.0-10.0)</text>
+  <text x="70" y="135" class="text-small">Must never lose • Highest retention priority</text>
+  <text x="70" y="155" class="text-tiny">Examples: API keys, core architecture decisions, critical user data</text>
+
+  <!-- High (7.0-8.9) -->
+  <rect x="50" y="185" width="800" height="80" class="high-box" rx="5"/>
+  <text x="70" y="210" class="text-label" fill="#FF9800">High (7.0-8.9)</text>
+  <text x="70" y="230" class="text-small">Very important • High retention priority</text>
+  <text x="70" y="250" class="text-tiny">Examples: User identity, major decisions, important preferences</text>
+
+  <!-- Medium (4.0-6.9) -->
+  <rect x="50" y="280" width="800" height="80" class="medium-box" rx="5"/>
+  <text x="70" y="305" class="text-label" fill="#FDD835">Medium (4.0-6.9)</text>
+  <text x="70" y="325" class="text-small">Moderately important • Standard retention</text>
+  <text x="70" y="345" class="text-tiny">Examples: Code snippets, current context, minor preferences</text>
+
+  <!-- Low (1.0-3.9) -->
+  <rect x="50" y="375" width="800" height="80" class="low-box" rx="5"/>
+  <text x="70" y="400" class="text-label" fill="#9E9E9E">Low (1.0-3.9)</text>
+  <text x="70" y="420" class="text-small">Nice to have • Can evict when needed</text>
+  <text x="70" y="440" class="text-tiny">Examples: Temporary notes, minor context, throwaway calculations</text>
+
+  <!-- Memory Types with Typical Ranges -->
+  <text x="50" y="490" class="text-label">Typical Importance by Memory Type</text>
+
+  <!-- Type boxes -->
+  <rect x="50" y="510" width="130" height="70" class="type-box" rx="3"/>
+  <text x="115" y="530" text-anchor="middle" class="text-label" fill="#2196F3">:fact</text>
+  <text x="115" y="550" text-anchor="middle" class="text-small">7.0-10.0</text>
+  <text x="115" y="570" text-anchor="middle" class="text-tiny">User data, system</text>
+
+  <rect x="195" y="510" width="130" height="70" class="type-box" rx="3"/>
+  <text x="260" y="530" text-anchor="middle" class="text-label" fill="#2196F3">:decision</text>
+  <text x="260" y="550" text-anchor="middle" class="text-small">7.0-10.0</text>
+  <text x="260" y="570" text-anchor="middle" class="text-tiny">Architecture,</text>
+  <text x="260" y="580" text-anchor="middle" class="text-tiny">choices</text>
+
+  <rect x="340" y="510" width="130" height="70" class="type-box" rx="3"/>
+  <text x="405" y="530" text-anchor="middle" class="text-label" fill="#2196F3">:preference</text>
+  <text x="405" y="550" text-anchor="middle" class="text-small">4.0-8.0</text>
+  <text x="405" y="570" text-anchor="middle" class="text-tiny">User preferences</text>
+
+  <rect x="485" y="510" width="130" height="70" class="type-box" rx="3"/>
+  <text x="550" y="530" text-anchor="middle" class="text-label" fill="#2196F3">:code</text>
+  <text x="550" y="550" text-anchor="middle" class="text-small">4.0-7.0</text>
+  <text x="550" y="570" text-anchor="middle" class="text-tiny">Snippets,</text>
+  <text x="550" y="580" text-anchor="middle" class="text-tiny">examples</text>
+
+  <rect x="630" y="510" width="130" height="70" class="type-box" rx="3"/>
+  <text x="695" y="530" text-anchor="middle" class="text-label" fill="#2196F3">:context</text>
+  <text x="695" y="550" text-anchor="middle" class="text-small">3.0-6.0</text>
+  <text x="695" y="570" text-anchor="middle" class="text-tiny">Conversation</text>
+  <text x="695" y="580" text-anchor="middle" class="text-tiny">state</text>
+
+  <rect x="775" y="510" width="75" height="70" class="type-box" rx="3"/>
+  <text x="812" y="530" text-anchor="middle" class="text-label" fill="#2196F3">:question</text>
+  <text x="812" y="550" text-anchor="middle" class="text-small">5.0-8.0</text>
+  <text x="812" y="570" text-anchor="middle" class="text-tiny">Open</text>
+  <text x="812" y="580" text-anchor="middle" class="text-tiny">items</text>
+</svg>

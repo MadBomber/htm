@@ -174,8 +174,16 @@ class HTM
       end
     end
 
-    # Add to working memory (access_count starts at 0)
+    # Add to working memory (evict if needed, access_count starts at 0)
+    unless @working_memory.has_space?(token_count)
+      evicted = @working_memory.evict_to_make_space(token_count)
+      evicted_keys = evicted.map { |n| n[:key] }
+      @long_term_memory.mark_evicted(robot_id: @robot_id, node_ids: evicted_keys) if evicted_keys.any?
+    end
     @working_memory.add(node_id, content, token_count: token_count, access_count: 0)
+
+    # Mark node as in working memory in the robot_nodes join table
+    result[:robot_node].update!(working_memory: true)
 
     update_robot_activity
     node_id
@@ -524,32 +532,29 @@ class HTM
     token_count = node['token_count'].to_i
     access_count = (node['access_count'] || 0).to_i
     last_accessed = node['last_accessed'] ? Time.parse(node['last_accessed'].to_s) : nil
+    node_id = node['id']
 
-    if @working_memory.has_space?(token_count)
-      @working_memory.add(
-        node['id'],
-        node['content'],
-        token_count: token_count,
-        access_count: access_count,
-        last_accessed: last_accessed,
-        from_recall: true
-      )
-    else
+    unless @working_memory.has_space?(token_count)
       # Evict to make space
       evicted = @working_memory.evict_to_make_space(token_count)
       evicted_keys = evicted.map { |n| n[:key] }
-      @long_term_memory.mark_evicted(evicted_keys) if evicted_keys.any?
-
-      # Now add the recalled node
-      @working_memory.add(
-        node['id'],
-        node['content'],
-        token_count: token_count,
-        access_count: access_count,
-        last_accessed: last_accessed,
-        from_recall: true
-      )
+      @long_term_memory.mark_evicted(robot_id: @robot_id, node_ids: evicted_keys) if evicted_keys.any?
     end
+
+    # Add to in-memory working memory
+    @working_memory.add(
+      node_id,
+      node['content'],
+      token_count: token_count,
+      access_count: access_count,
+      last_accessed: last_accessed,
+      from_recall: true
+    )
+
+    # Mark node as in working memory in the robot_nodes join table
+    HTM::Models::RobotNode
+      .find_by(robot_id: @robot_id, node_id: node_id)
+      &.update!(working_memory: true)
   end
 
   # Validation helper methods

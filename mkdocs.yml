@@ -205,6 +205,40 @@ nav:
     - Long-Term Memory: api/long-term-memory.md
     - Embedding Service: api/embedding-service.md
     - Database: api/database.md
+    - YARD Reference:
+      - api/yard-reference.md
+      - HTM Module: api/yard/HTM.md
+      - Core Classes:
+        - Configuration: api/yard/HTM/Configuration.md
+        - Database: api/yard/HTM/Database.md
+        - LongTermMemory: api/yard/HTM/LongTermMemory.md
+        - WorkingMemory: api/yard/HTM/WorkingMemory.md
+      - Services:
+        - EmbeddingService: api/yard/HTM/EmbeddingService.md
+        - TagService: api/yard/HTM/TagService.md
+        - JobAdapter: api/yard/HTM/JobAdapter.md
+      - Utilities:
+        - CircuitBreaker: api/yard/HTM/CircuitBreaker.md
+        - Observability: api/yard/HTM/Observability.md
+        - Timeframe: api/yard/HTM/Timeframe.md
+        - TimeframeExtractor: api/yard/HTM/TimeframeExtractor.md
+      - Internal:
+        - ActiveRecordConfig: api/yard/HTM/ActiveRecordConfig.md
+        - Railtie: api/yard/HTM/Railtie.md
+      - Errors:
+        - Error: api/yard/HTM/Error.md
+        - AuthorizationError: api/yard/HTM/AuthorizationError.md
+        - CircuitBreakerOpenError: api/yard/HTM/CircuitBreakerOpenError.md
+        - DatabaseError: api/yard/HTM/DatabaseError.md
+        - EmbeddingError: api/yard/HTM/EmbeddingError.md
+        - NotFoundError: api/yard/HTM/NotFoundError.md
+        - QueryTimeoutError: api/yard/HTM/QueryTimeoutError.md
+        - ResourceExhaustedError: api/yard/HTM/ResourceExhaustedError.md
+        - TagError: api/yard/HTM/TagError.md
+        - ValidationError: api/yard/HTM/ValidationError.md
+      - Result Types:
+        - Timeframe Result: api/yard/HTM/Timeframe/Result.md
+        - TimeframeExtractor Result: api/yard/HTM/TimeframeExtractor/Result.md
   - Development:
     - development/index.md
     - Setup: development/setup.md
@@ -217,6 +251,7 @@ nav:
         - Robots: database/public.robots.md
         - Nodes: database/public.nodes.md
         - Tags: database/public.tags.md
+        - File Sources: database/public.file_sources.md
         - Working Memories: database/public.working_memories.md
       - Join Tables:
         - Node Tags: database/public.node_tags.md

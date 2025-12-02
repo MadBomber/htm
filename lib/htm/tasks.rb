@@ -47,6 +47,13 @@
 #   rake htm:files:sync              # Sync all loaded files (reload changed files)
 #   rake htm:files:stats             # Show file loading statistics
 #
+# Documentation tasks:
+#   rake htm:doc:yard                # Build YARD API documentation website
+#   rake htm:doc:server              # Start YARD documentation server (live reload)
+#   rake htm:doc:server[port]        # Start server on custom port
+#   rake htm:doc:stats               # Show documentation coverage statistics
+#   rake htm:doc:clean               # Clean generated documentation
+#
 
 if defined?(Rake)
   # Load the rake tasks
@@ -54,6 +61,7 @@ if defined?(Rake)
   load File.expand_path('../tasks/jobs.rake', __dir__)
   load File.expand_path('../tasks/tags.rake', __dir__)
   load File.expand_path('../tasks/files.rake', __dir__)
+  load File.expand_path('../tasks/doc.rake', __dir__)
 else
   warn "HTM tasks not loaded: Rake is not available"
 end

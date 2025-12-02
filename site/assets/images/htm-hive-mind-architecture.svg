@@ -1,0 +1,125 @@
+<svg viewBox="0 0 1000 650" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <defs>
+    <style>
+      .robot-box { fill: rgba(33, 150, 243, 0.2); stroke: #2196F3; stroke-width: 2.5; }
+      .robot-alpha { fill: rgba(156, 39, 176, 0.2); stroke: #9C27B0; stroke-width: 2.5; }
+      .robot-beta { fill: rgba(255, 152, 0, 0.2); stroke: #FF9800; stroke-width: 2.5; }
+      .robot-gamma { fill: rgba(76, 175, 80, 0.2); stroke: #4CAF50; stroke-width: 2.5; }
+      .shared-box { fill: rgba(33, 150, 243, 0.3); stroke: #2196F3; stroke-width: 3; }
+      .text-header { fill: #E0E0E0; font-size: 16px; font-weight: bold; }
+      .text-label { fill: #E0E0E0; font-size: 13px; }
+      .text-small { fill: #B0B0B0; font-size: 11px; }
+      .text-tiny { fill: #A0A0A0; font-size: 10px; }
+      .arrow { stroke: #4A9EFF; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-bidirect { stroke: #4A9EFF; stroke-width: 2; fill: none; marker-start: url(#arrowhead-rev); marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4A9EFF" />
+    </marker>
+    <marker id="arrowhead-rev" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+      <polygon points="10 0, 0 3, 10 6" fill="#4A9EFF" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="500" y="30" text-anchor="middle" class="text-header" font-size="18">HTM Hive Mind Architecture</text>
+
+  <!-- Robot Alpha -->
+  <rect x="50" y="70" width="250" height="200" class="robot-alpha" rx="5"/>
+  <text x="175" y="95" text-anchor="middle" class="text-header">Robot Alpha</text>
+  <text x="175" y="115" text-anchor="middle" class="text-small">ID: research-001</text>
+
+  <rect x="65" y="130" width="220" height="120" fill="rgba(156, 39, 176, 0.15)" stroke="#9C27B0" stroke-width="1.5" rx="3"/>
+  <text x="175" y="150" text-anchor="middle" class="text-label">Working Memory</text>
+  <text x="175" y="167" text-anchor="middle" class="text-small">(Private)</text>
+
+  <text x="75" y="190" class="text-tiny">• Research findings</text>
+  <text x="75" y="205" class="text-tiny">• Data analysis</text>
+  <text x="75" y="220" class="text-tiny">• Recent queries</text>
+  <text x="75" y="235" class="text-tiny">128K tokens active</text>
+
+  <!-- Robot Beta -->
+  <rect x="375" y="70" width="250" height="200" class="robot-beta" rx="5"/>
+  <text x="500" y="95" text-anchor="middle" class="text-header">Robot Beta</text>
+  <text x="500" y="115" text-anchor="middle" class="text-small">ID: code-001</text>
+
+  <rect x="390" y="130" width="220" height="120" fill="rgba(255, 152, 0, 0.15)" stroke="#FF9800" stroke-width="1.5" rx="3"/>
+  <text x="500" y="150" text-anchor="middle" class="text-label">Working Memory</text>
+  <text x="500" y="167" text-anchor="middle" class="text-small">(Private)</text>
+
+  <text x="400" y="190" class="text-tiny">• Code snippets</text>
+  <text x="400" y="205" class="text-tiny">• Implementation plans</text>
+  <text x="400" y="220" class="text-tiny">• Architecture docs</text>
+  <text x="400" y="235" class="text-tiny">96K tokens active</text>
+
+  <!-- Robot Gamma -->
+  <rect x="700" y="70" width="250" height="200" class="robot-gamma" rx="5"/>
+  <text x="825" y="95" text-anchor="middle" class="text-header">Robot Gamma</text>
+  <text x="825" y="115" text-anchor="middle" class="text-small">ID: docs-001</text>
+
+  <rect x="715" y="130" width="220" height="120" fill="rgba(76, 175, 80, 0.15)" stroke="#4CAF50" stroke-width="1.5" rx="3"/>
+  <text x="825" y="150" text-anchor="middle" class="text-label">Working Memory</text>
+  <text x="825" y="167" text-anchor="middle" class="text-small">(Private)</text>
+
+  <text x="725" y="190" class="text-tiny">• Documentation</text>
+  <text x="725" y="205" class="text-tiny">• Examples</text>
+  <text x="725" y="220" class="text-tiny">• Tutorials</text>
+  <text x="725" y="235" class="text-tiny">64K tokens active</text>
+
+  <!-- Arrows from robots to shared memory -->
+  <path d="M 175 270 L 175 350" class="arrow-bidirect"/>
+  <text x="195" y="315" class="text-tiny" fill="#9C27B0">read/write</text>
+
+  <path d="M 500 270 L 500 350" class="arrow-bidirect"/>
+  <text x="520" y="315" class="text-tiny" fill="#FF9800">read/write</text>
+
+  <path d="M 825 270 L 825 350" class="arrow-bidirect"/>
+  <text x="845" y="315" class="text-tiny" fill="#4CAF50">read/write</text>
+
+  <!-- Shared Long-term Memory -->
+  <rect x="150" y="370" width="700" height="250" class="shared-box" rx="5"/>
+  <text x="500" y="400" text-anchor="middle" class="text-header" font-size="18">Long-term Memory (Shared)</text>
+  <text x="500" y="420" text-anchor="middle" class="text-small">PostgreSQL</text>
+
+  <!-- Shared memory features -->
+  <rect x="170" y="445" width="160" height="160" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="250" y="465" text-anchor="middle" class="text-label">All Robot Data</text>
+  <text x="180" y="490" class="text-small">✓ Combined knowledge</text>
+  <text x="180" y="510" class="text-small">✓ Shared discoveries</text>
+  <text x="180" y="530" class="text-small">✓ Cross-robot recall</text>
+  <text x="180" y="550" class="text-small">✓ Full conversation</text>
+  <text x="190" y="570" class="text-small">history</text>
+  <text x="180" y="590" class="text-tiny" fill="#64B5F6">~50,000 nodes</text>
+
+  <rect x="350" y="445" width="160" height="160" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="430" y="465" text-anchor="middle" class="text-label">Attribution</text>
+  <text x="360" y="490" class="text-small">✓ robot_id per node</text>
+  <text x="360" y="510" class="text-small">✓ Creation timestamps</text>
+  <text x="360" y="530" class="text-small">✓ Contribution tracking</text>
+  <text x="360" y="550" class="text-small">✓ Activity logs</text>
+  <text x="360" y="570" class="text-small">✓ Timeline queries</text>
+
+  <rect x="530" y="445" width="160" height="160" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="610" y="465" text-anchor="middle" class="text-label">Search &amp; Recall</text>
+  <text x="540" y="490" class="text-small">✓ Vector search</text>
+  <text x="540" y="510" class="text-small">✓ Full-text search</text>
+  <text x="540" y="530" class="text-small">✓ Hybrid retrieval</text>
+  <text x="540" y="550" class="text-small">✓ Time-range queries</text>
+  <text x="540" y="570" class="text-small">✓ Tag-based filtering</text>
+
+  <rect x="710" y="445" width="120" height="160" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F2" stroke-width="1.5" rx="3"/>
+  <text x="770" y="465" text-anchor="middle" class="text-label">Features</text>
+  <text x="720" y="490" class="text-small">✓ Never forget</text>
+  <text x="720" y="510" class="text-small">✓ Permanent</text>
+  <text x="720" y="530" class="text-small">✓ Scalable</text>
+  <text x="720" y="550" class="text-small">✓ Consistent</text>
+  <text x="720" y="570" class="text-small">✓ ACID safe</text>
+  <text x="720" y="590" class="text-small">✓ Durable</text>
+
+  <!-- Legend -->
+  <rect x="50" y="300" width="80" height="20" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="1" rx="2"/>
+  <text x="140" y="314" class="text-tiny">Private Memory</text>
+
+  <rect x="260" y="300" width="80" height="20" fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3" stroke-width="1" rx="2"/>
+  <text x="350" y="314" class="text-tiny">Shared Memory</text>
+</svg>

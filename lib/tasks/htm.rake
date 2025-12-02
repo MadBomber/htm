@@ -327,7 +327,7 @@ namespace :htm do
       sh "mkdocs serve"
     end
 
-    desc "Generate DB docs, build site, and serve locally"
-    task :all => [:db, :build, :serve]
+    desc "Generate DB docs, YARD API docs, build site, and serve locally"
+    task :all => [:db, :yard, :build, :serve]
   end
 end

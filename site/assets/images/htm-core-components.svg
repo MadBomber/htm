@@ -1,0 +1,63 @@
+<svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- HTM Core -->
+  <rect x="350" y="50" width="200" height="100" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="3" rx="5"/>
+  <text x="450" y="85" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">HTM</text>
+  <text x="450" y="110" text-anchor="middle" fill="#B0B0B0" font-size="11">@robot_id: UUID</text>
+  <text x="450" y="130" text-anchor="middle" fill="#B0B0B0" font-size="11">@robot_name: String</text>
+
+  <!-- Working Memory -->
+  <rect x="50" y="250" width="240" height="280" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
+  <text x="170" y="280" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">WorkingMemory</text>
+  <line x1="60" y1="290" x2="280" y2="290" stroke="#2196F3" stroke-width="1"/>
+  <text x="70" y="310" fill="#B0B0B0" font-size="11">@max_tokens: Integer</text>
+  <text x="70" y="330" fill="#B0B0B0" font-size="11">@nodes: Hash</text>
+  <text x="70" y="350" fill="#B0B0B0" font-size="11">@access_order: Array</text>
+  <line x1="60" y1="360" x2="280" y2="360" stroke="#2196F3" stroke-width="1"/>
+  <text x="70" y="380" fill="#B0B0B0" font-size="11">+add(key, value, ...)</text>
+  <text x="70" y="400" fill="#B0B0B0" font-size="11">+remove(key)</text>
+  <text x="70" y="420" fill="#B0B0B0" font-size="11">+has_space?(tokens)</text>
+  <text x="70" y="440" fill="#B0B0B0" font-size="11">+evict_to_make_space()</text>
+  <text x="70" y="460" fill="#B0B0B0" font-size="11">+assemble_context()</text>
+  <text x="70" y="480" fill="#B0B0B0" font-size="11">+token_count()</text>
+  <text x="70" y="500" fill="#B0B0B0" font-size="11">+utilization_percentage()</text>
+
+  <!-- Long-Term Memory -->
+  <rect x="330" y="250" width="240" height="280" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="2" rx="5"/>
+  <text x="450" y="280" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">LongTermMemory</text>
+  <line x1="340" y1="290" x2="560" y2="290" stroke="#9C27B0" stroke-width="1"/>
+  <text x="350" y="310" fill="#B0B0B0" font-size="11">@db: Database</text>
+  <text x="350" y="330" fill="#B0B0B0" font-size="11">@connection_pool</text>
+  <line x1="340" y1="340" x2="560" y2="340" stroke="#9C27B0" stroke-width="1"/>
+  <text x="350" y="360" fill="#B0B0B0" font-size="11">+add(key, value, ...)</text>
+  <text x="350" y="380" fill="#B0B0B0" font-size="11">+retrieve(key)</text>
+  <text x="350" y="400" fill="#B0B0B0" font-size="11">+delete(key)</text>
+  <text x="350" y="420" fill="#B0B0B0" font-size="11">+search(timeframe, ...)</text>
+  <text x="350" y="440" fill="#B0B0B0" font-size="11">+search_fulltext(query)</text>
+  <text x="350" y="460" fill="#B0B0B0" font-size="11">+search_hybrid()</text>
+  <text x="350" y="480" fill="#B0B0B0" font-size="11">+register_robot()</text>
+  <text x="350" y="500" fill="#B0B0B0" font-size="11">+add_relationship()</text>
+
+  <!-- Embedding Service -->
+  <rect x="610" y="250" width="240" height="280" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
+  <text x="730" y="280" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">EmbeddingService</text>
+  <line x1="620" y1="290" x2="840" y2="290" stroke="#FF9800" stroke-width="1"/>
+  <text x="630" y="310" fill="#B0B0B0" font-size="11">@provider: Symbol</text>
+  <text x="630" y="330" fill="#B0B0B0" font-size="11">@model: String</text>
+  <text x="630" y="350" fill="#B0B0B0" font-size="11">@dimensions: Integer</text>
+  <text x="630" y="370" fill="#B0B0B0" font-size="11">@ollama_url: String</text>
+  <line x1="620" y1="380" x2="840" y2="380" stroke="#FF9800" stroke-width="1"/>
+  <text x="630" y="400" fill="#4CAF50" font-size="11">+embed(text)</text>
+  <text x="630" y="420" fill="#B0B0B0" font-size="11">+count_tokens(text)</text>
+  <text x="630" y="440" fill="#B0B0B0" font-size="11">+embed_with_ollama()</text>
+  <text x="630" y="460" fill="#B0B0B0" font-size="11">+embed_with_openai()</text>
+  <text x="630" y="480" fill="#FFC107" font-size="10" font-style="italic">// Client-side generation</text>
+
+  <!-- Relationships -->
+  <line x1="450" y1="150" x2="170" y2="250" stroke="#2196F3" stroke-width="2"/>
+  <line x1="450" y1="150" x2="450" y2="250" stroke="#9C27B0" stroke-width="2"/>
+  <line x1="450" y1="150" x2="730" y2="250" stroke="#FF9800" stroke-width="2"/>
+
+  <text x="310" y="200" fill="#B0B0B0" font-size="10">1 has 1</text>
+  <text x="460" y="200" fill="#B0B0B0" font-size="10">1 has 1</text>
+  <text x="590" y="200" fill="#B0B0B0" font-size="10">1 has 1</text>
+</svg>

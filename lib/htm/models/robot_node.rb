@@ -34,6 +34,7 @@ class HTM
       scope :by_robot, ->(robot_id) { where(robot_id: robot_id) }
       scope :by_node, ->(node_id) { where(node_id: node_id) }
       scope :frequently_remembered, -> { where('remember_count > 1').order(remember_count: :desc) }
+      scope :in_working_memory, -> { where(working_memory: true) }
 
       # Record that a robot remembered this content again
       #

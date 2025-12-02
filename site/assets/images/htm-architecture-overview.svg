@@ -1,0 +1,83 @@
+<svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="bold">HTM Architecture Overview</text>
+
+  <!-- Your LLM -->
+  <rect x="250" y="70" width="400" height="80" fill="rgba(76, 175, 80, 0.3)" stroke="#4CAF50" stroke-width="3" rx="8"/>
+  <text x="450" y="105" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Your LLM</text>
+  <text x="450" y="130" text-anchor="middle" fill="#B0B0B0" font-size="13">(Claude, GPT, etc.)</text>
+
+  <!-- Arrow down -->
+  <path d="M 450 150 L 450 190" stroke="#2196F3" stroke-width="3" fill="none" marker-end="url(#arrow1)"/>
+
+  <!-- HTM API -->
+  <rect x="200" y="190" width="500" height="80" fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3" stroke-width="3" rx="8"/>
+  <text x="450" y="225" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">HTM API</text>
+  <text x="450" y="250" text-anchor="middle" fill="#B0B0B0" font-size="13">add_node(), recall(), create_context(), etc.</text>
+
+  <!-- Arrows down to both memories -->
+  <path d="M 320 270 L 320 330" stroke="#2196F3" stroke-width="3" fill="none" marker-end="url(#arrow1)"/>
+  <path d="M 580 270 L 580 330" stroke="#9C27B0" stroke-width="3" fill="none" marker-end="url(#arrow2)"/>
+
+  <!-- Working Memory -->
+  <rect x="120" y="330" width="280" height="120" fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3" stroke-width="3" rx="8"/>
+  <text x="260" y="370" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Working Memory</text>
+  <text x="260" y="395" text-anchor="middle" fill="#B0B0B0" font-size="13">(In-Memory)</text>
+  <text x="260" y="418" text-anchor="middle" fill="#B0B0B0" font-size="13">128k tokens</text>
+  <text x="260" y="438" text-anchor="middle" fill="#B0B0B0" font-size="13">Fast access</text>
+
+  <!-- Long-term Memory -->
+  <rect x="500" y="330" width="280" height="120" fill="rgba(156, 39, 176, 0.3)" stroke="#9C27B0" stroke-width="3" rx="8"/>
+  <text x="640" y="370" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Long-term Memory</text>
+  <text x="640" y="395" text-anchor="middle" fill="#B0B0B0" font-size="13">(PostgreSQL)</text>
+  <text x="640" y="418" text-anchor="middle" fill="#B0B0B0" font-size="13">∞ storage</text>
+  <text x="640" y="438" text-anchor="middle" fill="#B0B0B0" font-size="13">Persistent</text>
+
+  <!-- Bidirectional arrow between Working and Long-term Memory -->
+  <path d="M 400 380 L 500 380" stroke="#FFC107" stroke-width="3" fill="none" marker-end="url(#arrow3)" marker-start="url(#arrow3-start)"/>
+  <text x="450" y="370" text-anchor="middle" fill="#FFC107" font-size="12" font-weight="bold">Eviction</text>
+
+  <path d="M 500 400 L 400 400" stroke="#4CAF50" stroke-width="3" fill="none" marker-end="url(#arrow4)" marker-start="url(#arrow4-start)"/>
+  <text x="450" y="418" text-anchor="middle" fill="#4CAF50" font-size="12" font-weight="bold">Recall</text>
+
+  <!-- Arrow down from Long-term Memory -->
+  <path d="M 640 450 L 640 520" stroke="#9C27B0" stroke-width="3" fill="none" marker-end="url(#arrow2)"/>
+
+  <!-- Embedding Service -->
+  <rect x="500" y="520" width="280" height="100" fill="rgba(255, 152, 0, 0.3)" stroke="#FF9800" stroke-width="3" rx="8"/>
+  <text x="640" y="555" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Embedding Service</text>
+  <text x="640" y="580" text-anchor="middle" fill="#B0B0B0" font-size="13">(Ollama/RubyLLM)</text>
+  <text x="640" y="603" text-anchor="middle" fill="#B0B0B0" font-size="13">gpt-oss model</text>
+
+  <!-- Notes -->
+  <rect x="30" y="500" width="360" height="160" fill="rgba(33, 150, 243, 0.1)" stroke="#2196F3" stroke-width="2" rx="5" stroke-dasharray="5,5"/>
+  <text x="210" y="525" text-anchor="middle" fill="#2196F3" font-size="14" font-weight="bold">Key Components</text>
+  <text x="40" y="550" fill="#B0B0B0" font-size="11">• <tspan fill="#4CAF50" font-weight="bold">Your LLM</tspan>: Chat interface (Claude, GPT, etc.)</text>
+  <text x="40" y="570" fill="#B0B0B0" font-size="11">• <tspan fill="#2196F3" font-weight="bold">HTM API</tspan>: Main interface for memory operations</text>
+  <text x="40" y="590" fill="#B0B0B0" font-size="11">• <tspan fill="#2196F3" font-weight="bold">Working Memory</tspan>: Fast, token-limited cache</text>
+  <text x="40" y="610" fill="#B0B0B0" font-size="11">• <tspan fill="#9C27B0" font-weight="bold">Long-term Memory</tspan>: Durable PostgreSQL storage</text>
+  <text x="40" y="630" fill="#B0B0B0" font-size="11">• <tspan fill="#FF9800" font-weight="bold">Embedding Service</tspan>: Vector generation via Ollama</text>
+  <text x="40" y="650" fill="#B0B0B0" font-size="11">• <tspan fill="#FFC107" font-weight="bold">Eviction/Recall</tspan>: Automatic memory management</text>
+
+  <!-- Markers -->
+  <defs>
+    <marker id="arrow1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2196F3"/>
+    </marker>
+    <marker id="arrow2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#9C27B0"/>
+    </marker>
+    <marker id="arrow3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#FFC107"/>
+    </marker>
+    <marker id="arrow3-start" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+      <polygon points="10 0, 0 3, 10 6" fill="#FFC107"/>
+    </marker>
+    <marker id="arrow4" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
+    </marker>
+    <marker id="arrow4-start" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+      <polygon points="10 0, 0 3, 10 6" fill="#4CAF50"/>
+    </marker>
+  </defs>
+</svg>

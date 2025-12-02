@@ -1,0 +1,37 @@
+<svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="350" y="30" text-anchor="middle" fill="#FFFFFF" font-size="18" font-weight="bold">Current Two-Tier Architecture</text>
+
+  <!-- HTM Instance outer box -->
+  <rect x="50" y="70" width="300" height="280" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="3" rx="8"/>
+  <text x="200" y="100" text-anchor="middle" fill="#FFFFFF" font-size="15" font-weight="bold">HTM Instance</text>
+
+  <!-- Working Memory -->
+  <rect x="90" y="140" width="180" height="100" fill="rgba(76, 175, 80, 0.3)" stroke="#4CAF50" stroke-width="3" rx="8"/>
+  <text x="180" y="170" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="bold">Working Memory</text>
+  <text x="180" y="195" text-anchor="middle" fill="#B0B0B0" font-size="12">(Hash)</text>
+  <text x="180" y="220" text-anchor="middle" fill="#FFC107" font-size="11" font-style="italic">volatile</text>
+
+  <!-- PostgreSQL -->
+  <rect x="450" y="140" width="200" height="100" fill="rgba(156, 39, 176, 0.3)" stroke="#9C27B0" stroke-width="3" rx="8"/>
+  <text x="550" y="170" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="bold">PostgreSQL</text>
+  <text x="550" y="195" text-anchor="middle" fill="#B0B0B0" font-size="12">(Long-Term)</text>
+  <text x="550" y="220" text-anchor="middle" fill="#4CAF50" font-size="11" font-style="italic">persistent</text>
+
+  <!-- Arrow from Working Memory to PostgreSQL -->
+  <path d="M 270 190 L 450 190" stroke="#2196F3" stroke-width="3" fill="none" marker-end="url(#arrow1)"/>
+  <text x="360" y="180" text-anchor="middle" fill="#2196F3" font-size="11">syncs to</text>
+
+  <!-- Notes -->
+  <rect x="50" y="280" width="300" height="60" fill="rgba(255, 193, 7, 0.1)" stroke="#FFC107" stroke-width="2" rx="5" stroke-dasharray="5,5"/>
+  <text x="60" y="300" fill="#B0B0B0" font-size="11">• <tspan fill="#4CAF50" font-weight="bold">Working Memory</tspan>: Fast, in-memory hash</text>
+  <text x="60" y="318" fill="#B0B0B0" font-size="11">• <tspan fill="#9C27B0" font-weight="bold">Long-Term Memory</tspan>: Durable PostgreSQL</text>
+  <text x="60" y="336" fill="#B0B0B0" font-size="11">• Simple, proven architecture</text>
+
+  <!-- Markers -->
+  <defs>
+    <marker id="arrow1" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2196F3"/>
+    </marker>
+  </defs>
+</svg>

@@ -138,14 +138,16 @@ class HTM
     #
     # @param robot_id [Integer] Robot ID
     # @param node [HTM::Models::Node] Node to link
+    # @param working_memory [Boolean] Whether node is in working memory (default: false)
     # @return [HTM::Models::RobotNode] The robot_node link record
     #
-    def link_robot_to_node(robot_id:, node:)
+    def link_robot_to_node(robot_id:, node:, working_memory: false)
       robot_node = HTM::Models::RobotNode.find_by(robot_id: robot_id, node_id: node.id)
 
       if robot_node
         # Existing link - record that robot remembered this again
         robot_node.record_remember!
+        robot_node.update!(working_memory: working_memory) if working_memory
       else
         # New link
         robot_node = HTM::Models::RobotNode.create!(
@@ -153,7 +155,8 @@ class HTM
           node_id: node.id,
           first_remembered_at: Time.current,
           last_remembered_at: Time.current,
-          remember_count: 1
+          remember_count: 1,
+          working_memory: working_memory
         )
       end
 
@@ -273,15 +276,19 @@ class HTM
 
     # Mark nodes as evicted from working memory
     #
-    # Working memory state is now tracked per-robot in the working_memories table
-    # (optional persistence). The in-memory WorkingMemory class handles eviction
-    # tracking. This method is retained for API compatibility but is a no-op.
+    # Sets working_memory = false on the robot_nodes join table for the specified
+    # robot and node IDs.
     #
-    # @param node_ids [Array<Integer>] Node IDs (ignored)
+    # @param robot_id [Integer] Robot ID whose working memory is being evicted
+    # @param node_ids [Array<Integer>] Node IDs to mark as evicted
     # @return [void]
     #
-    def mark_evicted(node_ids)
-      # No-op: working memory is tracked in-memory or via WorkingMemoryEntry model
+    def mark_evicted(robot_id:, node_ids:)
+      return if node_ids.empty?
+
+      HTM::Models::RobotNode
+        .where(robot_id: robot_id, node_id: node_ids)
+        .update_all(working_memory: false)
     end
 
     # Track access for multiple nodes (bulk operation)

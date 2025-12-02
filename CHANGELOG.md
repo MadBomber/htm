@@ -7,28 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.10] - 2025-12-02
+
+### Changed
+- **Refactored working memory persistence to robot_nodes join table** - Simpler, more efficient schema
+  - Added `working_memory` boolean column to `robot_nodes` table (default: false)
+  - Partial index `idx_robot_nodes_working_memory` for efficient queries on active working memory
+  - Working memory state now tracked per robot-node relationship
+  - `remember()` and `recall()` now set `working_memory = true` when adding to working memory
+  - Eviction sets `working_memory = false` on evicted nodes
+- **Updated `mark_evicted` signature** - Now requires `robot_id:` and `node_ids:` keyword arguments
+- **Added space check to `remember()`** - Now evicts old memories before adding if working memory is full (was missing, only `recall()` had this check)
+
 ### Added
-- **JSONB metadata column on nodes** - Flexible key-value storage for arbitrary node metadata
-  - Added `metadata` JSONB column to nodes table with `{}` default
-  - GIN index for efficient JSONB containment queries
-- **Metadata parameter for `remember` and `recall`** - Filter memories by metadata
-  - `htm.remember(content, metadata: {source: "api", version: 2})`
-  - `htm.recall(topic, metadata: {source: "api"})` filters using PostgreSQL `@>` containment
-  - Metadata filtering works with all search strategies (vector, fulltext, hybrid)
-  - Validation ensures metadata is a Hash with string/symbol keys
-- **IRB configuration file** - `.irbrc` with useful HTM and RubyLLM objects for interactive testing
-  - Pre-configured robot instances: `htm`, `user`, `assistant`, `researcher`, `coder`
-  - RubyLLM shortcuts and model constants
-  - Helper methods for tag and node exploration
+- **`RobotNode.in_working_memory` scope** - Query nodes currently in a robot's working memory
+- **`Robot#memory_summary[:in_working_memory]`** - Now uses efficient scope instead of separate table
 
-### Security
-- **Fixed SQL injection vulnerability in `Observability.extension_installed?`** - Now uses parameterized query with `sanitize_sql_array` instead of string interpolation
+### Removed
+- **`working_memories` table** - Replaced by `working_memory` boolean on `robot_nodes`
+- **`WorkingMemoryEntry` model** - No longer needed
+- **Migration `00008_create_working_memories.rb`** - Replaced by simpler approach
 
-### Fixed
-- **Fixed N+1 query in `LongTermMemory#search_by_tags`** - Now uses `batch_load_node_tags` for bulk tag loading instead of individual queries per node
-- **Fixed thread safety issue in `Configuration`** - Added mutex protection for `@ollama_models_refreshed` flag in embedding generator and tag extractor lambdas
-- **Removed duplicate `private` declaration in `HTM` class** - Removed redundant private keyword at line 539
-- **Updated stale table list in `Database.drop` and `Database.info`** - Added missing tables (`robot_nodes`, `working_memories`, `file_sources`, `node_tags`), removed non-existent `operations_log`
+### Migration
+| Migration | Table | Description |
+|-----------|-------|-------------|
+| `00009_add_working_memory_to_robot_nodes.rb` | `robot_nodes` | Adds working_memory boolean column |
 
 ## [0.0.9] - 2025-11-29
 
@@ -416,7 +419,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.9...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.10...HEAD
+[0.0.10]: https://github.com/madbomber/htm/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/madbomber/htm/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/madbomber/htm/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/madbomber/htm/compare/v0.0.6...v0.0.7

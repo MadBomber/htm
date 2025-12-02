@@ -113,7 +113,6 @@ class HTM
         require_relative 'models/robot_node'
         require_relative 'models/tag'
         require_relative 'models/node_tag'
-        require_relative 'models/working_memory_entry'
         require_relative 'models/file_source'
       end
     end

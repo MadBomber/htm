@@ -6,7 +6,7 @@
 | ---- | ------- | ------- | ---- |
 | [public.file_sources](public.file_sources.md) | 9 | Source file metadata for loaded documents | BASE TABLE |
 | [public.node_tags](public.node_tags.md) | 4 | Join table connecting nodes to tags (many-to-many) | BASE TABLE |
-| [public.nodes](public.nodes.md) | 13 | Core memory storage for conversation messages and context | BASE TABLE |
+| [public.nodes](public.nodes.md) | 14 | Core memory storage for conversation messages and context | BASE TABLE |
 | [public.robot_nodes](public.robot_nodes.md) | 8 | Join table connecting robots to nodes (many-to-many) | BASE TABLE |
 | [public.robots](public.robots.md) | 4 | Registry of all LLM robots using the HTM system | BASE TABLE |
 | [public.schema_migrations](public.schema_migrations.md) | 1 |  | BASE TABLE |

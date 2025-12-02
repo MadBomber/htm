@@ -1,0 +1,115 @@
+<svg viewBox="0 0 950 700" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <defs>
+    <style>
+      .ltm-box { fill: rgba(33, 150, 243, 0.2); stroke: #2196F3; stroke-width: 3; }
+      .table-box { fill: rgba(76, 175, 80, 0.2); stroke: #4CAF50; stroke-width: 2; }
+      .index-box { fill: rgba(255, 152, 0, 0.2); stroke: #FF9800; stroke-width: 2; }
+      .hypertable { fill: rgba(156, 39, 176, 0.2); stroke: #9C27B0; stroke-width: 2; }
+      .text-header { fill: #E0E0E0; font-size: 18px; font-weight: bold; }
+      .text-label { fill: #E0E0E0; font-size: 14px; font-weight: bold; }
+      .text-small { fill: #B0B0B0; font-size: 12px; }
+      .text-tiny { fill: #A0A0A0; font-size: 10px; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text x="475" y="30" text-anchor="middle" class="text-header">Long-term Memory Architecture</text>
+  <text x="475" y="50" text-anchor="middle" class="text-small">PostgreSQL</text>
+
+  <!-- Main Container -->
+  <rect x="50" y="75" width="850" height="590" class="ltm-box" rx="5"/>
+
+  <!-- Tables Section -->
+  <text x="70" y="105" class="text-label">Database Tables</text>
+
+  <!-- nodes table -->
+  <rect x="70" y="120" width="250" height="180" class="table-box" rx="3"/>
+  <text x="195" y="140" text-anchor="middle" class="text-label" fill="#4CAF50">nodes</text>
+  <text x="80" y="165" class="text-small">Memories + Embeddings</text>
+  <text x="80" y="185" class="text-tiny">• id, key, value</text>
+  <text x="80" y="200" class="text-tiny">• type, category, importance</text>
+  <text x="80" y="215" class="text-tiny">• token_count, robot_id</text>
+  <text x="80" y="230" class="text-tiny">• embedding vector(1536)</text>
+  <text x="80" y="245" class="text-tiny">• created_at, last_accessed</text>
+  <text x="80" y="260" class="text-tiny">• in_working_memory flag</text>
+  <text x="80" y="280" class="text-small" fill="#66BB6A">Primary storage</text>
+
+  <!-- relationships table -->
+  <rect x="340" y="120" width="250" height="100" class="table-box" rx="3"/>
+  <text x="465" y="140" text-anchor="middle" class="text-label" fill="#4CAF50">relationships</text>
+  <text x="350" y="165" class="text-small">Knowledge Graph</text>
+  <text x="350" y="185" class="text-tiny">• from_node_id → to_node_id</text>
+  <text x="350" y="200" class="text-tiny">• relationship_type, strength</text>
+
+  <!-- tags table -->
+  <rect x="610" y="120" width="250" height="100" class="table-box" rx="3"/>
+  <text x="735" y="140" text-anchor="middle" class="text-label" fill="#4CAF50">tags</text>
+  <text x="620" y="165" class="text-small">Categorization</text>
+  <text x="620" y="185" class="text-tiny">• node_id, tag</text>
+  <text x="620" y="200" class="text-tiny">• Flexible tagging system</text>
+
+  <!-- robots table -->
+  <rect x="340" y="240" width="250" height="100" class="table-box" rx="3"/>
+  <text x="465" y="260" text-anchor="middle" class="text-label" fill="#4CAF50">robots</text>
+  <text x="350" y="285" class="text-small">Identity Registry</text>
+  <text x="350" y="305" class="text-tiny">• id, name, created_at</text>
+  <text x="350" y="320" class="text-tiny">• last_active, metadata</text>
+
+  <!-- operations_log table (hypertable) -->
+  <rect x="610" y="240" width="250" height="100" class="hypertable" rx="3"/>
+  <text x="735" y="260" text-anchor="middle" class="text-label" fill="#9C27B0">operations_log</text>
+  <text x="620" y="285" class="text-small">Audit Trail (Hypertable)</text>
+  <text x="620" y="305" class="text-tiny">• timestamp, operation</text>
+  <text x="620" y="320" class="text-tiny">• node_id, robot_id, details</text>
+
+  <!-- Indexes Section -->
+  <text x="70" y="375" class="text-label">Indexes &amp; Optimization</text>
+
+  <!-- HNSW Vector Index -->
+  <rect x="70" y="390" width="250" height="120" class="index-box" rx="3"/>
+  <text x="195" y="410" text-anchor="middle" class="text-label" fill="#FF9800">HNSW Vector Index</text>
+  <text x="80" y="435" class="text-small">Semantic Similarity</text>
+  <text x="80" y="455" class="text-tiny">• idx_nodes_embedding</text>
+  <text x="80" y="470" class="text-tiny">• vector_cosine_ops</text>
+  <text x="80" y="485" class="text-tiny">• m=16, ef_construction=64</text>
+  <text x="80" y="500" class="text-tiny">⚡ Fast nearest-neighbor search</text>
+
+  <!-- GIN Full-text Index -->
+  <rect x="340" y="390" width="250" height="120" class="index-box" rx="3"/>
+  <text x="465" y="410" text-anchor="middle" class="text-label" fill="#FF9800">GIN Full-text Index</text>
+  <text x="350" y="435" class="text-small">Keyword Search</text>
+  <text x="350" y="455" class="text-tiny">• idx_nodes_fulltext</text>
+  <text x="350" y="470" class="text-tiny">• to_tsvector('english')</text>
+  <text x="350" y="485" class="text-tiny">• Supports ts_rank scoring</text>
+  <text x="350" y="500" class="text-tiny">⚡ Fast keyword matching</text>
+
+  <!-- PostgreSQL Chunks -->
+  <rect x="610" y="390" width="250" height="120" class="hypertable" rx="3"/>
+  <text x="735" y="410" text-anchor="middle" class="text-label" fill="#9C27B0">PostgreSQL Chunks</text>
+  <text x="620" y="435" class="text-small">Time-series Partitioning</text>
+  <text x="620" y="455" class="text-tiny">• Auto-partitioning by time</text>
+  <text x="620" y="470" class="text-tiny">• Compression policies</text>
+  <text x="620" y="485" class="text-tiny">• Retention policies</text>
+  <text x="620" y="500" class="text-tiny">⚡ Fast time-range queries</text>
+
+  <!-- Features Section -->
+  <text x="70" y="545" class="text-label">Key Features</text>
+
+  <rect x="70" y="560" width="250" height="90" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="80" y="585" class="text-small">✓ Permanent storage</text>
+  <text x="80" y="605" class="text-small">✓ ACID compliant</text>
+  <text x="80" y="625" class="text-small">✓ Never forgets</text>
+  <text x="80" y="645" class="text-small">✓ Unlimited capacity</text>
+
+  <rect x="340" y="560" width="250" height="90" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="1.5" rx="3"/>
+  <text x="350" y="585" class="text-small">✓ Vector similarity search</text>
+  <text x="350" y="605" class="text-small">✓ Full-text search</text>
+  <text x="350" y="625" class="text-small">✓ Hybrid retrieval</text>
+  <text x="350" y="645" class="text-small">✓ RAG-optimized</text>
+
+  <rect x="610" y="560" width="250" height="90" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F2" stroke-width="1.5" rx="3"/>
+  <text x="620" y="585" class="text-small">✓ Multi-robot support</text>
+  <text x="620" y="605" class="text-small">✓ Relationship graphs</text>
+  <text x="620" y="625" class="text-small">✓ Tag-based filtering</text>
+  <text x="620" y="645" class="text-small">✓ Complete audit trail</text>
+</svg>
