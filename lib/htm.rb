@@ -235,7 +235,7 @@ class HTM
   #   memories = htm.recall("preferences", metadata: { source: "user" })
   #   memories = htm.recall("decisions", metadata: { confidence: 0.9, type: "architectural" })
   #
-  def recall(topic, timeframe: nil, limit: 20, strategy: :vector, with_relevance: false, query_tags: [], raw: false, metadata: {})
+  def recall(topic, timeframe: nil, limit: 20, strategy: :fulltext, with_relevance: false, query_tags: [], raw: false, metadata: {})
     # Validate inputs
     validate_timeframe!(timeframe)
     validate_positive_integer!(limit, "limit")
