@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
+# htm/bin/htm_mcp.rb
 
 # MCP Server Example for HTM
 #
@@ -83,7 +84,7 @@ module MCPSession
     end
 
     def set_robot(name)
-      @robot_name = name
+      @robot_name   = name
       @htm_instance = HTM.new(robot_name: name)
       MCP_STDERR_LOG.info "Robot set: #{name} (id=#{@htm_instance.robot_id})"
       @htm_instance
@@ -110,15 +111,15 @@ class SetRobotTool < FastMcp::Tool
   def call(name:)
     MCP_STDERR_LOG.info "SetRobotTool called: name=#{name.inspect}"
 
-    htm = MCPSession.set_robot(name)
+    htm   = MCPSession.set_robot(name)
     robot = HTM::Models::Robot.find(htm.robot_id)
 
     {
-      success: true,
-      robot_id: htm.robot_id,
+      success:    true,
+      robot_id:   htm.robot_id,
       robot_name: htm.robot_name,
       node_count: robot.node_count,
-      message: "Robot '#{name}' is now active for this session"
+      message:    "Robot '#{name}' is now active for this session"
     }.to_json
   end
 end
@@ -133,14 +134,14 @@ class GetRobotTool < FastMcp::Tool
   def call
     MCP_STDERR_LOG.info "GetRobotTool called"
 
-    htm = MCPSession.htm_instance
+    htm   = MCPSession.htm_instance
     robot = HTM::Models::Robot.find(htm.robot_id)
 
     {
-      success: true,
-      robot_id: htm.robot_id,
-      robot_name: htm.robot_name,
-      initialized: MCPSession.robot_initialized?,
+      success:        true,
+      robot_id:       htm.robot_id,
+      robot_name:     htm.robot_name,
+      initialized:    MCPSession.robot_initialized?,
       memory_summary: robot.memory_summary
     }.to_json
   end
@@ -170,21 +171,21 @@ class GetWorkingMemoryTool < FastMcp::Tool
 
       {
         id: rn.node.id,
-        content: rn.node.content,
-        tags: rn.node.tags.map(&:name),
-        remember_count: rn.remember_count,
+        content:            rn.node.content,
+        tags:               rn.node.tags.map(&:name),
+        remember_count:     rn.remember_count,
         last_remembered_at: rn.last_remembered_at&.iso8601,
-        created_at: rn.node.created_at.iso8601
+        created_at:         rn.node.created_at.iso8601
       }
     end
 
     MCP_STDERR_LOG.info "GetWorkingMemoryTool complete: #{working_memory_nodes.length} nodes in working memory"
 
     {
-      success: true,
-      robot_id: htm.robot_id,
-      robot_name: htm.robot_name,
-      count: working_memory_nodes.length,
+      success:        true,
+      robot_id:       htm.robot_id,
+      robot_name:     htm.robot_name,
+      count:          working_memory_nodes.length,
       working_memory: working_memory_nodes
     }.to_json
   rescue StandardError => e
@@ -213,12 +214,13 @@ class RememberTool < FastMcp::Tool
     MCP_STDERR_LOG.info "Memory stored: node_id=#{node_id}, robot=#{htm.robot_name}, tags=#{node.tags.map(&:name)}"
 
     {
-      success: true,
-      node_id: node_id,
-      robot_name: htm.robot_name,
-      content: node.content,
-      tags: node.tags.map(&:name),
-      created_at: node.created_at.iso8601
+      success:        true,
+      node_id:        node_id,
+      robot_id:       htm.robot_id,
+      robot_name:     htm.robot_name,
+      content:        node.content,
+      tags:           node.tags.map(&:name),
+      created_at:     node.created_at.iso8601
     }.to_json
   end
 end
@@ -254,23 +256,23 @@ class RecallTool < FastMcp::Tool
     results = memories.map do |memory|
       node = HTM::Models::Node.includes(:tags).find(memory['id'])
       {
-        id: memory['id'],
-        content: memory['content'],
-        tags: node.tags.map(&:name),
+        id:         memory['id'],
+        content:    memory['content'],
+        tags:       node.tags.map(&:name),
         created_at: memory['created_at'],
-        score: memory['combined_score'] || memory['similarity']
+        score:      memory['combined_score'] || memory['similarity']
       }
     end
 
     MCP_STDERR_LOG.info "Recall complete: found #{results.length} memories"
 
     {
-      success: true,
-      query: query,
-      strategy: strategy,
+      success:    true,
+      query:      query,
+      strategy:   strategy,
       robot_name: htm.robot_name,
-      count: results.length,
-      results: results
+      count:      results.length,
+      results:    results
     }.to_json
   end
 
@@ -316,10 +318,10 @@ class ForgetTool < FastMcp::Tool
     MCP_STDERR_LOG.info "Memory soft-deleted: node_id=#{node_id}"
 
     {
-      success: true,
-      node_id: node_id,
+      success:    true,
+      node_id:    node_id,
       robot_name: htm.robot_name,
-      message: "Memory soft-deleted. Use restore to recover."
+      message:    "Memory soft-deleted. Use restore to recover."
     }.to_json
   rescue ActiveRecord::RecordNotFound
     MCP_STDERR_LOG.warn "ForgetTool failed: node #{node_id} not found"
@@ -347,10 +349,10 @@ class RestoreTool < FastMcp::Tool
     MCP_STDERR_LOG.info "Memory restored: node_id=#{node_id}"
 
     {
-      success: true,
-      node_id: node_id,
+      success:    true,
+      node_id:    node_id,
       robot_name: htm.robot_name,
-      message: "Memory restored successfully"
+      message:    "Memory restored successfully"
     }.to_json
   rescue ActiveRecord::RecordNotFound
     MCP_STDERR_LOG.warn "RestoreTool failed: node #{node_id} not found"
@@ -406,28 +408,28 @@ class StatsTool < FastMcp::Tool
     MCP_STDERR_LOG.info "StatsTool called for robot=#{htm.robot_name}"
 
     # Note: Node uses default_scope to exclude deleted, so .count returns active nodes
-    total_nodes = HTM::Models::Node.count
-    deleted_nodes = HTM::Models::Node.deleted.count
+    total_nodes           = HTM::Models::Node.count
+    deleted_nodes         = HTM::Models::Node.deleted.count
     nodes_with_embeddings = HTM::Models::Node.with_embeddings.count
-    nodes_with_tags = HTM::Models::Node.joins(:tags).distinct.count
-    total_tags = HTM::Models::Tag.count
-    total_robots = HTM::Models::Robot.count
+    nodes_with_tags       = HTM::Models::Node.joins(:tags).distinct.count
+    total_tags            = HTM::Models::Tag.count
+    total_robots          = HTM::Models::Robot.count
 
     MCP_STDERR_LOG.info "StatsTool complete: #{total_nodes} active nodes, #{total_tags} tags"
 
     {
-      success: true,
+      success:       true,
       current_robot: {
-        name: htm.robot_name,
-        id: htm.robot_id,
+        name:           htm.robot_name,
+        id:             htm.robot_id,
         memory_summary: robot.memory_summary
       },
       statistics: {
         nodes: {
-          active: total_nodes,
-          deleted: deleted_nodes,
+          active:          total_nodes,
+          deleted:         deleted_nodes,
           with_embeddings: nodes_with_embeddings,
-          with_tags: nodes_with_tags
+          with_tags:       nodes_with_tags
         },
         tags: {
           total: total_tags
@@ -452,14 +454,14 @@ class MemoryStatsResource < FastMcp::Resource
   def content
     htm = MCPSession.htm_instance
     {
-      total_nodes: HTM::Models::Node.active.count,
-      total_tags: HTM::Models::Tag.count,
-      total_robots: HTM::Models::Robot.count,
-      current_robot: htm.robot_name,
-      robot_id: htm.robot_id,
-      robot_initialized: MCPSession.robot_initialized?,
+      total_nodes:        HTM::Models::Node.active.count,
+      total_tags:         HTM::Models::Tag.count,
+      total_robots:       HTM::Models::Robot.count,
+      current_robot:      htm.robot_name,
+      robot_id:           htm.robot_id,
+      robot_initialized:  MCPSession.robot_initialized?,
       embedding_provider: HTM.configuration.embedding_provider,
-      embedding_model: HTM.configuration.embedding_model
+      embedding_model:    HTM.configuration.embedding_model
     }.to_json
   end
 end
@@ -477,9 +479,9 @@ end
 
 # Resource: Recent Memories
 class RecentMemoriesResource < FastMcp::Resource
-  uri "htm://memories/recent"
+  uri           "htm://memories/recent"
   resource_name "Recent HTM Memories"
-  mime_type "application/json"
+  mime_type     "application/json"
 
   def content
     recent = HTM::Models::Node.active
@@ -488,9 +490,9 @@ class RecentMemoriesResource < FastMcp::Resource
                               .limit(20)
                               .map do |node|
       {
-        id: node.id,
-        content: node.content[0..200],
-        tags: node.tags.map(&:name),
+        id:         node.id,
+        content:    node.content[0..200],
+        tags:       node.tags.map(&:name),
         created_at: node.created_at.iso8601
       }
     end
@@ -501,7 +503,7 @@ end
 
 # Create and configure the MCP server
 server = FastMcp::Server.new(
-  name: 'htm-memory-server',
+  name:    'htm-memory-server',
   version: HTM::VERSION
 )
 

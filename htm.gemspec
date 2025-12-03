@@ -28,11 +28,11 @@ Gem::Specification.new do |spec|
   spec.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").reject do |f|
       (File.expand_path(f) == __FILE__) ||
-        f.start_with?(*%w[bin/ test/ spec/ features/ .git .github appveyor Gemfile])
+        f.start_with?(*%w[test/ spec/ features/ .git .github appveyor Gemfile])
     end
   end
-  spec.bindir = "exe"
-  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
+  spec.bindir = "bin"
+  spec.executables = ["htm_mcp.rb"]
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
@@ -44,7 +44,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "lru_redux"
   spec.add_dependency "ruby-progressbar"
   spec.add_dependency "chronic"
-
+  spec.add_dependency "fast-mcp"
   # Optional runtime dependencies for different job backends
   # - ActiveJob (bundled with Rails)
   # - Sidekiq (add to Gemfile if using :sidekiq backend)
@@ -54,6 +54,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "minitest-reporters"
   spec.add_development_dependency "debug_me"
+  spec.add_development_dependency "ruby_llm-mcp"
   spec.add_development_dependency "yard"
   spec.add_development_dependency "yard-markdown"
 end

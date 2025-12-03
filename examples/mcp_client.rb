@@ -11,7 +11,7 @@
 # 1. Install gems: gem install ruby_llm-mcp
 # 2. Have Ollama running with gpt-oss model: ollama pull gpt-oss
 # 3. Set HTM_DBURL environment variable
-# 4. The mcp_server.rb must be available (this client will launch it)
+# 4. The htm_mcp.rb must be available (this client will launch it)
 #
 # Usage:
 #   ruby examples/mcp_client.rb
@@ -29,7 +29,7 @@ require 'ruby_llm/mcp'
 # Configuration
 OLLAMA_MODEL    = ENV.fetch('OLLAMA_MODEL', 'gpt-oss:latest')
 OLLAMA_URL      = ENV.fetch('OLLAMA_URL', 'http://localhost:11434')
-MCP_SERVER_PATH = File.expand_path('mcp_server.rb', __dir__)
+MCP_SERVER_PATH = File.expand_path('../bin/htm_mcp.rb', __dir__)
 ENV_ROBOT_NAME  = ENV['HTM_ROBOT_NAME']  # nil if not set, allows prompting
 
 class HTMMcpClient

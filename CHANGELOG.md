@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.11] - 2025-12-02
+
+### Added
+- **MCP Server and Client** - Model Context Protocol integration for AI assistants
+  - `bin/htm_mcp.rb` - FastMCP-based server exposing HTM tools:
+    - `SetRobotTool` - Set robot identity for the session (per-client isolation)
+    - `GetRobotTool` - Get current robot information
+    - `GetWorkingMemoryTool` - Retrieve working memory for session restore
+    - `RememberTool` - Store information with tags and metadata
+    - `RecallTool` - Search memories with vector/fulltext/hybrid strategies
+    - `ForgetTool` / `RestoreTool` - Soft delete and restore memories
+    - `ListTagsTool` - List tags with optional prefix filtering
+    - `StatsTool` - Memory usage statistics
+  - Resources: `htm://statistics`, `htm://tags/hierarchy`, `htm://memories/recent`
+  - STDERR logging to avoid corrupting MCP JSON-RPC protocol
+  - Session-based robot identity via `MCPSession` module
+  - `examples/mcp_client.rb` - Interactive chat client using ruby_llm-mcp:
+    - Prompts for robot name on startup (or uses `HTM_ROBOT_NAME` env var)
+    - Session restore: offers to restore working memory from previous session
+    - Interactive chat loop with Ollama LLM (gpt-oss model)
+    - Tool call logging for visibility
+    - Slash commands: `/tools`, `/resources`, `/stats`, `/tags`, `/clear`, `/help`, `/exit`
+- **Session restore feature** - MCP client can restore previous session context
+  - `GetWorkingMemoryTool` returns all nodes in working memory for a robot
+  - Client prompts user to restore previous session on startup
+  - Working memory injected into chat context for continuity
+
+### Fixed
+- **GetWorkingMemoryTool** now uses `joins(:node)` to exclude soft-deleted nodes
+- **StatsTool** fixed scope error (`Node.active` → `Node.count` with default_scope)
+- **MCP tool response parsing** - Extract `.text` from `RubyLLM::MCP::Content` objects
+
 ## [0.0.10] - 2025-12-02
 
 ### Added
@@ -436,7 +468,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.10...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.12...HEAD
+[0.0.12]: https://github.com/madbomber/htm/compare/v0.0.10...v0.0.12
 [0.0.10]: https://github.com/madbomber/htm/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/madbomber/htm/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/madbomber/htm/compare/v0.0.7...v0.0.8
