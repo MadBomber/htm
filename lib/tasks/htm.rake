@@ -277,6 +277,120 @@ namespace :htm do
         puts "  Errors: #{errors}"
         puts "  Nodes with embeddings: #{final_with_embeddings}"
       end
+
+      desc "Rebuild propositions for all non-proposition nodes. Extracts atomic facts and creates new nodes."
+      task :propositions do
+        require 'htm'
+        require 'ruby-progressbar'
+
+        # Ensure database connection
+        HTM::ActiveRecordConfig.establish_connection!
+
+        # Find all non-proposition nodes (nodes that haven't been extracted from)
+        source_nodes = HTM::Models::Node.non_propositions
+        source_count = source_nodes.count
+
+        # Count existing proposition nodes
+        existing_propositions = HTM::Models::Node.propositions.count
+
+        puts "\nHTM Propositions Rebuild"
+        puts "=" * 50
+        puts "Current state:"
+        puts "  Source nodes (non-propositions): #{source_count}"
+        puts "  Existing proposition nodes: #{existing_propositions}"
+        puts "\nThis will extract propositions from ALL #{source_count} source nodes."
+        puts "Existing proposition nodes will be deleted and regenerated."
+        puts "This operation may take a long time depending on your LLM provider."
+        print "\nType 'yes' to confirm: "
+
+        confirmation = $stdin.gets&.strip
+        unless confirmation == 'yes'
+          puts "Aborted."
+          next
+        end
+
+        # Delete existing proposition nodes
+        if existing_propositions > 0
+          puts "\nDeleting #{existing_propositions} existing proposition nodes..."
+          deleted = HTM::Models::Node.propositions.delete_all
+          puts "  Deleted #{deleted} proposition nodes"
+        end
+
+        puts "\nExtracting propositions from #{source_count} nodes..."
+        puts "(This may take a while depending on your LLM provider)\n"
+
+        # Get a robot ID for linking proposition nodes
+        # Use the first robot or create a system robot
+        robot = HTM::Models::Robot.first || HTM::Models::Robot.create!(name: 'proposition_rebuilder')
+
+        # Create progress bar with ETA
+        progressbar = ProgressBar.create(
+          total: source_count,
+          format: '%t: |%B| %c/%C (%p%%) %e',
+          title: 'Extracting',
+          output: $stdout,
+          smoothing: 0.5
+        )
+
+        # Track stats
+        errors = 0
+        nodes_processed = 0
+        propositions_created = 0
+
+        source_nodes.find_each do |node|
+          begin
+            # Extract propositions
+            propositions = HTM::PropositionService.extract(node.content)
+
+            if propositions.any?
+              propositions.each do |proposition_text|
+                token_count = HTM.count_tokens(proposition_text)
+
+                # Create proposition node
+                prop_node = HTM::Models::Node.create!(
+                  content: proposition_text,
+                  token_count: token_count,
+                  metadata: { is_proposition: true, source_node_id: node.id }
+                )
+
+                # Link to robot
+                HTM::Models::RobotNode.find_or_create_by!(
+                  robot_id: robot.id,
+                  node_id: prop_node.id
+                )
+
+                # Generate embedding for proposition node
+                begin
+                  result = HTM::EmbeddingService.generate(proposition_text)
+                  prop_node.update!(embedding: result[:storage_embedding])
+                rescue StandardError => e
+                  progressbar.log "  Warning: Embedding failed for proposition: #{e.message}"
+                end
+
+                propositions_created += 1
+              end
+            end
+
+            nodes_processed += 1
+          rescue StandardError => e
+            errors += 1
+            progressbar.log "  Error on node #{node.id}: #{e.message}"
+          end
+
+          progressbar.increment
+        end
+
+        progressbar.finish
+
+        # Final stats
+        final_proposition_count = HTM::Models::Node.propositions.count
+
+        puts "\nRebuild complete!"
+        puts "  Source nodes processed: #{nodes_processed}"
+        puts "  Propositions created: #{propositions_created}"
+        puts "  Errors: #{errors}"
+        puts "  Total proposition nodes: #{final_proposition_count}"
+      end
     end
 
     namespace :schema do
@@ -290,6 +404,73 @@ namespace :htm do
       task :load do
         require 'htm'
         HTM::Database.load_schema
+      end
+    end
+
+    namespace :tags do
+      desc "Soft delete orphaned tags and stale node_tags entries"
+      task :cleanup do
+        require 'htm'
+
+        # Ensure database connection
+        HTM::ActiveRecordConfig.establish_connection!
+
+        puts "\nHTM Tag Cleanup"
+        puts "=" * 50
+
+        # Step 1: Find active node_tags pointing to soft-deleted or missing nodes
+        stale_node_tags = HTM::Models::NodeTag
+          .joins("LEFT JOIN nodes ON nodes.id = node_tags.node_id")
+          .where("nodes.id IS NULL OR nodes.deleted_at IS NOT NULL")
+
+        stale_count = stale_node_tags.count
+
+        # Step 2: Find orphaned tags using the Tag.orphaned scope
+        orphaned_tags = HTM::Models::Tag.orphaned
+        orphan_count = orphaned_tags.count
+
+        if stale_count == 0 && orphan_count == 0
+          puts "No cleanup needed."
+          puts "  Stale node_tags entries: 0"
+          puts "  Orphaned tags: 0"
+          next
+        end
+
+        puts "Found:"
+        puts "  Stale node_tags entries: #{stale_count} (pointing to deleted/missing nodes)"
+        puts "  Orphaned tags: #{orphan_count} (no active nodes)"
+
+        if orphan_count > 0
+          puts "\nOrphaned tags:"
+          orphaned_tags.limit(20).pluck(:name).each do |name|
+            puts "  - #{name}"
+          end
+          puts "  ... and #{orphan_count - 20} more" if orphan_count > 20
+        end
+
+        print "\nSoft delete these entries? (yes/no): "
+        confirmation = $stdin.gets&.strip
+
+        unless confirmation == 'yes'
+          puts "Cancelled."
+          next
+        end
+
+        now = Time.current
+
+        # Soft delete stale node_tags first
+        if stale_count > 0
+          soft_deleted_node_tags = stale_node_tags.update_all(deleted_at: now)
+          puts "\nSoft deleted #{soft_deleted_node_tags} stale node_tags entries."
+        end
+
+        # Then soft delete orphaned tags
+        if orphan_count > 0
+          soft_deleted_tags = orphaned_tags.update_all(deleted_at: now)
+          puts "Soft deleted #{soft_deleted_tags} orphaned tags."
+        end
+
+        puts "\nCleanup complete (soft delete)."
       end
     end
 

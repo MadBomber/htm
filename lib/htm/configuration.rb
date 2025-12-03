@@ -57,10 +57,11 @@ class HTM
   #   end
   #
   class Configuration
-    attr_accessor :embedding_generator, :tag_extractor, :token_counter
+    attr_accessor :embedding_generator, :tag_extractor, :proposition_extractor, :token_counter
     attr_accessor :embedding_model, :embedding_provider, :embedding_dimensions
     attr_accessor :tag_model, :tag_provider
-    attr_accessor :embedding_timeout, :tag_timeout, :connection_timeout
+    attr_accessor :proposition_model, :proposition_provider, :extract_propositions
+    attr_accessor :embedding_timeout, :tag_timeout, :proposition_timeout, :connection_timeout
     attr_accessor :logger
     attr_accessor :job_backend
     attr_accessor :week_start
@@ -104,6 +105,10 @@ class HTM
       @tag_provider = :ollama
       @tag_model = 'gemma3:latest'  # Include tag for Ollama models
 
+      @proposition_provider = :ollama
+      @proposition_model = 'gemma3:latest'  # Include tag for Ollama models
+      @extract_propositions = ENV['HTM_EXTRACT_PROPOSITIONS']&.downcase == 'true'
+
       # Provider credentials from environment variables
       @openai_api_key = ENV['OPENAI_API_KEY']
       @openai_organization = ENV['OPENAI_ORGANIZATION']
@@ -124,6 +129,7 @@ class HTM
       # Timeout settings (in seconds) - apply to all LLM providers
       @embedding_timeout = 120      # 2 minutes for embedding generation
       @tag_timeout = 180            # 3 minutes for tag generation (LLM inference)
+      @proposition_timeout = 180    # 3 minutes for proposition extraction (LLM inference)
       @connection_timeout = 30      # 30 seconds for initial connection
 
       # Default logger (STDOUT with INFO level)
@@ -148,6 +154,7 @@ class HTM
     def reset_to_defaults
       @embedding_generator = default_embedding_generator
       @tag_extractor = default_tag_extractor
+      @proposition_extractor = default_proposition_extractor
       @token_counter = default_token_counter
     end
 
@@ -159,6 +166,10 @@ class HTM
 
       unless @tag_extractor.respond_to?(:call)
         raise HTM::ValidationError, "tag_extractor must be callable (proc, lambda, or object responding to :call)"
+      end
+
+      unless @proposition_extractor.respond_to?(:call)
+        raise HTM::ValidationError, "proposition_extractor must be callable (proc, lambda, or object responding to :call)"
       end
 
       unless @token_counter.respond_to?(:call)
@@ -184,6 +195,10 @@ class HTM
 
       if @tag_provider && !SUPPORTED_PROVIDERS.include?(@tag_provider)
         raise HTM::ValidationError, "tag_provider must be one of: #{SUPPORTED_PROVIDERS.join(', ')} (got #{@tag_provider.inspect})"
+      end
+
+      if @proposition_provider && !SUPPORTED_PROVIDERS.include?(@proposition_provider)
+        raise HTM::ValidationError, "proposition_provider must be one of: #{SUPPORTED_PROVIDERS.join(', ')} (got #{@proposition_provider.inspect})"
       end
     end
 
@@ -474,6 +489,115 @@ class HTM
       end
     end
 
+    # Default proposition extractor using RubyLLM chat
+    #
+    # @return [Proc] Callable that takes text and returns array of propositions
+    #
+    def default_proposition_extractor
+      lambda do |text|
+        require 'ruby_llm' unless defined?(RubyLLM)
+
+        # Configure RubyLLM for the proposition provider
+        configure_ruby_llm(@proposition_provider)
+
+        # Refresh models for Ollama to discover local models (thread-safe)
+        if @proposition_provider == :ollama
+          @ollama_refresh_mutex.synchronize do
+            unless @ollama_models_refreshed
+              RubyLLM.models.refresh!
+              @ollama_models_refreshed = true
+            end
+          end
+        end
+
+        # Normalize Ollama model name (ensure it has a tag like :latest)
+        model = @proposition_provider == :ollama ? normalize_ollama_model(@proposition_model) : @proposition_model
+
+        # Build prompt
+        prompt = <<~PROMPT
+          Extract all ATOMIC factual propositions from the following text.
+
+          An atomic proposition expresses exactly ONE relationship or fact. If a statement combines multiple pieces of information (what, where, when, who, why), split it into separate propositions.
+
+          CRITICAL: Each proposition must contain only ONE of these:
+          - ONE subject-verb relationship
+          - ONE attribute or property
+          - ONE location, time, or qualifier
+
+          Example input: "Todd Warren plans to pursue a PhD in Music at the University of Texas."
+
+          CORRECT atomic output:
+          - Todd Warren plans to pursue a PhD.
+          - Todd Warren plans to study Music.
+          - Todd Warren plans to attend the University of Texas.
+          - The University of Texas offers a PhD program in Music.
+
+          WRONG (not atomic - combines multiple facts):
+          - Todd Warren plans to pursue a PhD in Music at the University of Texas.
+
+          Example input: "In 1969, Neil Armstrong became the first person to walk on the Moon during the Apollo 11 mission."
+
+          CORRECT atomic output:
+          - Neil Armstrong was an astronaut.
+          - Neil Armstrong walked on the Moon.
+          - Neil Armstrong walked on the Moon in 1969.
+          - Neil Armstrong was the first person to walk on the Moon.
+          - The Apollo 11 mission occurred in 1969.
+          - Neil Armstrong participated in the Apollo 11 mission.
+
+          Rules:
+          1. Split compound statements into separate atomic facts
+          2. Each proposition = exactly one fact
+          3. Use full names, never pronouns
+          4. Make each proposition understandable in isolation
+          5. Prefer more propositions over fewer
+
+          TEXT: #{text}
+
+          Return ONLY atomic propositions, one per line. Use a dash (-) prefix for each.
+        PROMPT
+
+        system_prompt = <<~SYSTEM.strip
+          You are an atomic fact extraction system. Your goal is maximum decomposition.
+
+          IMPORTANT: Break every statement into its smallest possible factual units.
+
+          A statement like "John bought a red car in Paris" contains FOUR facts:
+          - John bought a car.
+          - The car John bought is red.
+          - John made a purchase in Paris.
+          - John bought a car in Paris.
+
+          Always ask: "Can this be split further?" If yes, split it.
+
+          Rules:
+          1. ONE fact per proposition (subject-predicate or subject-attribute)
+          2. Never combine location + action + time in one proposition
+          3. Never combine multiple attributes in one proposition
+          4. Use full names, never pronouns
+          5. Each proposition must stand alone without context
+
+          Output ONLY propositions, one per line, prefixed with a dash (-).
+        SYSTEM
+
+        # Use RubyLLM chat for proposition extraction
+        chat = RubyLLM.chat(model: model)
+        chat.with_instructions(system_prompt)
+        response = chat.ask(prompt)
+
+        # Extract text from response
+        response_text = extract_text_from_response(response)
+
+        # Parse propositions (remove dash prefix, filter empty lines)
+        response_text.to_s
+          .split("\n")
+          .map(&:strip)
+          .map { |line| line.sub(/^[-*•]\s*/, '') }
+          .map(&:strip)
+          .reject(&:empty?)
+      end
+    end
+
     # Extract text content from RubyLLM chat response
     #
     # @param response [Object] RubyLLM chat response
@@ -551,6 +675,15 @@ class HTM
     #
     def extract_tags(text, existing_ontology: [])
       HTM::TagService.extract(text, existing_ontology: existing_ontology)
+    end
+
+    # Extract propositions using PropositionService
+    #
+    # @param text [String] Text to analyze
+    # @return [Array<String>] Extracted atomic propositions
+    #
+    def extract_propositions(text)
+      HTM::PropositionService.extract(text)
     end
 
     # Count tokens using configured counter

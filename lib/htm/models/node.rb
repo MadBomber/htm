@@ -55,6 +55,10 @@ class HTM
       scope :with_embeddings, -> { where.not(embedding: nil) }
       scope :from_source, ->(source_id) { where(source_id: source_id).order(:chunk_position) }
 
+      # Proposition scopes
+      scope :propositions, -> { where("metadata->>'is_proposition' = 'true'") }
+      scope :non_propositions, -> { where("metadata IS NULL OR metadata->>'is_proposition' IS NULL OR metadata->>'is_proposition' != 'true'") }
+
       # Soft delete scopes
       scope :deleted, -> { unscoped.where.not(deleted_at: nil) }
       scope :with_deleted, -> { unscoped }
@@ -170,19 +174,40 @@ class HTM
       end
 
       # Soft delete - mark node as deleted without removing from database
+      # Also cascades soft delete to associated robot_nodes and node_tags
       #
       # @return [Boolean] true if soft deleted successfully
       #
       def soft_delete!
-        update!(deleted_at: Time.current)
+        transaction do
+          now = Time.current
+          update!(deleted_at: now)
+
+          # Cascade soft delete to associated robot_nodes
+          robot_nodes.update_all(deleted_at: now)
+
+          # Cascade soft delete to associated node_tags
+          node_tags.update_all(deleted_at: now)
+        end
+        true
       end
 
       # Restore a soft-deleted node
+      # Also cascades restoration to associated robot_nodes and node_tags
       #
       # @return [Boolean] true if restored successfully
       #
       def restore!
-        update!(deleted_at: nil)
+        transaction do
+          update!(deleted_at: nil)
+
+          # Cascade restoration to associated robot_nodes
+          HTM::Models::RobotNode.unscoped.where(node_id: id).update_all(deleted_at: nil)
+
+          # Cascade restoration to associated node_tags
+          HTM::Models::NodeTag.unscoped.where(node_id: id).update_all(deleted_at: nil)
+        end
+        true
       end
 
       # Check if node is soft-deleted
@@ -191,6 +216,14 @@ class HTM
       #
       def deleted?
         deleted_at.present?
+      end
+
+      # Check if node is a proposition (extracted atomic fact)
+      #
+      # @return [Boolean] true if metadata['is_proposition'] is true
+      #
+      def proposition?
+        metadata&.dig('is_proposition') == true
       end
 
       private

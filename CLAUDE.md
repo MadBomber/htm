@@ -74,6 +74,9 @@ rake htm:db:stats
 # Rebuild all embeddings (clears and regenerates via LLM)
 rake htm:db:rebuild:embeddings
 
+# Rebuild propositions (extracts atomic facts from all non-proposition nodes)
+rake htm:db:rebuild:propositions
+
 # Enable PostgreSQL extensions (if needed)
 ruby enable_extensions.rb
 ```
@@ -93,6 +96,8 @@ ruby enable_extensions.rb
 **HTM::EmbeddingService** (`lib/htm/embedding_service.rb`): Vector embedding validation and processing service. Wraps the configured embedding generator (via RubyLLM), validates responses, handles dimension padding/truncation. Called by `GenerateEmbeddingJob` background job. See ADR-016 for async workflow.
 
 **HTM::TagService** (`lib/htm/tag_service.rb`): Hierarchical tag validation and processing service. Wraps the configured tag extractor (via RubyLLM chat), validates tag format, enforces depth limits. Called by `GenerateTagsJob` background job. Parallel architecture to EmbeddingService. See ADR-016.
+
+**HTM::PropositionService** (`lib/htm/proposition_service.rb`): Atomic proposition extraction service. Breaks complex text into simple, self-contained factual statements. Each proposition expresses a single fact, is understandable without context, uses full names (not pronouns), and includes relevant dates/qualifiers. Called by `GeneratePropositionsJob` when proposition extraction is enabled. Propositions become independent nodes with their own embeddings and tags.
 
 **HTM::Configuration** (`lib/htm/configuration.rb`): Multi-provider LLM configuration via RubyLLM. Supports OpenAI, Anthropic, Gemini, Azure, Ollama (default), HuggingFace, OpenRouter, Bedrock, and DeepSeek. Manages API keys, model selection, and timeouts.
 
@@ -172,6 +177,9 @@ The schema uses PostgreSQL 17 with pgvector and pg_trgm extensions. ActiveRecord
 - `HTM_DBPASS` - Database password
 - `HTM_DBPORT` - Database port
 - `HTM_DBHOST` - Database host
+
+### Feature Flags
+- `HTM_EXTRACT_PROPOSITIONS` - Enable automatic proposition extraction (default: false). When set to `true`, new nodes are decomposed into atomic factual propositions, each stored as an independent node with its own embedding and tags.
 
 ### LLM Providers (via RubyLLM)
 - `OPENAI_API_KEY` - OpenAI API key
@@ -414,6 +422,68 @@ rake 'htm:tags:export[database]'      # Export filtered tags to all formats
 rake htm:tags:rebuild                 # Rebuild all tags (clears and regenerates via LLM)
 ```
 
+### Working with Propositions
+
+Proposition extraction breaks complex text into atomic, self-contained factual statements. This is useful for RAG systems where granular facts improve retrieval accuracy.
+
+**Enable proposition extraction**:
+```ruby
+# Via environment variable
+ENV['HTM_EXTRACT_PROPOSITIONS'] = 'true'
+
+# Via configuration
+HTM.configure do |config|
+  config.extract_propositions = true
+  config.proposition_provider = :ollama  # or :openai, :anthropic, etc.
+  config.proposition_model = 'gemma3:latest'
+end
+```
+
+**How it works**:
+1. When `extract_propositions` is enabled, `remember()` enqueues `GeneratePropositionsJob`
+2. The job extracts atomic propositions from the node content
+3. Each proposition becomes an independent node with `metadata: { is_proposition: true }`
+4. Proposition nodes get their own embeddings and tags (via normal background jobs)
+5. Proposition nodes do NOT trigger further proposition extraction (prevents recursion)
+
+**Proposition criteria**:
+- Expresses a single fact or claim
+- Is understandable without additional context
+- Uses full names, not pronouns
+- Includes relevant dates, times, and qualifiers
+- Contains one subject-predicate relationship
+
+**Example**:
+```ruby
+# Input text
+htm.remember("In 1969, Neil Armstrong became the first person to walk on the Moon during Apollo 11.")
+
+# Creates proposition nodes (if enabled):
+# - "Neil Armstrong was an astronaut."
+# - "Neil Armstrong walked on the Moon in 1969."
+# - "Neil Armstrong was the first person to walk on the Moon."
+# - "Neil Armstrong walked on the Moon during the Apollo 11 mission."
+# - "The Apollo 11 mission occurred in 1969."
+```
+
+**Direct extraction** (without storing):
+```ruby
+propositions = HTM.extract_propositions("Complex text here...")
+# => ["Proposition 1.", "Proposition 2.", ...]
+
+# Manual storage
+propositions.each { |p| htm.remember(p) }
+```
+
+**Query proposition nodes**:
+```ruby
+# Find all proposition nodes
+HTM::Models::Node.where("metadata->>'is_proposition' = ?", 'true')
+
+# Find propositions from a specific source
+HTM::Models::Node.where("metadata->>'source_node_id' = ?", original_node_id.to_s)
+```
+
 ### Soft Delete and Memory Recovery
 
 HTM uses soft delete by default when forgetting memories, allowing recovery of accidentally deleted nodes.
@@ -585,11 +655,12 @@ The architecture review team (defined in `.architecture/members.yml`) includes:
 - The gem is under active development; see `htm_teamwork.md` for roadmap
 - Database connection requires `HTM_DBURL` environment variable or config/database.yml
 - **Async Processing** (ADR-016): Nodes saved immediately (~15ms), embeddings and tags added via background jobs
-- **Background Jobs**: Uses `async-job` gem with `GenerateEmbeddingJob` and `GenerateTagsJob`
+- **Background Jobs**: Uses `async-job` gem with `GenerateEmbeddingJob`, `GenerateTagsJob`, and `GeneratePropositionsJob`
 - **Multi-provider LLM support**: OpenAI, Anthropic, Gemini, Azure, Ollama (default), HuggingFace, OpenRouter, Bedrock, DeepSeek via RubyLLM
 - Database uses PostgreSQL 17 with pgvector and pg_trgm extensions
 - ActiveRecord models provide ORM layer: Robot, Node, Tag, NodeTag (ADR-013)
 - **TagService**: LLM-based hierarchical tag extraction (parallel architecture to EmbeddingService)
+- **PropositionService**: LLM-based atomic fact extraction; disabled by default, enable with `HTM_EXTRACT_PROPOSITIONS=true` or `config.extract_propositions = true`
 - All robots share global memory (hive mind architecture)
 - **Soft Delete**: `forget()` performs soft delete by default (recoverable via `restore()`); permanent delete requires `soft: false, confirm: :confirmed`
 - Working memory eviction moves nodes to long-term storage, never deletes them

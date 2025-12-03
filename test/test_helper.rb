@@ -123,6 +123,12 @@ def configure_htm_with_mocks(dimensions: 768)
     # Mock tag extractor (returns empty tags to speed up tests)
     config.tag_extractor = ->(text, ontology) { [] }
 
+    # Mock proposition extractor (returns empty propositions to speed up tests)
+    config.proposition_extractor = ->(text) { [] }
+
+    # Disable proposition extraction by default in tests
+    config.extract_propositions = false
+
     # Mock token counter
     config.token_counter = ->(text) {
       begin

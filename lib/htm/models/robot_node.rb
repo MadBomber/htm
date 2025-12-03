@@ -30,11 +30,42 @@ class HTM
       validates :robot_id, uniqueness: { scope: :node_id, message: 'already linked to this node' }
 
       # Scopes
+      # Soft delete - by default, only show non-deleted entries
+      default_scope { where(deleted_at: nil) }
+
       scope :recent, -> { order(last_remembered_at: :desc) }
       scope :by_robot, ->(robot_id) { where(robot_id: robot_id) }
       scope :by_node, ->(node_id) { where(node_id: node_id) }
       scope :frequently_remembered, -> { where('remember_count > 1').order(remember_count: :desc) }
       scope :in_working_memory, -> { where(working_memory: true) }
+
+      # Soft delete scopes
+      scope :deleted, -> { unscoped.where.not(deleted_at: nil) }
+      scope :with_deleted, -> { unscoped }
+
+      # Soft delete - mark as deleted without removing from database
+      #
+      # @return [Boolean] true if soft deleted successfully
+      #
+      def soft_delete!
+        update!(deleted_at: Time.current)
+      end
+
+      # Restore a soft-deleted entry
+      #
+      # @return [Boolean] true if restored successfully
+      #
+      def restore!
+        update!(deleted_at: nil)
+      end
+
+      # Check if entry is soft-deleted
+      #
+      # @return [Boolean] true if deleted_at is set
+      #
+      def deleted?
+        deleted_at.present?
+      end
 
       # Record that a robot remembered this content again
       #

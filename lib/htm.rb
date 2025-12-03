@@ -10,11 +10,13 @@ require_relative "htm/long_term_memory"
 require_relative "htm/working_memory"
 require_relative "htm/embedding_service"
 require_relative "htm/tag_service"
+require_relative "htm/proposition_service"
 require_relative "htm/timeframe_extractor"
 require_relative "htm/timeframe"
 require_relative "htm/job_adapter"
 require_relative "htm/jobs/generate_embedding_job"
 require_relative "htm/jobs/generate_tags_job"
+require_relative "htm/jobs/generate_propositions_job"
 require_relative "htm/loaders/paragraph_chunker"
 require_relative "htm/loaders/markdown_loader"
 require_relative "htm/observability"
@@ -163,6 +165,11 @@ class HTM
       # Only for NEW nodes - existing nodes already have embeddings/tags
       enqueue_embedding_job(node_id)
       enqueue_tags_job(node_id, manual_tags: tags)
+
+      # Enqueue proposition extraction if enabled and not already a proposition
+      if HTM.configuration.extract_propositions && !metadata[:is_proposition]
+        enqueue_propositions_job(node_id)
+      end
     else
       HTM.logger.info "Node #{node_id} already exists, linked to robot #{@robot_name} (remember_count: #{result[:robot_node].remember_count})"
 
@@ -348,6 +355,51 @@ class HTM
 
     update_robot_activity
     true
+  end
+
+  # Forget all nodes whose content includes the given string
+  #
+  # Performs a soft delete on all matching nodes. The nodes remain in the
+  # database but are excluded from queries. Use case-insensitive LIKE matching.
+  #
+  # @param content_substring [String] Substring to search for in node content
+  # @param soft [Boolean] If true (default), soft delete; if false, permanent delete
+  # @param confirm [Symbol] Must be :confirmed to proceed with permanent deletion
+  # @return [Array<Integer>] Array of node IDs that were deleted
+  # @raise [ArgumentError] if content_substring is blank
+  # @raise [ArgumentError] if permanent deletion requested without confirmation
+  #
+  # @example Soft delete all nodes containing "deprecated"
+  #   htm.forget_content("deprecated")
+  #   # => [42, 56, 78]  # IDs of deleted nodes
+  #
+  # @example Permanent delete all nodes containing "test data"
+  #   htm.forget_content("test data", soft: false, confirm: :confirmed)
+  #
+  def forget_content(content_substring, soft: true, confirm: false)
+    raise ArgumentError, "Content substring cannot be blank" if content_substring.to_s.strip.empty?
+
+    # Permanent delete requires confirmation
+    if !soft && confirm != :confirmed
+      raise ArgumentError, "Permanent deletion requires confirm: :confirmed"
+    end
+
+    # Find all nodes containing the substring (case-insensitive)
+    matching_nodes = HTM::Models::Node.where("content ILIKE ?", "%#{content_substring}%")
+    node_ids = matching_nodes.pluck(:id)
+
+    if node_ids.empty?
+      HTM.logger.info "No nodes found containing: #{content_substring}"
+      return []
+    end
+
+    # Delete each matching node
+    node_ids.each do |node_id|
+      forget(node_id, soft: soft, confirm: confirm)
+    end
+
+    HTM.logger.info "Forgot #{node_ids.length} nodes containing: #{content_substring}"
+    node_ids
   end
 
   # Restore a soft-deleted memory node
@@ -548,6 +600,14 @@ class HTM
     HTM::JobAdapter.enqueue(HTM::Jobs::GenerateTagsJob, node_id: node_id)
   rescue StandardError => e
     HTM.logger.error "Failed to enqueue tags job for node #{node_id}: #{e.message}"
+  end
+
+  def enqueue_propositions_job(node_id)
+    # Enqueue proposition extraction using configured job backend
+    # Job will use HTM.extract_propositions which delegates to configured proposition_extractor
+    HTM::JobAdapter.enqueue(HTM::Jobs::GeneratePropositionsJob, node_id: node_id, robot_id: @robot_id)
+  rescue StandardError => e
+    HTM.logger.error "Failed to enqueue propositions job for node #{node_id}: #{e.message}"
   end
 
   def add_to_working_memory(node)

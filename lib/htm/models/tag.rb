@@ -23,10 +23,30 @@ class HTM
       before_create :set_created_at
 
       # Scopes
+      # Soft delete - by default, only show non-deleted tags
+      default_scope { where(deleted_at: nil) }
+
       scope :by_name, ->(name) { where(name: name) }
       scope :with_prefix, ->(prefix) { where("name LIKE ?", "#{prefix}%") }
       scope :hierarchical, -> { where("name LIKE '%:%'") }
       scope :root_level, -> { where("name NOT LIKE '%:%'") }
+
+      # Soft delete scopes
+      scope :deleted, -> { unscoped.where.not(deleted_at: nil) }
+      scope :with_deleted, -> { unscoped }
+
+      # Orphaned tags - tags with no active (non-deleted) node associations
+      scope :orphaned, -> {
+        where(
+          "NOT EXISTS (
+            SELECT 1 FROM node_tags
+            JOIN nodes ON nodes.id = node_tags.node_id
+            WHERE node_tags.tag_id = tags.id
+            AND node_tags.deleted_at IS NULL
+            AND nodes.deleted_at IS NULL
+          )"
+        )
+      }
 
       # Class methods
 
@@ -366,6 +386,30 @@ class HTM
       #
       def usage_count
         node_tags.count
+      end
+
+      # Soft delete - mark tag as deleted without removing from database
+      #
+      # @return [Boolean] true if soft deleted successfully
+      #
+      def soft_delete!
+        update!(deleted_at: Time.current)
+      end
+
+      # Restore a soft-deleted tag
+      #
+      # @return [Boolean] true if restored successfully
+      #
+      def restore!
+        update!(deleted_at: nil)
+      end
+
+      # Check if tag is soft-deleted
+      #
+      # @return [Boolean] true if deleted_at is set
+      #
+      def deleted?
+        deleted_at.present?
       end
 
       private
