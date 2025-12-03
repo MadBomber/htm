@@ -347,7 +347,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2025-10-25
 
 ### Added
-- Initial release of HTM (Hierarchical Temporary Memory)
+- Initial release of HTM (Hierarchical Temporal Memory)
 - Two-tier memory system:
   - Working memory: Token-limited, in-memory active context
   - Long-term memory: Durable PostgreSQL/TimescaleDB storage

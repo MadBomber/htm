@@ -2,7 +2,7 @@
 **Inherits:** Object
     
 
-HTM (Hierarchical Temporary Memory) error classes
+HTM (Hierarchical Temporal Memory) error classes
 
 All HTM errors inherit from HTM::Error, allowing you to catch all HTM-related
 errors with a single rescue clause.
@@ -75,6 +75,4 @@ Reset configuration to defaults
 ## configuration[RW] {: #attribute-c-configuration }
 Get current configuration
 
-**`@return`** [HTM::Configuration] 
-
-
+**`@return`** [HTM::Configuration]

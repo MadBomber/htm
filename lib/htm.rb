@@ -28,7 +28,7 @@ require "uri"
 # Load Rails integration if Rails is defined
 require_relative "htm/railtie" if defined?(Rails::Railtie)
 
-# HTM (Hierarchical Temporary Memory) - Intelligent memory management for LLM robots
+# HTM (Hierarchical Temporal Memory) - Intelligent memory management for LLM robots
 #
 # HTM implements a two-tier memory system:
 # - Working Memory: Token-limited, active context for immediate LLM use

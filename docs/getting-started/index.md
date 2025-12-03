@@ -1,6 +1,6 @@
 # Getting Started
 
-Welcome to HTM (Hierarchical Temporary Memory)! This section will help you get up and running quickly.
+Welcome to HTM (Hierarchical Temporal Memory)! This section will help you get up and running quickly.
 
 ## Overview
 

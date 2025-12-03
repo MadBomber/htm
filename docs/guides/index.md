@@ -1,6 +1,6 @@
 # HTM User Guides
 
-Welcome to the HTM (Hierarchical Temporary Memory) user guide collection. These guides will help you understand and effectively use HTM for building intelligent LLM-based applications with persistent memory.
+Welcome to the HTM (Hierarchical Temporal Memory) user guide collection. These guides will help you understand and effectively use HTM for building intelligent LLM-based applications with persistent memory.
 
 ## What is HTM?
 

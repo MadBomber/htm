@@ -111,7 +111,7 @@ This means:
 $ ruby htm_cli.rb
 
 ============================================================
-HTM CLI - Hierarchical Temporary Memory Assistant
+HTM CLI - Hierarchical Temporal Memory Assistant
 ============================================================
 
 Job Backend: inline (synchronous execution)

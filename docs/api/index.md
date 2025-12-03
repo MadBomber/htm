@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API documentation for HTM (Hierarchical Temporary Memory).
+Complete API documentation for HTM (Hierarchical Temporal Memory).
 
 ## Overview
 

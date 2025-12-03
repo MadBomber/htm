@@ -8,11 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["Dewayne VanHoozer"]
   spec.email = ["dvanhoozer@gmail.com"]
 
-  spec.summary = "Hierarchical Temporary Memory for LLM robots"
+  spec.summary = "Hierarchical Temporal Memory for LLM robots"
   spec.description = <<~DESC
-    HTM (Hierarchical Temporary Memory) provides intelligent memory management for
+    HTM (Hierarchical Temporal Memory) provides intelligent memory/context management for
     LLM-based applications. It implements a two-tier memory system with
-    durable long-term storage (PostgreSQL/TimescaleDB) and token-limited working
+    durable long-term storage (PostgreSQL) and token-limited working
     memory, enabling applications to recall context from past conversations using RAG
     (Retrieval-Augmented Generation) techniques.
   DESC

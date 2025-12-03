@@ -67,7 +67,7 @@ class HTMCli
   def run
     puts
     puts "=" * 60
-    puts "HTM CLI - Hierarchical Temporary Memory Assistant"
+    puts "HTM CLI - Hierarchical Temporal Memory Assistant"
     puts "=" * 60
     puts
     puts "Job Backend: #{HTM.configuration.job_backend} (synchronous execution)"

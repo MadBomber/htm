@@ -4,7 +4,7 @@ Welcome to the HTM development documentation! This guide will help you contribut
 
 ## About HTM Development
 
-HTM (Hierarchical Temporary Memory) is an open-source Ruby gem that provides intelligent memory management for LLM-based applications. The project is built with modern Ruby practices, comprehensive testing, and a focus on developer experience.
+HTM (Hierarchical Temporal Memory) is an open-source Ruby gem that provides intelligent memory management for LLM-based applications. The project is built with modern Ruby practices, comprehensive testing, and a focus on developer experience.
 
 ### Project Values
 

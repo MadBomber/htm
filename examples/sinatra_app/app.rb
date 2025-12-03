@@ -281,7 +281,7 @@ __END__
 </head>
 <body>
   <h1>HTM Sinatra Example</h1>
-  <p>Hierarchical Temporary Memory with tag-enhanced hybrid search and Sidekiq background jobs</p>
+  <p>Hierarchical Temporal Memory with tag-enhanced hybrid search and Sidekiq background jobs</p>
 
   <div class="section">
     <h2>Remember Information</h2>

@@ -1,6 +1,6 @@
 # Architecture Overview
 
-HTM (Hierarchical Temporary Memory) implements a sophisticated two-tier memory system designed specifically for LLM-based applications ("robots"). This architecture enables robots to maintain long-term context across sessions while managing token budgets efficiently.
+HTM (Hierarchical Temporal Memory) implements a sophisticated two-tier memory system designed specifically for LLM-based applications ("robots"). This architecture enables robots to maintain long-term context across sessions while managing token budgets efficiently.
 
 ## System Overview
 

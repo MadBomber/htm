@@ -22,7 +22,7 @@ namespace :htm do
         "--plugin markdown",
         "--output-dir #{output_dir}",
         "--format markdown",
-        "--title 'HTM - Hierarchical Temporary Memory API'",
+        "--title 'HTM - Hierarchical Temporal Memory API'",
         "--markup markdown",
         "--charset utf-8",
         "--protected",

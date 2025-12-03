@@ -1,5 +1,5 @@
 # MkDocs Configuration for HTM Documentation
-site_name: HTM - Hierarchical Temporary Memory
+site_name: HTM - Hierarchical Temporal Memory
 site_description: Intelligent memory management for LLM robots with two-tier architecture and RAG-based retrieval
 site_author: Dewayne VanHoozer
 site_url: https://madbomber.github.io/htm
@@ -172,101 +172,101 @@ nav:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quick-start.md
   - Architecture:
-    - architecture/index.md
-    - Overview: architecture/overview.md
-    - Two-Tier Memory: architecture/two-tier-memory.md
-    - Hive Mind: architecture/hive-mind.md
-    - ADRs:
-      - architecture/adrs/index.md
-      - ADR-001 PostgreSQL & TimescaleDB: architecture/adrs/001-postgresql-timescaledb.md
-      - ADR-002 Two-Tier Memory: architecture/adrs/002-two-tier-memory.md
-      - ADR-003 Ollama Embeddings: architecture/adrs/003-ollama-embeddings.md
-      - ADR-004 Hive Mind: architecture/adrs/004-hive-mind.md
-      - ADR-005 RAG Retrieval: architecture/adrs/005-rag-retrieval.md
-      - ADR-006 Context Assembly: architecture/adrs/006-context-assembly.md
-      - ADR-007 Eviction Strategy: architecture/adrs/007-eviction-strategy.md
-      - ADR-008 Robot Identification: architecture/adrs/008-robot-identification.md
-      - ADR-009 Never-Forget Philosophy: architecture/adrs/009-never-forget.md
-      - ADR-010 Redis Working Memory (Rejected): architecture/adrs/010-redis-working-memory-rejected.md
-      - ADR-011 pgai Integration: architecture/adrs/011-pgai-integration.md
+      - architecture/index.md
+      - Overview: architecture/overview.md
+      - Two-Tier Memory: architecture/two-tier-memory.md
+      - Hive Mind: architecture/hive-mind.md
+      - ADRs:
+          - architecture/adrs/index.md
+          - ADR-001 PostgreSQL & TimescaleDB: architecture/adrs/001-postgresql-timescaledb.md
+          - ADR-002 Two-Tier Memory: architecture/adrs/002-two-tier-memory.md
+          - ADR-003 Ollama Embeddings: architecture/adrs/003-ollama-embeddings.md
+          - ADR-004 Hive Mind: architecture/adrs/004-hive-mind.md
+          - ADR-005 RAG Retrieval: architecture/adrs/005-rag-retrieval.md
+          - ADR-006 Context Assembly: architecture/adrs/006-context-assembly.md
+          - ADR-007 Eviction Strategy: architecture/adrs/007-eviction-strategy.md
+          - ADR-008 Robot Identification: architecture/adrs/008-robot-identification.md
+          - ADR-009 Never-Forget Philosophy: architecture/adrs/009-never-forget.md
+          - ADR-010 Redis Working Memory (Rejected): architecture/adrs/010-redis-working-memory-rejected.md
+          - ADR-011 pgai Integration: architecture/adrs/011-pgai-integration.md
   - Guides:
-    - guides/index.md
-    - Getting Started: guides/getting-started.md
-    - Adding Memories: guides/adding-memories.md
-    - Recalling Memories: guides/recalling-memories.md
-    - Working Memory: guides/working-memory.md
-    - Long-Term Memory: guides/long-term-memory.md
-    - Multi-Robot Usage: guides/multi-robot.md
-    - Search Strategies: guides/search-strategies.md
-    - Context Assembly: guides/context-assembly.md
+      - guides/index.md
+      - Getting Started: guides/getting-started.md
+      - Adding Memories: guides/adding-memories.md
+      - Recalling Memories: guides/recalling-memories.md
+      - Working Memory: guides/working-memory.md
+      - Long-Term Memory: guides/long-term-memory.md
+      - Multi-Robot Usage: guides/multi-robot.md
+      - Search Strategies: guides/search-strategies.md
+      - Context Assembly: guides/context-assembly.md
   - API Reference:
-    - api/index.md
-    - HTM Class: api/htm.md
-    - Working Memory: api/working-memory.md
-    - Long-Term Memory: api/long-term-memory.md
-    - Embedding Service: api/embedding-service.md
-    - Database: api/database.md
-    - YARD Reference:
-      - api/yard-reference.md
-      - HTM Module: api/yard/HTM.md
-      - Core Classes:
-        - Configuration: api/yard/HTM/Configuration.md
-        - Database: api/yard/HTM/Database.md
-        - LongTermMemory: api/yard/HTM/LongTermMemory.md
-        - WorkingMemory: api/yard/HTM/WorkingMemory.md
-      - Services:
-        - EmbeddingService: api/yard/HTM/EmbeddingService.md
-        - TagService: api/yard/HTM/TagService.md
-        - JobAdapter: api/yard/HTM/JobAdapter.md
-      - Utilities:
-        - CircuitBreaker: api/yard/HTM/CircuitBreaker.md
-        - Observability: api/yard/HTM/Observability.md
-        - Timeframe: api/yard/HTM/Timeframe.md
-        - TimeframeExtractor: api/yard/HTM/TimeframeExtractor.md
-      - Internal:
-        - ActiveRecordConfig: api/yard/HTM/ActiveRecordConfig.md
-        - Railtie: api/yard/HTM/Railtie.md
-      - Errors:
-        - Error: api/yard/HTM/Error.md
-        - AuthorizationError: api/yard/HTM/AuthorizationError.md
-        - CircuitBreakerOpenError: api/yard/HTM/CircuitBreakerOpenError.md
-        - DatabaseError: api/yard/HTM/DatabaseError.md
-        - EmbeddingError: api/yard/HTM/EmbeddingError.md
-        - NotFoundError: api/yard/HTM/NotFoundError.md
-        - QueryTimeoutError: api/yard/HTM/QueryTimeoutError.md
-        - ResourceExhaustedError: api/yard/HTM/ResourceExhaustedError.md
-        - TagError: api/yard/HTM/TagError.md
-        - ValidationError: api/yard/HTM/ValidationError.md
-      - Result Types:
-        - Timeframe Result: api/yard/HTM/Timeframe/Result.md
-        - TimeframeExtractor Result: api/yard/HTM/TimeframeExtractor/Result.md
+      - api/index.md
+      - HTM Class: api/htm.md
+      - Working Memory: api/working-memory.md
+      - Long-Term Memory: api/long-term-memory.md
+      - Embedding Service: api/embedding-service.md
+      - Database: api/database.md
+      - YARD Reference:
+          - api/yard-reference.md
+          - HTM Module: api/yard/HTM.md
+          - Core Classes:
+              - Configuration: api/yard/HTM/Configuration.md
+              - Database: api/yard/HTM/Database.md
+              - LongTermMemory: api/yard/HTM/LongTermMemory.md
+              - WorkingMemory: api/yard/HTM/WorkingMemory.md
+          - Services:
+              - EmbeddingService: api/yard/HTM/EmbeddingService.md
+              - TagService: api/yard/HTM/TagService.md
+              - JobAdapter: api/yard/HTM/JobAdapter.md
+          - Utilities:
+              - CircuitBreaker: api/yard/HTM/CircuitBreaker.md
+              - Observability: api/yard/HTM/Observability.md
+              - Timeframe: api/yard/HTM/Timeframe.md
+              - TimeframeExtractor: api/yard/HTM/TimeframeExtractor.md
+          - Internal:
+              - ActiveRecordConfig: api/yard/HTM/ActiveRecordConfig.md
+              - Railtie: api/yard/HTM/Railtie.md
+          - Errors:
+              - Error: api/yard/HTM/Error.md
+              - AuthorizationError: api/yard/HTM/AuthorizationError.md
+              - CircuitBreakerOpenError: api/yard/HTM/CircuitBreakerOpenError.md
+              - DatabaseError: api/yard/HTM/DatabaseError.md
+              - EmbeddingError: api/yard/HTM/EmbeddingError.md
+              - NotFoundError: api/yard/HTM/NotFoundError.md
+              - QueryTimeoutError: api/yard/HTM/QueryTimeoutError.md
+              - ResourceExhaustedError: api/yard/HTM/ResourceExhaustedError.md
+              - TagError: api/yard/HTM/TagError.md
+              - ValidationError: api/yard/HTM/ValidationError.md
+          - Result Types:
+              - Timeframe Result: api/yard/HTM/Timeframe/Result.md
+              - TimeframeExtractor Result: api/yard/HTM/TimeframeExtractor/Result.md
   - Development:
-    - development/index.md
-    - Setup: development/setup.md
-    - Testing: development/testing.md
-    - Contributing: development/contributing.md
-    - Database Schema: development/schema.md
-    - Database Tables:
-      - database/README.md
-      - Core Tables:
-        - Robots: database/public.robots.md
-        - Nodes: database/public.nodes.md
-        - Tags: database/public.tags.md
-        - File Sources: database/public.file_sources.md
-      - Join Tables:
-        - Node Tags: database/public.node_tags.md
-        - Nodes Tags (Legacy): database/public.nodes_tags.md
-        - Robot Nodes: database/public.robot_nodes.md
-      - Views & Stats:
-        - Node Stats: database/public.node_stats.md
-        - Robot Activity: database/public.robot_activity.md
-        - Topic Relationships: database/public.topic_relationships.md
-        - Ontology Structure: database/public.ontology_structure.md
-        - Relationships: database/public.relationships.md
-      - System:
-        - Operations Log: database/public.operations_log.md
-        - Schema Migrations: database/public.schema_migrations.md
-    - Multi-Framework Support: multi_framework_support.md
-    - Database Rake Tasks: database_rake_tasks.md
-    - Using Rake Tasks: using_rake_tasks_in_your_app.md
-    - Setup Local Database: setup_local_database.md
+      - development/index.md
+      - Setup: development/setup.md
+      - Testing: development/testing.md
+      - Contributing: development/contributing.md
+      - Database Schema: development/schema.md
+      - Database Tables:
+          - database/README.md
+          - Core Tables:
+              - Robots: database/public.robots.md
+              - Nodes: database/public.nodes.md
+              - Tags: database/public.tags.md
+              - File Sources: database/public.file_sources.md
+          - Join Tables:
+              - Node Tags: database/public.node_tags.md
+              - Nodes Tags (Legacy): database/public.nodes_tags.md
+              - Robot Nodes: database/public.robot_nodes.md
+          - Views & Stats:
+              - Node Stats: database/public.node_stats.md
+              - Robot Activity: database/public.robot_activity.md
+              - Topic Relationships: database/public.topic_relationships.md
+              - Ontology Structure: database/public.ontology_structure.md
+              - Relationships: database/public.relationships.md
+          - System:
+              - Operations Log: database/public.operations_log.md
+              - Schema Migrations: database/public.schema_migrations.md
+      - Multi-Framework Support: multi_framework_support.md
+      - Database Rake Tasks: database_rake_tasks.md
+      - Using Rake Tasks: using_rake_tasks_in_your_app.md
+      - Setup Local Database: setup_local_database.md

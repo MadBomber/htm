@@ -1,6 +1,6 @@
 # HTM Examples
 
-This directory contains example applications demonstrating various ways to use the HTM (Hierarchical Temporary Memory) gem.
+This directory contains example applications demonstrating various ways to use the HTM (Hierarchical Temporal Memory) gem.
 
 ## Prerequisites
 
