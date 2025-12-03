@@ -14,7 +14,11 @@
 
 temp.md
 .aigcm_msg
+CLAUDE.md
+/notes/
+.claude/
 
+*.log
 
 # Used by dotenv library to load environment variables.
 # .env
