@@ -1400,13 +1400,13 @@ This separation allows you to provide any LLM implementation while HTM handles r
 ## Roadmap
 
 - [x] Phase 1: Foundation (basic two-tier memory)
-- [ ] Phase 2: RAG retrieval (semantic search)
-- [ ] Phase 3: Relationships & tags
-- [ ] Phase 4: Working memory management
-- [ ] Phase 5: Hive mind features
-- [ ] Phase 6: Operations & observability
-- [ ] Phase 7: Advanced features
-- [ ] Phase 8: Production-ready gem
+- [x] Phase 2: RAG retrieval (semantic search)
+- [x] Phase 3: Relationships & tags
+- [x] Phase 4: Working memory management
+- [x] Phase 5: Hive mind features
+- [x] Phase 6: Operations & observability
+- [x] Phase 7: Advanced features
+- [x] Phase 8: Production-ready gem
 
 
 ## Contributing

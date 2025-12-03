@@ -84,7 +84,10 @@
       "WebFetch(domain:www.barndominiumlife.com)",
       "Bash(git rm:*)",
       "Bash(HTM_DBURL=\"postgresql://dewayne@localhost:5432/htm_development\" psql -c \"DROP TABLE IF EXISTS working_memories CASCADE;\" htm_development)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "WebFetch(domain:rubygems.org)",
+      "WebFetch(domain:www.rubyllm-mcp.com)",
+      "Bash(gem contents:*)"
     ],
     "deny": [],
     "ask": []

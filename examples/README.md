@@ -107,6 +107,127 @@ ruby examples/timeframe_demo.rb
 
 ---
 
+### mcp_server.rb & mcp_client.rb
+
+**Model Context Protocol (MCP) integration for AI assistants.**
+
+A pair of examples demonstrating how to expose HTM as an MCP server and connect to it from a chat client. This enables AI assistants like Claude Desktop to use HTM's memory capabilities.
+
+#### mcp_server.rb
+
+An MCP server that exposes HTM's memory operations as tools:
+
+```bash
+ruby examples/mcp_server.rb
+```
+
+**Tools exposed:**
+- `SetRobotTool` - Set the robot identity for this session (call first)
+- `GetRobotTool` - Get current robot information
+- `GetWorkingMemoryTool` - Get working memory contents for session restore
+- `RememberTool` - Store information with optional tags and metadata
+- `RecallTool` - Search memories using vector, fulltext, or hybrid strategies
+- `ForgetTool` - Soft-delete a memory (recoverable)
+- `RestoreTool` - Restore a soft-deleted memory
+- `ListTagsTool` - List tags with optional prefix filtering
+- `StatsTool` - Get memory usage statistics
+
+**Resources exposed:**
+- `htm://statistics` - Memory statistics as JSON
+- `htm://tags/hierarchy` - Tag hierarchy as text tree
+- `htm://memories/recent` - Last 20 memories
+
+**Claude Desktop configuration** (`~/.config/claude/claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "htm-memory": {
+      "command": "ruby",
+      "args": ["/path/to/htm/examples/mcp_server.rb"],
+      "env": {
+        "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
+      }
+    }
+  }
+}
+```
+
+#### mcp_client.rb
+
+An interactive chat client that connects to the MCP server via STDIO and uses a local Ollama model (gpt-oss) for conversation:
+
+```bash
+ruby examples/mcp_client.rb
+```
+
+**Features:**
+- Prompts for robot name on startup (or uses `HTM_ROBOT_NAME` env var)
+- Calls `SetRobotTool` to establish robot identity with the server
+- Offers to restore previous session from working memory
+- Connects to `mcp_server.rb` automatically via STDIO transport
+- Interactive chat loop with tool calling
+- LLM decides when to remember/recall information
+- Logs tool calls and results for visibility
+
+**Commands:**
+- `/tools` - List available MCP tools
+- `/resources` - List available MCP resources
+- `/clear` - Clear chat history
+- `/help` - Show help
+- `/exit` - Quit
+
+**Example startup and conversation:**
+```
+$ ruby examples/mcp_client.rb
+Connecting to HTM MCP server...
+[✓] Connected to HTM MCP server
+[✓] Found 9 tools:
+    - SetRobotTool: Set the robot identity for this session...
+    - GetRobotTool: Get information about the current robot...
+    - GetWorkingMemoryTool: Get all working memory contents...
+    ...
+
+Enter your robot name (or press Enter for default): alice-assistant
+[✓] Robot name: alice-assistant
+Setting robot identity on MCP server...
+[✓] Robot identity set: alice-assistant (id=5, nodes=12)
+
+Found 3 memories in working memory from previous session.
+Restore previous session? (y/N): y
+[✓] Will restore 3 memories after chat setup
+
+Initializing chat with gpt-oss:latest...
+[✓] Chat initialized with tools attached
+Restoring 3 memories to chat context...
+[✓] Restored 3 memories to chat context
+
+======================================================================
+HTM MCP Client - AI Chat with Memory Tools
+======================================================================
+
+Robot: alice-assistant
+Model: gpt-oss:latest (via Ollama)
+...
+
+you> What's the API rate limit?
+
+assistant> The API rate limit is 1000 requests per minute.
+```
+
+**Additional dependencies:**
+```bash
+gem install fast-mcp ruby_llm-mcp
+ollama pull gpt-oss  # Or your preferred model
+```
+
+**Environment Variables:**
+- `HTM_DBURL` - PostgreSQL connection (required)
+- `OLLAMA_URL` - Ollama server URL (default: http://localhost:11434)
+- `OLLAMA_MODEL` - Model to use (default: gpt-oss:latest)
+- `HTM_ROBOT_NAME` - Robot name (optional, prompts if not set)
+
+---
+
 ## Application Examples
 
 ### example_app/
@@ -245,6 +366,8 @@ examples/
 ├── custom_llm_configuration.rb    # LLM integration patterns
 ├── file_loader_usage.rb           # Document loading
 ├── timeframe_demo.rb              # Time-based filtering
+├── mcp_server.rb                  # MCP server exposing HTM tools
+├── mcp_client.rb                  # MCP client with chat interface
 ├── example_app/
 │   ├── app.rb                     # Full-featured demo app
 │   └── Rakefile
@@ -274,6 +397,8 @@ examples/
 | Custom LLM integration | `custom_llm_configuration.rb` |
 | Loading documents/files | `file_loader_usage.rb` |
 | Time-based queries | `timeframe_demo.rb` |
+| MCP server for AI assistants | `mcp_server.rb` |
+| MCP client with chat interface | `mcp_client.rb` |
 | Web application | `sinatra_app/` |
 | CLI tool | `cli_app/` |
 | Multi-robot coordination | `robot_groups/` |
