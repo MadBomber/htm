@@ -415,57 +415,68 @@ class HTM
         model = @tag_provider == :ollama ? normalize_ollama_model(@tag_model) : @tag_model
 
         # Build prompt
-        ontology_context = if existing_ontology.any?
+        taxonomy_context = if existing_ontology.any?
           sample_tags = existing_ontology.sample([existing_ontology.size, 20].min)
-          "Existing ontology includes: #{sample_tags.join(', ')}\n"
+          "Existing taxonomy paths: #{sample_tags.join(', ')}\n\nPrefer reusing these paths when the text matches their domain."
         else
-          "This is a new ontology - create appropriate hierarchical tags.\n"
+          "This is a new taxonomy - establish clear root categories."
         end
 
         prompt = <<~PROMPT
-          Extract hierarchical topic tags from the following text.
+          Extract classification tags for this text using a HIERARCHICAL TAXONOMY.
 
-          #{ontology_context}
-          Format: root:level1:level2:level3 (use colons to separate levels)
+          A hierarchical taxonomy is a tree where each concept has exactly ONE parent path:
 
-          Rules:
-          - Use lowercase letters, numbers, and hyphens only
-          - Maximum depth: 4 levels (to prevent excessive nesting)
-          - Return 2-5 tags per text
-          - Tags should be reusable and consistent
-          - Prefer existing ontology tags when applicable
-          - Use hyphens for multi-word terms (e.g., natural-language-processing)
+              domain
+              ├── category
+              │   ├── subcategory
+              │   │   └── specific-term
+              │   └── subcategory
+              └── category
 
-          CRITICAL CONSTRAINTS:
-          - NO CIRCULAR REFERENCES: A concept cannot appear at both the root and leaf of the same path
-          - NO REDUNDANT DUPLICATES: Do not create the same concept in multiple branches
-            Example (WRONG): database:postgresql vs database-management:relational-databases:postgresql
-            Example (RIGHT): Choose ONE primary location
-          - CONSISTENT DEPTH: Similar concept types should be at similar depth levels
-            Example (WRONG): age:numeric vs name:individual:specific-name:john
-            Example (RIGHT): Both should be at similar depths under personal-data
-          - NO SELF-CONTAINMENT: A parent concept should never contain itself as a descendant
-            Example (WRONG): age:personal-information:personal-data:age
-            Example (RIGHT): personal-information:personal-data:age
-          - AVOID AMBIGUOUS CROSS-DOMAIN CONCEPTS: Each concept should have ONE primary parent
-            If a concept truly belongs in multiple domains, use the most specific/primary domain
+          #{taxonomy_context}
+
+          TAG FORMAT: domain:category:subcategory:term (colon-separated, max 4 levels)
+
+          LEVEL GUIDELINES:
+          - Level 1 (domain): Broad field (database, ai, web, security, devops)
+          - Level 2 (category): Major subdivision (database:relational, ai:machine-learning)
+          - Level 3 (subcategory): Specific area (database:relational:postgresql)
+          - Level 4 (term): Fine detail, use sparingly (database:relational:postgresql:extensions)
+
+          RULES:
+          1. Each concept belongs to ONE path only (no duplicates across branches)
+          2. Use lowercase, hyphens for multi-word terms (natural-language-processing)
+          3. Return 2-5 tags that best classify this text
+          4. Match existing taxonomy paths when applicable
+          5. More general tags are often better than overly specific ones
+
+          GOOD EXAMPLES:
+          - database:postgresql
+          - ai:machine-learning:embeddings
+          - web:api:rest
+          - programming:ruby:gems
+
+          BAD EXAMPLES:
+          - postgresql (missing domain - where does it belong?)
+          - database:postgresql AND data:storage:postgresql (duplicate concept)
+          - ai:ml:nlp:transformers:bert:embeddings (too deep)
 
           TEXT: #{text}
 
-          Return ONLY the topic tags, one per line, no explanations.
+          Return ONLY tags, one per line.
         PROMPT
 
         system_prompt = <<~SYSTEM.strip
-          You are a precise topic extraction system that prevents ontological errors.
+          You are a taxonomy classifier that assigns texts to a hierarchical classification tree.
 
-          Your job is to:
-          1. Extract hierarchical tags in format: root:subtopic:detail
-          2. Maintain consistency with existing ontology (no duplicates)
-          3. Prevent circular references and self-containing concepts
-          4. Keep hierarchies at consistent depth levels
-          5. Choose PRIMARY locations for concepts (no multi-parent confusion)
+          Core principle: Each concept has ONE canonical location in the tree. If "postgresql" exists under "database", never create it elsewhere.
 
-          Output ONLY topic tags, one per line.
+          Your task:
+          1. Identify the domains/topics present in the text
+          2. Build paths from general (root) to specific (leaf)
+          3. Reuse existing taxonomy branches when they fit
+          4. Output 2-5 classification paths, one per line
         SYSTEM
 
         # Use RubyLLM chat for tag extraction

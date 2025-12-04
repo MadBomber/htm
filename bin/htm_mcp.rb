@@ -395,6 +395,98 @@ class ListTagsTool < FastMcp::Tool
   end
 end
 
+# Tool: Search tags with fuzzy matching
+class SearchTagsTool < FastMcp::Tool
+  description "Search for tags using fuzzy matching (typo-tolerant). Use this when you're unsure of exact tag names."
+
+  arguments do
+    required(:query).filled(:string).description("Search query - can contain typos (e.g., 'postgrsql' finds 'database:postgresql')")
+    optional(:limit).filled(:integer).description("Maximum number of results (default: 20)")
+    optional(:min_similarity).filled(:float).description("Minimum similarity threshold 0.0-1.0 (default: 0.3, lower = more fuzzy)")
+  end
+
+  def call(query:, limit: 20, min_similarity: 0.3)
+    MCP_STDERR_LOG.info "SearchTagsTool called: query=#{query.inspect}, limit=#{limit}, min_similarity=#{min_similarity}"
+
+    htm = MCPSession.htm_instance
+    ltm = htm.instance_variable_get(:@long_term_memory)
+
+    results = ltm.search_tags(query, limit: limit, min_similarity: min_similarity)
+
+    # Enrich with node counts
+    tags = results.map do |result|
+      tag = HTM::Models::Tag.find_by(name: result[:name])
+      {
+        name: result[:name],
+        similarity: result[:similarity].round(3),
+        node_count: tag&.nodes&.count || 0
+      }
+    end
+
+    MCP_STDERR_LOG.info "SearchTagsTool complete: found #{tags.length} tags"
+
+    {
+      success: true,
+      query: query,
+      min_similarity: min_similarity,
+      count: tags.length,
+      tags: tags
+    }.to_json
+  end
+end
+
+# Tool: Find nodes by topic with fuzzy option
+class FindByTopicTool < FastMcp::Tool
+  description "Find memory nodes by topic/tag with optional fuzzy matching for typo tolerance"
+
+  arguments do
+    required(:topic).filled(:string).description("Topic or tag to search for (e.g., 'database:postgresql' or 'postgrsql' with fuzzy)")
+    optional(:fuzzy).filled(:bool).description("Enable fuzzy matching for typo tolerance (default: false)")
+    optional(:exact).filled(:bool).description("Require exact tag match (default: false, uses prefix matching)")
+    optional(:limit).filled(:integer).description("Maximum number of results (default: 20)")
+    optional(:min_similarity).filled(:float).description("Minimum similarity for fuzzy mode (default: 0.3)")
+  end
+
+  def call(topic:, fuzzy: false, exact: false, limit: 20, min_similarity: 0.3)
+    MCP_STDERR_LOG.info "FindByTopicTool called: topic=#{topic.inspect}, fuzzy=#{fuzzy}, exact=#{exact}"
+
+    htm = MCPSession.htm_instance
+    ltm = htm.instance_variable_get(:@long_term_memory)
+
+    nodes = ltm.nodes_by_topic(
+      topic,
+      fuzzy: fuzzy,
+      exact: exact,
+      min_similarity: min_similarity,
+      limit: limit
+    )
+
+    # Enrich with tags
+    results = nodes.map do |node_attrs|
+      node = HTM::Models::Node.includes(:tags).find_by(id: node_attrs['id'])
+      next unless node
+
+      {
+        id: node.id,
+        content: node.content[0..200],
+        tags: node.tags.map(&:name),
+        created_at: node.created_at.iso8601
+      }
+    end.compact
+
+    MCP_STDERR_LOG.info "FindByTopicTool complete: found #{results.length} nodes"
+
+    {
+      success: true,
+      topic: topic,
+      fuzzy: fuzzy,
+      exact: exact,
+      count: results.length,
+      results: results
+    }.to_json
+  end
+end
+
 # Tool: Get memory statistics
 class StatsTool < FastMcp::Tool
   description "Get statistics about HTM memory usage"
@@ -516,6 +608,8 @@ server.register_tool(RecallTool)
 server.register_tool(ForgetTool)
 server.register_tool(RestoreTool)
 server.register_tool(ListTagsTool)
+server.register_tool(SearchTagsTool)   # Fuzzy tag search with typo tolerance
+server.register_tool(FindByTopicTool)  # Find nodes by topic with fuzzy option
 server.register_tool(StatsTool)
 
 # Register resources

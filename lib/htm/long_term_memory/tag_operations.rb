@@ -19,6 +19,10 @@ class HTM
       MAX_TAG_QUERY_LIMIT = 1000
       MAX_TAG_SAMPLE_SIZE = 50
 
+      # Default trigram similarity threshold for fuzzy tag search (0.0-1.0)
+      # Lower = more fuzzy matches, higher = stricter matching
+      DEFAULT_TAG_SIMILARITY_THRESHOLD = 0.3
+
       # Cache TTL for popular tags (5 minutes)
       # This eliminates expensive RANDOM() queries on every tag extraction
       POPULAR_TAGS_CACHE_TTL = 300
@@ -51,11 +55,18 @@ class HTM
       # Retrieve nodes by ontological topic
       #
       # @param topic_path [String] Topic hierarchy path
-      # @param exact [Boolean] Exact match or prefix match
+      # @param exact [Boolean] Exact match only (highest priority)
+      # @param fuzzy [Boolean] Use trigram similarity for typo-tolerant search
+      # @param min_similarity [Float] Minimum similarity for fuzzy mode (0.0-1.0)
       # @param limit [Integer] Maximum results (capped at MAX_TAG_QUERY_LIMIT)
       # @return [Array<Hash>] Matching nodes
       #
-      def nodes_by_topic(topic_path, exact: false, limit: 50)
+      # Matching modes (in order of precedence):
+      # - exact: true - Only exact tag name match
+      # - fuzzy: true - Trigram similarity search (typo-tolerant)
+      # - default - LIKE prefix match (e.g., "database" matches "database:postgresql")
+      #
+      def nodes_by_topic(topic_path, exact: false, fuzzy: false, min_similarity: DEFAULT_TAG_SIMILARITY_THRESHOLD, limit: 50)
         # Enforce limit to prevent DoS
         safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
 
@@ -63,6 +74,15 @@ class HTM
           nodes = HTM::Models::Node
             .joins(:tags)
             .where(tags: { name: topic_path })
+            .distinct
+            .order(created_at: :desc)
+            .limit(safe_limit)
+        elsif fuzzy
+          # Trigram similarity search - tolerates typos and partial matches
+          safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
+          nodes = HTM::Models::Node
+            .joins(:tags)
+            .where("similarity(tags.name, ?) >= ?", topic_path, safe_similarity)
             .distinct
             .order(created_at: :desc)
             .limit(safe_limit)
@@ -197,6 +217,42 @@ class HTM
           .map { |tag| { name: tag.name, usage_count: tag.usage_count } }
       end
 
+      # Fuzzy search for tags using trigram similarity
+      #
+      # Uses PostgreSQL pg_trgm extension to find tags that are similar
+      # to the query string, tolerating typos and partial matches.
+      #
+      # @param query [String] Search query (tag name or partial)
+      # @param limit [Integer] Maximum results (capped at MAX_TAG_QUERY_LIMIT)
+      # @param min_similarity [Float] Minimum similarity threshold (0.0-1.0)
+      # @return [Array<Hash>] Matching tags with similarity scores
+      #   Each hash contains: { name: String, similarity: Float }
+      #
+      def search_tags(query, limit: 20, min_similarity: DEFAULT_TAG_SIMILARITY_THRESHOLD)
+        return [] if query.nil? || query.strip.empty?
+
+        # Enforce limits
+        safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
+        safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
+
+        sql = <<~SQL
+          SELECT name, similarity(name, ?) as similarity
+          FROM tags
+          WHERE similarity(name, ?) >= ?
+          ORDER BY similarity DESC, name
+          LIMIT ?
+        SQL
+
+        result = ActiveRecord::Base.connection.select_all(
+          ActiveRecord::Base.sanitize_sql_array([sql, query, query, safe_similarity, safe_limit])
+        )
+
+        result.map { |r| { name: r['name'], similarity: r['similarity'].to_f } }
+      rescue ActiveRecord::ActiveRecordError => e
+        HTM.logger.error("Failed to search tags: #{e.message}")
+        []
+      end
+
       # Find tags that match terms in the query
       #
       # Searches the tags table for tags where any hierarchy level matches
@@ -274,15 +330,23 @@ class HTM
 
       # Find matching tags using a single unified query
       #
-      # Uses UNION to combine exact, prefix, and component matching
+      # Uses UNION to combine exact, prefix, component, and trigram matching
       # in a single database round-trip.
+      #
+      # Matching strategies (in priority order):
+      # 1. Exact matches - tag name exactly equals candidate
+      # 2. Prefix matches - tag name equals parent path component
+      # 3. Component matches - tag contains component at any hierarchy level
+      # 4. Trigram matches - fuzzy similarity search (typo-tolerant fallback)
       #
       # @param exact_candidates [Array<String>] Tags to match exactly
       # @param prefix_candidates [Array<String>] Prefixes to match
       # @param component_candidates [Array<String>] Components to search for
+      # @param fuzzy_fallback [Boolean] Include trigram fuzzy matching (default: true)
+      # @param min_similarity [Float] Minimum similarity for trigram matching
       # @return [Array<String>] Matched tag names
       #
-      def find_matching_tags_unified(exact_candidates:, prefix_candidates:, component_candidates:)
+      def find_matching_tags_unified(exact_candidates:, prefix_candidates:, component_candidates:, fuzzy_fallback: true, min_similarity: DEFAULT_TAG_SIMILARITY_THRESHOLD)
         return [] if exact_candidates.empty? && prefix_candidates.empty? && component_candidates.empty?
 
         conditions = []
@@ -302,7 +366,7 @@ class HTM
           params.concat(prefix_candidates)
         end
 
-        # Component matches (lowest priority)
+        # Component matches
         # Pre-sanitize components once to avoid duplicate processing
         if component_candidates.any?
           # Pre-compute sanitized components for efficiency
@@ -326,6 +390,17 @@ class HTM
 
           conditions << "(SELECT name, 3 as priority FROM tags WHERE #{component_conditions.join(' OR ')})"
           params.concat(component_params)
+        end
+
+        # Trigram fuzzy matches (lowest priority - fallback for typos)
+        # Uses pg_trgm similarity to find tags even with spelling errors
+        if fuzzy_fallback && component_candidates.any?
+          safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
+          trigram_conditions = component_candidates.map { "similarity(name, ?) >= ?" }
+          trigram_params = component_candidates.flat_map { |c| [c, safe_similarity] }
+
+          conditions << "(SELECT name, 4 as priority FROM tags WHERE #{trigram_conditions.join(' OR ')})"
+          params.concat(trigram_params)
         end
 
         return [] if conditions.empty?
