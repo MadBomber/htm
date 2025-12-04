@@ -260,7 +260,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Markdown file loader** - Load markdown files into long-term memory
   - `FileSource` model to track loaded files with metadata and sync status
   - `MarkdownLoader` with YAML frontmatter extraction
-  - `ParagraphChunker` for splitting content into semantic chunks
+  - `MarkdownChunker` for splitting content into semantic chunks (uses Baran gem)
   - DELTA_TIME tolerance (5 seconds) for reliable file change detection
 - **New HTM API methods** for file operations:
   - `htm.load_file(path, force: false)` - Load single markdown file

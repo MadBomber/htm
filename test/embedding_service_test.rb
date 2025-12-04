@@ -38,7 +38,7 @@ class EmbeddingServiceTest < Minitest::Test
     result = HTM::EmbeddingService.generate("test content")
 
     assert_equal 512, result[:dimension]
-    assert_equal HTM::EmbeddingService::MAX_DIMENSION, result[:storage_dimension]
+    assert_equal HTM::EmbeddingService.max_dimension, result[:storage_dimension]
   end
 
   def test_generate_pads_embedding_to_max_dimension
@@ -51,7 +51,7 @@ class EmbeddingServiceTest < Minitest::Test
     # Original dimension should be 3
     assert_equal 3, result[:dimension]
     # Storage should be padded to MAX_DIMENSION
-    assert_equal HTM::EmbeddingService::MAX_DIMENSION, result[:storage_dimension]
+    assert_equal HTM::EmbeddingService.max_dimension, result[:storage_dimension]
     # Storage format should contain all 2000 values
     assert_match(/^\[.*\]$/, result[:storage_embedding])
   end
@@ -64,8 +64,8 @@ class EmbeddingServiceTest < Minitest::Test
     result = HTM::EmbeddingService.generate("test content")
 
     # Should truncate to MAX_DIMENSION
-    assert_equal HTM::EmbeddingService::MAX_DIMENSION, result[:dimension]
-    assert_equal HTM::EmbeddingService::MAX_DIMENSION, result[:storage_dimension]
+    assert_equal HTM::EmbeddingService.max_dimension, result[:dimension]
+    assert_equal HTM::EmbeddingService.max_dimension, result[:storage_dimension]
   end
 
   # Validation tests
@@ -130,7 +130,7 @@ class EmbeddingServiceTest < Minitest::Test
     short = [1.0, 2.0, 3.0]
     padded = HTM::EmbeddingService.pad_embedding(short)
 
-    assert_equal HTM::EmbeddingService::MAX_DIMENSION, padded.length
+    assert_equal HTM::EmbeddingService.max_dimension, padded.length
     assert_equal 1.0, padded[0]
     assert_equal 2.0, padded[1]
     assert_equal 3.0, padded[2]
@@ -139,7 +139,7 @@ class EmbeddingServiceTest < Minitest::Test
   end
 
   def test_pad_embedding_returns_original_if_already_max
-    full = Array.new(HTM::EmbeddingService::MAX_DIMENSION) { |i| i * 0.001 }
+    full = Array.new(HTM::EmbeddingService.max_dimension) { |i| i * 0.001 }
     padded = HTM::EmbeddingService.pad_embedding(full)
 
     assert_equal full, padded

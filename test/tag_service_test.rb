@@ -208,9 +208,9 @@ class TagServiceTest < Minitest::Test
     assert_equal 3, result[:depth]
   end
 
-  # Test constants
-  def test_max_depth_constant
-    assert_equal 4, HTM::TagService::MAX_DEPTH
+  # Test max_depth (now configurable via HTM.configuration.max_tag_depth)
+  def test_max_depth_default
+    assert_equal 4, HTM::TagService.max_depth
   end
 
   def test_tag_format_constant

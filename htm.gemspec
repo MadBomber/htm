@@ -45,6 +45,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ruby-progressbar"
   spec.add_dependency "chronic"
   spec.add_dependency "fast-mcp"
+  spec.add_dependency "baran"
   # Optional runtime dependencies for different job backends
   # - ActiveJob (bundled with Rails)
   # - Sidekiq (add to Gemfile if using :sidekiq backend)

@@ -15,23 +15,31 @@ class HTM
   # The actual LLM call is delegated to HTM.configuration.embedding_generator
   #
   class EmbeddingService
-    MAX_DIMENSION = 2000  # Maximum dimension for pgvector HNSW index
-
     # Circuit breaker for embedding API calls
     @circuit_breaker = nil
     @circuit_breaker_mutex = Mutex.new
 
     class << self
+      # Maximum embedding dimension (configurable, default 2000)
+      #
+      # @return [Integer] Max dimensions for pgvector HNSW index
+      #
+      def max_dimension
+        HTM.configuration.max_embedding_dimension
+      end
+
       # Get or create the circuit breaker for embedding service
       #
       # @return [HTM::CircuitBreaker] The circuit breaker instance
       #
       def circuit_breaker
+        config = HTM.configuration
         @circuit_breaker_mutex.synchronize do
           @circuit_breaker ||= HTM::CircuitBreaker.new(
             name: 'embedding_service',
-            failure_threshold: 5,
-            reset_timeout: 60
+            failure_threshold: config.circuit_breaker_failure_threshold,
+            reset_timeout: config.circuit_breaker_reset_timeout,
+            half_open_max_calls: config.circuit_breaker_half_open_max_calls
           )
         end
       end
@@ -74,25 +82,26 @@ class HTM
       actual_dimension = raw_embedding.length
 
       # Check dimension limit
-      if actual_dimension > MAX_DIMENSION
-        HTM.logger.warn "EmbeddingService: Embedding dimension #{actual_dimension} exceeds max #{MAX_DIMENSION}, truncating"
-        raw_embedding = raw_embedding[0...MAX_DIMENSION]
-        actual_dimension = MAX_DIMENSION
+      max_dim = max_dimension
+      if actual_dimension > max_dim
+        HTM.logger.warn "EmbeddingService: Embedding dimension #{actual_dimension} exceeds max #{max_dim}, truncating"
+        raw_embedding = raw_embedding[0...max_dim]
+        actual_dimension = max_dim
       end
 
-      # Pad to 2000 dimensions for consistent storage
+      # Pad to max dimensions for consistent storage
       storage_embedding = pad_embedding(raw_embedding)
 
       # Format for database storage
       storage_string = format_for_storage(storage_embedding)
 
-      HTM.logger.debug "EmbeddingService: Generated #{actual_dimension}D embedding (padded to #{MAX_DIMENSION})"
+      HTM.logger.debug "EmbeddingService: Generated #{actual_dimension}D embedding (padded to #{max_dim})"
 
       {
         embedding: raw_embedding,
         dimension: actual_dimension,
         storage_embedding: storage_string,
-        storage_dimension: MAX_DIMENSION
+        storage_dimension: max_dim
       }
 
     rescue HTM::CircuitBreakerOpenError
@@ -129,15 +138,16 @@ class HTM
       end
     end
 
-    # Pad embedding to MAX_DIMENSION with zeros
+    # Pad embedding to max_dimension with zeros
     #
     # @param embedding [Array<Float>] Original embedding
     # @return [Array<Float>] Padded embedding
     #
     def self.pad_embedding(embedding)
-      return embedding if embedding.length >= MAX_DIMENSION
+      max_dim = max_dimension
+      return embedding if embedding.length >= max_dim
 
-      embedding + Array.new(MAX_DIMENSION - embedding.length, 0.0)
+      embedding + Array.new(max_dim - embedding.length, 0.0)
     end
 
     # Format embedding for database storage

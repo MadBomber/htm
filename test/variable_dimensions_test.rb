@@ -51,7 +51,7 @@ class VariableDimensionsTest < Minitest::Test
     small_embedding = Array.new(100) { rand(-1.0..1.0) }
     padded = service.pad_embedding(small_embedding)
 
-    assert_equal HTM::EmbeddingService::MAX_DIMENSION, padded.length
+    assert_equal HTM::EmbeddingService.max_dimension, padded.length
     assert_equal small_embedding, padded[0...100]
     assert_equal Array.new(1900, 0.0), padded[100..]
   end

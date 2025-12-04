@@ -5,25 +5,18 @@ class HTM
     # Relevance scoring for search results
     #
     # Combines multiple signals to calculate dynamic relevance:
-    # - Vector similarity (semantic match) - weight: WEIGHT_SEMANTIC
-    # - Tag overlap (categorical match) - weight: WEIGHT_TAG
-    # - Recency (freshness) - weight: WEIGHT_RECENCY
-    # - Access frequency (popularity/utility) - weight: WEIGHT_ACCESS
+    # - Vector similarity (semantic match) - config.relevance_semantic_weight (default: 0.5)
+    # - Tag overlap (categorical match) - config.relevance_tag_weight (default: 0.3)
+    # - Recency (freshness) - config.relevance_recency_weight (default: 0.1)
+    # - Access frequency (popularity/utility) - config.relevance_access_weight (default: 0.1)
+    #
+    # Recency decay uses configurable half-life: config.relevance_recency_half_life_hours (default: 168 = 1 week)
     #
     # Also provides tag similarity calculations using hierarchical Jaccard.
     #
     module RelevanceScorer
-      # Scoring weights (must sum to 1.0)
-      WEIGHT_SEMANTIC = 0.5   # Vector similarity weight
-      WEIGHT_TAG = 0.3        # Tag overlap weight
-      WEIGHT_RECENCY = 0.1    # Temporal freshness weight
-      WEIGHT_ACCESS = 0.1     # Access frequency weight
-
       # Default score when signal is unavailable
       DEFAULT_NEUTRAL_SCORE = 0.5
-
-      # Recency decay parameters
-      RECENCY_HALF_LIFE_HOURS = 168.0  # 1 week in hours
 
       # Access frequency normalization
       ACCESS_SCORE_NORMALIZER = 10.0
@@ -32,6 +25,27 @@ class HTM
       RELEVANCE_SCALE = 10.0
       RELEVANCE_MIN = 0.0
       RELEVANCE_MAX = 10.0
+
+      # Configurable scoring weights (via HTM.configuration)
+      def weight_semantic
+        HTM.configuration.relevance_semantic_weight
+      end
+
+      def weight_tag
+        HTM.configuration.relevance_tag_weight
+      end
+
+      def weight_recency
+        HTM.configuration.relevance_recency_weight
+      end
+
+      def weight_access
+        HTM.configuration.relevance_access_weight
+      end
+
+      def recency_half_life_hours
+        HTM.configuration.relevance_recency_half_life_hours
+      end
 
       # Calculate dynamic relevance score for a node given query context
       #
@@ -62,7 +76,7 @@ class HTM
 
         # 3. Recency (temporal relevance) - exponential decay with half-life
         age_hours = (Time.now - Time.parse(node['created_at'].to_s)) / 3600.0
-        recency_score = Math.exp(-age_hours / RECENCY_HALF_LIFE_HOURS)
+        recency_score = Math.exp(-age_hours / recency_half_life_hours)
 
         # 4. Access frequency (behavioral signal) - log-normalized
         access_count = node['access_count'] || 0
@@ -70,10 +84,10 @@ class HTM
 
         # Weighted composite with final scaling
         relevance = (
-          (semantic_score * WEIGHT_SEMANTIC) +
-          (tag_score * WEIGHT_TAG) +
-          (recency_score * WEIGHT_RECENCY) +
-          (access_score * WEIGHT_ACCESS)
+          (semantic_score * weight_semantic) +
+          (tag_score * weight_tag) +
+          (recency_score * weight_recency) +
+          (access_score * weight_access)
         ) * RELEVANCE_SCALE
 
         relevance.clamp(RELEVANCE_MIN, RELEVANCE_MAX)

@@ -26,9 +26,14 @@ class HTM
       MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB maximum file size
 
       # @param htm_instance [HTM] The HTM instance to use for storing nodes
-      def initialize(htm_instance)
+      # @param chunk_size [Integer] Maximum characters per chunk (default: from config)
+      # @param chunk_overlap [Integer] Character overlap between chunks (default: from config)
+      def initialize(htm_instance, chunk_size: nil, chunk_overlap: nil)
         @htm = htm_instance
-        @chunker = ParagraphChunker.new
+        @chunker = MarkdownChunker.new(
+          chunk_size: chunk_size,
+          chunk_overlap: chunk_overlap
+        )
       end
 
       # Load a single markdown file into long-term memory
@@ -89,19 +94,19 @@ class HTM
         # Parse frontmatter and body
         frontmatter, body = extract_frontmatter(content)
 
-        # Chunk the body
-        chunks = @chunker.chunk(body)
+        # Chunk the body with metadata (includes cursor positions)
+        chunks = @chunker.chunk_with_metadata(body)
 
         # Prepend frontmatter to first chunk if present
         if frontmatter.any? && chunks.any?
           frontmatter_yaml = YAML.dump(frontmatter).sub(/\A---\n/, "---\n")
-          chunks[0] = "#{frontmatter_yaml}---\n\n#{chunks[0]}"
+          chunks[0][:text] = "#{frontmatter_yaml}---\n\n#{chunks[0][:text]}"
         end
 
         # Save source first (need ID for node association)
         source.save! if source.new_record?
 
-        # Sync chunks to database
+        # Sync chunks to database (chunks now include cursor positions)
         result = sync_chunks(source, chunks)
 
         # Update source record
@@ -181,7 +186,7 @@ class HTM
       # Sync chunks to database, handling updates and deletions
       #
       # @param source [FileSource] The source record
-      # @param chunks [Array<String>] New chunk contents
+      # @param chunks [Array<Hash>] New chunks with :text and :cursor keys
       # @return [Hash] Sync statistics
       #
       def sync_chunks(source, chunks)
@@ -197,12 +202,16 @@ class HTM
         # Track which existing nodes we've matched
         matched_hashes = Set.new
 
-        # Process each new chunk
-        chunks.each_with_index do |chunk_content, position|
+        # Process each new chunk (chunks are now Hashes with :text and :cursor)
+        chunks.each_with_index do |chunk_data, position|
+          chunk_content = chunk_data[:text].strip
+          chunk_cursor = chunk_data[:cursor]
+          next if chunk_content.empty?
+
           chunk_hash = HTM::Models::Node.generate_content_hash(chunk_content)
 
           if existing_by_hash[chunk_hash]
-            # Chunk exists - update position if needed, restore if soft-deleted
+            # Chunk exists - update position/cursor if needed, restore if soft-deleted
             node = existing_by_hash[chunk_hash]
             matched_hashes << chunk_hash
 
@@ -210,13 +219,20 @@ class HTM
             changes[:chunk_position] = position if node.chunk_position != position
             changes[:deleted_at] = nil if node.deleted_at.present?
 
+            # Update cursor in metadata if changed
+            current_cursor = node.metadata&.dig('cursor')
+            if current_cursor != chunk_cursor
+              new_metadata = (node.metadata || {}).merge('cursor' => chunk_cursor)
+              changes[:metadata] = new_metadata
+            end
+
             if changes.any?
               node.update!(changes)
               updated += 1
             end
           else
-            # New chunk - create node
-            node = create_chunk_node(source, chunk_content, position)
+            # New chunk - create node with cursor in metadata
+            node = create_chunk_node(source, chunk_content, position, cursor: chunk_cursor)
             created += 1 if node
           end
         end
@@ -238,11 +254,15 @@ class HTM
       # @param source [FileSource] The source record
       # @param content [String] Chunk content
       # @param position [Integer] Position in file (0-indexed)
+      # @param cursor [Integer] Character offset in original file
       # @return [Node, nil] The created node or nil if duplicate
       #
-      def create_chunk_node(source, content, position)
+      def create_chunk_node(source, content, position, cursor: nil)
+        # Build metadata with cursor position (file path is in source, not duplicated here)
+        chunk_metadata = cursor ? { 'cursor' => cursor } : {}
+
         # Use remember to get proper embedding/tag processing
-        node_id = @htm.remember(content)
+        node_id = @htm.remember(content, metadata: chunk_metadata)
 
         # Update with source reference
         node = HTM::Models::Node.find(node_id)
@@ -254,7 +274,13 @@ class HTM
         # Find and link to this source
         existing = HTM::Models::Node.find_by_content(content)
         if existing && existing.source_id.nil?
-          existing.update!(source_id: source.id, chunk_position: position)
+          # Merge cursor into existing metadata
+          new_metadata = (existing.metadata || {}).merge('cursor' => cursor) if cursor
+          existing.update!(
+            source_id: source.id,
+            chunk_position: position,
+            metadata: new_metadata || existing.metadata
+          )
         end
         existing
       end

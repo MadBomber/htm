@@ -66,6 +66,26 @@ class HTM
     attr_accessor :job_backend
     attr_accessor :week_start
 
+    # Limit configuration
+    attr_accessor :max_embedding_dimension  # Max vector dimensions (default: 2000)
+    attr_accessor :max_tag_depth            # Max tag hierarchy depth (default: 4)
+
+    # Chunking configuration (for file loading)
+    attr_accessor :chunk_size               # Max characters per chunk (default: 1024)
+    attr_accessor :chunk_overlap            # Character overlap between chunks (default: 64)
+
+    # Circuit breaker configuration
+    attr_accessor :circuit_breaker_failure_threshold   # Failures before opening (default: 5)
+    attr_accessor :circuit_breaker_reset_timeout       # Seconds before half-open (default: 60)
+    attr_accessor :circuit_breaker_half_open_max_calls # Successes to close (default: 3)
+
+    # Relevance scoring weights (must sum to 1.0)
+    attr_accessor :relevance_semantic_weight  # Vector similarity weight (default: 0.5)
+    attr_accessor :relevance_tag_weight       # Tag overlap weight (default: 0.3)
+    attr_accessor :relevance_recency_weight   # Temporal freshness weight (default: 0.1)
+    attr_accessor :relevance_access_weight    # Access frequency weight (default: 0.1)
+    attr_accessor :relevance_recency_half_life_hours  # Decay half-life in hours (default: 168 = 1 week)
+
     # Provider-specific API keys and endpoints
     attr_accessor :openai_api_key, :openai_organization, :openai_project
     attr_accessor :anthropic_api_key
@@ -98,53 +118,74 @@ class HTM
 
     def initialize
       # Default configuration - Ollama for local development
-      @embedding_provider = :ollama
-      @embedding_model = 'nomic-embed-text:latest'  # Include tag for Ollama models
-      @embedding_dimensions = 768
+      # All settings can be overridden via HTM_* environment variables
+      @embedding_provider                  = ENV.fetch('HTM_EMBEDDING_PROVIDER', 'ollama').to_sym
+      @embedding_model                     = ENV.fetch('HTM_EMBEDDING_MODEL', 'nomic-embed-text:latest')
+      @embedding_dimensions                = ENV.fetch('HTM_EMBEDDING_DIMENSIONS', 768).to_i
 
-      @tag_provider = :ollama
-      @tag_model = 'gemma3:latest'  # Include tag for Ollama models
+      @tag_provider                        = ENV.fetch('HTM_TAG_PROVIDER', 'ollama').to_sym
+      @tag_model                           = ENV.fetch('HTM_TAG_MODEL', 'gemma3:latest')
 
-      @proposition_provider = :ollama
-      @proposition_model = 'gemma3:latest'  # Include tag for Ollama models
-      @extract_propositions = ENV['HTM_EXTRACT_PROPOSITIONS']&.downcase == 'true'
+      @proposition_provider                = ENV.fetch('HTM_PROPOSITION_PROVIDER', 'ollama').to_sym
+      @proposition_model                   = ENV.fetch('HTM_PROPOSITION_MODEL', 'gemma3:latest')
+      @extract_propositions                = ENV.fetch('HTM_EXTRACT_PROPOSITIONS', 'false').downcase == 'true'
 
       # Provider credentials from environment variables
-      @openai_api_key = ENV['OPENAI_API_KEY']
-      @openai_organization = ENV['OPENAI_ORGANIZATION']
-      @openai_project = ENV['OPENAI_PROJECT']
-      @anthropic_api_key = ENV['ANTHROPIC_API_KEY']
-      @gemini_api_key = ENV['GEMINI_API_KEY']
-      @azure_api_key = ENV['AZURE_OPENAI_API_KEY']
-      @azure_endpoint = ENV['AZURE_OPENAI_ENDPOINT']
-      @azure_api_version = ENV['AZURE_OPENAI_API_VERSION'] || '2024-02-01'
-      @ollama_url = ENV['OLLAMA_API_BASE'] || ENV['OLLAMA_URL'] || 'http://localhost:11434'
-      @huggingface_api_key = ENV['HUGGINGFACE_API_KEY']
-      @openrouter_api_key = ENV['OPENROUTER_API_KEY']
-      @bedrock_access_key = ENV['AWS_ACCESS_KEY_ID']
-      @bedrock_secret_key = ENV['AWS_SECRET_ACCESS_KEY']
-      @bedrock_region = ENV['AWS_REGION'] || 'us-east-1'
-      @deepseek_api_key = ENV['DEEPSEEK_API_KEY']
+      # These use standard provider env var names for compatibility
+      @openai_api_key                      = ENV.fetch('HTM_OPENAI_API_KEY', ENV['OPENAI_API_KEY'])
+      @openai_organization                 = ENV.fetch('HTM_OPENAI_ORGANIZATION', ENV['OPENAI_ORGANIZATION'])
+      @openai_project                      = ENV.fetch('HTM_OPENAI_PROJECT', ENV['OPENAI_PROJECT'])
+      @anthropic_api_key                   = ENV.fetch('HTM_ANTHROPIC_API_KEY', ENV['ANTHROPIC_API_KEY'])
+      @gemini_api_key                      = ENV.fetch('HTM_GEMINI_API_KEY', ENV['GEMINI_API_KEY'])
+      @azure_api_key                       = ENV.fetch('HTM_AZURE_API_KEY', ENV['AZURE_OPENAI_API_KEY'])
+      @azure_endpoint                      = ENV.fetch('HTM_AZURE_ENDPOINT', ENV['AZURE_OPENAI_ENDPOINT'])
+      @azure_api_version                   = ENV.fetch('HTM_AZURE_API_VERSION', ENV.fetch('AZURE_OPENAI_API_VERSION', '2024-02-01'))
+      @ollama_url                          = ENV.fetch('HTM_OLLAMA_URL', ENV['OLLAMA_API_BASE'] || ENV['OLLAMA_URL'] || 'http://localhost:11434')
+      @huggingface_api_key                 = ENV.fetch('HTM_HUGGINGFACE_API_KEY', ENV['HUGGINGFACE_API_KEY'])
+      @openrouter_api_key                  = ENV.fetch('HTM_OPENROUTER_API_KEY', ENV['OPENROUTER_API_KEY'])
+      @bedrock_access_key                  = ENV.fetch('HTM_BEDROCK_ACCESS_KEY', ENV['AWS_ACCESS_KEY_ID'])
+      @bedrock_secret_key                  = ENV.fetch('HTM_BEDROCK_SECRET_KEY', ENV['AWS_SECRET_ACCESS_KEY'])
+      @bedrock_region                      = ENV.fetch('HTM_BEDROCK_REGION', ENV.fetch('AWS_REGION', 'us-east-1'))
+      @deepseek_api_key                    = ENV.fetch('HTM_DEEPSEEK_API_KEY', ENV['DEEPSEEK_API_KEY'])
 
       # Timeout settings (in seconds) - apply to all LLM providers
-      @embedding_timeout = 120      # 2 minutes for embedding generation
-      @tag_timeout = 180            # 3 minutes for tag generation (LLM inference)
-      @proposition_timeout = 180    # 3 minutes for proposition extraction (LLM inference)
-      @connection_timeout = 30      # 30 seconds for initial connection
+      @embedding_timeout                   = ENV.fetch('HTM_EMBEDDING_TIMEOUT', 120).to_i
+      @tag_timeout                         = ENV.fetch('HTM_TAG_TIMEOUT', 180).to_i
+      @proposition_timeout                 = ENV.fetch('HTM_PROPOSITION_TIMEOUT', 180).to_i
+      @connection_timeout                  = ENV.fetch('HTM_CONNECTION_TIMEOUT', 30).to_i
+
+      # Limit settings
+      @max_embedding_dimension             = ENV.fetch('HTM_MAX_EMBEDDING_DIMENSION', 2000).to_i
+      @max_tag_depth                       = ENV.fetch('HTM_MAX_TAG_DEPTH', 4).to_i
+
+      # Chunking settings (for file loading)
+      @chunk_size                          = ENV.fetch('HTM_CHUNK_SIZE', 1024).to_i
+      @chunk_overlap                       = ENV.fetch('HTM_CHUNK_OVERLAP', 64).to_i
+
+      # Circuit breaker settings
+      @circuit_breaker_failure_threshold   = ENV.fetch('HTM_CIRCUIT_BREAKER_FAILURE_THRESHOLD', 5).to_i
+      @circuit_breaker_reset_timeout       = ENV.fetch('HTM_CIRCUIT_BREAKER_RESET_TIMEOUT', 60).to_i
+      @circuit_breaker_half_open_max_calls = ENV.fetch('HTM_CIRCUIT_BREAKER_HALF_OPEN_MAX_CALLS', 3).to_i
+
+      # Relevance scoring weights (should sum to 1.0)
+      @relevance_semantic_weight           = ENV.fetch('HTM_RELEVANCE_SEMANTIC_WEIGHT', 0.5).to_f
+      @relevance_tag_weight                = ENV.fetch('HTM_RELEVANCE_TAG_WEIGHT', 0.3).to_f
+      @relevance_recency_weight            = ENV.fetch('HTM_RELEVANCE_RECENCY_WEIGHT', 0.1).to_f
+      @relevance_access_weight             = ENV.fetch('HTM_RELEVANCE_ACCESS_WEIGHT', 0.1).to_f
+      @relevance_recency_half_life_hours   = ENV.fetch('HTM_RELEVANCE_RECENCY_HALF_LIFE_HOURS', 168.0).to_f
 
       # Default logger (STDOUT with INFO level)
-      @logger = default_logger
+      @logger                              = default_logger
 
-      # Auto-detect job backend based on environment
-      @job_backend = detect_job_backend
+      # Job backend: inline, thread, active_job, sidekiq (auto-detected if not set)
+      @job_backend                         = ENV['HTM_JOB_BACKEND'] ? ENV['HTM_JOB_BACKEND'].to_sym : detect_job_backend
 
-      # Timeframe parsing configuration
-      # :sunday (default) or :monday for week start day
-      @week_start = :sunday
+      # Timeframe parsing configuration: sunday or monday
+      @week_start                          = ENV.fetch('HTM_WEEK_START', 'sunday').to_sym
 
       # Thread-safe Ollama model refresh tracking
-      @ollama_models_refreshed = false
-      @ollama_refresh_mutex = Mutex.new
+      @ollama_models_refreshed             = false
+      @ollama_refresh_mutex                = Mutex.new
 
       # Set default implementations
       reset_to_defaults
@@ -222,7 +263,9 @@ class HTM
     # @param provider [Symbol] The provider to configure (:openai, :anthropic, etc.)
     #
     def configure_ruby_llm(provider = nil)
-      require 'ruby_llm' unless defined?(RubyLLM)
+      # Always require ruby_llm to ensure full module is loaded
+      # (require is idempotent, and defined?(RubyLLM) can be true before configure method exists)
+      require 'ruby_llm'
 
       provider ||= @embedding_provider
 

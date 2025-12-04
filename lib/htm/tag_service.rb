@@ -15,7 +15,6 @@ class HTM
   # The actual LLM call is delegated to HTM.configuration.tag_extractor
   #
   class TagService
-    MAX_DEPTH = 4  # Maximum hierarchy depth (3 colons)
     TAG_FORMAT = /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/  # Validation regex
 
     # Circuit breaker for tag extraction API calls
@@ -23,16 +22,26 @@ class HTM
     @circuit_breaker_mutex = Mutex.new
 
     class << self
+      # Maximum tag hierarchy depth (configurable, default 4)
+      #
+      # @return [Integer] Max depth (3 colons max by default)
+      #
+      def max_depth
+        HTM.configuration.max_tag_depth
+      end
+
       # Get or create the circuit breaker for tag service
       #
       # @return [HTM::CircuitBreaker] The circuit breaker instance
       #
       def circuit_breaker
+        config = HTM.configuration
         @circuit_breaker_mutex.synchronize do
           @circuit_breaker ||= HTM::CircuitBreaker.new(
             name: 'tag_service',
-            failure_threshold: 5,
-            reset_timeout: 60
+            failure_threshold: config.circuit_breaker_failure_threshold,
+            reset_timeout: config.circuit_breaker_reset_timeout,
+            half_open_max_calls: config.circuit_breaker_half_open_max_calls
           )
         end
       end
@@ -119,8 +128,9 @@ class HTM
 
         # Check depth
         depth = tag.count(':')
-        if depth >= MAX_DEPTH
-          HTM.logger.warn "TagService: Tag depth #{depth + 1} exceeds max #{MAX_DEPTH}, skipping: #{tag}"
+        max_tag_depth = max_depth
+        if depth >= max_tag_depth
+          HTM.logger.warn "TagService: Tag depth #{depth + 1} exceeds max #{max_tag_depth}, skipping: #{tag}"
           next
         end
 
@@ -155,7 +165,7 @@ class HTM
       return false unless tag.is_a?(String)
       return false if tag.empty?
       return false unless tag.match?(TAG_FORMAT)
-      return false if tag.count(':') >= MAX_DEPTH
+      return false if tag.count(':') >= max_depth
 
       # Ontological validation
       levels = tag.split(':')
