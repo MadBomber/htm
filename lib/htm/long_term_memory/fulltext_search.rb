@@ -37,7 +37,8 @@ class HTM
         # Enforce limit to prevent DoS
         safe_limit = [[limit.to_i, 1].max, MAX_FULLTEXT_LIMIT].min
 
-        @cache.fetch(:fulltext, timeframe, query, safe_limit, metadata) do
+        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        result = @cache.fetch(:fulltext, timeframe, query, safe_limit, metadata) do
           search_fulltext_uncached(
             timeframe: timeframe,
             query: query,
@@ -45,6 +46,9 @@ class HTM
             metadata: metadata
           )
         end
+        elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+        HTM::Telemetry.search_latency.record(elapsed_ms, attributes: { 'strategy' => 'fulltext' })
+        result
       end
 
       private

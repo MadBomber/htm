@@ -20,6 +20,7 @@ require_relative "htm/jobs/generate_propositions_job"
 require_relative "htm/loaders/markdown_chunker"
 require_relative "htm/loaders/markdown_loader"
 require_relative "htm/observability"
+require_relative "htm/telemetry"
 
 require "pg"
 require "securerandom"

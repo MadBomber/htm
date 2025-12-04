@@ -33,6 +33,9 @@ class HTM
           return
         end
 
+        provider = HTM.configuration.tag_provider.to_s
+        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
         begin
           HTM.logger.debug "GenerateTagsJob: Extracting tags for node #{node_id}"
 
@@ -61,21 +64,42 @@ class HTM
             )
           end
 
+          # Record success metrics
+          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+          HTM::Telemetry.tag_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'success' })
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'tags', 'status' => 'success' })
+
           HTM.logger.info "GenerateTagsJob: Successfully generated #{tag_names.length} tags for node #{node_id}: #{tag_names.join(', ')}"
 
         rescue HTM::CircuitBreakerOpenError => e
           # Circuit breaker is open - service is unavailable, will retry later
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'tags', 'status' => 'circuit_open' })
           HTM.logger.warn "GenerateTagsJob: Circuit breaker open for node #{node_id}, will retry when service recovers"
 
         rescue HTM::TagError => e
+          # Record failure metrics
+          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+          HTM::Telemetry.tag_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'error' })
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'tags', 'status' => 'error' })
+
           # Log tag-specific errors
           HTM.logger.error "GenerateTagsJob: Tag generation failed for node #{node_id}: #{e.message}"
 
         rescue ActiveRecord::RecordInvalid => e
+          # Record failure metrics
+          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+          HTM::Telemetry.tag_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'error' })
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'tags', 'status' => 'error' })
+
           # Log validation errors
           HTM.logger.error "GenerateTagsJob: Database validation failed for node #{node_id}: #{e.message}"
 
         rescue StandardError => e
+          # Record failure metrics
+          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+          HTM::Telemetry.tag_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'error' })
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'tags', 'status' => 'error' })
+
           # Log unexpected errors
           HTM.logger.error "GenerateTagsJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
           HTM.logger.debug e.backtrace.first(5).join("\n")

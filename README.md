@@ -68,6 +68,12 @@
     - Source file tracking with re-sync support
     - YAML frontmatter extraction as metadata
 
+- **Telemetry (OpenTelemetry)**
+    - Optional metrics collection via OpenTelemetry
+    - Zero overhead when disabled (null object pattern)
+    - Works with 50+ backends (Jaeger, Prometheus, Datadog, etc.)
+    - Tracks job latency, search performance, and cache effectiveness
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -372,6 +378,68 @@ rake htm:jobs:clear_all
 ```
 
 See `rake -T htm:jobs` for complete list of job management tasks.
+
+## Telemetry (OpenTelemetry)
+
+HTM includes optional OpenTelemetry-based metrics for production observability. Telemetry is **disabled by default** with zero overhead when off.
+
+### Enabling Telemetry
+
+```ruby
+HTM.configure do |config|
+  config.telemetry_enabled = true
+end
+
+# Or via environment variable
+# HTM_TELEMETRY_ENABLED=true
+```
+
+### Configuring the Destination
+
+HTM emits metrics via standard OpenTelemetry protocols. Configure your destination using environment variables:
+
+```bash
+# Export to any OTLP-compatible backend
+export OTEL_METRICS_EXPORTER="otlp"
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
+```
+
+### Available Metrics
+
+| Metric | Type | Attributes | Description |
+|--------|------|------------|-------------|
+| `htm.jobs` | Counter | `job`, `status` | Job execution counts (embedding, tags) |
+| `htm.embedding.latency` | Histogram | `provider`, `status` | Embedding generation time (ms) |
+| `htm.tag.latency` | Histogram | `provider`, `status` | Tag extraction time (ms) |
+| `htm.search.latency` | Histogram | `strategy` | Search operation time (ms) |
+| `htm.cache.operations` | Counter | `operation` | Cache hits/misses |
+
+### Compatible Backends
+
+HTM works with any OTLP-compatible observability platform:
+
+**Open Source:** Jaeger, Prometheus, Grafana Tempo/Mimir, SigNoz, Uptrace
+
+**Commercial:** Datadog, New Relic, Honeycomb, Splunk, Dynatrace, AWS X-Ray, Google Cloud Trace, Azure Monitor
+
+### Optional Dependencies
+
+Users who want telemetry should add these gems:
+
+```ruby
+gem 'opentelemetry-sdk'
+gem 'opentelemetry-metrics-sdk'
+gem 'opentelemetry-exporter-otlp'  # For OTLP export
+```
+
+### Design
+
+HTM uses a **null object pattern** for telemetry. When disabled or when the SDK is not installed:
+- All metric operations are no-ops
+- Zero runtime overhead
+- No errors or exceptions
+
+See [docs/telemetry.md](docs/telemetry.md) for detailed configuration and usage examples.
 
 ## Configuration
 
@@ -1159,6 +1227,17 @@ export HTM_LOG_LEVEL="INFO"   # Default
 ```
 
 This is used by the default logger when `HTM.configure` is called without a custom logger.
+
+#### HTM_TELEMETRY_ENABLED
+
+Enable OpenTelemetry metrics collection:
+
+```bash
+export HTM_TELEMETRY_ENABLED="true"   # Enable telemetry
+export HTM_TELEMETRY_ENABLED="false"  # Disable (default)
+```
+
+When enabled, HTM emits metrics to configured OpenTelemetry collectors. See [Telemetry](#telemetry-opentelemetry) for details.
 
 ### Quick Setup Examples
 

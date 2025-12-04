@@ -65,6 +65,7 @@ class HTM
     attr_accessor :logger
     attr_accessor :job_backend
     attr_accessor :week_start
+    attr_accessor :telemetry_enabled  # Enable OpenTelemetry metrics (default: false)
 
     # Limit configuration
     attr_accessor :max_embedding_dimension  # Max vector dimensions (default: 2000)
@@ -182,6 +183,9 @@ class HTM
 
       # Timeframe parsing configuration: sunday or monday
       @week_start                          = ENV.fetch('HTM_WEEK_START', 'sunday').to_sym
+
+      # Telemetry (OpenTelemetry metrics)
+      @telemetry_enabled                   = ENV.fetch('HTM_TELEMETRY_ENABLED', 'false').downcase == 'true'
 
       # Thread-safe Ollama model refresh tracking
       @ollama_models_refreshed             = false

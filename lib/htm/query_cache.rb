@@ -65,10 +65,12 @@ class HTM
 
       if (cached = @cache[key])
         @mutex.synchronize { @hits += 1 }
+        HTM::Telemetry.cache_operations.add(1, attributes: { 'operation' => 'hit' })
         return cached
       end
 
       @mutex.synchronize { @misses += 1 }
+      HTM::Telemetry.cache_operations.add(1, attributes: { 'operation' => 'miss' })
       result = yield
       @cache[key] = result
 

@@ -37,7 +37,8 @@ class HTM
         safe_limit = [[limit.to_i, 1].max, MAX_HYBRID_LIMIT].min
         safe_prefilter = [[prefilter_limit.to_i, 1].max, MAX_PREFILTER_LIMIT].min
 
-        @cache.fetch(:hybrid, timeframe, query, safe_limit, safe_prefilter, metadata) do
+        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        result = @cache.fetch(:hybrid, timeframe, query, safe_limit, safe_prefilter, metadata) do
           search_hybrid_uncached(
             timeframe: timeframe,
             query: query,
@@ -47,6 +48,9 @@ class HTM
             metadata: metadata
           )
         end
+        elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+        HTM::Telemetry.search_latency.record(elapsed_ms, attributes: { 'strategy' => 'hybrid' })
+        result
       end
 
       private

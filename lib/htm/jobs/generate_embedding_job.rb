@@ -36,6 +36,9 @@ class HTM
           return
         end
 
+        provider = HTM.configuration.embedding_provider.to_s
+        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
         begin
           HTM.logger.debug "GenerateEmbeddingJob: Generating embedding for node #{node_id}"
 
@@ -45,17 +48,33 @@ class HTM
           # Update node with processed embedding
           node.update!(embedding: result[:storage_embedding])
 
+          # Record success metrics
+          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+          HTM::Telemetry.embedding_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'success' })
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'embedding', 'status' => 'success' })
+
           HTM.logger.info "GenerateEmbeddingJob: Successfully generated embedding for node #{node_id} (#{result[:dimension]} dimensions)"
 
         rescue HTM::CircuitBreakerOpenError => e
           # Circuit breaker is open - service is unavailable, will retry later
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'embedding', 'status' => 'circuit_open' })
           HTM.logger.warn "GenerateEmbeddingJob: Circuit breaker open for node #{node_id}, will retry when service recovers"
 
         rescue HTM::EmbeddingError => e
+          # Record failure metrics
+          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+          HTM::Telemetry.embedding_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'error' })
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'embedding', 'status' => 'error' })
+
           # Log embedding-specific errors
           HTM.logger.error "GenerateEmbeddingJob: Embedding generation failed for node #{node_id}: #{e.message}"
 
         rescue StandardError => e
+          # Record failure metrics
+          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+          HTM::Telemetry.embedding_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'error' })
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'embedding', 'status' => 'error' })
+
           # Log unexpected errors
           HTM.logger.error "GenerateEmbeddingJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
           HTM.logger.debug e.backtrace.first(5).join("\n")
