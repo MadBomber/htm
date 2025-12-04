@@ -1,0 +1,46 @@
+# Dictator Configuration for HTM
+# Decree-based structural enforcement
+# https://github.com/seuros/dictator
+
+[decree.supreme]
+# Universal structural rules (applies to ALL files)
+trailing_whitespace   = "deny"
+tabs_vs_spaces        = "spaces"
+tab_width             = 2
+final_newline         = "require"
+line_endings          = "lf"
+blank_line_whitespace = "deny"
+
+[decree.ruby]
+# Ruby-specific structural enforcement
+max_line_length         = 120
+max_lines               = 300
+ignore_comments         = true
+ignore_blank_lines      = true
+method_visibility_order = ["public", "protected", "private"]
+comment_spacing         = true
+
+[decree.ruby.linter]
+# External linter - Dictator adds: -A --format json
+command = "rubocop"
+
+[decree.frontmatter]
+# YAML frontmatter ordering for .md files
+order    = ["title", "slug", "pubDate", "description", "tags", "draft"]
+required = ["title"]
+
+# Disable unused language decrees
+[decree.typescript]
+enabled = false
+
+[decree.golang]
+enabled = false
+
+[decree.rust]
+enabled = false
+
+[decree.python]
+enabled = false
+
+[decree.kjr]
+enabled = false
