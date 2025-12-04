@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.13] - 2025-12-04
+### Changed
+- **MarkdownChunker now uses Baran gem** - Replaced custom ParagraphChunker with Baran's `MarkdownSplitter`
+  - Respects markdown structure (headers, code blocks, horizontal rules)
+  - Configurable `chunk_size` and `chunk_overlap` settings
+  - Returns cursor positions for each chunk
+- **Fuzzy tag search with trigram matching** - Tags now searchable with fuzzy matching via pg_trgm
+- **LongTermMemory modularization** - Refactored into separate concerns for better maintainability
+  - Search optimizations for vector, fulltext, and hybrid strategies
+
+### Fixed
+- **Configurable limits** - The following are now configurable (previously hard-coded):
+  - `max_embedding_dimension` (default: 2000)
+  - `max_tag_depth` (default: 4)
+  - Circuit breaker settings: `failure_threshold`, `reset_timeout`, `half_open_max_calls`
+  - Relevance scoring weights: `semantic_weight`, `tag_weight`, `recency_weight`, `access_weight`
+  - `relevance_recency_half_life_hours` (default: 168 = 1 week)
+
 ## [0.0.11] - 2025-12-02
 
 ### Added
