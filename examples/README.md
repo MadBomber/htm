@@ -11,6 +11,12 @@ All examples require:
    export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
    ```
 
+   > **Note**: Database selection now respects `RAILS_ENV`. If `RAILS_ENV` is set,
+   > HTM extracts the base name from `HTM_DBURL` and appends the environment suffix.
+   > For example, with `HTM_DBURL=...htm_development` and `RAILS_ENV=test`, HTM
+   > connects to `htm_test`. When `RAILS_ENV` is unset (typical for examples),
+   > behavior is unchanged.
+
 2. **Ollama** (recommended for local LLM):
    ```bash
    ollama pull nomic-embed-text  # For embeddings
@@ -104,6 +110,39 @@ ruby examples/timeframe_demo.rb
 - Weekend expressions ("last weekend", "2 weekends ago")
 - Automatic extraction (`:auto`) from query text
 - Multiple time windows (array of ranges)
+
+---
+
+### telemetry/
+
+**Live Grafana dashboard for HTM metrics.**
+
+A complete telemetry demo using Homebrew-installed Prometheus and Grafana to visualize HTM metrics in real-time graphs.
+
+```bash
+cd examples/telemetry
+ruby demo.rb
+```
+
+The demo automatically:
+- Checks/installs Prometheus and Grafana via Homebrew
+- Starts both services if not running
+- Configures Prometheus to scrape the demo's metrics
+- Cleans up previous demo data
+- Opens Grafana in your browser
+
+**Features:**
+- Live updating dashboard with job counts, latencies, cache hit rates
+- Pre-built Grafana dashboard JSON
+- No Docker required - uses native macOS services
+
+**Dependencies:**
+```bash
+brew install prometheus grafana
+gem install prometheus-client webrick
+```
+
+See [telemetry/README.md](telemetry/README.md) for detailed setup instructions.
 
 ---
 
@@ -366,6 +405,11 @@ examples/
 ├── custom_llm_configuration.rb    # LLM integration patterns
 ├── file_loader_usage.rb           # Document loading
 ├── timeframe_demo.rb              # Time-based filtering
+├── telemetry/
+│   ├── demo.rb                    # Live Grafana metrics dashboard
+│   ├── README.md
+│   ├── SETUP_README.md
+│   └── grafana/dashboards/htm-metrics.json
 ├── mcp_server.rb                  # MCP server exposing HTM tools
 ├── mcp_client.rb                  # MCP client with chat interface
 ├── example_app/
@@ -397,6 +441,7 @@ examples/
 | Custom LLM integration | `custom_llm_configuration.rb` |
 | Loading documents/files | `file_loader_usage.rb` |
 | Time-based queries | `timeframe_demo.rb` |
+| Production observability | `telemetry/` |
 | MCP server for AI assistants | `mcp_server.rb` |
 | MCP client with chat interface | `mcp_client.rb` |
 | Web application | `sinatra_app/` |
