@@ -68,21 +68,28 @@ namespace :htm do
       end
     end
 
-    desc "Test database connection"
-    task :test do
+    desc "Verify database connection (respects RAILS_ENV)"
+    task :verify do
       require 'htm'
-      config = HTM::Database.default_config
-      raise "Database not configured. Set HTM_DBURL environment variable." unless config
 
-      puts "Testing HTM database connection..."
+      env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+      config = HTM::ActiveRecordConfig.load_database_config
+
+      puts "Verifying HTM database connection (#{env})..."
       puts "  Host: #{config[:host]}"
       puts "  Port: #{config[:port]}"
-      puts "  Database: #{config[:dbname]}"
-      puts "  User: #{config[:user]}"
+      puts "  Database: #{config[:database]}"
+      puts "  User: #{config[:username]}"
 
       begin
         require 'pg'
-        conn = PG.connect(config)
+        conn = PG.connect(
+          host: config[:host],
+          port: config[:port],
+          dbname: config[:database],
+          user: config[:username],
+          password: config[:password]
+        )
 
         # Check pgvector
         pgvector = conn.exec("SELECT extversion FROM pg_extension WHERE extname='vector'").first
@@ -100,16 +107,18 @@ namespace :htm do
       end
     end
 
-    desc "Open PostgreSQL console"
+    desc "Open PostgreSQL console (respects RAILS_ENV)"
     task :console do
       require 'htm'
-      config = HTM::Database.default_config
-      raise "Database not configured. Set HTM_DBURL environment variable." unless config
 
+      env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+      config = HTM::ActiveRecordConfig.load_database_config
+
+      puts "Connecting to #{config[:database]} (#{env})..."
       exec "psql", "-h", config[:host],
                    "-p", config[:port].to_s,
-                   "-U", config[:user],
-                   "-d", config[:dbname]
+                   "-U", config[:username],
+                   "-d", config[:database]
     end
 
     desc "Seed database with sample data"
@@ -404,6 +413,62 @@ namespace :htm do
       task :load do
         require 'htm'
         HTM::Database.load_schema
+      end
+    end
+
+    desc "Create database if it doesn't exist (respects RAILS_ENV)"
+    task :create do
+      require 'htm'
+
+      env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+      config = HTM::ActiveRecordConfig.load_database_config
+      db_name = config[:database]
+
+      puts "Creating database: #{db_name} (#{env})"
+
+      admin_config = config.dup
+      admin_config[:database] = 'postgres'
+
+      begin
+        require 'pg'
+        admin_conn = PG.connect(
+          host: admin_config[:host],
+          port: admin_config[:port],
+          dbname: admin_config[:database],
+          user: admin_config[:username],
+          password: admin_config[:password]
+        )
+
+        result = admin_conn.exec_params(
+          "SELECT 1 FROM pg_database WHERE datname = $1",
+          [db_name]
+        )
+
+        if result.ntuples == 0
+          admin_conn.exec("CREATE DATABASE #{PG::Connection.quote_ident(db_name)}")
+          puts "✓ Database created: #{db_name}"
+
+          # Connect to new database and enable extensions
+          db_conn = PG.connect(
+            host: config[:host],
+            port: config[:port],
+            dbname: db_name,
+            user: config[:username],
+            password: config[:password]
+          )
+          %w[vector pg_trgm].each do |ext|
+            db_conn.exec("CREATE EXTENSION IF NOT EXISTS #{ext}")
+          end
+          db_conn.close
+          puts "✓ Extensions enabled (pgvector, pg_trgm)"
+        else
+          puts "✓ Database already exists: #{db_name}"
+        end
+
+        admin_conn.close
+      rescue PG::Error => e
+        puts "✗ Error: #{e.message}"
+        exit 1
       end
     end
 

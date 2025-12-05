@@ -10,6 +10,18 @@ Rake::TestTask.new(:test) do |t|
   t.verbose = true
 end
 
+# Ensure test task runs with RAILS_ENV=test
+task :test do
+  ENV['RAILS_ENV'] = 'test'
+end
+
+# Prepend environment setup before test runs
+Rake::Task[:test].enhance [:set_test_env]
+
+task :set_test_env do
+  ENV['RAILS_ENV'] = 'test'
+end
+
 task default: :test
 
 # Load HTM database tasks from lib/tasks/htm.rake
@@ -20,8 +32,8 @@ require_relative "lib/htm/tasks"
 desc "Run database setup (deprecated: use htm:db:setup)"
 task :db_setup => "htm:db:setup"
 
-desc "Test database connection (deprecated: use htm:db:test)"
-task :db_test => "htm:db:test"
+desc "Verify database connection (deprecated: use htm:db:verify)"
+task :db_test => "htm:db:verify"
 
 desc "Run example"
 task :example do

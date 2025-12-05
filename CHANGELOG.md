@@ -7,7 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **OpenTelemetry metrics** - Optional observability with zero overhead when disabled
+  - New `HTM::Telemetry` module with null object pattern
+  - Metrics: `htm.jobs` (counter), `htm.embedding.latency`, `htm.tag.latency`, `htm.search.latency` (histograms), `htm.cache.operations` (counter)
+  - Instrumented: `GenerateEmbeddingJob`, `GenerateTagsJob`, search methods, `QueryCache`
+  - Enable via `HTM_TELEMETRY_ENABLED=true` or `config.telemetry_enabled = true`
+  - Works with 50+ OTLP-compatible backends (Jaeger, Prometheus, Datadog, etc.)
+  - Comprehensive documentation in `docs/telemetry.md`
+  - 18 new telemetry tests
+- **`htm:db:create` rake task** - Create database if it doesn't exist (respects `RAILS_ENV`)
+
+### Changed
+- **All `htm:db:*` tasks now respect `RAILS_ENV`** - Following Rails conventions
+  - Database selection based on environment: `htm_development`, `htm_test`, `htm_production`
+  - `rake test` automatically sets `RAILS_ENV=test`
+  - Example: `RAILS_ENV=test rake htm:db:setup` operates on `htm_test`
+- **`config/database.yml` refactored** - Extracts base name from `HTM_DBURL` and appends environment suffix
+  - `HTM_DBURL=postgresql://...htm_development` + `RAILS_ENV=test` → connects to `htm_test`
+- **`HTM::Database.default_config` now respects `RAILS_ENV`** - Uses `ActiveRecordConfig.load_database_config`
+- **Renamed `htm:db:test` to `htm:db:verify`** - Avoids naming collision with test database namespace
+  - `htm:db:verify` verifies database connection
+  - `RAILS_ENV=test rake htm:db:*` operates on test database
+
 ## [0.0.13] - 2025-12-04
+
 ### Changed
 - **MarkdownChunker now uses Baran gem** - Replaced custom ParagraphChunker with Baran's `MarkdownSplitter`
   - Respects markdown structure (headers, code blocks, horizontal rules)

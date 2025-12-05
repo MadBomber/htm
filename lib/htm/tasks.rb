@@ -8,16 +8,22 @@
 #
 # This will make the following tasks available:
 #
-# Database tasks:
+# Database tasks (all respect RAILS_ENV, default: development):
+#   rake htm:db:create     # Create database if it doesn't exist
 #   rake htm:db:setup      # Set up HTM database schema and run migrations
 #   rake htm:db:migrate    # Run pending database migrations
 #   rake htm:db:status     # Show migration status
 #   rake htm:db:info       # Show database info
-#   rake htm:db:test       # Test database connection
+#   rake htm:db:verify     # Verify database connection
 #   rake htm:db:console    # Open PostgreSQL console
 #   rake htm:db:seed       # Seed database with sample data
 #   rake htm:db:drop       # Drop all HTM tables (destructive!)
 #   rake htm:db:reset      # Drop and recreate database (destructive!)
+#
+# Examples:
+#   RAILS_ENV=test rake htm:db:create   # Create htm_test database
+#   RAILS_ENV=test rake htm:db:setup    # Setup test database with migrations
+#   RAILS_ENV=test rake htm:db:drop     # Drop test database
 #
 # Async job tasks:
 #   rake htm:jobs:stats              # Show async job statistics

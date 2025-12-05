@@ -2,36 +2,46 @@
 # Uses ERB to read from environment variables
 #
 # Priority:
-# 1. HTM_DBURL - Full connection URL (preferred)
+# 1. HTM_DBURL - Full connection URL (preferred for development/production)
 # 2. Individual HTM_DB* variables - Host, name, user, password, port
 # 3. Defaults for development/test
 #
 # Example HTM_DBURL format:
 #   postgresql://user:password@host:port/database?sslmode=require
+#
+# Test database:
+#   Tests always use htm_test database (Rails convention).
+#   Set RAILS_ENV=test or RACK_ENV=test to use the test configuration.
 
 <%
   require 'uri'
-  
+
+  # Determine current environment
+  current_env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+
   # Parse connection from HTM_DBURL or use individual variables
   if ENV['HTM_DBURL']
     uri = URI.parse(ENV['HTM_DBURL'])
     params = URI.decode_www_form(uri.query || '').to_h
-    
+    base_database = uri.path[1..-1]
+
+    # Extract base name (remove _development, _test, _production suffixes if present)
+    base_name = base_database.sub(/_(development|test|production)$/, '')
+
     db_config = {
       'host' => uri.host,
       'port' => uri.port || 5432,
-      'database' => uri.path[1..-1],
+      'base_name' => base_name,
       'username' => uri.user,
       'password' => uri.password,
       'sslmode' => params['sslmode'] || 'prefer'
     }
   else
-    env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
     db_config = {
       'host' => ENV.fetch('HTM_DBHOST', 'localhost'),
       'port' => ENV.fetch('HTM_DBPORT', 5432).to_i,
-      'database' => ENV.fetch('HTM_DBNAME', "htm_#{env}"),
-      'username' => ENV.fetch('HTM_DBUSER', 'postgres'),
+      'base_name' => ENV.fetch('HTM_DBNAME', 'htm').sub(/_(development|test|production)$/, ''),
+      'username' => ENV.fetch('HTM_DBUSER', ENV['USER']),
       'password' => ENV.fetch('HTM_DBPASS', ''),
       'sslmode' => ENV.fetch('HTM_SSLMODE', 'prefer')
     }
@@ -53,15 +63,12 @@ default: &default
 
 development:
   <<: *default
-  database: <%= db_config['database'] %>
+  database: <%= db_config['base_name'] %>_development
 
 test:
   <<: *default
-  database: <%= db_config['database'] %>_test
+  database: <%= db_config['base_name'] %>_test
 
 production:
   <<: *default
-  database: <%= db_config['database'] %>
-  <% unless ENV['HTM_DBURL'] %>
-  # WARNING: Production should use HTM_DBURL with SSL
-  <% end %>
+  database: <%= db_config['base_name'] %>_production

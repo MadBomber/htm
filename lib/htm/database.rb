@@ -105,14 +105,18 @@ class HTM
         puts "=" * 100
       end
 
-      # Drop all HTM tables
+      # Drop all HTM tables (respects RAILS_ENV)
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses default_config if not provided)
       # @return [void]
       #
       def drop(db_url = nil)
-        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        config = db_url ? parse_connection_url(db_url) : default_config
         raise "Database configuration not found" unless config
+
+        env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+        puts "Environment: #{env}"
+        puts "Database: #{config[:dbname]}"
 
         conn = PG.connect(config)
 
@@ -171,15 +175,15 @@ class HTM
         load seeds_file
       end
 
-      # Dump current database schema to db/schema.sql
+      # Dump current database schema to db/schema.sql (respects RAILS_ENV)
       #
       # Uses pg_dump to create a clean SQL schema file without data
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses default_config if not provided)
       # @return [void]
       #
       def dump_schema(db_url = nil)
-        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        config = db_url ? parse_connection_url(db_url) : default_config
         raise "Database configuration not found" unless config
 
         schema_file = File.expand_path('../../db/schema.sql', __dir__)
@@ -231,15 +235,15 @@ class HTM
         puts "  Size: #{File.size(schema_file)} bytes"
       end
 
-      # Load schema from db/schema.sql
+      # Load schema from db/schema.sql (respects RAILS_ENV)
       #
       # Uses psql to load the schema file
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses default_config if not provided)
       # @return [void]
       #
       def load_schema(db_url = nil)
-        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        config = db_url ? parse_connection_url(db_url) : default_config
         raise "Database configuration not found" unless config
 
         schema_file = File.expand_path('../../db/schema.sql', __dir__)
@@ -356,22 +360,25 @@ class HTM
         puts "  open #{doc_path}/README.md"
       end
 
-      # Show database info
+      # Show database info (respects RAILS_ENV)
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses default_config if not provided)
       # @return [void]
       #
       def info(db_url = nil)
-        config = parse_connection_url(db_url || ENV['HTM_DBURL'])
+        config = db_url ? parse_connection_url(db_url) : default_config
         raise "Database configuration not found" unless config
+
+        env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
 
         conn = PG.connect(config)
 
-        puts "\nHTM Database Information"
+        puts "\nHTM Database Information (#{env})"
         puts "=" * 80
 
         # Connection info
         puts "\nConnection:"
+        puts "  Environment: #{env}"
         puts "  Host: #{config[:host]}"
         puts "  Port: #{config[:port]}"
         puts "  Database: #{config[:dbname]}"
@@ -468,18 +475,35 @@ class HTM
         }
       end
 
-      # Get default database configuration
+      # Get default database configuration (respects RAILS_ENV)
       #
-      # @return [Hash, nil] Connection configuration hash
+      # Uses ActiveRecordConfig which reads from config/database.yml
+      # and respects RAILS_ENV for environment-specific database selection.
+      #
+      # @return [Hash, nil] Connection configuration hash with PG-style keys
       #
       def default_config
-        # Prefer HTM_DBURL if available
-        if ENV['HTM_DBURL']
-          parse_connection_url(ENV['HTM_DBURL'])
-        elsif ENV['HTM_DBNAME']
-          parse_connection_params
-        else
-          nil
+        require_relative 'active_record_config'
+
+        begin
+          ar_config = HTM::ActiveRecordConfig.load_database_config
+
+          # Convert ActiveRecord config keys to PG-style keys
+          {
+            host: ar_config[:host],
+            port: ar_config[:port],
+            dbname: ar_config[:database],
+            user: ar_config[:username],
+            password: ar_config[:password],
+            sslmode: ar_config[:sslmode] || 'prefer'
+          }
+        rescue StandardError
+          # Fallback to legacy behavior if ActiveRecordConfig fails
+          if ENV['HTM_DBURL']
+            parse_connection_url(ENV['HTM_DBURL'])
+          elsif ENV['HTM_DBNAME']
+            parse_connection_params
+          end
         end
       end
 
