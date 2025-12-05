@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Works with 50+ OTLP-compatible backends (Jaeger, Prometheus, Datadog, etc.)
   - Comprehensive documentation in `docs/telemetry.md`
   - 18 new telemetry tests
+- **Telemetry demo with Grafana visualization** - `examples/telemetry/`
+  - Live dashboard showing HTM metrics (job counts, latencies, cache hit rates)
+  - Uses Homebrew-installed Prometheus and Grafana (no Docker required)
+  - Auto-configures Prometheus scrape target
+  - Pre-built Grafana dashboard JSON for easy import
+  - Interactive shutdown prompt for service management
 - **`htm:db:create` rake task** - Create database if it doesn't exist (respects `RAILS_ENV`)
 
 ### Changed
