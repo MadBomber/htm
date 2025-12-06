@@ -4191,8 +4191,11 @@
   storage_embedding: String,         # Formatted for database storage
   storage_dimension: Integer         # Padded dimension (2000)
 }</p>
+<h2 id="method-c-max_dimension">max_dimension()<a class="headerlink" href="#method-c-max_dimension" title="Permanent link">&para;</a></h2>
+<p>Maximum embedding dimension (configurable, default 2000)
+<strong><code>@return</code></strong> [Integer] Max dimensions for pgvector HNSW index</p>
 <h2 id="method-c-pad_embedding">pad_embedding(embedding )<a class="headerlink" href="#method-c-pad_embedding" title="Permanent link">&para;</a></h2>
-<p>Pad embedding to MAX_DIMENSION with zeros
+<p>Pad embedding to max_dimension with zeros
 <strong><code>@param</code></strong> [Array<Float>] Original embedding</p>
 <p><strong><code>@return</code></strong> [Array<Float>] Padded embedding</p>
 <h2 id="method-c-reset_circuit_breaker!">reset_circuit_breaker!()<a class="headerlink" href="#method-c-reset_circuit_breaker!" title="Permanent link">&para;</a></h2>

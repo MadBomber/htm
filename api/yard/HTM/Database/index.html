@@ -4168,16 +4168,18 @@
 initialization</p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
 <h2 id="method-c-default_config">default_config()<a class="headerlink" href="#method-c-default_config" title="Permanent link">&para;</a></h2>
-<p>Get default database configuration
-<strong><code>@return</code></strong> [Hash, nil] Connection configuration hash</p>
+<p>Get default database configuration (respects RAILS_ENV)</p>
+<p>Uses ActiveRecordConfig which reads from config/database.yml and respects
+RAILS_ENV for environment-specific database selection.
+<strong><code>@return</code></strong> [Hash, nil] Connection configuration hash with PG-style keys</p>
 <h2 id="method-c-drop">drop(db_url nil)<a class="headerlink" href="#method-c-drop" title="Permanent link">&para;</a></h2>
-<p>Drop all HTM tables
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p>Drop all HTM tables (respects RAILS_ENV)
+<strong><code>@param</code></strong> [String] Database connection URL (uses default_config if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-dump_schema">dump_schema(db_url nil)<a class="headerlink" href="#method-c-dump_schema" title="Permanent link">&para;</a></h2>
-<p>Dump current database schema to db/schema.sql</p>
+<p>Dump current database schema to db/schema.sql (respects RAILS_ENV)</p>
 <p>Uses pg_dump to create a clean SQL schema file without data
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<strong><code>@param</code></strong> [String] Database connection URL (uses default_config if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-generate_docs">generate_docs(db_url nil)<a class="headerlink" href="#method-c-generate_docs" title="Permanent link">&para;</a></h2>
 <p>Generate database documentation using tbls</p>
@@ -4190,13 +4192,13 @@ comprehensive database documentation including:
 <strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-info">info(db_url nil)<a class="headerlink" href="#method-c-info" title="Permanent link">&para;</a></h2>
-<p>Show database info
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<p>Show database info (respects RAILS_ENV)
+<strong><code>@param</code></strong> [String] Database connection URL (uses default_config if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-load_schema">load_schema(db_url nil)<a class="headerlink" href="#method-c-load_schema" title="Permanent link">&para;</a></h2>
-<p>Load schema from db/schema.sql</p>
+<p>Load schema from db/schema.sql (respects RAILS_ENV)</p>
 <p>Uses psql to load the schema file
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<strong><code>@param</code></strong> [String] Database connection URL (uses default_config if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-migrate">migrate(db_url nil)<a class="headerlink" href="#method-c-migrate" title="Permanent link">&para;</a></h2>
 <p>Run pending database migrations

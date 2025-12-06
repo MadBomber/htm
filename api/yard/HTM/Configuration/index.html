@@ -4229,6 +4229,16 @@
 <p>Returns the value of attribute bedrock_region.</p>
 <h2 id="attribute-i-bedrock_secret_key">bedrock_secret_key[RW]<a class="headerlink" href="#attribute-i-bedrock_secret_key" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute bedrock_secret_key.</p>
+<h2 id="attribute-i-chunk_overlap">chunk_overlap[RW]<a class="headerlink" href="#attribute-i-chunk_overlap" title="Permanent link">&para;</a></h2>
+<p>Character overlap between chunks (default: 64)</p>
+<h2 id="attribute-i-chunk_size">chunk_size[RW]<a class="headerlink" href="#attribute-i-chunk_size" title="Permanent link">&para;</a></h2>
+<p>Chunking configuration (for file loading)</p>
+<h2 id="attribute-i-circuit_breaker_failure_threshold">circuit_breaker_failure_threshold[RW]<a class="headerlink" href="#attribute-i-circuit_breaker_failure_threshold" title="Permanent link">&para;</a></h2>
+<p>Circuit breaker configuration</p>
+<h2 id="attribute-i-circuit_breaker_half_open_max_calls">circuit_breaker_half_open_max_calls[RW]<a class="headerlink" href="#attribute-i-circuit_breaker_half_open_max_calls" title="Permanent link">&para;</a></h2>
+<p>Successes to close (default: 3)</p>
+<h2 id="attribute-i-circuit_breaker_reset_timeout">circuit_breaker_reset_timeout[RW]<a class="headerlink" href="#attribute-i-circuit_breaker_reset_timeout" title="Permanent link">&para;</a></h2>
+<p>Seconds before half-open (default: 60)</p>
 <h2 id="attribute-i-connection_timeout">connection_timeout[RW]<a class="headerlink" href="#attribute-i-connection_timeout" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute connection_timeout.</p>
 <h2 id="attribute-i-deepseek_api_key">deepseek_api_key[RW]<a class="headerlink" href="#attribute-i-deepseek_api_key" title="Permanent link">&para;</a></h2>
@@ -4243,6 +4253,8 @@
 <p>Returns the value of attribute embedding_provider.</p>
 <h2 id="attribute-i-embedding_timeout">embedding_timeout[RW]<a class="headerlink" href="#attribute-i-embedding_timeout" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute embedding_timeout.</p>
+<h2 id="attribute-i-extract_propositions">extract_propositions[RW]<a class="headerlink" href="#attribute-i-extract_propositions" title="Permanent link">&para;</a></h2>
+<p>Returns the value of attribute extract_propositions.</p>
 <h2 id="attribute-i-gemini_api_key">gemini_api_key[RW]<a class="headerlink" href="#attribute-i-gemini_api_key" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute gemini_api_key.</p>
 <h2 id="attribute-i-huggingface_api_key">huggingface_api_key[RW]<a class="headerlink" href="#attribute-i-huggingface_api_key" title="Permanent link">&para;</a></h2>
@@ -4251,6 +4263,10 @@
 <p>Returns the value of attribute job_backend.</p>
 <h2 id="attribute-i-logger">logger[RW]<a class="headerlink" href="#attribute-i-logger" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute logger.</p>
+<h2 id="attribute-i-max_embedding_dimension">max_embedding_dimension[RW]<a class="headerlink" href="#attribute-i-max_embedding_dimension" title="Permanent link">&para;</a></h2>
+<p>Limit configuration</p>
+<h2 id="attribute-i-max_tag_depth">max_tag_depth[RW]<a class="headerlink" href="#attribute-i-max_tag_depth" title="Permanent link">&para;</a></h2>
+<p>Max tag hierarchy depth (default: 4)</p>
 <h2 id="attribute-i-ollama_url">ollama_url[RW]<a class="headerlink" href="#attribute-i-ollama_url" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute ollama_url.</p>
 <h2 id="attribute-i-openai_api_key">openai_api_key[RW]<a class="headerlink" href="#attribute-i-openai_api_key" title="Permanent link">&para;</a></h2>
@@ -4261,6 +4277,24 @@
 <p>Provider-specific API keys and endpoints</p>
 <h2 id="attribute-i-openrouter_api_key">openrouter_api_key[RW]<a class="headerlink" href="#attribute-i-openrouter_api_key" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute openrouter_api_key.</p>
+<h2 id="attribute-i-proposition_extractor">proposition_extractor[RW]<a class="headerlink" href="#attribute-i-proposition_extractor" title="Permanent link">&para;</a></h2>
+<p>Returns the value of attribute proposition_extractor.</p>
+<h2 id="attribute-i-proposition_model">proposition_model[RW]<a class="headerlink" href="#attribute-i-proposition_model" title="Permanent link">&para;</a></h2>
+<p>Returns the value of attribute proposition_model.</p>
+<h2 id="attribute-i-proposition_provider">proposition_provider[RW]<a class="headerlink" href="#attribute-i-proposition_provider" title="Permanent link">&para;</a></h2>
+<p>Returns the value of attribute proposition_provider.</p>
+<h2 id="attribute-i-proposition_timeout">proposition_timeout[RW]<a class="headerlink" href="#attribute-i-proposition_timeout" title="Permanent link">&para;</a></h2>
+<p>Returns the value of attribute proposition_timeout.</p>
+<h2 id="attribute-i-relevance_access_weight">relevance_access_weight[RW]<a class="headerlink" href="#attribute-i-relevance_access_weight" title="Permanent link">&para;</a></h2>
+<p>Access frequency weight (default: 0.1)</p>
+<h2 id="attribute-i-relevance_recency_half_life_hours">relevance_recency_half_life_hours[RW]<a class="headerlink" href="#attribute-i-relevance_recency_half_life_hours" title="Permanent link">&para;</a></h2>
+<p>Decay half-life in hours (default: 168 = 1 week)</p>
+<h2 id="attribute-i-relevance_recency_weight">relevance_recency_weight[RW]<a class="headerlink" href="#attribute-i-relevance_recency_weight" title="Permanent link">&para;</a></h2>
+<p>Temporal freshness weight (default: 0.1)</p>
+<h2 id="attribute-i-relevance_semantic_weight">relevance_semantic_weight[RW]<a class="headerlink" href="#attribute-i-relevance_semantic_weight" title="Permanent link">&para;</a></h2>
+<p>Relevance scoring weights (must sum to 1.0)</p>
+<h2 id="attribute-i-relevance_tag_weight">relevance_tag_weight[RW]<a class="headerlink" href="#attribute-i-relevance_tag_weight" title="Permanent link">&para;</a></h2>
+<p>Tag overlap weight (default: 0.3)</p>
 <h2 id="attribute-i-tag_extractor">tag_extractor[RW]<a class="headerlink" href="#attribute-i-tag_extractor" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute tag_extractor.</p>
 <h2 id="attribute-i-tag_model">tag_model[RW]<a class="headerlink" href="#attribute-i-tag_model" title="Permanent link">&para;</a></h2>
@@ -4269,6 +4303,8 @@
 <p>Returns the value of attribute tag_provider.</p>
 <h2 id="attribute-i-tag_timeout">tag_timeout[RW]<a class="headerlink" href="#attribute-i-tag_timeout" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute tag_timeout.</p>
+<h2 id="attribute-i-telemetry_enabled">telemetry_enabled[RW]<a class="headerlink" href="#attribute-i-telemetry_enabled" title="Permanent link">&para;</a></h2>
+<p>Enable OpenTelemetry metrics (default: false)</p>
 <h2 id="attribute-i-token_counter">token_counter[RW]<a class="headerlink" href="#attribute-i-token_counter" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute token_counter.</p>
 <h2 id="attribute-i-week_start">week_start[RW]<a class="headerlink" href="#attribute-i-week_start" title="Permanent link">&para;</a></h2>

@@ -4346,6 +4346,15 @@
 <td>When this tag was created</td>
 </tr>
 <tr>
+<td>deleted_at</td>
+<td>timestamp with time zone</td>
+<td></td>
+<td>true</td>
+<td></td>
+<td></td>
+<td>Soft delete timestamp</td>
+</tr>
+<tr>
 <td>id</td>
 <td>bigint</td>
 <td>nextval('tags_id_seq'::regclass)</td>
@@ -4392,8 +4401,16 @@
 </thead>
 <tbody>
 <tr>
+<td>idx_tags_deleted_at</td>
+<td>CREATE INDEX idx_tags_deleted_at ON public.tags USING btree (deleted_at)</td>
+</tr>
+<tr>
 <td>idx_tags_name_pattern</td>
 <td>CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern_ops)</td>
+</tr>
+<tr>
+<td>idx_tags_name_trgm</td>
+<td>CREATE INDEX idx_tags_name_trgm ON public.tags USING gin (name gin_trgm_ops)</td>
 </tr>
 <tr>
 <td>idx_tags_name_unique</td>

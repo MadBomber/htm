@@ -122,6 +122,12 @@
           "comment": "When this association was created"
         },
         {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "comment": "Soft delete timestamp"
+        },
+        {
           "name": "id",
           "type": "bigint",
           "nullable": false,
@@ -141,6 +147,14 @@
         }
       ],
       "indexes": [
+        {
+          "name": "idx_node_tags_deleted_at",
+          "def": "CREATE INDEX idx_node_tags_deleted_at ON public.node_tags USING btree (deleted_at)",
+          "table": "public.node_tags",
+          "columns": [
+            "deleted_at"
+          ]
+        },
         {
           "name": "idx_node_tags_node_id",
           "def": "CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id)",
@@ -319,6 +333,22 @@
           ]
         },
         {
+          "name": "idx_nodes_active",
+          "def": "CREATE INDEX idx_nodes_active ON public.nodes USING btree (id) WHERE (deleted_at IS NULL)",
+          "table": "public.nodes",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "idx_nodes_active_with_embedding",
+          "def": "CREATE INDEX idx_nodes_active_with_embedding ON public.nodes USING btree (id) WHERE ((deleted_at IS NULL) AND (embedding IS NOT NULL))",
+          "table": "public.nodes",
+          "columns": [
+            "id"
+          ]
+        },
+        {
           "name": "idx_nodes_content_gin",
           "def": "CREATE INDEX idx_nodes_content_gin ON public.nodes USING gin (to_tsvector('english'::regconfig, content))",
           "table": "public.nodes",
@@ -472,6 +502,12 @@
           "default": "CURRENT_TIMESTAMP"
         },
         {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "comment": "Soft delete timestamp"
+        },
+        {
           "name": "first_remembered_at",
           "type": "timestamp with time zone",
           "nullable": true,
@@ -525,6 +561,14 @@
         }
       ],
       "indexes": [
+        {
+          "name": "idx_robot_nodes_deleted_at",
+          "def": "CREATE INDEX idx_robot_nodes_deleted_at ON public.robot_nodes USING btree (deleted_at)",
+          "table": "public.robot_nodes",
+          "columns": [
+            "deleted_at"
+          ]
+        },
         {
           "name": "idx_robot_nodes_last_remembered_at",
           "def": "CREATE INDEX idx_robot_nodes_last_remembered_at ON public.robot_nodes USING btree (last_remembered_at)",
@@ -716,6 +760,12 @@
           "comment": "When this tag was created"
         },
         {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "comment": "Soft delete timestamp"
+        },
+        {
           "name": "id",
           "type": "bigint",
           "nullable": false,
@@ -730,8 +780,24 @@
       ],
       "indexes": [
         {
+          "name": "idx_tags_deleted_at",
+          "def": "CREATE INDEX idx_tags_deleted_at ON public.tags USING btree (deleted_at)",
+          "table": "public.tags",
+          "columns": [
+            "deleted_at"
+          ]
+        },
+        {
           "name": "idx_tags_name_pattern",
           "def": "CREATE INDEX idx_tags_name_pattern ON public.tags USING btree (name text_pattern_ops)",
+          "table": "public.tags",
+          "columns": [
+            "name"
+          ]
+        },
+        {
+          "name": "idx_tags_name_trgm",
+          "def": "CREATE INDEX idx_tags_name_trgm ON public.tags USING gin (name gin_trgm_ops)",
           "table": "public.tags",
           "columns": [
             "name"

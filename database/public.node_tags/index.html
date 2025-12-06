@@ -4346,6 +4346,15 @@
 <td>When this association was created</td>
 </tr>
 <tr>
+<td>deleted_at</td>
+<td>timestamp with time zone</td>
+<td></td>
+<td>true</td>
+<td></td>
+<td></td>
+<td>Soft delete timestamp</td>
+</tr>
+<tr>
 <td>id</td>
 <td>bigint</td>
 <td>nextval('node_tags_id_seq'::regclass)</td>
@@ -4410,6 +4419,10 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>idx_node_tags_deleted_at</td>
+<td>CREATE INDEX idx_node_tags_deleted_at ON public.node_tags USING btree (deleted_at)</td>
+</tr>
 <tr>
 <td>idx_node_tags_node_id</td>
 <td>CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id)</td>

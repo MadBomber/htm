@@ -4164,6 +4164,7 @@
 
 <h1 id="class-htmlongtermmemory">Class: HTM::LongTermMemory<a class="headerlink" href="#class-htmlongtermmemory" title="Permanent link">&para;</a></h1>
 <p><strong>Inherits:</strong> Object</p>
+<p><strong>Includes:</strong> FulltextSearch, HybridSearch, NodeOperations, RelevanceScorer, RobotOperations, TagOperations, VectorSearch</p>
 <p>Long-term Memory - PostgreSQL/TimescaleDB-backed permanent storage</p>
 <p>LongTermMemory provides durable storage for all memory nodes with:
 *   Vector similarity search (RAG)
@@ -4173,68 +4174,25 @@
 *   Tag system
 *   ActiveRecord ORM for data access
 *   Query result caching for efficiency</p>
+<p>This class uses standalone utility classes and modules:</p>
+<p>Standalone classes (used via class methods or instances):
+*   HTM::SqlBuilder: SQL condition building helpers (class methods)
+*   HTM::QueryCache: Query result caching (instantiated as <a class="magiclink magiclink-github magiclink-mention" href="https://github.com/cache" title="GitHub User: cache">@cache</a>)</p>
+<p>Included modules:
+*   RelevanceScorer: Dynamic relevance scoring
+*   NodeOperations: Node CRUD operations
+*   RobotOperations: Robot registration and activity
+*   TagOperations: Tag management
+*   VectorSearch: Vector similarity search
+*   FulltextSearch: Full-text search
+*   HybridSearch: Combined search strategies</p>
 <h1 id="attributes">Attributes<a class="headerlink" href="#attributes" title="Permanent link">&para;</a></h1>
 <h2 id="attribute-i-query_timeout">query_timeout[RW]<a class="headerlink" href="#attribute-i-query_timeout" title="Permanent link">&para;</a></h2>
 <p>Returns the value of attribute query_timeout.</p>
 <h1 id="instance-methods">Instance Methods<a class="headerlink" href="#instance-methods" title="Permanent link">&para;</a></h1>
-<h2 id="method-i-add">add(content:, token_count:0, robot_id:, embedding:nil, metadata:{})<a class="headerlink" href="#method-i-add" title="Permanent link">&para;</a></h2>
-<p>Add a node to long-term memory (with deduplication)</p>
-<p>If content already exists (by content_hash), links the robot to the existing
-node and updates timestamps. Otherwise creates a new node.</p>
-<p><strong><code>@param</code></strong> [String] Conversation message/utterance</p>
-<p><strong><code>@param</code></strong> [Integer] Token count</p>
-<p><strong><code>@param</code></strong> [Integer] Robot identifier</p>
-<p><strong><code>@param</code></strong> [Array<Float>, nil] Pre-generated embedding vector</p>
-<p><strong><code>@param</code></strong> [Hash] Flexible metadata for the node (default: {})</p>
-<p><strong><code>@return</code></strong> [Hash] { node_id:, is_new:, robot_node: }</p>
-<h2 id="method-i-add_tag">add_tag(node_id:, tag:)<a class="headerlink" href="#method-i-add_tag" title="Permanent link">&para;</a></h2>
-<p>Add a tag to a node</p>
-<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
-<p><strong><code>@param</code></strong> [String] Tag name</p>
-<p><strong><code>@return</code></strong> [void] </p>
-<h2 id="method-i-batch_load_node_tags">batch_load_node_tags(node_ids)<a class="headerlink" href="#method-i-batch_load_node_tags" title="Permanent link">&para;</a></h2>
-<p>Batch load tags for multiple nodes (avoids N+1 queries)</p>
-<p><strong><code>@param</code></strong> [Array<Integer>] Node database IDs</p>
-<p><strong><code>@return</code></strong> [Hash<Integer, Array\<String>>] Map of node_id to array of tag names</p>
-<h2 id="method-i-calculate_relevance">calculate_relevance(node:, query_tags:[], vector_similarity:nil, node_tags:nil)<a class="headerlink" href="#method-i-calculate_relevance" title="Permanent link">&para;</a></h2>
-<p>Calculate dynamic relevance score for a node given query context</p>
-<p>Combines multiple signals:
-*   Vector similarity (semantic match)
-*   Tag overlap (categorical match)
-*   Recency (freshness)
-*   Access frequency (popularity/utility)</p>
-<p><strong><code>@param</code></strong> [Hash] Node data with similarity, tags, created_at, access_count</p>
-<p><strong><code>@param</code></strong> [Array<String>] Tags associated with the query</p>
-<p><strong><code>@param</code></strong> [Float, nil] Pre-computed vector similarity (0-1)</p>
-<p><strong><code>@param</code></strong> [Array<String>, nil] Pre-loaded tags for this node (avoids N+1 query)</p>
-<p><strong><code>@return</code></strong> [Float] Composite relevance score (0-10)</p>
 <h2 id="method-i-clear_cache!">clear_cache!()<a class="headerlink" href="#method-i-clear_cache!" title="Permanent link">&para;</a></h2>
-<p>Clear the query cache</p>
-<p>Call this after any operation that modifies data (soft delete, restore, etc.)
-to ensure subsequent queries see fresh results.</p>
+<p>Clear the query result cache</p>
 <p><strong><code>@return</code></strong> [void] </p>
-<h2 id="method-i-delete">delete(node_id)<a class="headerlink" href="#method-i-delete" title="Permanent link">&para;</a></h2>
-<p>Delete a node</p>
-<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
-<p><strong><code>@return</code></strong> [void] </p>
-<h2 id="method-i-exists?">exists?(node_id)<a class="headerlink" href="#method-i-exists?" title="Permanent link">&para;</a></h2>
-<p>Check if a node exists</p>
-<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
-<p><strong><code>@return</code></strong> [Boolean] True if node exists</p>
-<h2 id="method-i-find_query_matching_tags">find_query_matching_tags(query, include_extracted:false)<a class="headerlink" href="#method-i-find_query_matching_tags" title="Permanent link">&para;</a></h2>
-<p>Find tags that match terms in the query</p>
-<p>Searches the tags table for tags where any hierarchy level matches query
-words. For example, query "PostgreSQL database" would match tags like
-"database:postgresql", "database:sql", etc. Find tags matching a query using
-semantic extraction</p>
-<p><strong><code>@param</code></strong> [String] Search query</p>
-<p><strong><code>@param</code></strong> [Boolean] If true, returns hash with :extracted and :matched keys</p>
-<p><strong><code>@return</code></strong> [Array<String>] Matching tag names (default)</p>
-<p><strong><code>@return</code></strong> [Hash] If include_extracted: { extracted: [...], matched: [...] }</p>
-<h2 id="method-i-get_node_tags">get_node_tags(node_id)<a class="headerlink" href="#method-i-get_node_tags" title="Permanent link">&para;</a></h2>
-<p>Get tags for a specific node</p>
-<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
-<p><strong><code>@return</code></strong> [Array<String>] Tag names</p>
 <h2 id="method-i-initialize">initialize(config, pool_size:nil, query_timeout:DEFAULT_QUERY_TIMEOUT, cache_size:DEFAULT_CACHE_SIZE, cache_ttl:DEFAULT_CACHE_TTL)<a class="headerlink" href="#method-i-initialize" title="Permanent link">&para;</a></h2>
 <p>Initialize long-term memory storage</p>
 <p><strong><code>@param</code></strong> [Hash] Database configuration (host, port, dbname, user, password)</p>
@@ -4252,114 +4210,13 @@ semantic extraction</p>
 <strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">ltm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">LongTermMemory</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="w"> </span><span class="ss">cache_size</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
 </span></code></pre></div></p>
-<h2 id="method-i-link_robot_to_node">link_robot_to_node(robot_id:, node:, working_memory:false)<a class="headerlink" href="#method-i-link_robot_to_node" title="Permanent link">&para;</a></h2>
-<p>Link a robot to a node (create or update robot_node record)</p>
-<p><strong><code>@param</code></strong> [Integer] Robot ID</p>
-<p><strong><code>@param</code></strong> [HTM::Models::Node] Node to link</p>
-<p><strong><code>@param</code></strong> [Boolean] Whether node is in working memory (default: false)</p>
-<p><strong><code>@return</code></strong> [HTM::Models::RobotNode] The robot_node link record</p>
-<h2 id="method-i-mark_evicted">mark_evicted(robot_id:, node_ids:)<a class="headerlink" href="#method-i-mark_evicted" title="Permanent link">&para;</a></h2>
-<p>Mark nodes as evicted from working memory</p>
-<p>Sets working_memory = false on the robot_nodes join table for the specified
-robot and node IDs.</p>
-<p><strong><code>@param</code></strong> [Integer] Robot ID whose working memory is being evicted</p>
-<p><strong><code>@param</code></strong> [Array<Integer>] Node IDs to mark as evicted</p>
-<p><strong><code>@return</code></strong> [void] </p>
-<h2 id="method-i-node_topics">node_topics(node_id)<a class="headerlink" href="#method-i-node_topics" title="Permanent link">&para;</a></h2>
-<p>Get topics for a specific node</p>
-<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
-<p><strong><code>@return</code></strong> [Array<String>] Topic paths</p>
-<h2 id="method-i-nodes_by_topic">nodes_by_topic(topic_path, exact:false, limit:50)<a class="headerlink" href="#method-i-nodes_by_topic" title="Permanent link">&para;</a></h2>
-<p>Retrieve nodes by ontological topic</p>
-<p><strong><code>@param</code></strong> [String] Topic hierarchy path</p>
-<p><strong><code>@param</code></strong> [Boolean] Exact match or prefix match</p>
-<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes</p>
-<h2 id="method-i-ontology_structure">ontology_structure()<a class="headerlink" href="#method-i-ontology_structure" title="Permanent link">&para;</a></h2>
-<p>Get ontology structure view</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Ontology structure</p>
 <h2 id="method-i-pool_size">pool_size()<a class="headerlink" href="#method-i-pool_size" title="Permanent link">&para;</a></h2>
 <p>For backwards compatibility with tests/code that expect pool_size</p>
-<h2 id="method-i-popular_tags">popular_tags(limit:20, timeframe:nil)<a class="headerlink" href="#method-i-popular_tags" title="Permanent link">&para;</a></h2>
-<p>Get most popular tags</p>
-<p><strong><code>@param</code></strong> [Integer] Number of tags to return</p>
-<p><strong><code>@param</code></strong> [Range, nil] Optional time range filter</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Tags with usage counts</p>
-<h2 id="method-i-register_robot">register_robot(robot_name)<a class="headerlink" href="#method-i-register_robot" title="Permanent link">&para;</a></h2>
-<p>Register a robot</p>
-<p><strong><code>@param</code></strong> [String] Robot identifier</p>
-<p><strong><code>@param</code></strong> [String] Robot name</p>
-<p><strong><code>@return</code></strong> [void] </p>
-<h2 id="method-i-retrieve">retrieve(node_id)<a class="headerlink" href="#method-i-retrieve" title="Permanent link">&para;</a></h2>
-<p>Retrieve a node by ID</p>
-<p>Automatically tracks access by incrementing access_count and updating
-last_accessed</p>
-<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
-<p><strong><code>@return</code></strong> [Hash, nil] Node data or nil</p>
-<h2 id="method-i-search">search(timeframe:, query:, limit:, embedding_service:, metadata:{})<a class="headerlink" href="#method-i-search" title="Permanent link">&para;</a></h2>
-<p>Vector similarity search</p>
-<p><strong><code>@param</code></strong> [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)</p>
-<p><strong><code>@param</code></strong> [String] Search query</p>
-<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
-<p><strong><code>@param</code></strong> [Object] Service to generate embeddings</p>
-<p><strong><code>@param</code></strong> [Hash] Filter by metadata fields (default: {})</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes</p>
-<h2 id="method-i-search_by_tags">search_by_tags(tags:, match_all:false, timeframe:nil, limit:20)<a class="headerlink" href="#method-i-search_by_tags" title="Permanent link">&para;</a></h2>
-<p>Search nodes by tags</p>
-<p><strong><code>@param</code></strong> [Array<String>] Tags to search for</p>
-<p><strong><code>@param</code></strong> [Boolean] If true, match ALL tags; if false, match ANY tag</p>
-<p><strong><code>@param</code></strong> [Range, nil] Optional time range filter</p>
-<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes with relevance scores</p>
-<h2 id="method-i-search_fulltext">search_fulltext(timeframe:, query:, limit:, metadata:{})<a class="headerlink" href="#method-i-search_fulltext" title="Permanent link">&para;</a></h2>
-<p>Full-text search</p>
-<p><strong><code>@param</code></strong> [Range] Time range to search</p>
-<p><strong><code>@param</code></strong> [String] Search query</p>
-<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
-<p><strong><code>@param</code></strong> [Hash] Filter by metadata fields (default: {})</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes</p>
-<h2 id="method-i-search_hybrid">search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit:100, metadata:{})<a class="headerlink" href="#method-i-search_hybrid" title="Permanent link">&para;</a></h2>
-<p>Hybrid search (full-text + vector)</p>
-<p><strong><code>@param</code></strong> [Range] Time range to search</p>
-<p><strong><code>@param</code></strong> [String] Search query</p>
-<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
-<p><strong><code>@param</code></strong> [Object] Service to generate embeddings</p>
-<p><strong><code>@param</code></strong> [Integer] Candidates to consider (default: 100)</p>
-<p><strong><code>@param</code></strong> [Hash] Filter by metadata fields (default: {})</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Matching nodes</p>
-<h2 id="method-i-search_with_relevance">search_with_relevance(timeframe:, query:nil, query_tags:[], limit:20, embedding_service:nil, metadata:{})<a class="headerlink" href="#method-i-search_with_relevance" title="Permanent link">&para;</a></h2>
-<p>Search with dynamic relevance scoring</p>
-<p>Returns nodes with calculated relevance scores based on query context</p>
-<p><strong><code>@param</code></strong> [nil, Range, Array<Range>] Time range(s) to search (nil = no filter)</p>
-<p><strong><code>@param</code></strong> [String, nil] Search query</p>
-<p><strong><code>@param</code></strong> [Array<String>] Tags to match</p>
-<p><strong><code>@param</code></strong> [Integer] Maximum results</p>
-<p><strong><code>@param</code></strong> [Object, nil] Service to generate embeddings</p>
-<p><strong><code>@param</code></strong> [Hash] Filter by metadata fields (default: {})</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Nodes with relevance scores</p>
 <h2 id="method-i-shutdown">shutdown()<a class="headerlink" href="#method-i-shutdown" title="Permanent link">&para;</a></h2>
 <p>Shutdown - no-op with ActiveRecord (connection pool managed by ActiveRecord)</p>
 <h2 id="method-i-stats">stats()<a class="headerlink" href="#method-i-stats" title="Permanent link">&para;</a></h2>
 <p>Get memory statistics</p>
 <p><strong><code>@return</code></strong> [Hash] Statistics</p>
-<h2 id="method-i-topic_relationships">topic_relationships(min_shared_nodes:2, limit:50)<a class="headerlink" href="#method-i-topic_relationships" title="Permanent link">&para;</a></h2>
-<p>Get topic relationships (co-occurrence)</p>
-<p><strong><code>@param</code></strong> [Integer] Minimum shared nodes</p>
-<p><strong><code>@param</code></strong> [Integer] Maximum relationships</p>
-<p><strong><code>@return</code></strong> [Array<Hash>] Topic relationships</p>
-<h2 id="method-i-track_access">track_access(node_ids)<a class="headerlink" href="#method-i-track_access" title="Permanent link">&para;</a></h2>
-<p>Track access for multiple nodes (bulk operation)</p>
-<p>Updates access_count and last_accessed for all nodes in the array</p>
-<p><strong><code>@param</code></strong> [Array<Integer>] Node IDs that were accessed</p>
-<p><strong><code>@return</code></strong> [void] </p>
-<h2 id="method-i-update_last_accessed">update_last_accessed(node_id)<a class="headerlink" href="#method-i-update_last_accessed" title="Permanent link">&para;</a></h2>
-<p>Update last_accessed timestamp</p>
-<p><strong><code>@param</code></strong> [Integer] Node database ID</p>
-<p><strong><code>@return</code></strong> [void] </p>
-<h2 id="method-i-update_robot_activity">update_robot_activity(robot_id)<a class="headerlink" href="#method-i-update_robot_activity" title="Permanent link">&para;</a></h2>
-<p>Update robot activity timestamp</p>
-<p><strong><code>@param</code></strong> [String] Robot identifier</p>
-<p><strong><code>@return</code></strong> [void] </p>
 
 
 
