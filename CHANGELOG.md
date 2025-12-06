@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.15] - 2025-12-06
+
 ### Added
+- **"Why Robots Instead of Agents?" README section** - Explains terminology choice
+  - Opens with Shakespeare quote from Romeo and Juliet
+  - Discusses semantic clarity, honest capabilities, avoiding hype cycle
+  - Critiques "agent" frameworks that are just prompt wrappers
+  - References rich heritage (Čapek's R.U.R., Asimov's Three Laws)
+  - Notes cultural personality of robots (R2-D2, Wall-E, Bender)
 - **MCP Server documentation** - Comprehensive guide for AI assistant integration
   - Added MCP Server section to README.md with tools/resources reference
   - Created `docs/guides/mcp-server.md` with detailed configuration for Claude Desktop, Claude Code, and AIA

@@ -1653,6 +1653,31 @@ This separation allows you to provide any LLM implementation while HTM handles r
 - [x] Phase 8: Production-ready gem
 
 
+## Why "Robots" Instead of "Agents"?
+
+> "What's in a name? That which we call a rose
+> By any other name would smell as sweet."
+> — Shakespeare, *Romeo and Juliet*
+
+Shakespeare argues names are arbitrary. In software, we respectfully disagree—names shape expectations and understanding.
+
+HTM uses "robots" rather than the fashionable "agents" for several reasons:
+
+- **Semantic clarity**: "Agent" is overloaded—user agents, software agents, real estate agents, secret agents. "Robot" is specific to automated workers.
+
+- **Honest about capabilities**: "Agent" implies autonomy and genuine decision-making. These systems follow instructions—they don't have agency. "Robot" acknowledges what they actually are: tools.
+
+- **Avoiding the hype cycle**: "AI Agent" and "Agentic AI" became buzzwords in 2023-2024, often meaning nothing more than "LLM with a prompt." We prefer terminology that will age well.
+
+- **Many "agent" frameworks are prompt wrappers**: Look under the hood of popular agent libraries and you'll often find a single prompt in a for-loop. Calling that an "agent" sets false expectations.
+
+- **Rich heritage**: "Robot" comes from Karel Čapek's 1920 play *R.U.R.* (from Czech *robota*, meaning labor). Isaac Asimov gave us the Three Laws. There's decades of thoughtful writing about robot ethics and behavior. "Agent" has no comparable tradition.
+
+- **Personality**: Robots are endearing—R2-D2, Wall-E, Bender. They have cultural weight that "agent" lacks.
+
+Honest terminology leads to clearer thinking. These are robots: tireless workers with perfect memory, executing instructions on our behalf. That's exactly what HTM helps them do better.
+
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/madbomber/htm.
