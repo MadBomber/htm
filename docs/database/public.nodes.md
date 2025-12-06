@@ -36,6 +36,8 @@ Core memory storage for conversation messages and context
 | Name | Definition |
 | ---- | ---------- |
 | idx_nodes_access_count | CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count) |
+| idx_nodes_active | CREATE INDEX idx_nodes_active ON public.nodes USING btree (id) WHERE (deleted_at IS NULL) |
+| idx_nodes_active_with_embedding | CREATE INDEX idx_nodes_active_with_embedding ON public.nodes USING btree (id) WHERE ((deleted_at IS NULL) AND (embedding IS NOT NULL)) |
 | idx_nodes_content_gin | CREATE INDEX idx_nodes_content_gin ON public.nodes USING gin (to_tsvector('english'::regconfig, content)) |
 | idx_nodes_content_hash_unique | CREATE UNIQUE INDEX idx_nodes_content_hash_unique ON public.nodes USING btree (content_hash) |
 | idx_nodes_content_trgm | CREATE INDEX idx_nodes_content_trgm ON public.nodes USING gin (content gin_trgm_ops) |

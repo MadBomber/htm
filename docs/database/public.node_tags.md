@@ -9,6 +9,7 @@ Join table connecting nodes to tags (many-to-many)
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
 | created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this association was created |
+| deleted_at | timestamp with time zone |  | true |  |  | Soft delete timestamp |
 | id | bigint | nextval('node_tags_id_seq'::regclass) | false |  |  |  |
 | node_id | bigint |  | false |  | [public.nodes](public.nodes.md) | ID of the node being tagged |
 | tag_id | bigint |  | false |  | [public.tags](public.tags.md) | ID of the tag being applied |
@@ -25,6 +26,7 @@ Join table connecting nodes to tags (many-to-many)
 
 | Name | Definition |
 | ---- | ---------- |
+| idx_node_tags_deleted_at | CREATE INDEX idx_node_tags_deleted_at ON public.node_tags USING btree (deleted_at) |
 | idx_node_tags_node_id | CREATE INDEX idx_node_tags_node_id ON public.node_tags USING btree (node_id) |
 | idx_node_tags_tag_id | CREATE INDEX idx_node_tags_tag_id ON public.node_tags USING btree (tag_id) |
 | idx_node_tags_unique | CREATE UNIQUE INDEX idx_node_tags_unique ON public.node_tags USING btree (node_id, tag_id) |

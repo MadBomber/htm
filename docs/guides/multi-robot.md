@@ -23,173 +23,174 @@ In HTM, all robots share the same long-term memory database but maintain separat
 # Robot 1: Research Assistant
 research_bot = HTM.new(
   robot_name: "Research Assistant",
-  robot_id: "research-001",
   working_memory_size: 128_000
 )
+# Each robot gets a unique robot_id automatically
 
 # Robot 2: Code Helper
 code_bot = HTM.new(
   robot_name: "Code Helper",
-  robot_id: "code-001",
   working_memory_size: 128_000
 )
 
 # Robot 3: Documentation Writer
 docs_bot = HTM.new(
   robot_name: "Docs Writer",
-  robot_id: "docs-001",
   working_memory_size: 64_000
 )
 
-# Each robot can access shared knowledge
-research_bot.add_node(
-  "finding_001",
+# Each robot can access shared knowledge through the shared database
+research_bot.remember(
   "Research shows PostgreSQL outperforms MongoDB for ACID workloads",
-  type: :fact,
-  importance: 8.0,
-  tags: ["research", "database"]
+  tags: ["research", "database:comparison"]
 )
 
-# Code bot can access this finding
+# Code bot can access research findings (shared long-term memory)
 findings = code_bot.recall(
-  timeframe: "last hour",
-  topic: "database performance"
+  "database performance",
+  timeframe: "last hour"
 )
 
-# Docs bot can document it
-docs_bot.add_node(
-  "doc_001",
+# Docs bot can document findings
+docs_bot.remember(
   "PostgreSQL performance documented based on research findings",
-  type: :context,
-  importance: 6.0,
   tags: ["documentation", "database"],
-  related_to: ["finding_001"]
+  metadata: { source: "research" }
 )
 ```
 
 ## Robot Identification
 
-### Session IDs vs Persistent IDs
+### Naming Strategies
 
-Choose the right identification strategy:
+Choose a consistent naming strategy for robot identification:
 
 ```ruby
 # Strategy 1: Persistent Robot (recommended for production)
+# Use descriptive names - robot_id is assigned automatically
 persistent_bot = HTM.new(
-  robot_name: "Production Assistant",
-  robot_id: "prod-assistant-001"  # Fixed, reusable
+  robot_name: "Production Assistant"
 )
+puts "Robot ID: #{persistent_bot.robot_id}"  # e.g., 1
+puts "Robot Name: #{persistent_bot.robot_name}"  # "Production Assistant"
 
 # Strategy 2: Session-based Robot (for temporary workflows)
-session_id = SecureRandom.uuid
+session_id = SecureRandom.uuid[0..7]
 session_bot = HTM.new(
-  robot_name: "Temp Session",
-  robot_id: "session-#{session_id}"  # Unique per session
+  robot_name: "Session #{session_id}"
 )
 
 # Strategy 3: User-specific Robot
 user_id = "alice"
 user_bot = HTM.new(
-  robot_name: "Alice's Assistant",
-  robot_id: "user-#{user_id}-assistant"
+  robot_name: "#{user_id}'s Assistant"
 )
 ```
 
 !!! tip "Naming Conventions"
-    - **Production robots**: `service-purpose-001` (e.g., `api-assistant-001`)
-    - **User robots**: `user-{user_id}-{purpose}` (e.g., `user-alice-assistant`)
-    - **Session robots**: `session-{uuid}` (e.g., `session-abc123...`)
-    - **Team robots**: `team-{name}-{purpose}` (e.g., `team-eng-reviewer`)
+    Use descriptive `robot_name` values to identify robots:
+    - **Production robots**: `"Production Assistant"`, `"API Helper"`
+    - **User robots**: `"Alice's Assistant"`, `"User 123 Bot"`
+    - **Session robots**: `"Session abc123"`, `"Temp Session"`
+    - **Team robots**: `"Engineering Reviewer"`, `"QA Bot"`
 
 ### Robot Registry
 
-All robots are automatically registered:
+All robots are automatically registered in the database:
 
 ```ruby
 # Robots are registered when created
-bot = HTM.new(robot_name: "My Bot", robot_id: "bot-001")
+bot = HTM.new(robot_name: "My Bot")
+puts "Registered with ID: #{bot.robot_id}"
 
-# Query robot registry
-config = HTM::Database.default_config
-conn = PG.connect(config)
-
-result = conn.exec("SELECT * FROM robots ORDER BY last_active DESC")
-
+# Query robot registry using ActiveRecord
 puts "Registered robots:"
-result.each do |row|
-  puts "#{row['name']} (#{row['id']})"
-  puts "  Created: #{row['created_at']}"
-  puts "  Last active: #{row['last_active']}"
+HTM::Models::Robot.order(last_active_at: :desc).each do |robot|
+  puts "#{robot.name} (ID: #{robot.id})"
+  puts "  Created: #{robot.created_at}"
+  puts "  Last active: #{robot.last_active_at}"
   puts
 end
-
-conn.close
 ```
 
 ## Attribution Tracking
 
 ### Who Said What?
 
-Track which robot contributed which memories:
+Track which robot contributed which memories using the robot_nodes join table:
 
 ```ruby
 # Add memories from different robots
-alpha = HTM.new(robot_name: "Alpha", robot_id: "alpha")
-beta = HTM.new(robot_name: "Beta", robot_id: "beta")
+alpha = HTM.new(robot_name: "Alpha")
+beta = HTM.new(robot_name: "Beta")
 
-alpha.add_node("alpha_001", "Alpha's insight about caching", type: :fact)
-beta.add_node("beta_001", "Beta's approach to testing", type: :fact)
+alpha.remember("Alpha's insight about caching", tags: ["caching"])
+beta.remember("Beta's approach to testing", tags: ["testing"])
 
-# Query by robot
+# Query memories linked to a specific robot via RobotNode
 def memories_by_robot(robot_id)
-  config = HTM::Database.default_config
-  conn = PG.connect(config)
-
-  result = conn.exec_params(
-    "SELECT key, value, type FROM nodes WHERE robot_id = $1",
-    [robot_id]
-  )
-
-  memories = result.to_a
-  conn.close
-  memories
+  HTM::Models::RobotNode.where(robot_id: robot_id)
+    .includes(:node)
+    .map { |rn| rn.node.attributes }
 end
 
-alpha_memories = memories_by_robot("alpha")
+alpha_memories = memories_by_robot(alpha.robot_id)
 puts "Alpha contributed #{alpha_memories.length} memories"
 ```
 
-### Which Robot Said...?
+### Tracking Contributions
 
-Use HTM's built-in attribution tracking:
+Query which robots have contributed to specific topics:
 
 ```ruby
-# Find which robots discussed a topic
-breakdown = htm.which_robot_said("PostgreSQL")
+# Find nodes matching a topic and see which robots contributed
+def robots_discussing(topic)
+  # Get matching nodes
+  nodes = HTM::Models::Node.where("content ILIKE ?", "%#{topic}%")
 
-puts "Robots that discussed PostgreSQL:"
-breakdown.each do |robot_id, count|
-  puts "  #{robot_id}: #{count} mentions"
+  # Count contributions by robot
+  robot_counts = Hash.new(0)
+  nodes.each do |node|
+    node.robot_nodes.each do |rn|
+      robot = HTM::Models::Robot.find(rn.robot_id)
+      robot_counts[robot.name] += 1
+    end
+  end
+
+  robot_counts
 end
 
-# Example output:
-# Robots that discussed PostgreSQL:
-#   research-001: 15 mentions
-#   code-001: 8 mentions
-#   docs-001: 3 mentions
+breakdown = robots_discussing("PostgreSQL")
+
+puts "Robots that discussed PostgreSQL:"
+breakdown.each do |robot_name, count|
+  puts "  #{robot_name}: #{count} mentions"
+end
 ```
 
-### Conversation Timeline
+### Memory Timeline
 
-See the chronological conversation across robots:
+See the chronological contributions across robots:
 
 ```ruby
-timeline = htm.conversation_timeline("architecture decisions", limit: 50)
+# Get recent nodes with robot attribution
+def memory_timeline(topic, limit: 50)
+  HTM::Models::Node
+    .where("content ILIKE ?", "%#{topic}%")
+    .order(created_at: :desc)
+    .limit(limit)
+    .includes(:robot_nodes)
+end
+
+timeline = memory_timeline("architecture decisions", limit: 50)
 
 puts "Architecture discussion timeline:"
-timeline.each do |entry|
-  puts "#{entry[:timestamp]} - #{entry[:robot]}"
-  puts "  [#{entry[:type]}] #{entry[:content][0..100]}..."
+timeline.each do |node|
+  robot_ids = node.robot_nodes.map(&:robot_id)
+  robots = HTM::Models::Robot.where(id: robot_ids).pluck(:name)
+
+  puts "#{node.created_at} - #{robots.join(', ')}"
+  puts "  #{node.content[0..100]}..."
   puts
 end
 ```
@@ -203,59 +204,38 @@ Each robot has a specific role and expertise:
 ```ruby
 class MultiRobotSystem
   def initialize
-    @researcher = HTM.new(
-      robot_name: "Researcher",
-      robot_id: "researcher-001"
-    )
-
-    @developer = HTM.new(
-      robot_name: "Developer",
-      robot_id: "developer-001"
-    )
-
-    @reviewer = HTM.new(
-      robot_name: "Reviewer",
-      robot_id: "reviewer-001"
-    )
+    @researcher = HTM.new(robot_name: "Researcher")
+    @developer = HTM.new(robot_name: "Developer")
+    @reviewer = HTM.new(robot_name: "Reviewer")
   end
 
   def process_feature_request(feature)
     # 1. Researcher gathers requirements
-    @researcher.add_node(
-      "research_#{feature}",
+    @researcher.remember(
       "Research findings for #{feature}",
-      type: :fact,
-      importance: 8.0,
-      tags: ["research", feature]
+      tags: ["research", feature],
+      metadata: { category: "fact", priority: "high" }
     )
 
     # 2. Developer recalls research and implements
     research = @developer.recall(
-      timeframe: "last hour",
-      topic: "research #{feature}"
+      "research #{feature}",
+      timeframe: "last hour"
     )
 
-    @developer.add_node(
-      "impl_#{feature}",
+    @developer.remember(
       "Implementation plan based on research",
-      type: :decision,
-      importance: 9.0,
       tags: ["implementation", feature],
-      related_to: ["research_#{feature}"]
+      metadata: { category: "decision", priority: "critical" }
     )
 
     # 3. Reviewer checks work
-    work = @reviewer.recall(
-      timeframe: "last hour",
-      topic: feature
-    )
+    work = @reviewer.recall(feature, timeframe: "last hour")
 
-    @reviewer.add_node(
-      "review_#{feature}",
+    @reviewer.remember(
       "Code review findings",
-      type: :context,
-      importance: 7.0,
-      tags: ["review", feature]
+      tags: ["review", feature],
+      metadata: { category: "context" }
     )
   end
 end
@@ -275,15 +255,12 @@ class ShiftHandoff
   end
 
   def start_shift(shift_name)
-    @current_shift = HTM.new(
-      robot_name: "#{shift_name} Bot",
-      robot_id: "shift-#{shift_name.downcase}"
-    )
+    @current_shift = HTM.new(robot_name: "#{shift_name} Bot")
 
     # Recall context from previous shift
     handoff = @current_shift.recall(
+      "shift handoff urgent",
       timeframe: "last 24 hours",
-      topic: "shift handoff urgent",
       strategy: :hybrid,
       limit: 20
     )
@@ -296,12 +273,10 @@ class ShiftHandoff
 
   def end_shift(summary)
     # Document shift handoff
-    @current_shift.add_node(
-      "handoff_#{Time.now.to_i}",
+    @current_shift.remember(
       summary,
-      type: :context,
-      importance: 9.0,
-      tags: ["shift-handoff", "urgent"]
+      tags: ["shift-handoff", "urgent"],
+      metadata: { category: "context", priority: "critical" }
     )
 
     puts "Shift handoff documented"
@@ -329,24 +304,12 @@ Specialized experts provide knowledge:
 class ExpertSystem
   def initialize
     @experts = {
-      database: HTM.new(
-        robot_name: "Database Expert",
-        robot_id: "expert-database"
-      ),
-      security: HTM.new(
-        robot_name: "Security Expert",
-        robot_id: "expert-security"
-      ),
-      performance: HTM.new(
-        robot_name: "Performance Expert",
-        robot_id: "expert-performance"
-      )
+      database: HTM.new(robot_name: "Database Expert"),
+      security: HTM.new(robot_name: "Security Expert"),
+      performance: HTM.new(robot_name: "Performance Expert")
     }
 
-    @general = HTM.new(
-      robot_name: "General Assistant",
-      robot_id: "assistant-general"
-    )
+    @general = HTM.new(robot_name: "General Assistant")
   end
 
   def consult(topic)
@@ -354,23 +317,21 @@ class ExpertSystem
     expert_type = determine_expert(topic)
     expert = @experts[expert_type]
 
-    # Get expert knowledge
+    # Get expert knowledge (use raw: true for full node data)
     knowledge = expert.recall(
+      topic,
       timeframe: "all time",
-      topic: topic,
       strategy: :hybrid,
-      limit: 10
+      limit: 10,
+      raw: true
     )
 
     # General assistant learns from expert
     knowledge.each do |k|
-      @general.add_node(
-        "learned_#{SecureRandom.hex(4)}",
-        "Learned from #{expert_type} expert: #{k['value']}",
-        type: :fact,
-        importance: k['importance'],
+      @general.remember(
+        "Learned from #{expert_type} expert: #{k['content']}",
         tags: ["learned", expert_type.to_s],
-        related_to: [k['key']]
+        metadata: { category: "fact", source_id: k['id'] }
       )
     end
 
@@ -410,45 +371,38 @@ class CollaborativeDecision
   end
 
   def add_participant(name, role)
-    bot = HTM.new(
-      robot_name: "#{name} (#{role})",
-      robot_id: "decision-#{role.downcase}-#{SecureRandom.hex(4)}"
-    )
+    bot = HTM.new(robot_name: "#{name} (#{role})")
     @participants << { name: name, role: role, bot: bot }
     bot
   end
 
   def gather_input(bot, opinion)
-    bot.add_node(
-      "opinion_#{SecureRandom.hex(4)}",
+    bot.remember(
       opinion,
-      type: :context,
-      importance: 8.0,
-      tags: ["decision", @topic, "opinion"]
+      tags: ["decision", @topic, "opinion"],
+      metadata: { category: "context", priority: "high" }
     )
   end
 
   def make_decision(decision_maker)
     # Recall all opinions
     opinions = decision_maker.recall(
+      "decision #{@topic} opinion",
       timeframe: "last hour",
-      topic: "decision #{@topic} opinion",
       strategy: :hybrid,
       limit: 50
     )
 
     puts "#{decision_maker.robot_name} considering:"
     opinions.each do |opinion|
-      puts "- #{opinion['value'][0..100]}..."
+      puts "- #{opinion[0..100]}..."
     end
 
     # Document final decision
-    decision_maker.add_node(
-      "decision_#{@topic}_final",
+    decision_maker.remember(
       "Final decision on #{@topic} after considering team input",
-      type: :decision,
-      importance: 10.0,
-      tags: ["decision", @topic, "final"]
+      tags: ["decision", @topic, "final"],
+      metadata: { category: "decision", priority: "critical" }
     )
   end
 end
@@ -475,57 +429,59 @@ decision.make_decision(lead)
 
 ### Sharing Strategies
 
-Control what gets shared:
+Control what gets shared using tags:
 
 ```ruby
 class SmartSharing
-  def initialize(robot_id)
-    @htm = HTM.new(robot_name: "Smart Bot", robot_id: robot_id)
-    @private_prefix = "private_#{robot_id}_"
+  def initialize(robot_name)
+    @htm = HTM.new(robot_name: robot_name)
+    @private_tag = "private:#{@htm.robot_id}"
   end
 
-  def add_shared(key, value, **opts)
-    # Shared with all robots
-    @htm.add_node(key, value, **opts.merge(
-      tags: (opts[:tags] || []) + ["shared"]
-    ))
+  def add_shared(value, **opts)
+    # Shared with all robots - use "shared" tag
+    @htm.remember(value,
+      tags: (opts[:tags] || []) + ["shared"],
+      metadata: opts[:metadata] || {}
+    )
   end
 
-  def add_private(key, value, **opts)
-    # Use robot-specific key prefix
-    private_key = "#{@private_prefix}#{key}"
-    @htm.add_node(private_key, value, **opts.merge(
-      tags: (opts[:tags] || []) + ["private"],
-      importance: (opts[:importance] || 5.0)
-    ))
+  def add_private(value, **opts)
+    # Private to this robot - use robot-specific tag
+    @htm.remember(value,
+      tags: (opts[:tags] || []) + [@private_tag],
+      metadata: opts[:metadata] || {}
+    )
   end
 
   def recall_shared(topic)
-    # Only shared knowledge
+    # Query with shared tag filter
     @htm.recall(
+      "shared #{topic}",
       timeframe: "all time",
-      topic: "shared #{topic}",
-      strategy: :hybrid
-    ).select { |m| m['tags']&.include?("shared") }
+      strategy: :hybrid,
+      query_tags: ["shared"]
+    )
   end
 
   def recall_private(topic)
-    # Only my private knowledge
+    # Query with private tag filter
     @htm.recall(
+      topic,
       timeframe: "all time",
-      topic: topic,
-      strategy: :hybrid
-    ).select { |m| m['key'].start_with?(@private_prefix) }
+      strategy: :hybrid,
+      query_tags: [@private_tag]
+    )
   end
 end
 
 # Usage
-bot1 = SmartSharing.new("bot-001")
-bot1.add_shared("shared_fact", "Everyone should know this", type: :fact)
-bot1.add_private("my_thought", "Private thought", type: :context)
+bot1 = SmartSharing.new("Bot 001")
+bot1.add_shared("Everyone should know this", metadata: { category: "fact" })
+bot1.add_private("Private thought", metadata: { category: "context" })
 
-bot2 = SmartSharing.new("bot-002")
-shared = bot2.recall_shared("fact")  # Can see shared_fact
+bot2 = SmartSharing.new("Bot 002")
+shared = bot2.recall_shared("fact")  # Can see shared content
 private = bot2.recall_private("thought")  # Won't see bot1's private thoughts
 ```
 
@@ -534,39 +490,30 @@ private = bot2.recall_private("thought")  # Won't see bot1's private thoughts
 ### Finding Robot Activity
 
 ```ruby
-# Get all robots and their activity
+# Get all robots and their activity using ActiveRecord
 def get_robot_activity
-  config = HTM::Database.default_config
-  conn = PG.connect(config)
+  HTM::Models::Robot.all.map do |robot|
+    memory_count = robot.robot_nodes.count
+    last_memory = robot.robot_nodes.maximum(:last_remembered_at)
 
-  result = conn.exec(
-    <<~SQL
-      SELECT
-        r.id,
-        r.name,
-        COUNT(n.id) as memory_count,
-        MAX(n.created_at) as last_memory,
-        r.last_active
-      FROM robots r
-      LEFT JOIN nodes n ON r.id = n.robot_id
-      GROUP BY r.id, r.name, r.last_active
-      ORDER BY r.last_active DESC
-    SQL
-  )
-
-  robots = result.to_a
-  conn.close
-  robots
+    {
+      id: robot.id,
+      name: robot.name,
+      memory_count: memory_count,
+      last_memory: last_memory,
+      last_active_at: robot.last_active_at
+    }
+  end.sort_by { |r| r[:last_active_at] || Time.at(0) }.reverse
 end
 
 # Display activity
 robots = get_robot_activity
 puts "Robot Activity Report:"
 robots.each do |r|
-  puts "\n#{r['name']} (#{r['id']})"
-  puts "  Memories: #{r['memory_count']}"
-  puts "  Last memory: #{r['last_memory']}"
-  puts "  Last active: #{r['last_active']}"
+  puts "\n#{r[:name]} (#{r[:id]})"
+  puts "  Memories: #{r[:memory_count]}"
+  puts "  Last memory: #{r[:last_memory]}"
+  puts "  Last active: #{r[:last_active_at]}"
 end
 ```
 
@@ -574,37 +521,24 @@ end
 
 ```ruby
 def search_across_robots(topic, limit_per_robot: 5)
-  config = HTM::Database.default_config
-  conn = PG.connect(config)
-
-  # Get all robots
-  robots = conn.exec("SELECT id, name FROM robots")
-
   results = {}
 
-  robots.each do |robot|
-    # Search memories from this robot
-    stmt = conn.prepare(
-      "search_#{robot['id']}",
-      <<~SQL
-        SELECT key, value, type, importance, created_at
-        FROM nodes
-        WHERE robot_id = $1
-        AND to_tsvector('english', value) @@ plainto_tsquery('english', $2)
-        ORDER BY importance DESC
-        LIMIT $3
-      SQL
-    )
+  HTM::Models::Robot.find_each do |robot|
+    # Find nodes linked to this robot via robot_nodes
+    node_ids = robot.robot_nodes.pluck(:node_id)
 
-    robot_results = conn.exec_prepared(
-      "search_#{robot['id']}",
-      [robot['id'], topic, limit_per_robot]
-    )
+    # Search within this robot's nodes using full-text search
+    robot_nodes = HTM::Models::Node
+      .where(id: node_ids)
+      .where("to_tsvector('english', content) @@ plainto_tsquery('english', ?)", topic)
+      .order(created_at: :desc)
+      .limit(limit_per_robot)
 
-    results[robot['name']] = robot_results.to_a
+    results[robot.name] = robot_nodes.map do |n|
+      { id: n.id, content: n.content, created_at: n.created_at }
+    end
   end
 
-  conn.close
   results
 end
 
@@ -613,7 +547,7 @@ results = search_across_robots("authentication")
 results.each do |robot_name, memories|
   puts "\n=== #{robot_name} ==="
   memories.each do |m|
-    puts "- [#{m['type']}] #{m['value'][0..80]}..."
+    puts "- #{m[:content][0..80]}..."
   end
 end
 ```
@@ -624,33 +558,21 @@ end
 
 ```ruby
 class MultiRobotDashboard
-  def initialize
-    @config = HTM::Database.default_config
-  end
-
   def summary
-    conn = PG.connect(@config)
+    total_robots = HTM::Models::Robot.count
+    total_memories = HTM::Models::Node.count
 
-    # Total stats
-    total_robots = conn.exec("SELECT COUNT(*) FROM robots").first['count'].to_i
-    total_memories = conn.exec("SELECT COUNT(*) FROM nodes").first['count'].to_i
+    # Per-robot breakdown using ActiveRecord
+    breakdown = HTM::Models::Robot.all.map do |robot|
+      robot_node_ids = robot.robot_nodes.pluck(:node_id)
+      nodes = HTM::Models::Node.where(id: robot_node_ids)
 
-    # Per-robot breakdown
-    breakdown = conn.exec(
-      <<~SQL
-        SELECT
-          r.name,
-          COUNT(n.id) as memories,
-          AVG(n.importance) as avg_importance,
-          MAX(n.created_at) as last_contribution
-        FROM robots r
-        LEFT JOIN nodes n ON r.id = n.robot_id
-        GROUP BY r.id, r.name
-        ORDER BY memories DESC
-      SQL
-    ).to_a
-
-    conn.close
+      {
+        name: robot.name,
+        memories: nodes.count,
+        last_contribution: robot.robot_nodes.maximum(:last_remembered_at)
+      }
+    end.sort_by { |r| -r[:memories] }
 
     {
       total_robots: total_robots,
@@ -668,10 +590,9 @@ class MultiRobotDashboard
     puts "\nPer-robot breakdown:"
 
     data[:breakdown].each do |robot|
-      puts "\n#{robot['name']}"
-      puts "  Memories: #{robot['memories']}"
-      puts "  Avg importance: #{robot['avg_importance'].to_f.round(2)}"
-      puts "  Last contribution: #{robot['last_contribution']}"
+      puts "\n#{robot[:name]}"
+      puts "  Memories: #{robot[:memories]}"
+      puts "  Last contribution: #{robot[:last_contribution]}"
     end
   end
 end
@@ -686,11 +607,11 @@ dashboard.print_summary
 
 ```ruby
 # Good: Clear, specific roles
-researcher = HTM.new(robot_name: "Research Specialist", robot_id: "research-001")
-coder = HTM.new(robot_name: "Code Generator", robot_id: "coder-001")
+researcher = HTM.new(robot_name: "Research Specialist")
+coder = HTM.new(robot_name: "Code Generator")
 
 # Avoid: Vague roles
-bot1 = HTM.new(robot_name: "Bot 1", robot_id: "bot1")
+bot1 = HTM.new(robot_name: "Bot 1")
 ```
 
 ### 2. Consistent Naming
@@ -698,27 +619,23 @@ bot1 = HTM.new(robot_name: "Bot 1", robot_id: "bot1")
 ```ruby
 # Good: Consistent naming scheme
 class RobotFactory
-  def self.create(service, purpose, instance = "001")
-    HTM.new(
-      robot_name: "#{service.capitalize} #{purpose.capitalize}",
-      robot_id: "#{service}-#{purpose}-#{instance}"
-    )
+  def self.create(service, purpose)
+    HTM.new(robot_name: "#{service.capitalize} #{purpose.capitalize}")
   end
 end
 
-api_assistant = RobotFactory.create("api", "assistant", "001")
-api_validator = RobotFactory.create("api", "validator", "001")
+api_assistant = RobotFactory.create("api", "assistant")
+api_validator = RobotFactory.create("api", "validator")
 ```
 
 ### 3. Attribution in Content
 
 ```ruby
 # Include attribution in the content itself
-bot.add_node(
-  "finding_001",
+bot.remember(
   "Research by #{bot.robot_name}: PostgreSQL outperforms MongoDB",
-  type: :fact,
-  importance: 8.0
+  tags: ["research", "database:comparison"],
+  metadata: { category: "fact", priority: "high" }
 )
 ```
 
@@ -727,13 +644,14 @@ bot.add_node(
 ```ruby
 # Periodically sync understanding across robots
 def sync_robots(*robots)
-  # Find recent high-importance memories
+  # Find recent high-priority memories using metadata
   shared_knowledge = robots.first.recall(
+    "important shared",
     timeframe: "last 24 hours",
-    topic: "important shared",
     strategy: :hybrid,
-    limit: 50
-  ).select { |m| m['importance'].to_f >= 8.0 }
+    limit: 50,
+    metadata: { priority: "high" }
+  )
 
   puts "Syncing #{shared_knowledge.length} important memories across #{robots.length} robots"
 end
@@ -743,22 +661,14 @@ end
 
 ```ruby
 def cleanup_inactive_robots(days: 30)
-  config = HTM::Database.default_config
-  conn = PG.connect(config)
-
   cutoff = Time.now - (days * 24 * 3600)
 
-  result = conn.exec_params(
-    "SELECT id, name FROM robots WHERE last_active < $1",
-    [cutoff]
-  )
+  inactive = HTM::Models::Robot.where("last_active_at < ?", cutoff)
 
   puts "Inactive robots (last active > #{days} days):"
-  result.each do |robot|
-    puts "- #{robot['name']} (#{robot['id']})"
+  inactive.each do |robot|
+    puts "- #{robot.name} (#{robot.id})"
   end
-
-  conn.close
 end
 
 cleanup_inactive_robots(days: 90)
@@ -772,20 +682,9 @@ require 'htm'
 # Create a multi-robot development team
 class DevTeam
   def initialize
-    @analyst = HTM.new(
-      robot_name: "Requirements Analyst",
-      robot_id: "team-analyst-001"
-    )
-
-    @developer = HTM.new(
-      robot_name: "Senior Developer",
-      robot_id: "team-developer-001"
-    )
-
-    @tester = HTM.new(
-      robot_name: "QA Tester",
-      robot_id: "team-tester-001"
-    )
+    @analyst = HTM.new(robot_name: "Requirements Analyst")
+    @developer = HTM.new(robot_name: "Senior Developer")
+    @tester = HTM.new(robot_name: "QA Tester")
   end
 
   def process_feature(feature_name)
@@ -793,63 +692,68 @@ class DevTeam
 
     # 1. Analyst documents requirements
     puts "\n1. Analyst gathering requirements..."
-    @analyst.add_node(
-      "req_#{feature_name}",
+    @analyst.remember(
       "Requirements for #{feature_name}: Must support OAuth2",
-      type: :fact,
-      importance: 9.0,
-      tags: ["requirements", feature_name]
+      tags: ["requirements", feature_name],
+      metadata: { category: "fact", priority: "critical" }
     )
 
     # 2. Developer recalls requirements and designs
     puts "\n2. Developer reviewing requirements..."
     requirements = @developer.recall(
-      timeframe: "last hour",
-      topic: "requirements #{feature_name}"
+      "requirements #{feature_name}",
+      timeframe: "last hour"
     )
 
     puts "Found #{requirements.length} requirements"
 
-    @developer.add_node(
-      "design_#{feature_name}",
+    @developer.remember(
       "Design for #{feature_name} based on requirements",
-      type: :decision,
-      importance: 9.0,
       tags: ["design", feature_name],
-      related_to: ["req_#{feature_name}"]
+      metadata: { category: "decision", priority: "critical" }
     )
 
     # 3. Tester recalls everything and creates test plan
     puts "\n3. Tester creating test plan..."
     context = @tester.recall(
+      feature_name,
       timeframe: "last hour",
-      topic: feature_name,
       strategy: :hybrid
     )
 
     puts "Tester reviewed #{context.length} items"
 
-    @tester.add_node(
-      "test_#{feature_name}",
+    @tester.remember(
       "Test plan for #{feature_name}",
-      type: :context,
-      importance: 8.0,
       tags: ["testing", feature_name],
-      related_to: ["design_#{feature_name}", "req_#{feature_name}"]
+      metadata: { category: "context", priority: "high" }
     )
 
-    # 4. Show collaboration
+    # 4. Show collaboration timeline
     puts "\n4. Collaboration summary:"
-    timeline = @analyst.conversation_timeline(feature_name)
-    timeline.each do |entry|
-      puts "- #{entry[:robot]}: #{entry[:type]}"
+    nodes = HTM::Models::Node
+      .where("content ILIKE ?", "%#{feature_name}%")
+      .order(created_at: :asc)
+      .includes(:robot_nodes)
+
+    nodes.each do |node|
+      robot_ids = node.robot_nodes.map(&:robot_id)
+      robots = HTM::Models::Robot.where(id: robot_ids).pluck(:name)
+      puts "- #{robots.join(', ')}: #{node.content[0..50]}..."
     end
 
     # 5. Show attribution
     puts "\n5. Who contributed:"
-    breakdown = @analyst.which_robot_said(feature_name)
-    breakdown.each do |robot_id, count|
-      puts "- #{robot_id}: #{count} memories"
+    robot_counts = Hash.new(0)
+    nodes.each do |node|
+      node.robot_nodes.each do |rn|
+        robot = HTM::Models::Robot.find(rn.robot_id)
+        robot_counts[robot.name] += 1
+      end
+    end
+
+    robot_counts.each do |robot_name, count|
+      puts "- #{robot_name}: #{count} memories"
     end
   end
 end

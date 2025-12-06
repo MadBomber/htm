@@ -367,9 +367,8 @@ When you `remember()`, the node is automatically added to working memory:
 htm.remember("Important fact")
 
 # Check working memory
-stats = htm.working_memory.stats
-puts "Nodes in WM: #{stats[:node_count]}"
-puts "Token usage: #{stats[:utilization]}%"
+puts "Nodes in WM: #{htm.working_memory.node_count}"
+puts "Token usage: #{htm.working_memory.utilization_percentage}%"
 ```
 
 ### Eviction

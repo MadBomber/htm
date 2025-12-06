@@ -108,7 +108,7 @@ CREATE TABLE public.node_tags (
     node_id bigint NOT NULL,
     tag_id bigint NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp(6) without time zone
+    deleted_at timestamp with time zone
 );
 
 --
@@ -134,6 +134,12 @@ COMMENT ON COLUMN public.node_tags.tag_id IS 'ID of the tag being applied';
 --
 
 COMMENT ON COLUMN public.node_tags.created_at IS 'When this association was created';
+
+--
+-- Name: COLUMN node_tags.deleted_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.node_tags.deleted_at IS 'Soft delete timestamp';
 
 --
 -- Name: node_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -288,10 +294,10 @@ CREATE TABLE public.robot_nodes (
     first_remembered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     last_remembered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     remember_count integer DEFAULT 1 NOT NULL,
+    working_memory boolean DEFAULT false NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    working_memory boolean DEFAULT false NOT NULL,
-    deleted_at timestamp(6) without time zone
+    deleted_at timestamp with time zone
 );
 
 --
@@ -335,6 +341,12 @@ COMMENT ON COLUMN public.robot_nodes.remember_count IS 'Number of times this rob
 --
 
 COMMENT ON COLUMN public.robot_nodes.working_memory IS 'True if this node is currently in the robot working memory';
+
+--
+-- Name: COLUMN robot_nodes.deleted_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.robot_nodes.deleted_at IS 'Soft delete timestamp';
 
 --
 -- Name: robot_nodes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -421,7 +433,7 @@ CREATE TABLE public.tags (
     id bigint NOT NULL,
     name text NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp(6) without time zone
+    deleted_at timestamp with time zone
 );
 
 --
@@ -441,6 +453,12 @@ COMMENT ON COLUMN public.tags.name IS 'Hierarchical tag in format: root:level1:l
 --
 
 COMMENT ON COLUMN public.tags.created_at IS 'When this tag was created';
+
+--
+-- Name: COLUMN tags.deleted_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.tags.deleted_at IS 'Soft delete timestamp';
 
 --
 -- Name: tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -563,6 +581,12 @@ CREATE INDEX idx_file_sources_last_synced ON public.file_sources USING btree (la
 CREATE UNIQUE INDEX idx_file_sources_path_unique ON public.file_sources USING btree (file_path);
 
 --
+-- Name: idx_node_tags_deleted_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_node_tags_deleted_at ON public.node_tags USING btree (deleted_at);
+
+--
 -- Name: idx_node_tags_node_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -591,12 +615,6 @@ CREATE INDEX idx_nodes_access_count ON public.nodes USING btree (access_count);
 --
 
 CREATE INDEX idx_nodes_active ON public.nodes USING btree (id) WHERE (deleted_at IS NULL);
-
---
--- Name: INDEX idx_nodes_active; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON INDEX public.idx_nodes_active IS 'Partial index for active (non-deleted) node queries';
 
 --
 -- Name: idx_nodes_active_with_embedding; Type: INDEX; Schema: public; Owner: -
@@ -677,6 +695,12 @@ CREATE INDEX idx_nodes_source_id ON public.nodes USING btree (source_id);
 CREATE INDEX idx_nodes_updated_at ON public.nodes USING btree (updated_at);
 
 --
+-- Name: idx_robot_nodes_deleted_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_robot_nodes_deleted_at ON public.robot_nodes USING btree (deleted_at);
+
+--
 -- Name: idx_robot_nodes_last_remembered_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -707,6 +731,12 @@ CREATE UNIQUE INDEX idx_robot_nodes_unique ON public.robot_nodes USING btree (ro
 CREATE INDEX idx_robot_nodes_working_memory ON public.robot_nodes USING btree (robot_id, working_memory) WHERE (working_memory = true);
 
 --
+-- Name: idx_tags_deleted_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_tags_deleted_at ON public.tags USING btree (deleted_at);
+
+--
 -- Name: idx_tags_name_pattern; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -723,24 +753,6 @@ CREATE INDEX idx_tags_name_trgm ON public.tags USING gin (name public.gin_trgm_o
 --
 
 CREATE UNIQUE INDEX idx_tags_name_unique ON public.tags USING btree (name);
-
---
--- Name: index_node_tags_on_deleted_at; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_node_tags_on_deleted_at ON public.node_tags USING btree (deleted_at);
-
---
--- Name: index_robot_nodes_on_deleted_at; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_robot_nodes_on_deleted_at ON public.robot_nodes USING btree (deleted_at);
-
---
--- Name: index_tags_on_deleted_at; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_tags_on_deleted_at ON public.tags USING btree (deleted_at);
 
 --
 -- Name: nodes fk_rails_920ad16d08; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -781,4 +793,4 @@ ALTER TABLE ONLY public.robot_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict bjkKIo8iBhvKUCAsIDDWdDnwALL0oxUsmZVbvgEad6ZmhcLmalGL4Ih7bfe9nlh
+\unrestrict 4WlUqnJzNHaNhcr67XLIIhAvRPidZODUPGkM34l27SvmC0zu6dIsQdJ8dtu589Z

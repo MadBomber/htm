@@ -57,6 +57,12 @@ Generate embedding using EmbeddingService
 
 **`@return`** [Array<Float>] Embedding vector (original, not padded)
 
+## extract_propositions(text ) {: #method-c-extract_propositions }
+Extract propositions using PropositionService
+**`@param`** [String] Text to analyze
+
+**`@return`** [Array<String>] Extracted atomic propositions
+
 ## extract_tags(text , existing_ontology: []) {: #method-c-extract_tags }
 Extract tags using TagService
 **`@param`** [String] Text to analyze
@@ -75,4 +81,6 @@ Reset configuration to defaults
 ## configuration[RW] {: #attribute-c-configuration }
 Get current configuration
 
-**`@return`** [HTM::Configuration]
+**`@return`** [HTM::Configuration] 
+
+

@@ -63,14 +63,14 @@ HTM enables multiple AI robots to share a collective memory:
 - Cross-robot context awareness and conversation continuity
 - Query conversation timelines across multiple robots
 
-### Knowledge Graph
+### Pseudo Knowledge Graph
 
-Build rich relationship networks between memories:
+Build rich relationship networks between memories using a hierarchical taxonomy:
 
 - Link related memories together
-- Tag-based categorization
+- Tag-based categorization with up to four levels of abstraction
 - Importance scoring for prioritization
-- Navigate memory relationships programmatically
+- Navigate memory relationship abstractions
 
 ## Quick Example
 
@@ -79,33 +79,36 @@ Here's how simple it is to get started with HTM:
 ```ruby
 require 'htm'
 
+# Configure HTM globally (optional - uses Ollama by default)
+HTM.configure do |config|
+  config.embedding_provider = :ollama
+  config.embedding_model = 'nomic-embed-text:latest'
+  config.tag_provider = :ollama
+  config.tag_model = 'gemma3:latest'
+end
+
 # Initialize HTM for your robot
 htm = HTM.new(
-  robot_name: "Code Helper",
-  working_memory_size: 128_000,    # 128k tokens
-  embedding_service: :ollama,       # Use Ollama for embeddings
-  embedding_model: 'gpt-oss'        # Default embedding model
+  robot_name: "Chat Assistant",
+  working_memory_size: 128_000     # 128k tokens
 )
 
-# Add memories (embeddings generated automatically)
-htm.add_node(
-  "decision_001",
+# Remember information (embeddings generated automatically in background)
+node_id = htm.remember(
   "We decided to use PostgreSQL for HTM storage",
-  type: :decision,
-  category: "architecture",
-  importance: 9.0,
-  tags: ["database", "architecture"]
+  tags: ["database:postgresql", "architecture"],
+  metadata: { category: "architecture", priority: "high" }
 )
 
 # Recall memories from the past
 memories = htm.recall(
+  "database decisions",            # Topic (first positional argument)
   timeframe: "last week",
-  topic: "database decisions",
   strategy: :hybrid
 )
 
-# Create context for your LLM
-context = htm.create_context(
+# Create context for your LLM from working memory
+context = htm.working_memory.assemble_context(
   strategy: :balanced,
   max_tokens: 50_000
 )
@@ -117,8 +120,9 @@ response = llm.chat(
   user: "What database did we decide to use?"
 )
 
-# Explicit deletion only when needed
-htm.forget("old_decision", confirm: :confirmed)
+# Explicit deletion only when needed (soft delete by default)
+htm.forget(node_id)                              # Soft delete (recoverable)
+htm.forget(node_id, soft: false, confirm: :confirmed)  # Permanent delete
 ```
 
 ## Use Cases

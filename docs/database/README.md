@@ -5,12 +5,12 @@
 | Name | Columns | Comment | Type |
 | ---- | ------- | ------- | ---- |
 | [public.file_sources](public.file_sources.md) | 9 | Source file metadata for loaded documents | BASE TABLE |
-| [public.node_tags](public.node_tags.md) | 4 | Join table connecting nodes to tags (many-to-many) | BASE TABLE |
+| [public.node_tags](public.node_tags.md) | 5 | Join table connecting nodes to tags (many-to-many) | BASE TABLE |
 | [public.nodes](public.nodes.md) | 14 | Core memory storage for conversation messages and context | BASE TABLE |
-| [public.robot_nodes](public.robot_nodes.md) | 9 | Join table connecting robots to nodes (many-to-many) | BASE TABLE |
+| [public.robot_nodes](public.robot_nodes.md) | 10 | Join table connecting robots to nodes (many-to-many) | BASE TABLE |
 | [public.robots](public.robots.md) | 4 | Registry of all LLM robots using the HTM system | BASE TABLE |
 | [public.schema_migrations](public.schema_migrations.md) | 1 |  | BASE TABLE |
-| [public.tags](public.tags.md) | 3 | Unique tag names for categorization | BASE TABLE |
+| [public.tags](public.tags.md) | 4 | Unique tag names for categorization | BASE TABLE |
 
 ## Stored procedures and functions
 

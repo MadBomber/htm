@@ -9,6 +9,7 @@ Join table connecting robots to nodes (many-to-many)
 | Name | Type | Default | Nullable | Children | Parents | Comment |
 | ---- | ---- | ------- | -------- | -------- | ------- | ------- |
 | created_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  |  |
+| deleted_at | timestamp with time zone |  | true |  |  | Soft delete timestamp |
 | first_remembered_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this robot first remembered this content |
 | id | bigint | nextval('robot_nodes_id_seq'::regclass) | false |  |  |  |
 | last_remembered_at | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this robot last tried to remember this content |
@@ -30,6 +31,7 @@ Join table connecting robots to nodes (many-to-many)
 
 | Name | Definition |
 | ---- | ---------- |
+| idx_robot_nodes_deleted_at | CREATE INDEX idx_robot_nodes_deleted_at ON public.robot_nodes USING btree (deleted_at) |
 | idx_robot_nodes_last_remembered_at | CREATE INDEX idx_robot_nodes_last_remembered_at ON public.robot_nodes USING btree (last_remembered_at) |
 | idx_robot_nodes_node_id | CREATE INDEX idx_robot_nodes_node_id ON public.robot_nodes USING btree (node_id) |
 | idx_robot_nodes_robot_id | CREATE INDEX idx_robot_nodes_robot_id ON public.robot_nodes USING btree (robot_id) |

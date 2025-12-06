@@ -106,94 +106,79 @@ puts "Robot ID: #{htm.robot_id}"
 
 ```ruby
 # Add a fact about the user
-htm.add_node(
-  "user_name",                    # Unique key
-  "The user's name is Alice",     # Content
-  type: :fact,                    # Memory type
-  importance: 8.0,                # Importance score (0-10)
-  tags: ["user", "identity"]      # Tags for categorization
+node_id = htm.remember(
+  "The user's name is Alice",             # Content
+  tags: ["user", "identity"],             # Tags for categorization
+  metadata: { category: "fact" }          # Metadata for priority/categorization
 )
 
-puts "Memory added successfully!"
+puts "Memory added with ID: #{node_id}"
 ```
 
-### Understanding Memory Types
+### Using Tags and Metadata
 
-HTM supports six memory types, each optimized for different purposes:
+HTM uses hierarchical tags and flexible metadata to categorize memories:
 
 ```ruby
 # Facts: Immutable truths
-htm.add_node(
-  "fact_001",
+htm.remember(
   "The user lives in San Francisco",
-  type: :fact,
-  importance: 7.0
+  tags: ["user:location"],
+  metadata: { category: "fact", priority: "high" }
 )
 
 # Context: Conversation state
-htm.add_node(
-  "context_001",
+htm.remember(
   "Currently discussing database architecture for a new project",
-  type: :context,
-  importance: 6.0
+  tags: ["conversation:topic"],
+  metadata: { category: "context" }
 )
 
 # Preferences: User preferences
-htm.add_node(
-  "pref_001",
+htm.remember(
   "User prefers Ruby over Python for scripting",
-  type: :preference,
-  importance: 5.0
+  tags: ["user:preference", "language:ruby"],
+  metadata: { category: "preference" }
 )
 
 # Decisions: Design decisions
-htm.add_node(
-  "decision_001",
+htm.remember(
   "Decided to use PostgreSQL instead of MongoDB for better consistency",
-  type: :decision,
-  importance: 9.0,
-  tags: ["architecture", "database"]
+  tags: ["architecture", "database:postgresql"],
+  metadata: { category: "decision", priority: "critical" }
 )
 
 # Code: Code snippets
-htm.add_node(
-  "code_001",
+htm.remember(
   "def greet(name)\n  puts \"Hello, \#{name}!\"\nend",
-  type: :code,
-  importance: 4.0,
-  tags: ["ruby", "functions"]
+  tags: ["code:ruby", "pattern:function"],
+  metadata: { category: "code", language: "ruby" }
 )
 
 # Questions: Unresolved questions
-htm.add_node(
-  "question_001",
+htm.remember(
   "Should we add Redis caching to improve performance?",
-  type: :question,
-  importance: 6.0,
-  tags: ["performance", "caching"]
+  tags: ["performance", "caching"],
+  metadata: { category: "question", resolved: false }
 )
 ```
 
-!!! tip "Choosing the Right Type"
-    - Use `:fact` for unchanging information
-    - Use `:context` for temporary conversation state
-    - Use `:preference` for user settings
-    - Use `:decision` for important architectural choices
-    - Use `:code` for code examples and snippets
-    - Use `:question` for tracking open questions
+!!! tip "Organizing Memories"
+    - Use hierarchical tags (e.g., `user:preference`, `database:postgresql`)
+    - Use metadata for structured data (priority, category, resolved status)
+    - Combine tags and metadata for powerful filtering
 
 ### Retrieving Memories
 
-Retrieve a specific memory by its key:
+Retrieve a specific memory by its ID:
 
 ```ruby
-memory = htm.retrieve("user_name")
+# Retrieve by ID (returned from remember())
+memory = htm.long_term_memory.retrieve(node_id)
 
 if memory
-  puts "Found: #{memory['value']}"
-  puts "Type: #{memory['type']}"
-  puts "Created: #{memory['created_at']}"
-  puts "Importance: #{memory['importance']}"
+  puts "Found: #{memory.content}"
+  puts "Created: #{memory.created_at}"
 end
 ```
 
@@ -204,13 +189,14 @@ Use HTM's RAG capabilities to recall relevant memories:
 ```ruby
 # Recall memories about databases from the last week
 memories = htm.recall(
+  "database architecture",  # Topic is first positional argument
   timeframe: "last week",
-  topic: "database architecture",
-  limit: 10
+  limit: 10,
+  raw: true  # Get full hash with similarity scores
 )
 
 memories.each do |memory|
-  puts "- #{memory['value']}"
+  puts "- #{memory['content']}"
   puts "  Similarity: #{memory['similarity']}"
   puts
 end
@@ -225,7 +211,7 @@ Assemble working memory into context for your LLM:
 
 ```ruby
 # Get a balanced mix of important and recent memories
-context = htm.create_context(
+context = htm.working_memory.assemble_context(
   strategy: :balanced,
   max_tokens: 50_000
 )
@@ -260,27 +246,22 @@ class ConversationTracker
     @turn += 1
 
     # Store user message
-    @htm.add_node(
-      "turn_#{@turn}_user",
+    @htm.remember(
       user_message,
-      type: :context,
-      importance: 5.0,
-      tags: ["conversation", "user"]
+      tags: ["conversation", "user", "turn:#{@turn}"],
+      metadata: { category: "context", turn: @turn, role: "user" }
     )
 
     # Store assistant response
-    @htm.add_node(
-      "turn_#{@turn}_assistant",
+    @htm.remember(
       assistant_response,
-      type: :context,
-      importance: 5.0,
-      tags: ["conversation", "assistant"],
-      related_to: ["turn_#{@turn}_user"]
+      tags: ["conversation", "assistant", "turn:#{@turn}"],
+      metadata: { category: "context", turn: @turn, role: "assistant" }
     )
   end
 
   def recall_context
-    @htm.create_context(strategy: :recent, max_tokens: 10_000)
+    @htm.working_memory.assemble_context(strategy: :recent, max_tokens: 10_000)
   end
 end
 ```
@@ -295,22 +276,19 @@ class KnowledgeBase
     @htm = HTM.new(robot_name: "Knowledge Bot")
   end
 
-  def add_fact(key, fact, category:, tags: [])
-    @htm.add_node(
-      key,
+  def add_fact(fact, category:, tags: [])
+    @htm.remember(
       fact,
-      type: :fact,
-      category: category,
-      importance: 8.0,
-      tags: tags
+      tags: tags,
+      metadata: { category: category, priority: "high" }
     )
   end
 
   def query(question)
     # Search all time for relevant facts
     @htm.recall(
+      question,
       timeframe: "last 10 years",  # Effectively all memories
-      topic: question,
       limit: 5
     )
   end
@@ -319,7 +297,6 @@ end
 # Usage
 kb = KnowledgeBase.new
 kb.add_fact(
-  "ruby_version",
   "Ruby 3.0 introduced Ractors for parallel execution",
   category: "programming",
   tags: ["ruby", "concurrency"]
@@ -339,8 +316,6 @@ class DecisionJournal
   end
 
   def record_decision(title, rationale, alternatives: [], tags: [])
-    key = "decision_#{Time.now.to_i}"
-
     decision = <<~DECISION
       Decision: #{title}
 
@@ -349,20 +324,19 @@ class DecisionJournal
       #{alternatives.any? ? "Alternatives considered: #{alternatives.join(', ')}" : ''}
     DECISION
 
-    @htm.add_node(
-      key,
+    @htm.remember(
       decision,
-      type: :decision,
-      importance: 9.0,
-      tags: tags + ["decision"]
+      tags: tags + ["decision"],
+      metadata: { category: "decision", priority: "critical" }
     )
   end
 
   def get_decision_history(topic)
     @htm.recall(
+      topic,
       timeframe: "last year",
-      topic: topic,
-      limit: 20
+      limit: 20,
+      raw: true
     ).sort_by { |d| d['created_at'] }
   end
 end
@@ -379,11 +353,9 @@ puts "Nodes in working memory: #{wm.node_count}"
 puts "Tokens used: #{wm.token_count} / #{wm.max_tokens}"
 puts "Utilization: #{wm.utilization_percentage}%"
 
-# Get comprehensive stats
-stats = htm.memory_stats
-puts "Total nodes in long-term: #{stats[:total_nodes]}"
-puts "Active robots: #{stats[:active_robots]}"
-puts "Database size: #{stats[:database_size] / (1024.0 * 1024.0)} MB"
+# Get comprehensive stats using ActiveRecord
+puts "Total nodes in long-term: #{HTM::Models::Node.count}"
+puts "Active robots: #{HTM::Models::Robot.count}"
 ```
 
 !!! tip
@@ -391,73 +363,103 @@ puts "Database size: #{stats[:database_size] / (1024.0 * 1024.0)} MB"
 
 ## Best Practices for Beginners
 
-### 1. Use Meaningful Keys
+### 1. Use Descriptive Content
 
 ```ruby
-# Good: Descriptive, unique keys
-htm.add_node("user_pref_theme_dark", "User prefers dark theme", ...)
+# Good: Clear, self-contained content
+htm.remember(
+  "User prefers dark theme for all interfaces",
+  tags: ["user:preference", "ui:theme"],
+  metadata: { category: "preference" }
+)
 
-# Bad: Generic keys that might conflict
-htm.add_node("pref", "User prefers dark theme", ...)
+# Bad: Vague or context-dependent
+htm.remember("prefers dark", tags: ["pref"])
 ```
 
-### 2. Set Appropriate Importance
+### 2. Use Metadata for Priority
 
 ```ruby
-# Critical facts: 9-10
-htm.add_node("api_key", "API key is: ...", importance: 10.0)
+# Critical facts
+htm.remember(
+  "Production API endpoint: https://api.example.com",
+  tags: ["api", "production"],
+  metadata: { priority: "critical", category: "fact" }
+)
 
-# Important decisions: 7-9
-htm.add_node("arch_001", "Using microservices", importance: 8.0)
+# Important decisions
+htm.remember(
+  "Using microservices architecture for scalability",
+  tags: ["architecture", "decision"],
+  metadata: { priority: "high", category: "decision" }
+)
 
-# Contextual information: 4-6
-htm.add_node("ctx_001", "Discussing weather", importance: 5.0)
+# Contextual information
+htm.remember(
+  "Currently discussing weather API integration",
+  tags: ["context", "conversation"],
+  metadata: { priority: "medium", category: "context" }
+)
 
-# Temporary notes: 1-3
-htm.add_node("note_001", "Remember to check logs", importance: 2.0)
+# Temporary notes
+htm.remember(
+  "Remember to check server logs after deployment",
+  tags: ["todo", "temporary"],
+  metadata: { priority: "low", category: "note" }
+)
 ```
 
 ### 3. Use Tags Liberally
 
 ```ruby
-htm.add_node(
-  "decision_001",
-  "Chose PostgreSQL for data persistence",
-  type: :decision,
-  importance: 9.0,
+htm.remember(
+  "Chose PostgreSQL for data persistence due to ACID compliance",
   tags: [
     "database",
     "architecture",
     "backend",
     "persistence",
-    "postgresql"
-  ]
+    "database:postgresql"
+  ],
+  metadata: { category: "decision", priority: "high" }
 )
 ```
 
-### 4. Leverage Relationships
+### 4. Use Hierarchical Tags for Relationships
 
 ```ruby
-# Add related memories
-htm.add_node("decision_db", "Use PostgreSQL", type: :decision)
-
-htm.add_node(
-  "code_db_connect",
-  "Connection code for PostgreSQL",
-  type: :code,
-  related_to: ["decision_db"]  # Link to the decision
+# Add related memories using hierarchical tags
+htm.remember(
+  "Use PostgreSQL for primary data storage",
+  tags: ["decision:database", "database:postgresql"],
+  metadata: { category: "decision" }
 )
+
+htm.remember(
+  "PG.connect(host: 'localhost', dbname: 'app_production')",
+  tags: ["code:ruby", "database:postgresql", "decision:database"],
+  metadata: { category: "code", language: "ruby" }
+)
+
+# Find related by shared tags
+htm.recall("database:postgresql", timeframe: "last month", limit: 10)
 ```
 
 ### 5. Clean Up When Needed
 
 ```ruby
-# Explicitly forget outdated information
-htm.forget("old_api_key", confirm: :confirmed)
+# Store the node_id when creating memories you may want to remove
+node_id = htm.remember("Temporary calculation result", tags: ["scratch"])
+
+# Later, soft delete (recoverable)
+htm.forget(node_id)
+
+# Or permanently delete with confirmation
+htm.forget(node_id, soft: false, confirm: :confirmed)
 ```
 
 !!! warning
-    The `forget` method requires explicit confirmation to prevent accidental data loss. HTM never deletes memories automatically.
+    Permanent deletion requires explicit confirmation to prevent accidental data loss. Use soft delete (default) when possible - you can always restore with `htm.restore(node_id)`.
 
 ## Troubleshooting
 
@@ -493,12 +495,22 @@ end
 ### Memory Not Found
 
 ```ruby
-memory = htm.retrieve("my_key")
+# Retrieve by node_id (returned from remember())
+node_id = 123  # Use the ID you saved when creating the memory
+memory = htm.long_term_memory.retrieve(node_id)
 
 if memory.nil?
-  puts "Memory not found. Check the key spelling."
+  puts "Memory not found. Check the node ID."
 else
-  puts "Found: #{memory['value']}"
+  puts "Found: #{memory.content}"
+end
+
+# Or search for memories by content
+results = htm.recall("what I'm looking for", timeframe: "last month", limit: 5)
+if results.empty?
+  puts "No matching memories found."
+else
+  puts "Found #{results.length} matches"
 end
 ```
 
@@ -525,53 +537,47 @@ htm = HTM.new(
 )
 
 # Add various memories
-htm.add_node(
-  "user_001",
+htm.remember(
   "User's name is Alice and she's a software engineer",
-  type: :fact,
-  importance: 8.0,
-  tags: ["user", "identity", "profession"]
+  tags: ["user", "identity", "profession"],
+  metadata: { category: "fact", priority: "high" }
 )
 
-htm.add_node(
-  "decision_001",
+htm.remember(
   "Decided to use HTM for managing conversation memory",
-  type: :decision,
-  importance: 9.0,
-  tags: ["architecture", "memory"]
+  tags: ["architecture", "memory", "decision"],
+  metadata: { category: "decision", priority: "critical" }
 )
 
-htm.add_node(
-  "pref_001",
+htm.remember(
   "Alice prefers detailed explanations with examples",
-  type: :preference,
-  importance: 7.0,
-  tags: ["user", "communication"],
-  related_to: ["user_001"]
+  tags: ["user", "communication", "user:preference"],
+  metadata: { category: "preference" }
 )
 
 # Recall relevant memories
 memories = htm.recall(
+  "user preferences",  # Topic is positional
   timeframe: "last 7 days",
-  topic: "user preferences",
-  limit: 5
+  limit: 5,
+  raw: true  # Get full hash with similarity scores
 )
 
 puts "Found #{memories.length} relevant memories:"
 memories.each do |m|
-  puts "- #{m['value']} (importance: #{m['importance']})"
+  puts "- #{m['content']}"
 end
 
 # Create context for LLM
-context = htm.create_context(strategy: :balanced)
+context = htm.working_memory.assemble_context(strategy: :balanced)
 puts "\nContext length: #{context.length} characters"
 
 # Check stats
-stats = htm.memory_stats
+wm = htm.working_memory
 puts "\nMemory statistics:"
-puts "- Total nodes: #{stats[:total_nodes]}"
-puts "- Working memory: #{stats[:working_memory][:utilization]}% full"
-puts "- Database size: #{(stats[:database_size] / 1024.0 / 1024.0).round(2)} MB"
+puts "- Total nodes in database: #{HTM::Models::Node.count}"
+puts "- Working memory nodes: #{wm.node_count}"
+puts "- Working memory: #{wm.utilization_percentage}% full"
 ```
 
 Happy coding with HTM!

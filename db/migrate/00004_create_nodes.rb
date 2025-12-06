@@ -59,6 +59,23 @@ class CreateNodes < ActiveRecord::Migration[7.1]
         CHECK (embedding_dimension IS NULL OR (embedding_dimension > 0 AND embedding_dimension <= 2000))
     SQL
 
+    # Partial index for active (non-deleted) node queries
+    add_index :nodes, :id,
+              name: 'idx_nodes_active',
+              where: 'deleted_at IS NULL'
+
+    # Composite index for embedding-based searches on active nodes
+    execute <<-SQL
+      CREATE INDEX idx_nodes_active_with_embedding ON nodes (id)
+        WHERE deleted_at IS NULL AND embedding IS NOT NULL
+    SQL
+
+    # LZ4 compression for better read performance
+    execute <<-SQL
+      ALTER TABLE nodes ALTER COLUMN metadata SET COMPRESSION lz4;
+      ALTER TABLE nodes ALTER COLUMN content SET COMPRESSION lz4;
+    SQL
+
     # Foreign key to file_sources table
     add_foreign_key :nodes, :file_sources, column: :source_id, on_delete: :nullify
   end

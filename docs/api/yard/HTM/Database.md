@@ -8,20 +8,23 @@ initialization
 
 # Class Methods
 ## default_config() {: #method-c-default_config }
-Get default database configuration
-**`@return`** [Hash, nil] Connection configuration hash
+Get default database configuration (respects RAILS_ENV)
+
+Uses ActiveRecordConfig which reads from config/database.yml and respects
+RAILS_ENV for environment-specific database selection.
+**`@return`** [Hash, nil] Connection configuration hash with PG-style keys
 
 ## drop(db_url nil) {: #method-c-drop }
-Drop all HTM tables
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+Drop all HTM tables (respects RAILS_ENV)
+**`@param`** [String] Database connection URL (uses default_config if not provided)
 
 **`@return`** [void] 
 
 ## dump_schema(db_url nil) {: #method-c-dump_schema }
-Dump current database schema to db/schema.sql
+Dump current database schema to db/schema.sql (respects RAILS_ENV)
 
 Uses pg_dump to create a clean SQL schema file without data
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+**`@param`** [String] Database connection URL (uses default_config if not provided)
 
 **`@return`** [void] 
 
@@ -39,16 +42,16 @@ comprehensive database documentation including:
 **`@return`** [void] 
 
 ## info(db_url nil) {: #method-c-info }
-Show database info
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+Show database info (respects RAILS_ENV)
+**`@param`** [String] Database connection URL (uses default_config if not provided)
 
 **`@return`** [void] 
 
 ## load_schema(db_url nil) {: #method-c-load_schema }
-Load schema from db/schema.sql
+Load schema from db/schema.sql (respects RAILS_ENV)
 
 Uses psql to load the schema file
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+**`@param`** [String] Database connection URL (uses default_config if not provided)
 
 **`@return`** [void] 
 

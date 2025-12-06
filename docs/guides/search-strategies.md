@@ -166,8 +166,8 @@ Similarity scores indicate how related the memory is to your query:
 ```ruby
 # Query about concepts, not specific keywords
 memories = htm.recall(
+  "ways to speed up slow applications",
   timeframe: "last year",
-  topic: "ways to speed up slow applications",
   strategy: :vector
 )
 
@@ -183,8 +183,8 @@ memories = htm.recall(
 ```ruby
 # Find related concepts even without exact keywords
 memories = htm.recall(
+  "machine learning",
   timeframe: "all time",
-  topic: "machine learning",
   strategy: :vector
 )
 
@@ -207,7 +207,7 @@ queries = [
 ]
 
 queries.each do |q|
-  results = htm.recall(timeframe: "all time", topic: q, strategy: :vector)
+  results = htm.recall(q, timeframe: "all time", strategy: :vector)
   # All queries return similar results!
 end
 ```
@@ -217,8 +217,8 @@ end
 ```ruby
 # If embeddings support multiple languages
 memories = htm.recall(
+  "base de données",  # French: database
   timeframe: "all time",
-  topic: "base de données",  # French: database
   strategy: :vector
 )
 
@@ -233,8 +233,8 @@ memories = htm.recall(
 ```ruby
 # Bad for exact technical terms
 memories = htm.recall(
+  "JWT",  # Specific acronym
   timeframe: "all time",
-  topic: "JWT",  # Specific acronym
   strategy: :vector
 )
 
@@ -247,8 +247,8 @@ memories = htm.recall(
 ```ruby
 # Not ideal for names
 memories = htm.recall(
+  "Alice Thompson",
   timeframe: "all time",
-  topic: "Alice Thompson",
   strategy: :vector
 )
 
@@ -263,10 +263,11 @@ memories = htm.recall(
 ```ruby
 def vector_search_with_threshold(topic, threshold: 0.7)
   results = htm.recall(
+    topic,
     timeframe: "all time",
-    topic: topic,
     strategy: :vector,
-    limit: 50
+    limit: 50,
+    raw: true  # Get hash with similarity scores
   )
 
   # Filter by threshold
@@ -280,10 +281,10 @@ high_quality = vector_search_with_threshold("database", threshold: 0.8)
 
 ```ruby
 # Vague: Returns less relevant results
-htm.recall(topic: "API", strategy: :vector)
+htm.recall("API", strategy: :vector)
 
 # Descriptive: Returns more relevant results
-htm.recall(topic: "RESTful API design patterns and best practices", strategy: :vector)
+htm.recall("RESTful API design patterns and best practices", strategy: :vector)
 ```
 
 **3. Query Expansion**
@@ -294,8 +295,8 @@ def expanded_vector_search(base_query, related_terms)
   expanded = "#{base_query} #{related_terms.join(' ')}"
 
   htm.recall(
+    expanded,
     timeframe: "all time",
-    topic: expanded,
     strategy: :vector,
     limit: 20
   )
@@ -331,14 +332,15 @@ User Query: "PostgreSQL indexing"
 
 ```ruby
 memories = htm.recall(
+  "PostgreSQL indexing",
   timeframe: "last month",
-  topic: "PostgreSQL indexing",
   strategy: :fulltext,
-  limit: 10
+  limit: 10,
+  raw: true  # Get hash with rank scores
 )
 
 memories.each do |m|
-  puts "#{m['value']}"
+  puts "#{m['content']}"
   puts "Rank: #{m['rank']}"  # Higher = better match
   puts
 end
@@ -351,8 +353,8 @@ end
 ```ruby
 # Finding specific technical terms
 memories = htm.recall(
+  "JWT OAuth2 authentication",
   timeframe: "all time",
-  topic: "JWT OAuth2 authentication",
   strategy: :fulltext
 )
 
@@ -364,8 +366,8 @@ memories = htm.recall(
 ```ruby
 # Finding people, places, products
 memories = htm.recall(
+  "Alice Thompson",
   timeframe: "all time",
-  topic: "Alice Thompson",
   strategy: :fulltext
 )
 
@@ -377,8 +379,8 @@ memories = htm.recall(
 ```ruby
 # Technical acronyms
 memories = htm.recall(
+  "REST API CRUD SQL",
   timeframe: "all time",
-  topic: "REST API CRUD SQL",
   strategy: :fulltext
 )
 
@@ -390,8 +392,8 @@ memories = htm.recall(
 ```ruby
 # Finding specific code or commands
 memories = htm.recall(
+  "pg_dump VACUUM",
   timeframe: "all time",
-  topic: "pg_dump VACUUM",
   strategy: :fulltext
 )
 
@@ -405,8 +407,8 @@ memories = htm.recall(
 ```ruby
 # PostgreSQL supports AND, OR, NOT
 memories = htm.recall(
+  "PostgreSQL AND (indexing OR optimization)",
   timeframe: "all time",
-  topic: "PostgreSQL AND (indexing OR optimization)",
   strategy: :fulltext
 )
 ```
@@ -416,8 +418,8 @@ memories = htm.recall(
 ```ruby
 # Find exact phrases
 memories = htm.recall(
+  '"database connection pool"',  # Exact phrase
   timeframe: "all time",
-  topic: '"database connection pool"',  # Exact phrase
   strategy: :fulltext
 )
 ```
@@ -429,8 +431,8 @@ memories = htm.recall(
 # "running" matches "run", "runs", "runner"
 
 memories = htm.recall(
+  "optimize",  # Matches "optimizing", "optimized", etc.
   timeframe: "all time",
-  topic: "optimize",  # Matches "optimizing", "optimized", etc.
   strategy: :fulltext
 )
 ```
@@ -442,8 +444,8 @@ memories = htm.recall(
 ```ruby
 # Doesn't understand meaning
 memories = htm.recall(
+  "database",
   timeframe: "all time",
-  topic: "database",
   strategy: :fulltext
 )
 
@@ -456,8 +458,8 @@ memories = htm.recall(
 ```ruby
 # Must use exact keywords
 memories = htm.recall(
+  "speed up application",
   timeframe: "all time",
-  topic: "speed up application",
   strategy: :fulltext
 )
 
@@ -472,8 +474,8 @@ memories = htm.recall(
 ```ruby
 # Include variations and synonyms
 memories = htm.recall(
+  "database PostgreSQL SQL relational",
   timeframe: "all time",
-  topic: "database PostgreSQL SQL relational",
   strategy: :fulltext
 )
 ```
@@ -694,15 +696,15 @@ require 'benchmark'
 
 Benchmark.bm(15) do |x|
   x.report("Vector:") do
-    htm.recall(timeframe: "last month", topic: "database", strategy: :vector)
+    htm.recall("database", timeframe: "last month", strategy: :vector)
   end
 
   x.report("Full-text:") do
-    htm.recall(timeframe: "last month", topic: "database", strategy: :fulltext)
+    htm.recall("database", timeframe: "last month", strategy: :fulltext)
   end
 
   x.report("Hybrid:") do
-    htm.recall(timeframe: "last month", topic: "database", strategy: :hybrid)
+    htm.recall("database", timeframe: "last month", strategy: :hybrid)
   end
 end
 
@@ -779,8 +781,8 @@ class SmartSearch
     strategy = detect_strategy(query)
 
     @htm.recall(
+      query,
       timeframe: timeframe,
-      topic: query,
       strategy: strategy,
       limit: 20
     )
@@ -821,31 +823,34 @@ search.search("performance issues")    # → Uses :vector
 
 ```ruby
 def comprehensive_search(query, timeframe: "last month")
-  # Run all three strategies
+  # Run all three strategies with raw: true for hash access
   vector_results = htm.recall(
+    query,
     timeframe: timeframe,
-    topic: query,
     strategy: :vector,
-    limit: 10
+    limit: 10,
+    raw: true
   )
 
   fulltext_results = htm.recall(
+    query,
     timeframe: timeframe,
-    topic: query,
     strategy: :fulltext,
-    limit: 10
+    limit: 10,
+    raw: true
   )
 
   hybrid_results = htm.recall(
+    query,
     timeframe: timeframe,
-    topic: query,
     strategy: :hybrid,
-    limit: 10
+    limit: 10,
+    raw: true
   )
 
   # Combine and deduplicate
   all_results = (vector_results + fulltext_results + hybrid_results)
-    .uniq { |m| m['key'] }
+    .uniq { |m| m['id'] }
 
   # Sort by best score
   all_results.sort_by do |m|
@@ -860,8 +865,8 @@ end
 def search_with_fallback(query, timeframe: "last month")
   # Try hybrid first
   results = htm.recall(
+    query,
     timeframe: timeframe,
-    topic: query,
     strategy: :hybrid,
     limit: 10
   )
@@ -870,8 +875,8 @@ def search_with_fallback(query, timeframe: "last month")
   if results.empty?
     warn "No hybrid results, trying vector search..."
     results = htm.recall(
+      query,
       timeframe: timeframe,
-      topic: query,
       strategy: :vector,
       limit: 10
     )
@@ -881,8 +886,8 @@ def search_with_fallback(query, timeframe: "last month")
   if results.empty?
     warn "No vector results, trying full-text search..."
     results = htm.recall(
+      query,
       timeframe: timeframe,
-      topic: query,
       strategy: :fulltext,
       limit: 10
     )
@@ -897,22 +902,19 @@ end
 ```ruby
 def search_with_confidence(query)
   results = htm.recall(
+    query,
     timeframe: "all time",
-    topic: query,
     strategy: :hybrid,
-    limit: 20
+    limit: 20,
+    raw: true  # Need hash access for scoring
   )
 
   # Add confidence scores
   results.map do |m|
     similarity = m['similarity'].to_f
-    importance = m['importance'].to_f
 
     # Calculate confidence (0-100)
-    confidence = (
-      similarity * 60 +      # 60% weight on similarity
-      (importance / 10.0) * 40  # 40% weight on importance
-    ).round(2)
+    confidence = (similarity * 100).round(2)
 
     m.merge('confidence' => confidence)
   end.sort_by { |m| -m['confidence'] }
@@ -932,7 +934,7 @@ end
 
 if vector_results.empty?
   # Try full-text as fallback
-  htm.recall(topic: query, strategy: :fulltext)
+  htm.recall(query, strategy: :fulltext)
 end
 ```
 
@@ -942,10 +944,11 @@ end
 # Filter by quality threshold
 def quality_search(query, min_similarity: 0.7)
   results = htm.recall(
+    query,
     timeframe: "all time",
-    topic: query,
     strategy: :hybrid,
-    limit: 50
+    limit: 50,
+    raw: true
   )
 
   results.select { |m| m['similarity'].to_f >= min_similarity }
@@ -960,24 +963,24 @@ require 'htm'
 htm = HTM.new(robot_name: "Search Demo")
 
 # Add test data
-htm.add_node("pg_001", "PostgreSQL indexing tutorial", type: :code, importance: 7.0)
-htm.add_node("perf_001", "Performance optimization guide", type: :fact, importance: 8.0)
-htm.add_node("cache_001", "Caching strategies for speed", type: :decision, importance: 9.0)
+htm.remember("PostgreSQL indexing tutorial", tags: ["code:sql"], metadata: { category: "code" })
+htm.remember("Performance optimization guide", tags: ["performance"], metadata: { category: "fact" })
+htm.remember("Caching strategies for speed", tags: ["caching"], metadata: { category: "decision" })
 
 # Compare strategies
 query = "how to make database faster"
 
 puts "=== Vector Search (Semantic) ==="
-vector = htm.recall(timeframe: "all time", topic: query, strategy: :vector)
-vector.each { |m| puts "- #{m['value']} (#{m['similarity']})" }
+vector = htm.recall(query, timeframe: "all time", strategy: :vector, raw: true)
+vector.each { |m| puts "- #{m['content']} (#{m['similarity']})" }
 
 puts "\n=== Full-text Search (Keywords) ==="
-fulltext = htm.recall(timeframe: "all time", topic: query, strategy: :fulltext)
-fulltext.each { |m| puts "- #{m['value']} (#{m['rank']})" }
+fulltext = htm.recall(query, timeframe: "all time", strategy: :fulltext, raw: true)
+fulltext.each { |m| puts "- #{m['content']} (#{m['rank']})" }
 
 puts "\n=== Hybrid Search (Combined) ==="
-hybrid = htm.recall(timeframe: "all time", topic: query, strategy: :hybrid)
-hybrid.each { |m| puts "- #{m['value']} (#{m['similarity']})" }
+hybrid = htm.recall(query, timeframe: "all time", strategy: :hybrid, raw: true)
+hybrid.each { |m| puts "- #{m['content']} (#{m['similarity']})" }
 ```
 
 ## Next Steps

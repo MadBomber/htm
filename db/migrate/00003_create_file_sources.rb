@@ -16,5 +16,10 @@ class CreateFileSources < ActiveRecord::Migration[7.1]
     add_index :file_sources, :file_path, unique: true, name: 'idx_file_sources_path_unique'
     add_index :file_sources, :file_hash, name: 'idx_file_sources_hash'
     add_index :file_sources, :last_synced_at, name: 'idx_file_sources_last_synced'
+
+    # LZ4 compression for better read performance on JSONB column
+    execute <<~SQL
+      ALTER TABLE file_sources ALTER COLUMN frontmatter SET COMPRESSION lz4;
+    SQL
   end
 end

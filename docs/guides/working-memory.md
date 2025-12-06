@@ -51,15 +51,10 @@ htm = HTM.new(
 
 ### Adding Memories
 
-When you add a node, it goes to both working and long-term memory:
+When you remember content, it goes to both working and long-term memory:
 
 ```ruby
-htm.add_node(
-  "fact_001",
-  "User prefers Ruby for scripting",
-  type: :fact,
-  importance: 7.0
-)
+htm.remember("User prefers Ruby for scripting")
 
 # Internally:
 # 1. Calculate token count
@@ -74,8 +69,8 @@ When you recall, memories are added to working memory:
 
 ```ruby
 memories = htm.recall(
-  timeframe: "last week",
-  topic: "database design"
+  "database design",
+  timeframe: "last week"
 )
 
 # Internally:
@@ -123,7 +118,6 @@ class MemoryMonitor
 
   def report
     wm = @htm.working_memory
-    stats = @htm.memory_stats
 
     puts "=== Working Memory Report ==="
     puts "Capacity: #{wm.max_tokens} tokens"
@@ -134,8 +128,7 @@ class MemoryMonitor
     puts "Average tokens per node: #{wm.token_count / wm.node_count}" if wm.node_count > 0
     puts
     puts "=== Long-term Memory ==="
-    puts "Total nodes: #{stats[:total_nodes]}"
-    puts "Database size: #{(stats[:database_size] / 1024.0 / 1024.0).round(2)} MB"
+    puts "Total nodes: #{HTM::Models::Node.count}"
   end
 
   def health_check
@@ -189,29 +182,24 @@ htm = HTM.new(
   working_memory_size: 10_000  # Small for demo
 )
 
-# Add important fact (will stay)
-htm.add_node(
-  "critical",
+# Add important fact (stays longer due to higher access frequency)
+critical_id = htm.remember(
   "Critical system password",
-  importance: 10.0
+  metadata: { priority: "critical" }
 )
 
-# Add many low-importance items
+# Add many items
 100.times do |i|
-  htm.add_node(
-    "temp_#{i}",
-    "Temporary note #{i}",
-    importance: 1.0
-  )
+  htm.remember("Temporary note #{i}")
 end
 
-# Check what survived
+# Check what survived in working memory
 wm = htm.working_memory
 puts "Surviving nodes: #{wm.node_count}"
 
-# Critical fact should still be there
-critical = htm.retrieve("critical")
-puts "Critical fact present: #{!critical.nil?}"
+# Critical fact is still in long-term memory
+critical = htm.long_term_memory.retrieve(critical_id)
+puts "Critical fact present in LTM: #{!critical.nil?}"
 ```
 
 ### Manual Eviction
@@ -235,35 +223,31 @@ end
 
 ## Best Practices
 
-### 1. Set Appropriate Importance
+### 1. Use Metadata for Priority Tracking
 
 ```ruby
-# Critical data: Never evict
-htm.add_node(
-  "api_key",
-  "Production API key",
-  importance: 10.0
+# Critical data: Mark with priority metadata
+htm.remember(
+  "Production API key: secret123",
+  metadata: { priority: "critical", category: "credentials" }
 )
 
-# Important context: Retain longer
-htm.add_node(
-  "user_goal",
+# Important context: Mark appropriately
+htm.remember(
   "User wants to optimize database",
-  importance: 8.0
+  metadata: { priority: "high", category: "goal" }
 )
 
-# Temporary context: Evict when needed
-htm.add_node(
-  "current_topic",
+# Temporary context
+htm.remember(
   "Discussing query optimization",
-  importance: 5.0
+  metadata: { priority: "medium", category: "context" }
 )
 
-# Disposable notes: Evict first
-htm.add_node(
-  "scratch",
+# Disposable notes
+htm.remember(
   "Temporary calculation result",
-  importance: 1.0
+  metadata: { priority: "low", category: "scratch" }
 )
 ```
 
@@ -305,16 +289,16 @@ Don't load unnecessary data into working memory:
 ```ruby
 # Bad: Load everything
 all_memories = htm.recall(
+  "anything",
   timeframe: "all time",
-  topic: "anything",
   limit: 1000
 )
 # This fills working memory with potentially irrelevant data
 
 # Good: Load what you need
 relevant = htm.recall(
+  "current project",
   timeframe: "last week",
-  topic: "current project",
   limit: 20
 )
 # This keeps working memory focused
@@ -322,25 +306,27 @@ relevant = htm.recall(
 
 ### 4. Clean Up When Done
 
-Remove temporary memories:
+Remove temporary memories when no longer needed:
 
 ```ruby
-def with_temporary_context(htm, key, value)
+def with_temporary_context(htm, value)
   # Add temporary context
-  htm.add_node(key, value, type: :context, importance: 2.0)
+  node_id = htm.remember(value, metadata: { temporary: true })
 
-  yield
+  result = yield
 
-  # Clean up
-  htm.forget(key, confirm: :confirmed)
+  # Clean up - soft delete by default (recoverable)
+  htm.forget(node_id)
+
+  result
 end
 
-with_temporary_context(htm, "scratch_001", "Temp data") do
+with_temporary_context(htm, "Temp calculation data") do
   # Use the temporary context
-  context = htm.create_context(strategy: :recent)
-  # ... do work
+  context = htm.working_memory.assemble_context(strategy: :recent)
+  # ... do work with context
 end
-# Temp data is now removed
+# Temp data is now soft-deleted
 ```
 
 ### 5. Batch Operations Carefully
@@ -348,23 +334,9 @@ end
 Be mindful when adding many memories at once:
 
 ```ruby
-# Risky: Might fill working memory quickly
-1000.times do |i|
-  htm.add_node("item_#{i}", "Data #{i}", importance: 5.0)
-end
-
-# Better: Add with appropriate importance
-1000.times do |i|
-  htm.add_node(
-    "item_#{i}",
-    "Data #{i}",
-    importance: 3.0  # Lower importance for bulk data
-  )
-end
-
-# Or: Monitor during batch operations
+# Add batch data with monitoring
 batch_data.each_with_index do |data, i|
-  htm.add_node("item_#{i}", data, importance: 5.0)
+  htm.remember(data, metadata: { batch: "import_001", index: i })
 
   # Check capacity every 100 items
   if i % 100 == 0
@@ -378,58 +350,56 @@ end
 
 ### Strategy 1: Sliding Window
 
-Keep only recent memories:
+Keep only recent memories by tracking node IDs:
 
 ```ruby
 class SlidingWindow
   def initialize(htm, window_size: 50)
     @htm = htm
     @window_size = window_size
-    @keys = []
+    @node_ids = []
   end
 
-  def add(key, value, **opts)
-    @htm.add_node(key, value, **opts)
-    @keys << key
+  def add(value, **opts)
+    node_id = @htm.remember(value, **opts)
+    @node_ids << node_id
 
-    # Evict oldest if window exceeded
-    if @keys.length > @window_size
-      oldest = @keys.shift
-      @htm.forget(oldest, confirm: :confirmed) rescue nil
+    # Forget oldest if window exceeded
+    if @node_ids.length > @window_size
+      oldest_id = @node_ids.shift
+      @htm.forget(oldest_id) rescue nil
     end
+
+    node_id
   end
 end
 ```
 
-### Strategy 2: Importance Thresholding
+### Strategy 2: Priority-Based Management
 
-Only keep high-importance memories:
+Use metadata to track priority:
 
 ```ruby
-class ImportanceFilter
-  def initialize(htm, min_importance: 7.0)
+class PriorityManager
+  def initialize(htm)
     @htm = htm
-    @min_importance = min_importance
   end
 
-  def add(key, value, importance:, **opts)
-    @htm.add_node(key, value, importance: importance, **opts)
+  def add(value, priority: "medium", **opts)
+    metadata = (opts[:metadata] || {}).merge(priority: priority)
+    node_id = @htm.remember(value, **opts.merge(metadata: metadata))
 
-    # If low importance and memory is tight, evict immediately
-    if importance < @min_importance &&
-       @htm.working_memory.utilization_percentage > 80
+    # If low priority and memory is tight, it will evict naturally
+    # HTM uses LFU + LRU eviction based on access patterns
 
-      # Let it evict naturally or remove from working memory
-      # (Note: HTM doesn't expose direct working memory removal,
-      #  so we rely on natural eviction)
-    end
+    node_id
   end
 end
 ```
 
 ### Strategy 3: Topic-Based Management
 
-Group memories by topic and manage separately:
+Group memories by topic using tags:
 
 ```ruby
 class TopicManager
@@ -438,15 +408,17 @@ class TopicManager
     @topics = Hash.new { |h, k| h[k] = [] }
   end
 
-  def add(key, value, topic:, **opts)
-    @htm.add_node(key, value, **opts)
-    @topics[topic] << key
+  def add(value, topic:, **opts)
+    tags = (opts[:tags] || []) + ["topic:#{topic}"]
+    node_id = @htm.remember(value, **opts.merge(tags: tags))
+    @topics[topic] << node_id
+    node_id
   end
 
   def clear_topic(topic)
-    keys = @topics[topic] || []
-    keys.each do |key|
-      @htm.forget(key, confirm: :confirmed) rescue nil
+    node_ids = @topics[topic] || []
+    node_ids.each do |node_id|
+      @htm.forget(node_id) rescue nil
     end
     @topics.delete(topic)
   end
@@ -471,8 +443,7 @@ medium = "A" * 100     # ~25 tokens
 long = "word " * 1000  # ~1000 tokens
 
 # Check token count of a string
-embedding_service = HTM::EmbeddingService.new
-tokens = embedding_service.count_tokens(long)
+tokens = HTM.configuration.count_tokens(long)
 puts "Token count: #{tokens}"
 ```
 
@@ -512,18 +483,18 @@ htm = HTM.new(robot_name: "Perf Test")
 
 # Add 1000 memories
 1000.times do |i|
-  htm.add_node("key_#{i}", "Value #{i}", importance: 5.0)
+  htm.remember("Value #{i}")
 end
 
 # Benchmark working memory access
 Benchmark.bm do |x|
-  x.report("create_context:") do
-    1000.times { htm.create_context(strategy: :balanced) }
+  x.report("assemble_context:") do
+    1000.times { htm.working_memory.assemble_context(strategy: :balanced) }
   end
 end
 
 # Typical results:
-# create_context: ~1ms per call
+# assemble_context: ~1ms per call
 ```
 
 ### Optimization Tips
@@ -532,7 +503,7 @@ end
 # 1. Avoid frequent context assembly
 # Bad: Assemble context every message
 def process_message(message)
-  context = htm.create_context  # Slow if called frequently
+  context = htm.working_memory.assemble_context(strategy: :balanced)  # Slow if called frequently
   llm.chat(context + message)
 end
 
@@ -542,7 +513,7 @@ end
 
 def process_message(message)
   if @context_cache.nil? || @context_age > 10
-    @context_cache = htm.create_context
+    @context_cache = htm.working_memory.assemble_context(strategy: :balanced)
     @context_age = 0
   end
   @context_age += 1
@@ -552,7 +523,7 @@ end
 
 # 2. Use appropriate token limits
 # Don't request more than your LLM can handle
-context = htm.create_context(
+context = htm.working_memory.assemble_context(
   strategy: :balanced,
   max_tokens: 100_000  # Match LLM's context window
 )
@@ -605,29 +576,25 @@ end
 **Issue: Working memory always full**
 
 ```ruby
-# Check if you're adding too much
-stats = htm.memory_stats
-wm_util = stats[:working_memory][:utilization]
+# Check working memory utilization
+wm_util = htm.working_memory.utilization_percentage
 
 if wm_util > 95
   puts "Working memory consistently full"
   puts "Solutions:"
-  puts "1. Increase working_memory_size"
-  puts "2. Lower importance of bulk data"
-  puts "3. Reduce recall limit"
-  puts "4. Clean up temporary data more frequently"
+  puts "1. Increase working_memory_size when creating HTM"
+  puts "2. Reduce recall limit"
+  puts "3. Clean up temporary data more frequently with forget()"
 end
 ```
 
 **Issue: Important data getting evicted**
 
 ```ruby
-# Increase importance of critical data
-htm.add_node(
-  "critical_data",
-  "Important information",
-  importance: 9.5  # High enough to avoid eviction
-)
+# HTM evicts based on access frequency and recency
+# Access important data more frequently to keep it in working memory
+# Or query it from long-term memory when needed:
+critical = htm.long_term_memory.retrieve(critical_node_id)
 ```
 
 **Issue: Memory utilization too low**
@@ -640,8 +607,8 @@ if wm_util < 20
   puts "Working memory underutilized"
   puts "Consider:"
   puts "1. Reducing working_memory_size to save RAM"
-  puts "2. Recalling more context"
-  puts "3. Using larger token limits in create_context"
+  puts "2. Recalling more context with larger limit"
+  puts "3. Using larger token limits in assemble_context"
 end
 ```
 
@@ -678,37 +645,37 @@ end
 
 monitor = Monitor.new(htm)
 
-# Add memories with different importance
+# Add memories with different priorities via metadata
 puts "Adding critical data..."
-htm.add_node("critical", "Critical system data", importance: 10.0)
+critical_id = htm.remember("Critical system data", metadata: { priority: "critical" })
 monitor.report
 
 puts "\nAdding important data..."
 10.times do |i|
-  htm.add_node("important_#{i}", "Important item #{i}", importance: 8.0)
+  htm.remember("Important item #{i}", metadata: { priority: "high" })
 end
 monitor.report
 
 puts "\nAdding regular data..."
 50.times do |i|
-  htm.add_node("regular_#{i}", "Regular item #{i}", importance: 5.0)
+  htm.remember("Regular item #{i}", metadata: { priority: "medium" })
 end
 monitor.report
 
 puts "\nAdding temporary data..."
 100.times do |i|
-  htm.add_node("temp_#{i}", "Temporary item #{i}", importance: 2.0)
+  htm.remember("Temporary item #{i}", metadata: { priority: "low" })
 end
 monitor.report
 
-# Check what survived
+# Check that critical data is still in long-term memory
 puts "\n=== Survival Check ==="
-critical = htm.retrieve("critical")
-puts "Critical survived: #{!critical.nil?}"
+critical = htm.long_term_memory.retrieve(critical_id)
+puts "Critical in LTM: #{!critical.nil?}"
 
-# Create context
+# Create context from working memory
 puts "\nCreating context..."
-context = htm.create_context(strategy: :important, max_tokens: 50_000)
+context = htm.working_memory.assemble_context(strategy: :balanced, max_tokens: 50_000)
 puts "Context length: #{context.length} characters"
 
 # Final stats

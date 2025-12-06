@@ -39,8 +39,12 @@ Generate embedding with validation and processing
   storage_dimension: Integer         # Padded dimension (2000)
 }
 
+## max_dimension() {: #method-c-max_dimension }
+Maximum embedding dimension (configurable, default 2000)
+**`@return`** [Integer] Max dimensions for pgvector HNSW index
+
 ## pad_embedding(embedding ) {: #method-c-pad_embedding }
-Pad embedding to MAX_DIMENSION with zeros
+Pad embedding to max_dimension with zeros
 **`@param`** [Array<Float>] Original embedding
 
 **`@return`** [Array<Float>] Padded embedding

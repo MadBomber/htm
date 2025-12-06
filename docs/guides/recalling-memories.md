@@ -4,20 +4,20 @@ This guide covers HTM's powerful RAG-based retrieval system for finding relevant
 
 ## Basic Recall
 
-The `recall` method searches long-term memory using timeframe and topic:
+The `recall` method searches long-term memory using topic and optional filters:
 
 ```ruby
 memories = htm.recall(
+  "database design",          # Topic (first positional argument)
   timeframe: "last week",     # Time range to search
-  topic: "database design",   # What to search for
   limit: 20,                  # Max results (default: 20)
-  strategy: :vector          # Search strategy (default: :vector)
+  strategy: :vector,          # Search strategy (default: :fulltext)
+  raw: true                   # Return full node hashes
 )
 
 memories.each do |memory|
-  puts memory['value']
+  puts memory['content']
   puts "Similarity: #{memory['similarity']}"
-  puts "Importance: #{memory['importance']}"
   puts "Created: #{memory['created_at']}"
   puts
 end
@@ -148,23 +148,23 @@ HTM supports both natural language timeframes and explicit ranges.
 
 ```ruby
 # Last 24 hours (default if unparseable)
-htm.recall(timeframe: "today", topic: "...")
+htm.recall("...", timeframe: "today")
 
 # Yesterday
-htm.recall(timeframe: "yesterday", topic: "...")
+htm.recall("...", timeframe: "yesterday")
 
 # Last week
-htm.recall(timeframe: "last week", topic: "...")
+htm.recall("...", timeframe: "last week")
 
 # Last N days
-htm.recall(timeframe: "last 7 days", topic: "...")
-htm.recall(timeframe: "last 30 days", topic: "...")
+htm.recall("...", timeframe: "last 7 days")
+htm.recall("...", timeframe: "last 30 days")
 
 # This month
-htm.recall(timeframe: "this month", topic: "...")
+htm.recall("...", timeframe: "this month")
 
 # Last month
-htm.recall(timeframe: "last month", topic: "...")
+htm.recall("...", timeframe: "last month")
 ```
 
 ### Explicit Time Ranges
@@ -176,27 +176,24 @@ For precise control, use Ruby time ranges:
 start_date = Time.new(2024, 1, 1)
 end_date = Time.new(2024, 12, 31)
 htm.recall(
-  timeframe: start_date..end_date,
-  topic: "annual report"
+  "annual report",
+  timeframe: start_date..end_date
 )
 
 # Last 24 hours precisely
 htm.recall(
-  timeframe: (Time.now - 24*3600)..Time.now,
-  topic: "errors"
+  "errors",
+  timeframe: (Time.now - 24*3600)..Time.now
 )
 
-# All time
-htm.recall(
-  timeframe: Time.at(0)..Time.now,
-  topic: "architecture decisions"
-)
+# No time filter (all time)
+htm.recall("architecture decisions")
 
 # Relative to current time
 three_days_ago = Time.now - (3 * 24 * 3600)
 htm.recall(
-  timeframe: three_days_ago..Time.now,
-  topic: "bug fixes"
+  "bug fixes",
+  timeframe: three_days_ago..Time.now
 )
 ```
 
@@ -215,8 +212,8 @@ Vector search uses embeddings to find semantically similar memories.
 
 ```ruby
 memories = htm.recall(
+  "improving application performance",
   timeframe: "last month",
-  topic: "improving application performance",
   strategy: :vector,
   limit: 10
 )
@@ -240,8 +237,8 @@ memories = htm.recall(
 ```ruby
 # Will find memories about databases, even without the word "PostgreSQL"
 memories = htm.recall(
+  "data persistence strategies",
   timeframe: "last year",
-  topic: "data persistence strategies",
   strategy: :vector
 )
 
@@ -257,8 +254,8 @@ Full-text search uses PostgreSQL's text search for exact keyword matching.
 
 ```ruby
 memories = htm.recall(
+  "PostgreSQL indexing",
   timeframe: "last week",
-  topic: "PostgreSQL indexing",
   strategy: :fulltext,
   limit: 10
 )
@@ -282,8 +279,7 @@ memories = htm.recall(
 ```ruby
 # Will only find memories containing "JWT"
 memories = htm.recall(
-  timeframe: "all time",
-  topic: "JWT authentication",
+  "JWT authentication",
   strategy: :fulltext
 )
 
@@ -300,8 +296,8 @@ Hybrid search combines full-text and vector search for optimal results.
 
 ```ruby
 memories = htm.recall(
+  "database performance issues",
   timeframe: "last month",
-  topic: "database performance issues",
   strategy: :hybrid,
   limit: 10
 )
@@ -325,8 +321,8 @@ memories = htm.recall(
 ```ruby
 # Combines keyword matching with semantic understanding
 memories = htm.recall(
+  "scaling our PostgreSQL database",
   timeframe: "last quarter",
-  topic: "scaling our PostgreSQL database",
   strategy: :hybrid
 )
 
@@ -351,43 +347,43 @@ memories = htm.recall(
 
 ```ruby
 # Vague: Returns too many irrelevant results
-htm.recall(timeframe: "last year", topic: "data")
+htm.recall("data", timeframe: "last year")
 
 # Specific: Returns targeted results
-htm.recall(timeframe: "last year", topic: "PostgreSQL query optimization")
+htm.recall("PostgreSQL query optimization", timeframe: "last year")
 ```
 
 ### 2. Use Appropriate Timeframes
 
 ```ruby
 # Too wide: Includes outdated information
-htm.recall(timeframe: "last 5 years", topic: "current project status")
+htm.recall("current project status", timeframe: "last 5 years")
 
 # Right size: Recent context
-htm.recall(timeframe: "last week", topic: "current project status")
+htm.recall("current project status", timeframe: "last week")
 ```
 
 ### 3. Adjust Limit Based on Need
 
 ```ruby
 # Few results: Quick overview
-htm.recall(timeframe: "last month", topic: "errors", limit: 5)
+htm.recall("errors", timeframe: "last month", limit: 5)
 
 # Many results: Comprehensive search
-htm.recall(timeframe: "last year", topic: "architecture decisions", limit: 50)
+htm.recall("architecture decisions", timeframe: "last year", limit: 50)
 ```
 
 ### 4. Try Different Strategies
 
 ```ruby
 # Start with hybrid (best all-around)
-results = htm.recall(topic: "authentication", strategy: :hybrid)
+results = htm.recall("authentication", strategy: :hybrid)
 
 # If too many results, try full-text (more precise)
-results = htm.recall(topic: "JWT authentication", strategy: :fulltext)
+results = htm.recall("JWT authentication", strategy: :fulltext)
 
 # If no results, try vector (more flexible)
-results = htm.recall(topic: "user validation methods", strategy: :vector)
+results = htm.recall("user validation methods", strategy: :vector)
 ```
 
 ## Filtering by Metadata
@@ -397,21 +393,21 @@ HTM supports metadata filtering directly in the `recall()` method. This is more 
 ```ruby
 # Filter by single metadata field
 memories = htm.recall(
-  topic: "user settings",
+  "user settings",
   metadata: { category: "preference" }
 )
 # => Returns only nodes with metadata containing { category: "preference" }
 
 # Filter by multiple metadata fields
 memories = htm.recall(
-  topic: "API configuration",
+  "API configuration",
   metadata: { environment: "production", version: 2 }
 )
 # => Returns nodes with BOTH environment: "production" AND version: 2
 
 # Combine with other filters
 memories = htm.recall(
-  topic: "database changes",
+  "database changes",
   timeframe: "last month",
   strategy: :hybrid,
   metadata: { breaking_change: true },
@@ -429,19 +425,17 @@ Metadata filtering uses PostgreSQL's JSONB containment operator (`@>`), which me
 While `recall` handles timeframes, topics, and metadata, you can filter results further:
 
 ```ruby
-# Recall memories
+# Recall memories with full data
 memories = htm.recall(
+  "database",
   timeframe: "last month",
-  topic: "database",
   strategy: :hybrid,
-  limit: 50
+  limit: 50,
+  raw: true  # Get full node hashes
 )
 
-# Filter by type
-decisions = memories.select { |m| m['type'] == 'decision' }
-
-# Filter by importance
-critical = memories.select { |m| m['importance'].to_f >= 8.0 }
+# Filter by metadata
+high_priority = memories.select { |m| m['metadata']&.dig('priority') == 'high' }
 
 # Filter by robot
 my_memories = memories.select { |m| m['robot_id'] == htm.robot_id }
@@ -459,26 +453,28 @@ end
 Search for multiple related topics:
 
 ```ruby
-def search_multiple_topics(timeframe, topics, strategy: :hybrid, limit: 10)
+def search_multiple_topics(htm, timeframe, topics, strategy: :hybrid, limit: 10)
   results = []
 
   topics.each do |topic|
     results.concat(
       htm.recall(
+        topic,
         timeframe: timeframe,
-        topic: topic,
         strategy: strategy,
-        limit: limit
+        limit: limit,
+        raw: true
       )
     )
   end
 
-  # Remove duplicates by key
-  results.uniq { |m| m['key'] }
+  # Remove duplicates by id
+  results.uniq { |m| m['id'] }
 end
 
 # Usage
 memories = search_multiple_topics(
+  htm,
   "last month",
   ["database optimization", "query performance", "indexing strategies"]
 )
@@ -491,22 +487,23 @@ Start broad, then narrow:
 ```ruby
 # First pass: Broad search
 broad_results = htm.recall(
+  "architecture",
   timeframe: "last year",
-  topic: "architecture",
   strategy: :vector,
-  limit: 100
+  limit: 100,
+  raw: true
 )
 
 # Analyze results, refine query
 relevant_terms = broad_results
   .select { |m| m['similarity'].to_f > 0.7 }
-  .flat_map { |m| m['tags'] }
+  .map { |m| m['content'].split.first(3).join(' ') }
   .uniq
 
 # Second pass: Refined search
 refined_results = htm.recall(
+  "architecture #{relevant_terms.first}",
   timeframe: "last year",
-  topic: "architecture #{relevant_terms.join(' ')}",
   strategy: :hybrid,
   limit: 20
 )
@@ -517,12 +514,13 @@ refined_results = htm.recall(
 Only keep high-quality matches:
 
 ```ruby
-def recall_with_threshold(timeframe:, topic:, threshold: 0.7, strategy: :vector)
+def recall_with_threshold(htm, topic, timeframe: nil, threshold: 0.7, strategy: :vector)
   results = htm.recall(
+    topic,
     timeframe: timeframe,
-    topic: topic,
     strategy: strategy,
-    limit: 50  # Get more candidates
+    limit: 50,  # Get more candidates
+    raw: true
   )
 
   # Filter by similarity threshold
@@ -537,8 +535,9 @@ end
 
 # Usage
 high_quality = recall_with_threshold(
+  htm,
+  "performance optimization",
   timeframe: "last month",
-  topic: "performance optimization",
   threshold: 0.8
 )
 ```
@@ -548,12 +547,13 @@ high_quality = recall_with_threshold(
 Weight results by recency:
 
 ```ruby
-def recall_time_weighted(timeframe:, topic:, recency_weight: 0.3)
+def recall_time_weighted(htm, topic, timeframe: nil, recency_weight: 0.3)
   memories = htm.recall(
+    topic,
     timeframe: timeframe,
-    topic: topic,
     strategy: :hybrid,
-    limit: 50
+    limit: 50,
+    raw: true
   )
 
   # Calculate time-weighted score
@@ -593,14 +593,14 @@ class ContextualRecall
     @current_context << { key: key, value: value }
   end
 
-  def recall(timeframe:, topic:, strategy: :hybrid)
+  def recall(topic, timeframe: nil, strategy: :hybrid)
     # Enhance topic with current context
     context_terms = @current_context.map { |c| c[:value] }.join(" ")
     enhanced_topic = "#{topic} #{context_terms}"
 
     @htm.recall(
+      enhanced_topic,
       timeframe: timeframe,
-      topic: enhanced_topic,
       strategy: strategy,
       limit: 20
     )
@@ -614,71 +614,73 @@ recall.add_context("focus", "checkout flow")
 
 # Search includes context automatically
 results = recall.recall(
-  timeframe: "last month",
-  topic: "payment processing"
+  "payment processing",
+  timeframe: "last month"
 )
 ```
 
-## Retrieving Specific Memories
+## Looking Up Specific Memories
 
-For known keys, use `retrieve` instead of `recall`:
+For known node IDs, access the node directly via the model:
 
 ```ruby
-# Retrieve by exact key
-memory = htm.retrieve("decision_database")
+# Look up by node ID
+node = HTM::Models::Node.find_by(id: node_id)
 
-if memory
-  puts memory['value']
-  puts "Type: #{memory['type']}"
-  puts "Created: #{memory['created_at']}"
+if node
+  puts node.content
+  puts "Tags: #{node.tags.pluck(:name).join(', ')}"
+  puts "Created: #{node.created_at}"
 else
   puts "Memory not found"
 end
 ```
 
 !!! note
-    `retrieve` is faster than `recall` because it doesn't require embedding generation or similarity calculation.
+    Direct model access is faster than `recall` because it doesn't require embedding generation or similarity calculation.
 
 ## Working with Search Results
 
 ### Result Structure
 
-Each memory returned by `recall` has these fields:
+When using `raw: true`, each memory returned by `recall` has these fields:
 
 ```ruby
 memory = {
   'id' => 123,                           # Database ID
-  'key' => "decision_001",               # Unique key
-  'value' => "Decision text...",         # Content
-  'type' => "decision",                  # Memory type
-  'category' => "architecture",          # Category (if set)
-  'importance' => 9.0,                   # Importance score
+  'content' => "Decision text...",       # The memory content
   'created_at' => "2024-01-15 10:30:00", # Timestamp
-  'robot_id' => "uuid...",               # Which robot added it
   'token_count' => 150,                  # Token count
-  'metadata' => { 'priority' => 'high', 'version' => 2 },  # JSONB metadata
+  'metadata' => { 'priority' => 'high' }, # JSONB metadata
   'similarity' => 0.85                   # Similarity score (vector/hybrid)
   # or 'rank' for fulltext
 }
 ```
 
+When using `raw: false` (default), `recall` returns just the content strings:
+
+```ruby
+memories = htm.recall("database")
+# => ["PostgreSQL is great...", "Use connection pooling...", ...]
+```
+
 ### Processing Results
 
 ```ruby
-memories = htm.recall(timeframe: "last month", topic: "errors")
+memories = htm.recall("errors", timeframe: "last month", raw: true)
 
-# Sort by importance
-by_importance = memories.sort_by { |m| -m['importance'].to_f }
+# Sort by similarity
+by_similarity = memories.sort_by { |m| -m['similarity'].to_f }
 
-# Group by type
-by_type = memories.group_by { |m| m['type'] }
+# Group by metadata category
+by_category = memories.group_by { |m| m['metadata']&.dig('category') }
 
 # Extract just the content
-content = memories.map { |m| m['value'] }
+content = memories.map { |m| m['content'] }
 
 # Create summary
 summary = memories.map do |m|
-  "[#{m['type']}] #{m['value'][0..100]}... (#{m['importance']})"
+  "#{m['content'][0..100]}... (sim: #{m['similarity']})"
 end.join("\n\n")
 ```
 
@@ -691,15 +693,16 @@ Find recent errors and their solutions:
 ```ruby
 # Find recent errors
 errors = htm.recall(
+  "error exception failure",
   timeframe: "last 7 days",
-  topic: "error exception failure",
   strategy: :fulltext,
-  limit: 20
+  limit: 20,
+  raw: true
 )
 
-# Group by error type
+# Group by error pattern
 error_types = errors
-  .map { |e| e['value'][/Error: (.+?)\\n/, 1] }
+  .map { |e| e['content'][/Error: (.+?)$/, 1] }
   .compact
   .tally
 
@@ -714,20 +717,21 @@ end
 Track decision evolution:
 
 ```ruby
-# Get all decisions about a topic
+# Get all decisions about a topic (filter by metadata)
 decisions = htm.recall(
-  timeframe: Time.at(0)..Time.now,  # All time
-  topic: "authentication",
+  "authentication",
   strategy: :hybrid,
-  limit: 50
-).select { |m| m['type'] == 'decision' }
+  limit: 50,
+  metadata: { category: "decision" },
+  raw: true
+)
 
 # Sort chronologically
 timeline = decisions.sort_by { |d| d['created_at'] }
 
 puts "Decision timeline:"
 timeline.each do |decision|
-  puts "#{decision['created_at']}: #{decision['value'][0..100]}..."
+  puts "#{decision['created_at']}: #{decision['content'][0..100]}..."
 end
 ```
 
@@ -736,34 +740,24 @@ end
 Gather all knowledge about a topic:
 
 ```ruby
-def gather_knowledge(topic)
-  # Gather different types of memories
-  facts = htm.recall(
-    timeframe: "all time",
-    topic: topic,
-    strategy: :hybrid
-  ).select { |m| m['type'] == 'fact' }
+def gather_knowledge(htm, topic)
+  # Gather all memories about a topic
+  all_memories = htm.recall(
+    topic,
+    strategy: :hybrid,
+    limit: 100,
+    raw: true
+  )
 
-  decisions = htm.recall(
-    timeframe: "all time",
-    topic: topic,
-    strategy: :hybrid
-  ).select { |m| m['type'] == 'decision' }
-
-  code = htm.recall(
-    timeframe: "all time",
-    topic: topic,
-    strategy: :hybrid
-  ).select { |m| m['type'] == 'code' }
-
+  # Group by metadata category
   {
-    facts: facts,
-    decisions: decisions,
-    code_examples: code
+    facts: all_memories.select { |m| m['metadata']&.dig('category') == 'fact' },
+    decisions: all_memories.select { |m| m['metadata']&.dig('category') == 'decision' },
+    code_examples: all_memories.select { |m| m['metadata']&.dig('category') == 'code' }
   }
 end
 
-knowledge = gather_knowledge("PostgreSQL")
+knowledge = gather_knowledge(htm, "PostgreSQL")
 ```
 
 ### Use Case 4: Conversation Context
@@ -771,16 +765,16 @@ knowledge = gather_knowledge("PostgreSQL")
 Recall recent conversation:
 
 ```ruby
-def get_conversation_context(session_id, turns: 5)
-  # Get recent conversation turns
+def get_conversation_context(htm, session_id, turns: 5)
+  # Get recent conversation turns by tag
   htm.recall(
+    "session:#{session_id}",
     timeframe: "last 24 hours",
-    topic: "session_#{session_id}",
     strategy: :fulltext,
-    limit: turns * 2  # user + assistant messages
-  ).select { |m| m['type'] == 'context' }
-    .sort_by { |m| m['created_at'] }
-    .last(turns * 2)
+    limit: turns * 2,  # user + assistant messages
+    raw: true
+  ).sort_by { |m| m['created_at'] }
+   .last(turns * 2)
 end
 ```
 
@@ -835,23 +829,23 @@ end
 ### No Results
 
 ```ruby
-results = htm.recall(timeframe: "last week", topic: "xyz")
+results = htm.recall("xyz", timeframe: "last week")
 
 if results.empty?
   # Try wider timeframe
-  results = htm.recall(timeframe: "last month", topic: "xyz")
+  results = htm.recall("xyz", timeframe: "last month")
 
   # Try different strategy
   results = htm.recall(
+    "xyz",
     timeframe: "last month",
-    topic: "xyz",
     strategy: :vector  # More flexible
   )
 
   # Try related terms
   results = htm.recall(
+    "xyz related similar",
     timeframe: "last month",
-    topic: "xyz related similar",
     strategy: :vector
   )
 end
@@ -877,11 +871,11 @@ If vector search fails:
 
 ```ruby
 begin
-  results = htm.recall(topic: "...", strategy: :vector)
+  results = htm.recall("...", strategy: :vector)
 rescue => e
   warn "Vector search failed: #{e.message}"
   warn "Falling back to full-text search"
-  results = htm.recall(topic: "...", strategy: :fulltext)
+  results = htm.recall("...", strategy: :fulltext)
 end
 ```
 
@@ -899,33 +893,29 @@ require 'htm'
 htm = HTM.new(robot_name: "Search Demo")
 
 # Add test memories
-htm.add_node(
-  "decision_db",
+htm.remember(
   "Chose PostgreSQL for its reliability and ACID compliance",
-  type: :decision,
-  importance: 9.0,
-  tags: ["database", "postgresql", "architecture"]
+  tags: ["database:postgresql", "architecture:decisions"],
+  metadata: { category: "decision" }
 )
 
-htm.add_node(
-  "code_connection",
+htm.remember(
   "conn = PG.connect(dbname: 'mydb')",
-  type: :code,
-  importance: 6.0,
-  tags: ["postgresql", "ruby", "connection"]
+  tags: ["database:postgresql", "ruby:patterns"],
+  metadata: { category: "code" }
 )
 
 # Vector search: Semantic understanding
 puts "=== Vector Search ==="
 vector_results = htm.recall(
-  timeframe: "all time",
-  topic: "data persistence strategies",
+  "data persistence strategies",
   strategy: :vector,
-  limit: 10
+  limit: 10,
+  raw: true
 )
 
 vector_results.each do |m|
-  puts "#{m['value'][0..80]}..."
+  puts "#{m['content'][0..80]}..."
   puts "  Similarity: #{m['similarity']}"
   puts
 end
@@ -933,14 +923,14 @@ end
 # Full-text search: Exact keywords
 puts "\n=== Full-text Search ==="
 fulltext_results = htm.recall(
-  timeframe: "all time",
-  topic: "PostgreSQL",
+  "PostgreSQL",
   strategy: :fulltext,
-  limit: 10
+  limit: 10,
+  raw: true
 )
 
 fulltext_results.each do |m|
-  puts "#{m['value'][0..80]}..."
+  puts "#{m['content'][0..80]}..."
   puts "  Rank: #{m['rank']}"
   puts
 end
@@ -948,15 +938,15 @@ end
 # Hybrid search: Best of both
 puts "\n=== Hybrid Search ==="
 hybrid_results = htm.recall(
-  timeframe: "all time",
-  topic: "database connection setup",
+  "database connection setup",
   strategy: :hybrid,
-  limit: 10
+  limit: 10,
+  raw: true
 )
 
 hybrid_results.each do |m|
-  puts "[#{m['type']}] #{m['value'][0..80]}..."
-  puts "  Importance: #{m['importance']}, Similarity: #{m['similarity']}"
+  puts "#{m['content'][0..80]}..."
+  puts "  Similarity: #{m['similarity']}"
   puts
 end
 ```

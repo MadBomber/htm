@@ -81,6 +81,21 @@ Returns the value of attribute bedrock_region.
 ## bedrock_secret_key[RW] {: #attribute-i-bedrock_secret_key }
 Returns the value of attribute bedrock_secret_key.
 
+## chunk_overlap[RW] {: #attribute-i-chunk_overlap }
+Character overlap between chunks (default: 64)
+
+## chunk_size[RW] {: #attribute-i-chunk_size }
+Chunking configuration (for file loading)
+
+## circuit_breaker_failure_threshold[RW] {: #attribute-i-circuit_breaker_failure_threshold }
+Circuit breaker configuration
+
+## circuit_breaker_half_open_max_calls[RW] {: #attribute-i-circuit_breaker_half_open_max_calls }
+Successes to close (default: 3)
+
+## circuit_breaker_reset_timeout[RW] {: #attribute-i-circuit_breaker_reset_timeout }
+Seconds before half-open (default: 60)
+
 ## connection_timeout[RW] {: #attribute-i-connection_timeout }
 Returns the value of attribute connection_timeout.
 
@@ -102,6 +117,9 @@ Returns the value of attribute embedding_provider.
 ## embedding_timeout[RW] {: #attribute-i-embedding_timeout }
 Returns the value of attribute embedding_timeout.
 
+## extract_propositions[RW] {: #attribute-i-extract_propositions }
+Returns the value of attribute extract_propositions.
+
 ## gemini_api_key[RW] {: #attribute-i-gemini_api_key }
 Returns the value of attribute gemini_api_key.
 
@@ -113,6 +131,12 @@ Returns the value of attribute job_backend.
 
 ## logger[RW] {: #attribute-i-logger }
 Returns the value of attribute logger.
+
+## max_embedding_dimension[RW] {: #attribute-i-max_embedding_dimension }
+Limit configuration
+
+## max_tag_depth[RW] {: #attribute-i-max_tag_depth }
+Max tag hierarchy depth (default: 4)
 
 ## ollama_url[RW] {: #attribute-i-ollama_url }
 Returns the value of attribute ollama_url.
@@ -129,6 +153,33 @@ Provider-specific API keys and endpoints
 ## openrouter_api_key[RW] {: #attribute-i-openrouter_api_key }
 Returns the value of attribute openrouter_api_key.
 
+## proposition_extractor[RW] {: #attribute-i-proposition_extractor }
+Returns the value of attribute proposition_extractor.
+
+## proposition_model[RW] {: #attribute-i-proposition_model }
+Returns the value of attribute proposition_model.
+
+## proposition_provider[RW] {: #attribute-i-proposition_provider }
+Returns the value of attribute proposition_provider.
+
+## proposition_timeout[RW] {: #attribute-i-proposition_timeout }
+Returns the value of attribute proposition_timeout.
+
+## relevance_access_weight[RW] {: #attribute-i-relevance_access_weight }
+Access frequency weight (default: 0.1)
+
+## relevance_recency_half_life_hours[RW] {: #attribute-i-relevance_recency_half_life_hours }
+Decay half-life in hours (default: 168 = 1 week)
+
+## relevance_recency_weight[RW] {: #attribute-i-relevance_recency_weight }
+Temporal freshness weight (default: 0.1)
+
+## relevance_semantic_weight[RW] {: #attribute-i-relevance_semantic_weight }
+Relevance scoring weights (must sum to 1.0)
+
+## relevance_tag_weight[RW] {: #attribute-i-relevance_tag_weight }
+Tag overlap weight (default: 0.3)
+
 ## tag_extractor[RW] {: #attribute-i-tag_extractor }
 Returns the value of attribute tag_extractor.
 
@@ -140,6 +191,9 @@ Returns the value of attribute tag_provider.
 
 ## tag_timeout[RW] {: #attribute-i-tag_timeout }
 Returns the value of attribute tag_timeout.
+
+## telemetry_enabled[RW] {: #attribute-i-telemetry_enabled }
+Enable OpenTelemetry metrics (default: false)
 
 ## token_counter[RW] {: #attribute-i-token_counter }
 Returns the value of attribute token_counter.

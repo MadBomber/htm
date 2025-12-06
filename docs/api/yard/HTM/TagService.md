@@ -29,6 +29,10 @@ Extract tags with validation and processing
 
 **`@return`** [Array<String>] Validated tag names
 
+## max_depth() {: #method-c-max_depth }
+Maximum tag hierarchy depth (configurable, default 4)
+**`@return`** [Integer] Max depth (3 colons max by default)
+
 ## parse_hierarchy(tag ) {: #method-c-parse_hierarchy }
 Parse hierarchical structure of a tag
 **`@param`** [String] Hierarchical tag (e.g., "ai:llm:embedding")

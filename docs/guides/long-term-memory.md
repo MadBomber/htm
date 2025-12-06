@@ -140,70 +140,60 @@ conn.close
 
 ### Using LongTermMemory Directly
 
-Access the long-term memory layer:
+Access the long-term memory layer (advanced usage):
 
 ```ruby
-ltm = HTM::LongTermMemory.new(HTM::Database.default_config)
+# Access via HTM instance
+ltm = htm.long_term_memory
 
-# Add a node
-node_id = ltm.add(
-  key: "test_001",
-  value: "Test memory",
-  type: :fact,
-  importance: 7.0,
-  token_count: 10,
-  robot_id: "test-robot",
-  embedding: Array.new(1536) { rand }
+# Retrieve a node by ID
+node = ltm.retrieve(123)  # Returns Node model or nil
+
+# The recommended way to add memories is via HTM
+node_id = htm.remember(
+  "Test memory",
+  tags: ["test"],
+  metadata: { category: "fact" }
 )
 
-# Retrieve a node
-node = ltm.retrieve("test_001")
-
-# Update last accessed
-ltm.update_last_accessed("test_001")
-
-# Delete a node
-ltm.delete("test_001")
+# Retrieve the node
+node = ltm.retrieve(node_id)
+puts "Content: #{node.content}"
+puts "Created: #{node.created_at}"
 ```
 
 ## Memory Statistics
 
-Get comprehensive statistics:
+Get statistics using ActiveRecord:
 
 ```ruby
-stats = htm.memory_stats
-
 # Total nodes
-puts "Total nodes: #{stats[:total_nodes]}"
+total_nodes = HTM::Models::Node.count
+puts "Total nodes: #{total_nodes}"
 
-# Nodes by robot
-stats[:nodes_by_robot].each do |robot_id, count|
-  puts "#{robot_id}: #{count} nodes"
+# Nodes by robot via robot_nodes join table
+robot_counts = HTM::Models::RobotNode
+  .group(:robot_id)
+  .count
+puts "Nodes by robot:"
+robot_counts.each do |robot_id, count|
+  robot = HTM::Models::Robot.find(robot_id)
+  puts "  #{robot.name}: #{count} nodes"
 end
 
-# Nodes by type
-stats[:nodes_by_type].each do |row|
-  puts "Type #{row['type']}: #{row['count']} nodes"
-end
-
-# Relationships
-puts "Total relationships: #{stats[:total_relationships]}"
-
-# Tags
-puts "Total tags: #{stats[:total_tags]}"
+# Total tags
+puts "Total tags: #{HTM::Models::Tag.count}"
 
 # Time range
-puts "Oldest memory: #{stats[:oldest_memory]}"
-puts "Newest memory: #{stats[:newest_memory]}"
-
-# Database size
-size_mb = stats[:database_size] / (1024.0 * 1024.0)
-puts "Database size: #{size_mb.round(2)} MB"
+oldest = HTM::Models::Node.minimum(:created_at)
+newest = HTM::Models::Node.maximum(:created_at)
+puts "Oldest memory: #{oldest}"
+puts "Newest memory: #{newest}"
 
 # Active robots
-puts "Active robots: #{stats[:active_robots]}"
-stats[:robot_activity].each do |robot|
-  puts "  #{robot['name']}: last active #{robot['last_active']}"
+puts "Active robots: #{HTM::Models::Robot.count}"
+HTM::Models::Robot.order(last_active_at: :desc).each do |robot|
+  puts "  #{robot.name}: last active #{robot.last_active_at}"
 end
 ```
 
@@ -870,72 +860,50 @@ conn.close
 
 ```ruby
 require 'htm'
-require 'pg'
 
 # Initialize HTM
 htm = HTM.new(robot_name: "Database Admin")
 
 # Add some test data
 puts "Adding test data..."
+node_ids = []
 10.times do |i|
-  htm.add_node(
-    "test_#{i}",
+  node_id = htm.remember(
     "Test memory number #{i}",
-    type: :fact,
-    importance: rand(1.0..10.0),
-    tags: ["test", "batch_#{i / 5}"]
+    tags: ["test", "batch:#{i / 5}"],
+    metadata: { category: "fact", index: i }
   )
+  node_ids << node_id
 end
 
-# Get statistics
+# Get statistics using ActiveRecord
 puts "\n=== Database Statistics ==="
-stats = htm.memory_stats
-puts "Total nodes: #{stats[:total_nodes]}"
-puts "Database size: #{(stats[:database_size] / 1024.0 / 1024.0).round(2)} MB"
-puts "Active robots: #{stats[:active_robots]}"
+puts "Total nodes: #{HTM::Models::Node.count}"
+puts "Total tags: #{HTM::Models::Tag.count}"
+puts "Active robots: #{HTM::Models::Robot.count}"
 
-# Query by tag
+# Query by tag using ActiveRecord
 puts "\n=== Query by Tag ==="
-config = HTM::Database.default_config
-conn = PG.connect(config)
-
-result = conn.exec_params(
-  <<~SQL,
-    SELECT n.key, n.value
-    FROM nodes n
-    JOIN tags t ON n.id = t.node_id
-    WHERE t.tag = $1
-  SQL
-  ['test']
-)
-
-puts "Found #{result.ntuples} nodes with tag 'test'"
-result.each do |row|
-  puts "- #{row['key']}: #{row['value']}"
+test_tag = HTM::Models::Tag.find_by(name: "test")
+if test_tag
+  tagged_nodes = test_tag.nodes
+  puts "Found #{tagged_nodes.count} nodes with tag 'test'"
+  tagged_nodes.each do |node|
+    puts "- #{node.id}: #{node.content}"
+  end
 end
 
 # Performance check
 puts "\n=== Performance Metrics ==="
-result = conn.exec(
-  <<~SQL
-    SELECT
-      pg_size_pretty(pg_total_relation_size('nodes')) as nodes_size,
-      pg_size_pretty(pg_total_relation_size('relationships')) as rel_size,
-      pg_size_pretty(pg_total_relation_size('tags')) as tags_size
-  SQL
-)
-
 puts "Table sizes:"
-puts "  nodes: #{result.first['nodes_size']}"
-puts "  relationships: #{result.first['rel_size']}"
-puts "  tags: #{result.first['tags_size']}"
+puts "  nodes: #{HTM::Models::Node.count} records"
+puts "  tags: #{HTM::Models::Tag.count} records"
+puts "  node_tags: #{HTM::Models::NodeTag.count} records"
 
-conn.close
-
-# Cleanup test data
+# Cleanup test data (soft delete)
 puts "\n=== Cleanup ==="
-10.times do |i|
-  htm.forget("test_#{i}", confirm: :confirmed)
+node_ids.each do |node_id|
+  htm.forget(node_id)  # Soft delete by default
 end
-puts "Test data removed"
+puts "Test data soft-deleted (recoverable)"
 ```
