@@ -2,30 +2,10 @@
 **Inherits:** Object
     
 
-HTM (Hierarchical Temporal Memory) error classes
-
-All HTM errors inherit from HTM::Error, allowing you to catch all HTM-related
-errors with a single rescue clause.
+examples/robot_groups/lib/htm/working_memory_channel.rb frozen_string_literal:
+true
 
 
-**`@example`**
-```ruby
-begin
-  htm.remember("some content")
-rescue HTM::Error => e
-  logger.error "HTM error: #{e.message}"
-end
-```
-**`@example`**
-```ruby
-begin
-  htm.forget(node_id, soft: false)
-rescue HTM::NotFoundError
-  puts "Node not found"
-rescue HTM::ValidationError
-  puts "Invalid input"
-end
-```
 # Class Methods
 ## configure() {: #method-c-configure }
 Configure HTM

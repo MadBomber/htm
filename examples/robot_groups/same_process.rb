@@ -26,9 +26,6 @@
 require_relative '../../lib/htm'
 require 'json'
 
-require_relative 'lib/working_memory_channel'
-require_relative 'lib/robot_group'
-
 # =============================================================================
 # Demo Script
 # =============================================================================
@@ -59,7 +56,7 @@ begin
   # ---------------------------------------------------------------------------
   puts "\n2. Creating robot group with primary + standby..."
 
-  group = RobotGroup.new(
+  group = HTM::RobotGroup.new(
     name: 'customer-support-ha',
     active: ['support-primary'],
     passive: ['support-standby'],

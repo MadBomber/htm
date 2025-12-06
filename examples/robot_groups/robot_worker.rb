@@ -20,7 +20,6 @@
 require 'logger'
 require 'json'
 require_relative '../../lib/htm'
-require_relative 'lib/working_memory_channel'
 
 robot_name = ARGV[0]
 group_name = ARGV[1]
@@ -53,7 +52,7 @@ htm = HTM.new(robot_name: robot_name, working_memory_size: 8000)
 db_config = HTM::Database.default_config
 
 # Setup channel for cross-process notifications
-channel = WorkingMemoryChannel.new(group_name, db_config)
+channel = HTM::WorkingMemoryChannel.new(group_name, db_config)
 
 # Track notifications received
 notifications_count = 0

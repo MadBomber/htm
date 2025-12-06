@@ -21,6 +21,8 @@ require_relative "htm/loaders/markdown_chunker"
 require_relative "htm/loaders/markdown_loader"
 require_relative "htm/observability"
 require_relative "htm/telemetry"
+require_relative "htm/working_memory_channel"
+require_relative "htm/robot_group"
 
 require "pg"
 require "securerandom"

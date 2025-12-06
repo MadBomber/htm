@@ -51,6 +51,12 @@
     - Cross-robot context awareness
     - Track which robot said what
 
+- **Robot Groups**
+    - Coordinate multiple robots with shared working memory
+    - Real-time synchronization via PostgreSQL LISTEN/NOTIFY
+    - Active/passive roles for instant failover
+    - Dynamic scaling (add/remove robots at runtime)
+
 - **LLM-Driven Tag Extraction**
     - Automatic hierarchical tag extraction from content
     - Tags in colon-delimited format (e.g., `database:postgresql:performance`)
@@ -311,6 +317,82 @@ rake htm:files:list                     # List all loaded file sources
 rake htm:files:sync                     # Sync all files (reload changed)
 rake htm:files:stats                    # Show file loading statistics
 ```
+
+### Robot Groups
+
+Robot Groups enable coordination of multiple robots with shared working memory and real-time synchronization. This is useful for high-availability setups, load balancing, and collaborative AI agents.
+
+**Key Classes:**
+- `HTM::RobotGroup` - Coordinates multiple robots with active/passive roles and shared working memory
+- `HTM::WorkingMemoryChannel` - PostgreSQL LISTEN/NOTIFY pub/sub for real-time cross-process synchronization
+
+**Basic Usage:**
+
+```ruby
+require 'htm'
+
+HTM.configure do |config|
+  config.embedding_provider = :ollama
+  config.embedding_model = 'nomic-embed-text'
+end
+
+# Create a robot group with primary + standby
+group = HTM::RobotGroup.new(
+  name: 'customer-support-ha',
+  active: ['support-primary'],
+  passive: ['support-standby'],
+  max_tokens: 8000
+)
+
+# Add memories to the shared working memory
+group.remember("Customer #123 prefers email communication", originator: 'support-primary')
+
+# All robots in the group can recall shared memories
+memories = group.recall('customer', limit: 5, strategy: :fulltext)
+
+# Simulate failover when primary fails
+group.failover!  # Promotes standby to active
+
+# Dynamic scaling - add more robots at runtime
+group.add_active('support-secondary')
+group.sync_robot('support-secondary')  # Sync existing memories
+
+# Check group status
+status = group.status
+# => { name: "customer-support-ha", active: [...], passive: [...], in_sync: true, ... }
+
+# Cleanup
+group.shutdown
+```
+
+**Cross-Process Synchronization:**
+
+For multi-process deployments, use `HTM::WorkingMemoryChannel` directly:
+
+```ruby
+# In each worker process
+channel = HTM::WorkingMemoryChannel.new('my-group', HTM::Database.default_config)
+
+# Listen for memory changes from other processes
+channel.on_change do |event, node_id, origin_robot_id|
+  case event
+  when :added    # Another robot added a memory
+  when :evicted  # Another robot evicted a memory
+  when :cleared  # Another robot cleared working memory
+  end
+end
+
+channel.start_listening
+
+# Notify other processes when you add a memory
+channel.notify(:added, node_id: node.id, robot_id: my_robot_id)
+```
+
+**Demo Applications:**
+
+See `examples/robot_groups/` for complete examples:
+- `same_process.rb` - Single-process demo with multiple robots
+- `multi_process.rb` - Multi-process demo with real-time sync
 
 ### Automatic Tag Extraction
 
