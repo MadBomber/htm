@@ -13,6 +13,7 @@ The MCP server (`bin/htm_mcp.rb`) uses [FastMCP](https://github.com/yjacket/fast
 - **Session restore**: Restore previous session context from working memory
 - **Fuzzy search**: Typo-tolerant tag and topic search
 - **Resource access**: Query statistics, tag hierarchy, and recent memories
+- **Robot Groups (High-Availability)**: Coordinate multiple robots with shared working memory, failover, and real-time sync
 
 ## Prerequisites
 
@@ -335,6 +336,291 @@ Get statistics about HTM memory usage.
 }
 ```
 
+## Robot Group Tools
+
+Robot Groups enable high-availability configurations with multiple robots sharing working memory. Groups support active/passive roles, automatic failover, and real-time synchronization via PostgreSQL LISTEN/NOTIFY.
+
+### CreateGroupTool
+
+Create a new robot group with shared working memory.
+
+**Parameters:**
+- `name` (String, required): Unique name for the group
+- `sync_interval` (Integer, optional): Sync interval in seconds (default: 30)
+- `max_members` (Integer, optional): Maximum group members (default: 10)
+- `token_budget` (Integer, optional): Shared working memory token limit (default: 4000)
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "sync_interval": 30,
+  "max_members": 10,
+  "token_budget": 4000,
+  "message": "Robot group 'research-team' created successfully"
+}
+```
+
+---
+
+### ListGroupsTool
+
+List all active robot groups in the current MCP session.
+
+**Parameters:** None
+
+**Returns:**
+```json
+{
+  "success": true,
+  "count": 2,
+  "groups": [
+    {
+      "name": "research-team",
+      "member_count": 3,
+      "active_robot": "researcher-1"
+    },
+    {
+      "name": "support-team",
+      "member_count": 2,
+      "active_robot": "support-bot"
+    }
+  ]
+}
+```
+
+---
+
+### GetGroupStatusTool
+
+Get detailed status of a robot group.
+
+**Parameters:**
+- `name` (String, required): The group name
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "status": {
+    "active_robot": "researcher-1",
+    "member_count": 3,
+    "members": [
+      { "name": "researcher-1", "role": "active", "last_seen": "2024-01-15T10:30:00Z" },
+      { "name": "researcher-2", "role": "passive", "last_seen": "2024-01-15T10:29:55Z" },
+      { "name": "researcher-3", "role": "passive", "last_seen": "2024-01-15T10:29:50Z" }
+    ],
+    "working_memory_tokens": 2500,
+    "token_budget": 4000,
+    "sync_interval": 30
+  }
+}
+```
+
+---
+
+### JoinGroupTool
+
+Add a robot to an existing group.
+
+**Parameters:**
+- `group_name` (String, required): The group to join
+- `robot_name` (String, required): The robot name to add
+- `role` (String, optional): `"active"` or `"passive"` (default: `"passive"`)
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "robot_name": "researcher-4",
+  "role": "passive",
+  "message": "Robot 'researcher-4' joined group 'research-team' as passive"
+}
+```
+
+---
+
+### LeaveGroupTool
+
+Remove a robot from a group.
+
+**Parameters:**
+- `group_name` (String, required): The group to leave
+- `robot_name` (String, required): The robot to remove
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "robot_name": "researcher-4",
+  "message": "Robot 'researcher-4' left group 'research-team'"
+}
+```
+
+---
+
+### GroupRememberTool
+
+Store memory shared across all group members. Only the active robot can write to group memory.
+
+**Parameters:**
+- `group_name` (String, required): The target group
+- `content` (String, required): The content to remember
+- `tags` (Array<String>, optional): Tags for categorization
+- `metadata` (Hash, optional): Key-value metadata
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "node_id": 789,
+  "content": "Found relevant paper on embeddings",
+  "tags": ["research:papers", "ai:embeddings"],
+  "message": "Memory stored in group working memory"
+}
+```
+
+---
+
+### GroupRecallTool
+
+Recall memories from a group's shared context.
+
+**Parameters:**
+- `group_name` (String, required): The target group
+- `query` (String, required): Search query
+- `limit` (Integer, optional): Maximum results (default: 10)
+- `strategy` (String, optional): `"vector"`, `"fulltext"`, or `"hybrid"` (default: `"hybrid"`)
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "query": "embeddings",
+  "count": 3,
+  "results": [
+    {
+      "id": 789,
+      "content": "Found relevant paper on embeddings",
+      "tags": ["research:papers", "ai:embeddings"],
+      "score": 0.92
+    }
+  ]
+}
+```
+
+---
+
+### GetGroupWorkingMemoryTool
+
+Get a group's working memory contents.
+
+**Parameters:**
+- `group_name` (String, required): The target group
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "token_usage": 2500,
+  "token_budget": 4000,
+  "count": 15,
+  "working_memory": [
+    {
+      "id": 789,
+      "content": "Found relevant paper on embeddings",
+      "tags": ["research:papers"],
+      "added_at": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### PromoteRobotTool
+
+Promote a passive robot to active role. The current active robot becomes passive.
+
+**Parameters:**
+- `group_name` (String, required): The target group
+- `robot_name` (String, required): The robot to promote
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "promoted_robot": "researcher-2",
+  "previous_active": "researcher-1",
+  "message": "Robot 'researcher-2' is now active. 'researcher-1' is now passive."
+}
+```
+
+---
+
+### FailoverTool
+
+Trigger failover to the next available robot in the group.
+
+**Parameters:**
+- `group_name` (String, required): The target group
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "new_active": "researcher-2",
+  "previous_active": "researcher-1",
+  "message": "Failover complete. 'researcher-2' is now active."
+}
+```
+
+---
+
+### SyncGroupTool
+
+Manually synchronize group state across all members.
+
+**Parameters:**
+- `group_name` (String, required): The target group
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "synced_members": 3,
+  "message": "Group state synchronized across 3 members"
+}
+```
+
+---
+
+### ShutdownGroupTool
+
+Gracefully shutdown a robot group, removing all members.
+
+**Parameters:**
+- `group_name` (String, required): The group to shutdown
+
+**Returns:**
+```json
+{
+  "success": true,
+  "group_name": "research-team",
+  "message": "Robot group 'research-team' has been shut down"
+}
+```
+
 ## Resources Reference
 
 ### htm://statistics
@@ -374,6 +660,32 @@ ai
 ### htm://memories/recent
 
 Last 20 memories as JSON array.
+
+### htm://groups
+
+Active robot groups and their status:
+
+```json
+{
+  "count": 2,
+  "groups": [
+    {
+      "name": "research-team",
+      "member_count": 3,
+      "active_robot": "researcher-1",
+      "token_usage": 2500,
+      "token_budget": 4000
+    },
+    {
+      "name": "support-team",
+      "member_count": 2,
+      "active_robot": "support-bot",
+      "token_usage": 1200,
+      "token_budget": 4000
+    }
+  ]
+}
+```
 
 ## Client Configuration
 
@@ -514,6 +826,41 @@ Remember that project B uses Vue with JavaScript
 ```
 
 Each robot has its own working memory but shares the global long-term memory (hive mind).
+
+### Using Robot Groups
+
+Robot Groups enable high-availability configurations where multiple robots share working memory:
+
+1. **Create a group**:
+   ```
+   Create a robot group called "research-team" with 3 max members
+   ```
+
+2. **Join robots to the group**:
+   ```
+   Join robot "researcher-1" to group "research-team" as active
+   Join robot "researcher-2" to group "research-team" as passive
+   ```
+
+3. **Store shared memories**:
+   ```
+   Remember in group "research-team" that we found a relevant paper on embeddings
+   ```
+
+4. **Recall from group context**:
+   ```
+   Recall from group "research-team" what we know about embeddings
+   ```
+
+5. **Handle failover**:
+   ```
+   Trigger failover for group "research-team"
+   ```
+
+6. **Check group status**:
+   ```
+   Show status of group "research-team"
+   ```
 
 ### Searching with Typo Tolerance
 

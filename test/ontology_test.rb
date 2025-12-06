@@ -8,6 +8,10 @@ class OntologyTest < Minitest::Test
     skip_without_database
     return if skipped?
 
+    # Configure HTM with mocks to prevent real LLM calls
+    # This ensures tests don't generate auto-tags from content
+    configure_htm_with_mocks
+
     @htm = HTM.new(robot_name: "Ontology Test Robot")
   end
 
@@ -20,6 +24,9 @@ class OntologyTest < Minitest::Test
     rescue => e
       # Ignore errors during cleanup
     end
+
+    # Reset configuration for other tests
+    reset_htm_configuration
   end
 
   def test_manual_topic_assignment

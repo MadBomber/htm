@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    htm (0.0.15)
+    htm (0.0.16)
       activerecord
       baran
       chronic

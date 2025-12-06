@@ -529,6 +529,8 @@ HTM includes an MCP server that exposes memory capabilities to AI assistants lik
 
 ### Available Tools
 
+#### Session & Memory Tools
+
 | Tool | Description |
 |------|-------------|
 | `SetRobotTool` | Set the robot identity for the session (call first) |
@@ -543,6 +545,23 @@ HTM includes an MCP server that exposes memory capabilities to AI assistants lik
 | `FindByTopicTool` | Find nodes by topic with optional fuzzy matching |
 | `StatsTool` | Get memory usage statistics |
 
+#### Robot Group Tools (High-Availability)
+
+| Tool | Description |
+|------|-------------|
+| `CreateGroupTool` | Create a new robot group with shared working memory |
+| `ListGroupsTool` | List all active robot groups in the session |
+| `GetGroupStatusTool` | Get detailed status of a robot group |
+| `JoinGroupTool` | Add a robot to an existing group |
+| `LeaveGroupTool` | Remove a robot from a group |
+| `GroupRememberTool` | Store memory shared across group members |
+| `GroupRecallTool` | Recall memories from a group's shared context |
+| `GetGroupWorkingMemoryTool` | Get a group's working memory contents |
+| `PromoteRobotTool` | Promote a passive robot to active role |
+| `FailoverTool` | Trigger failover to next available robot |
+| `SyncGroupTool` | Synchronize group state across members |
+| `ShutdownGroupTool` | Gracefully shutdown a robot group |
+
 ### Available Resources
 
 | URI | Description |
@@ -550,6 +569,7 @@ HTM includes an MCP server that exposes memory capabilities to AI assistants lik
 | `htm://statistics` | Memory statistics as JSON |
 | `htm://tags/hierarchy` | Tag hierarchy as text tree |
 | `htm://memories/recent` | Last 20 memories |
+| `htm://groups` | Active robot groups and their status |
 
 ### Client Configuration
 
