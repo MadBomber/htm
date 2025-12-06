@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **MCP Server documentation** - Comprehensive guide for AI assistant integration
+  - Added MCP Server section to README.md with tools/resources reference
+  - Created `docs/guides/mcp-server.md` with detailed configuration for Claude Desktop, Claude Code, and AIA
+  - Covers all 11 tools (SetRobot, Remember, Recall, Forget, Restore, ListTags, SearchTags, FindByTopic, Stats, GetRobot, GetWorkingMemory)
+  - Covers all 3 resources (statistics, tags/hierarchy, memories/recent)
+  - Usage examples, session management, and troubleshooting guide
+- **HTM Rake Tasks Reference** - Complete documentation for all 44 rake tasks
+  - Added rake tasks summary table to README.md Development section
+  - Created `docs/development/rake-tasks.md` with detailed reference organized by namespace:
+    - Database Tasks (`htm:db:*`) - 16 tasks
+    - Documentation Tasks (`htm:doc:*`) - 9 tasks
+    - File Loading Tasks (`htm:files:*`) - 7 tasks
+    - Job Tasks (`htm:jobs:*`) - 7 tasks
+    - Tag Tasks (`htm:tags:*`) - 5 tasks
+  - Common workflows, environment variables, and troubleshooting
+
+### Fixed
+- **Documentation code examples** - Fixed incorrect API usage in docs/guides/*.md
+  - `add_node()` → `remember()`
+  - `topic:` named parameter → positional argument in `recall()`
+  - `retrieve(key)` → `long_term_memory.retrieve(node_id)`
+  - `create_context()` → `working_memory.assemble_context()`
+  - Removed invalid parameters: `type:`, `importance:`, `category:`, `related_to:`
+
 ## [0.0.14] - 2025-12-05
 
 ### Added
