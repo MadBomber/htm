@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **RobotGroup MCP tools** - 12 new tools for high-availability robot coordination
+  - `CreateGroupTool` - Create a new robot group with shared working memory
+  - `ListGroupsTool` - List all active robot groups in the session
+  - `GetGroupStatusTool` - Get detailed status of a robot group
+  - `JoinGroupTool` - Add a robot to an existing group
+  - `LeaveGroupTool` - Remove a robot from a group
+  - `GroupRememberTool` - Store memory shared across group members
+  - `GroupRecallTool` - Recall memories from a group's shared context
+  - `GetGroupWorkingMemoryTool` - Get a group's working memory contents
+  - `PromoteRobotTool` - Promote a passive robot to active role
+  - `FailoverTool` - Trigger failover to next available robot
+  - `SyncGroupTool` - Synchronize group state across members
+  - `ShutdownGroupTool` - Gracefully shutdown a robot group
+- **RobotGroups MCP resource** - `htm://groups` returns active robot groups and their status
+- **MCPGroupSession module** - Session state management for robot groups in MCP server
+- **MCP server test suite** - 59 tests with 174 assertions covering all tools and resources
+
+### Changed
+- **README.md MCP section** - Reorganized tools by category (Session & Memory, Robot Group)
+- **docs/guides/mcp-server.md** - Comprehensive RobotGroup tools documentation with examples
+
+### Fixed
+- **ontology_test.rb** - Added `configure_htm_with_mocks` to prevent real LLM calls during tests
+  - `test_node_creation_without_tags` and `test_empty_tag_array_no_topics` now pass
+
 ## [0.0.15] - 2025-12-06
 
 ### Added
