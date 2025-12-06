@@ -1,12 +1,12 @@
 
 <div align="center">
-  <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: 4px solid #ff0000; border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 800px; box-shadow: 0 8px 16px rgba(255, 0, 0, 0.3);">
-    <p style="color: #ffffff; font-size: 24px; font-weight: bold; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
-      ⚠️ WARNING ⚠️
+  <div style="background: linear-gradient(135deg, #ffd93d 0%, #f5c800 100%); border: 4px solid #e6b800; border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 800px; box-shadow: 0 8px 16px rgba(230, 184, 0, 0.3);">
+    <p style="color: #000000; font-size: 42px; font-weight: bold; margin: 0;">
+      💣 CAUTION 💣
     </p>
-    <p style="color: #fff; font-size: 16px; margin: 10px 0 0 0; line-height: 1.6;">
-      This documentation is AI-generated and may contain <strong>hallucinations</strong>, <strong>inaccuracies</strong>, or <strong>outdated information</strong>.<br/>
-      Always verify critical details in the source code.
+    <p style="color: #000; font-size: 27px; font-weight: bold; margin: 10px 0 0 0; line-height: 1.6;">
+      This documentation may contain <strong>inaccuracies</strong>.<br/>
+      Verify critical details in the source code and example demos.
     </p>
   </div>
 
