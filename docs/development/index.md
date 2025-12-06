@@ -59,6 +59,19 @@ Everything you need to know about contributing code, documentation, or bug repor
 - Code review expectations
 - Documentation requirements
 
+### [Rake Tasks Reference](rake-tasks.md)
+Complete reference for all 44 HTM rake tasks covering database management, documentation, file loading, background jobs, and tag management.
+
+**Topics covered:**
+
+- Database tasks (`htm:db:*`) - setup, migrations, maintenance
+- Documentation tasks (`htm:doc:*`) - YARD, MkDocs, diagrams
+- File loading tasks (`htm:files:*`) - load, sync, unload files
+- Job tasks (`htm:jobs:*`) - process embeddings, tags, propositions
+- Tag tasks (`htm:tags:*`) - visualization and management
+- Common workflows and examples
+- Troubleshooting guide
+
 ### [Database Schema](schema.md)
 Deep dive into HTM's database architecture, tables, indexes, and TimescaleDB optimization strategies.
 

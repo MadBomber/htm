@@ -199,6 +199,7 @@ nav:
       - Multi-Robot Usage: guides/multi-robot.md
       - Search Strategies: guides/search-strategies.md
       - Context Assembly: guides/context-assembly.md
+      - MCP Server: guides/mcp-server.md
   - API Reference:
       - api/index.md
       - HTM Class: api/htm.md
@@ -245,6 +246,7 @@ nav:
       - Setup: development/setup.md
       - Testing: development/testing.md
       - Contributing: development/contributing.md
+      - Rake Tasks Reference: development/rake-tasks.md
       - Database Schema: development/schema.md
       - Database Tables:
           - database/README.md

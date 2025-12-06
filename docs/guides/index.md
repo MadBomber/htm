@@ -36,6 +36,12 @@ Dive deeper into HTM's powerful capabilities.
 - [**Search Strategies**](search-strategies.md) - Vector, full-text, and hybrid search
 - [**Context Assembly**](context-assembly.md) - Creating optimized context for LLMs
 
+### Integrations
+
+Connect HTM to external tools and services.
+
+- [**MCP Server**](mcp-server.md) - Use HTM with Claude Desktop, Claude Code, and AIA
+
 ## Learning Path
 
 We recommend the following progression:
@@ -68,6 +74,7 @@ We recommend the following progression:
 - **Create LLM context**: See [Context Assembly](context-assembly.md#basic-usage)
 - **Monitor memory usage**: See [Working Memory](working-memory.md#monitoring-utilization)
 - **Multi-robot setup**: See [Multi-Robot Usage](multi-robot.md#setting-up-multiple-robots)
+- **Use with Claude/AIA**: See [MCP Server](mcp-server.md#client-configuration)
 
 ### Memory Types
 

@@ -441,6 +441,75 @@ HTM uses a **null object pattern** for telemetry. When disabled or when the SDK 
 
 See [docs/telemetry.md](docs/telemetry.md) for detailed configuration and usage examples.
 
+## MCP Server (Model Context Protocol)
+
+HTM includes an MCP server that exposes memory capabilities to AI assistants like Claude Desktop, Claude Code, and AIA. This enables any MCP-compatible client to store, recall, and manage memories through a standardized protocol.
+
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `SetRobotTool` | Set the robot identity for the session (call first) |
+| `GetRobotTool` | Get current robot information |
+| `GetWorkingMemoryTool` | Get working memory contents for session restore |
+| `RememberTool` | Store information with optional tags and metadata |
+| `RecallTool` | Search memories using vector, fulltext, or hybrid strategies |
+| `ForgetTool` | Soft-delete a memory (recoverable) |
+| `RestoreTool` | Restore a soft-deleted memory |
+| `ListTagsTool` | List tags with optional prefix filtering |
+| `SearchTagsTool` | Fuzzy tag search with typo tolerance |
+| `FindByTopicTool` | Find nodes by topic with optional fuzzy matching |
+| `StatsTool` | Get memory usage statistics |
+
+### Available Resources
+
+| URI | Description |
+|-----|-------------|
+| `htm://statistics` | Memory statistics as JSON |
+| `htm://tags/hierarchy` | Tag hierarchy as text tree |
+| `htm://memories/recent` | Last 20 memories |
+
+### Client Configuration
+
+**Claude Desktop** (`~/.config/claude/claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "htm-memory": {
+      "command": "htm_mcp.rb",
+      "env": {
+        "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
+      }
+    }
+  }
+}
+```
+
+**Claude Code** (`~/.claude/claude_code_config.json`):
+```json
+{
+  "mcpServers": {
+    "htm-memory": {
+      "command": "htm_mcp.rb",
+      "env": {
+        "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
+      }
+    }
+  }
+}
+```
+
+**AIA** (`~/.config/aia/config.yml`):
+```yaml
+mcp_servers:
+  htm-memory:
+    command: htm_mcp.rb
+    env:
+      HTM_DBURL: postgresql://user@localhost:5432/htm_development
+```
+
+See [docs/guides/mcp-server.md](docs/guides/mcp-server.md) for detailed configuration, usage examples, and troubleshooting.
+
 ## Configuration
 
 HTM uses dependency injection for LLM access, allowing you to configure embedding generation, tag extraction, logging, and token counting.
@@ -1318,50 +1387,86 @@ rake test
 ruby examples/basic_usage.rb
 ```
 
-### Database Management
-
-HTM provides comprehensive rake tasks under the `htm:db` namespace for managing the database:
-
-```bash
-# List all database tasks
-rake -T htm:db
-
-# Set up database (create schema + run migrations)
-rake htm:db:setup
-
-# Run pending migrations only
-rake htm:db:migrate
-
-# Show migration status (which migrations are applied)
-rake htm:db:status
-
-# Show database info (size, tables, extensions, row counts)
-rake htm:db:info
-
-# Test database connection
-rake htm:db:test
-
-# Open PostgreSQL console (interactive psql session)
-rake htm:db:console
-
-# Seed database with sample data
-rake htm:db:seed
-
-# Drop all HTM tables (WARNING: destructive!)
-rake htm:db:drop
-
-# Drop and recreate database (WARNING: destructive!)
-rake htm:db:reset
-```
-
 **Important**: Make sure `direnv allow` has been run once in the project directory to load database environment variables from `.envrc`. Alternatively, you can manually export the environment variables:
 
 ```bash
-# Manually export HTM_DBURL
 export HTM_DBURL="postgresql://user:password@host:port/dbname?sslmode=require"
 ```
 
-**Common Workflows**:
+### HTM Rake Tasks Reference
+
+HTM provides comprehensive rake tasks for database management, documentation, file loading, job processing, and tag management. Use `rake -T htm` to see all available tasks.
+
+#### Database Tasks (`htm:db:*`)
+
+| Task | Description |
+|------|-------------|
+| `rake htm:db:setup` | Set up HTM database schema and run migrations (sets up from scratch) |
+| `rake htm:db:create` | Create database if it doesn't exist (respects RAILS_ENV) |
+| `rake htm:db:migrate` | Run pending database migrations |
+| `rake htm:db:status` | Show migration status |
+| `rake htm:db:verify` | Verify database connection (respects RAILS_ENV) |
+| `rake htm:db:info` | Show database info (size, tables, extensions) |
+| `rake htm:db:stats` | Show record counts for all HTM tables |
+| `rake htm:db:console` | Open PostgreSQL console (respects RAILS_ENV) |
+| `rake htm:db:seed` | Seed database with sample data |
+| `rake htm:db:schema:dump` | Dump current schema to db/schema.sql |
+| `rake htm:db:schema:load` | Load schema from db/schema.sql |
+| `rake htm:db:rebuild:embeddings` | Rebuild embeddings for all nodes |
+| `rake htm:db:rebuild:propositions` | Rebuild propositions for all non-proposition nodes |
+| `rake htm:db:tags:cleanup` | Soft delete orphaned tags and stale node_tags entries |
+| `rake htm:db:drop` | Drop all HTM tables (WARNING: destructive!) |
+| `rake htm:db:reset` | Drop and recreate database (WARNING: destructive!) |
+
+#### Documentation Tasks (`htm:doc:*`)
+
+| Task | Description |
+|------|-------------|
+| `rake htm:doc:all` | Generate DB docs, YARD API docs, build site, and serve |
+| `rake htm:doc:yard` | Build YARD API documentation (markdown format for MkDocs) |
+| `rake htm:doc:db` | Generate/update database documentation in docs/database/ |
+| `rake htm:doc:build` | Build documentation site with MkDocs |
+| `rake htm:doc:serve` | Serve documentation site locally with MkDocs |
+| `rake htm:doc:server[port]` | Start YARD documentation server (live reload) |
+| `rake htm:doc:fix_anchors` | Fix YARD anchor links for MkDocs compatibility |
+| `rake htm:doc:stats` | Show documentation coverage statistics |
+| `rake htm:doc:clean` | Clean generated documentation |
+
+#### File Loading Tasks (`htm:files:*`)
+
+| Task | Description |
+|------|-------------|
+| `rake htm:files:load[path]` | Load a markdown file into long-term memory |
+| `rake htm:files:load_dir[path,pattern]` | Load all markdown files from a directory |
+| `rake htm:files:list` | List all loaded file sources |
+| `rake htm:files:info[path]` | Show details for a loaded file |
+| `rake htm:files:sync` | Sync all loaded files (reload changed files) |
+| `rake htm:files:unload[path]` | Unload a file from memory |
+| `rake htm:files:stats` | Show file loading statistics |
+
+#### Job Processing Tasks (`htm:jobs:*`)
+
+| Task | Description |
+|------|-------------|
+| `rake htm:jobs:stats` | Show statistics for nodes and async job processing |
+| `rake htm:jobs:process_embeddings` | Process pending embedding jobs for nodes without embeddings |
+| `rake htm:jobs:process_tags` | Process pending tag extraction jobs for nodes without tags |
+| `rake htm:jobs:process_all` | Process all pending jobs (embeddings and tags) |
+| `rake htm:jobs:reprocess_embeddings` | Reprocess embeddings for all nodes (force regeneration) |
+| `rake htm:jobs:failed` | Show nodes that failed async processing |
+| `rake htm:jobs:clear_all` | Clear all embeddings and tags (for testing/development) |
+
+#### Tag Management Tasks (`htm:tags:*`)
+
+| Task | Description |
+|------|-------------|
+| `rake htm:tags:tree[prefix]` | Display tags as a hierarchical tree (text format) |
+| `rake htm:tags:mermaid[prefix]` | Export tags as Mermaid flowchart to tags.md |
+| `rake htm:tags:svg[prefix]` | Export tags as SVG visualization to tags.svg |
+| `rake htm:tags:export[prefix]` | Export tags in all formats (tags.txt, tags.md, tags.svg) |
+| `rake htm:tags:rebuild` | Rebuild all tags from node content |
+
+### Common Workflows
 
 ```bash
 # Initial setup (first time)
@@ -1374,6 +1479,26 @@ rake htm:db:migrate      # Run pending migrations
 # Check database state
 rake htm:db:status       # See migration status
 rake htm:db:info         # See database details
+rake htm:db:stats        # See record counts
+
+# Monitor async processing
+rake htm:jobs:stats
+rake htm:jobs:failed     # Show stuck jobs
+
+# Process pending jobs manually
+rake htm:jobs:process_all
+
+# Generate documentation
+rake htm:doc:all         # Full documentation build
+rake htm:doc:serve       # Local preview
+
+# Load files into memory
+rake 'htm:files:load[docs/guide.md]'
+rake 'htm:files:load_dir[docs/,**/*.md]'
+
+# View tag hierarchy
+rake htm:tags:tree
+rake 'htm:tags:svg[database]'  # Export filtered tags
 
 # Reset database (development only!)
 rake htm:db:reset        # Drops and recreates everything
@@ -1382,49 +1507,7 @@ rake htm:db:reset        # Drops and recreates everything
 rake htm:db:console      # Opens psql
 ```
 
-### Async Job Management
-
-HTM provides rake tasks under the `htm:jobs` namespace for managing async embedding and tag extraction jobs:
-
-```bash
-# List all job management tasks
-rake -T htm:jobs
-
-# Show statistics for async processing
-rake htm:jobs:stats
-
-# Process pending jobs
-rake htm:jobs:process_embeddings    # Process nodes without embeddings
-rake htm:jobs:process_tags          # Process nodes without tags
-rake htm:jobs:process_all           # Process both
-
-# Reprocess all nodes (force regeneration)
-rake htm:jobs:reprocess_embeddings  # WARNING: Prompts for confirmation
-
-# Debugging and maintenance
-rake htm:jobs:failed                # Show stuck jobs (>1 hour old)
-rake htm:jobs:clear_all            # Clear all embeddings/tags (testing only)
-```
-
-**Common Workflows**:
-
-```bash
-# Monitor async processing
-rake htm:jobs:stats
-
-# Manually process pending jobs (if async job runner is not running)
-rake htm:jobs:process_all
-
-# Debug stuck jobs
-rake htm:jobs:failed
-rake htm:jobs:process_embeddings    # Retry failed embeddings
-
-# Development/testing: force regeneration
-rake htm:jobs:reprocess_embeddings  # Regenerate all embeddings
-rake htm:jobs:clear_all             # Clear everything and start fresh
-```
-
-See the [Async Job Processing](#async-job-processing) section for more details.
+See the [Async Job Processing](#async-job-processing) section for more details on background jobs.
 
 ## Testing
 
