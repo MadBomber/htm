@@ -137,6 +137,10 @@
          <lastmod>2025-12-06</lastmod>
     </url>
     <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/RobotGroup/</loc>
+         <lastmod>2025-12-06</lastmod>
+    </url>
+    <url>
          <loc>https://madbomber.github.io/htm/api/yard/HTM/SqlBuilder/</loc>
          <lastmod>2025-12-06</lastmod>
     </url>
@@ -166,6 +170,10 @@
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/yard/HTM/WorkingMemory/</loc>
+         <lastmod>2025-12-06</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/WorkingMemoryChannel/</loc>
          <lastmod>2025-12-06</lastmod>
     </url>
     <url>
@@ -374,6 +382,10 @@
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/guides/recalling-memories/</loc>
+         <lastmod>2025-12-06</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/guides/robot-groups/</loc>
          <lastmod>2025-12-06</lastmod>
     </url>
     <url>

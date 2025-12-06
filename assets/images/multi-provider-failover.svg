@@ -1,0 +1,51 @@
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Multi-Provider Failover Strategy</text>
+
+  <!-- Primary -->
+  <rect x="50" y="80" width="200" height="100" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="2" rx="5"/>
+  <text x="150" y="105" text-anchor="middle" fill="#4CAF50" font-size="12" font-weight="bold">PRIMARY</text>
+  <text x="150" y="130" text-anchor="middle" fill="#E0E0E0" font-size="14">OpenAI GPT-4</text>
+  <text x="150" y="155" text-anchor="middle" fill="#B0B0B0" font-size="10">Fast, cost-effective</text>
+  <text x="150" y="170" text-anchor="middle" fill="#B0B0B0" font-size="10">JSON output format</text>
+
+  <!-- Standby 1 -->
+  <rect x="300" y="80" width="200" height="100" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
+  <text x="400" y="105" text-anchor="middle" fill="#FF9800" font-size="12" font-weight="bold">STANDBY 1</text>
+  <text x="400" y="130" text-anchor="middle" fill="#E0E0E0" font-size="14">Anthropic Claude</text>
+  <text x="400" y="155" text-anchor="middle" fill="#B0B0B0" font-size="10">Different provider</text>
+  <text x="400" y="170" text-anchor="middle" fill="#B0B0B0" font-size="10">XML output format</text>
+
+  <!-- Standby 2 -->
+  <rect x="550" y="80" width="200" height="100" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
+  <text x="650" y="105" text-anchor="middle" fill="#FF9800" font-size="12" font-weight="bold">STANDBY 2</text>
+  <text x="650" y="130" text-anchor="middle" fill="#E0E0E0" font-size="14">Google Gemini</text>
+  <text x="650" y="155" text-anchor="middle" fill="#B0B0B0" font-size="10">Third provider option</text>
+  <text x="650" y="170" text-anchor="middle" fill="#B0B0B0" font-size="10">Markdown output format</text>
+
+  <!-- Arrows -->
+  <path d="M 250 130 L 290 130" stroke="#4CAF50" stroke-width="2" marker-end="url(#arrow-fail)"/>
+  <path d="M 500 130 L 540 130" stroke="#FF9800" stroke-width="2" marker-end="url(#arrow-fail)"/>
+  <text x="270" y="120" fill="#F44336" font-size="10">failover</text>
+  <text x="520" y="120" fill="#F44336" font-size="10">failover</text>
+
+  <!-- Shared Context Box -->
+  <rect x="150" y="230" width="500" height="80" fill="rgba(33, 150, 243, 0.15)" stroke="#2196F3" stroke-width="2" rx="5"/>
+  <text x="400" y="260" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Shared Working Memory</text>
+  <text x="400" y="285" text-anchor="middle" fill="#2196F3" font-size="12">Same context across all providers</text>
+
+  <!-- Connections to shared -->
+  <line x1="150" y1="180" x2="200" y2="230" stroke="#4CAF50" stroke-width="1.5"/>
+  <line x1="400" y1="180" x2="400" y2="230" stroke="#FF9800" stroke-width="1.5"/>
+  <line x1="650" y1="180" x2="600" y2="230" stroke="#FF9800" stroke-width="1.5"/>
+
+  <!-- Key points -->
+  <text x="400" y="350" text-anchor="middle" fill="#4CAF50" font-size="12">Context is shared</text>
+  <text x="400" y="370" text-anchor="middle" fill="#F44336" font-size="12">Prompts are provider-specific</text>
+
+  <defs>
+    <marker id="arrow-fail" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#F44336"/>
+    </marker>
+  </defs>
+</svg>
