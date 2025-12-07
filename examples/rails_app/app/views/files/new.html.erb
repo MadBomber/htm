@@ -1,0 +1,321 @@
+<!-- Full-page loading overlay -->
+<div id="upload-overlay" class="hidden fixed inset-0 bg-gray-900/90 z-50 flex items-center justify-center">
+  <div class="bg-gray-800 rounded-lg border border-gray-700 p-8 max-w-md w-full mx-4 text-center">
+    <svg class="animate-spin h-12 w-12 text-indigo-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    <h3 class="text-lg font-medium text-white mb-2" id="overlay-title">Uploading Files...</h3>
+    <p class="text-sm text-gray-400 mb-4" id="overlay-status">Preparing upload</p>
+    <div class="w-full bg-gray-700 rounded-full h-2 mb-2">
+      <div id="overlay-progress" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+    </div>
+    <p class="text-xs text-gray-500" id="overlay-detail">This may take a moment while files are chunked and processed...</p>
+  </div>
+</div>
+
+<div class="space-y-6">
+  <!-- Back link -->
+  <div>
+    <%= link_to files_path, class: 'inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors' do %>
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Files
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Upload Files -->
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+      <h2 class="text-lg font-bold text-white mb-4">Upload Files</h2>
+
+      <%= form_with url: upload_files_path, method: :post, multipart: true, class: 'space-y-4', id: 'upload-files-form', data: { turbo: false } do %>
+        <div>
+          <label for="files" class="block text-sm font-medium text-gray-300 mb-2">Select Files</label>
+          <input
+            type="file"
+            name="files[]"
+            id="files"
+            multiple
+            accept=".md,.markdown,.txt"
+            class="w-full rounded-md bg-gray-700 border border-gray-600 text-white file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:bg-indigo-600 file:text-white file:cursor-pointer hover:file:bg-indigo-500 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <p class="mt-1 text-xs text-gray-500">Select one or more markdown files (.md, .markdown, .txt)</p>
+          <div id="files-selected" class="mt-2 text-sm text-indigo-400 hidden"></div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" name="force" value="true" id="upload_force" class="rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500">
+          <label for="upload_force" class="text-sm text-gray-300">Force reload (re-sync even if unchanged)</label>
+        </div>
+
+        <div class="pt-4 border-t border-gray-700">
+          <button type="submit" id="upload-files-btn" class="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg id="upload-files-spinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="upload-files-text">Upload Files</span>
+          </button>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Upload Directory -->
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+      <h2 class="text-lg font-bold text-white mb-4">Upload Directory</h2>
+
+      <%= form_with url: upload_directory_files_path, method: :post, multipart: true, class: 'space-y-4', id: 'upload-dir-form', data: { turbo: false } do %>
+        <div>
+          <label for="directory" class="block text-sm font-medium text-gray-300 mb-2">Select Directory</label>
+          <input
+            type="file"
+            name="files[]"
+            id="directory"
+            webkitdirectory
+            directory
+            multiple
+            class="w-full rounded-md bg-gray-700 border border-gray-600 text-white file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:bg-indigo-600 file:text-white file:cursor-pointer hover:file:bg-indigo-500 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <p class="mt-1 text-xs text-gray-500">Select a folder - all markdown files will be loaded</p>
+          <div id="dir-selected" class="mt-2 text-sm text-indigo-400 hidden"></div>
+        </div>
+
+        <div>
+          <label for="upload_pattern" class="block text-sm font-medium text-gray-300 mb-2">File Extension Filter</label>
+          <select name="extension" id="upload_pattern" class="w-full rounded-md bg-gray-700 border-gray-600 text-white text-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <option value=".md">Markdown (.md)</option>
+            <option value=".markdown">Markdown (.markdown)</option>
+            <option value=".txt">Text (.txt)</option>
+            <option value="">All files</option>
+          </select>
+          <p class="mt-1 text-xs text-gray-500">Filter files by extension</p>
+        </div>
+
+        <div class="pt-4 border-t border-gray-700">
+          <button type="submit" id="upload-dir-btn" class="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg id="upload-dir-spinner" class="hidden animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="upload-dir-text">Upload Directory</span>
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="relative">
+    <div class="absolute inset-0 flex items-center">
+      <div class="w-full border-t border-gray-700"></div>
+    </div>
+    <div class="relative flex justify-center text-sm">
+      <span class="px-2 bg-gray-900 text-gray-500">or load by path</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Load Single File by Path -->
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+      <h2 class="text-lg font-bold text-white mb-4">Load File by Path</h2>
+
+      <%= form_with url: files_path, method: :post, class: 'space-y-4' do %>
+        <div>
+          <label for="path" class="block text-sm font-medium text-gray-300 mb-2">File Path</label>
+          <input
+            type="text"
+            name="path"
+            id="path"
+            placeholder="/path/to/document.md"
+            class="w-full rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 font-mono text-sm focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <p class="mt-1 text-xs text-gray-500">Absolute path to a markdown file on the server</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" name="force" value="true" id="force" class="rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500">
+          <label for="force" class="text-sm text-gray-300">Force reload (re-sync even if unchanged)</label>
+        </div>
+
+        <div class="pt-4 border-t border-gray-700">
+          <%= submit_tag 'Load File', class: 'rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-500 cursor-pointer transition-colors' %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Load Directory by Path -->
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+      <h2 class="text-lg font-bold text-white mb-4">Load Directory by Path</h2>
+
+      <%= form_with url: load_directory_files_path, method: :post, class: 'space-y-4' do %>
+        <div>
+          <label for="dir_path" class="block text-sm font-medium text-gray-300 mb-2">Directory Path</label>
+          <input
+            type="text"
+            name="path"
+            id="dir_path"
+            placeholder="/path/to/docs/"
+            class="w-full rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 font-mono text-sm focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label for="pattern" class="block text-sm font-medium text-gray-300 mb-2">Glob Pattern</label>
+          <input
+            type="text"
+            name="pattern"
+            id="pattern"
+            value="**/*.md"
+            placeholder="**/*.md"
+            class="w-full rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 font-mono text-sm focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <p class="mt-1 text-xs text-gray-500">Pattern to match files (default: **/*.md)</p>
+        </div>
+
+        <div class="pt-4 border-t border-gray-700">
+          <%= submit_tag 'Load Directory', class: 'rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-500 cursor-pointer transition-colors' %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+    <h3 class="text-sm font-medium text-gray-300 mb-2">How File Loading Works</h3>
+    <ul class="text-xs text-gray-400 space-y-1 list-disc list-inside">
+      <li>Markdown files are split into chunks using the Baran gem's markdown-aware splitter</li>
+      <li>Each chunk becomes a separate memory node with its own embedding and tags</li>
+      <li>YAML frontmatter is extracted and stored as file metadata</li>
+      <li>Files are tracked by path with mtime-based change detection for efficient re-sync</li>
+      <li>Default chunk size: <%= HTM.configuration.chunk_size %> characters, overlap: <%= HTM.configuration.chunk_overlap %> characters</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Overlay elements
+  const overlay = document.getElementById('upload-overlay');
+  const overlayTitle = document.getElementById('overlay-title');
+  const overlayStatus = document.getElementById('overlay-status');
+  const overlayProgress = document.getElementById('overlay-progress');
+  const overlayDetail = document.getElementById('overlay-detail');
+
+  let fileCount = 0;
+  let progressInterval = null;
+
+  function showOverlay(title, count) {
+    fileCount = count;
+    overlayTitle.textContent = title;
+    overlayStatus.textContent = 'Uploading ' + count + ' file' + (count > 1 ? 's' : '') + '...';
+    overlayProgress.style.width = '0%';
+    overlayDetail.textContent = 'This may take a moment while files are chunked and processed...';
+    overlay.classList.remove('hidden');
+
+    // Simulate progress since we can't track actual server progress
+    let progress = 0;
+    const stages = [
+      { pct: 15, status: 'Uploading files to server...' },
+      { pct: 30, status: 'Reading file contents...' },
+      { pct: 45, status: 'Splitting into chunks...' },
+      { pct: 60, status: 'Creating memory nodes...' },
+      { pct: 75, status: 'Generating embeddings...' },
+      { pct: 85, status: 'Extracting tags...' },
+      { pct: 95, status: 'Finalizing...' }
+    ];
+    let stageIndex = 0;
+
+    progressInterval = setInterval(function() {
+      if (stageIndex < stages.length) {
+        const stage = stages[stageIndex];
+        if (progress < stage.pct) {
+          progress += 1;
+          overlayProgress.style.width = progress + '%';
+        } else {
+          overlayStatus.textContent = stage.status;
+          stageIndex++;
+        }
+      }
+    }, 200);
+  }
+
+  // File selection display for single files
+  const filesInput = document.getElementById('files');
+  const filesSelected = document.getElementById('files-selected');
+
+  if (filesInput) {
+    filesInput.addEventListener('change', function() {
+      if (this.files.length > 0) {
+        const names = Array.from(this.files).map(f => f.name);
+        if (names.length <= 3) {
+          filesSelected.textContent = 'Selected: ' + names.join(', ');
+        } else {
+          filesSelected.textContent = 'Selected: ' + names.slice(0, 3).join(', ') + ' and ' + (names.length - 3) + ' more';
+        }
+        filesSelected.classList.remove('hidden');
+      } else {
+        filesSelected.classList.add('hidden');
+      }
+    });
+  }
+
+  // File selection display for directory
+  const dirInput = document.getElementById('directory');
+  const dirSelected = document.getElementById('dir-selected');
+
+  if (dirInput) {
+    dirInput.addEventListener('change', function() {
+      if (this.files.length > 0) {
+        const mdFiles = Array.from(this.files).filter(f => /\.(md|markdown|txt)$/i.test(f.name));
+        if (mdFiles.length > 0) {
+          dirSelected.textContent = 'Found ' + mdFiles.length + ' matching file(s) in selected folder';
+        } else {
+          dirSelected.textContent = 'No markdown files found in selected folder';
+        }
+        dirSelected.classList.remove('hidden');
+      } else {
+        dirSelected.classList.add('hidden');
+      }
+    });
+  }
+
+  // Upload files form submission
+  const uploadFilesForm = document.getElementById('upload-files-form');
+  const uploadFilesBtn = document.getElementById('upload-files-btn');
+  const uploadFilesSpinner = document.getElementById('upload-files-spinner');
+  const uploadFilesText = document.getElementById('upload-files-text');
+
+  if (uploadFilesForm) {
+    uploadFilesForm.addEventListener('submit', function() {
+      const files = filesInput.files;
+      if (files.length === 0) return;
+
+      uploadFilesBtn.disabled = true;
+      uploadFilesSpinner.classList.remove('hidden');
+      uploadFilesText.textContent = 'Processing...';
+      showOverlay('Uploading Files...', files.length);
+    });
+  }
+
+  // Upload directory form submission
+  const uploadDirForm = document.getElementById('upload-dir-form');
+  const uploadDirBtn = document.getElementById('upload-dir-btn');
+  const uploadDirSpinner = document.getElementById('upload-dir-spinner');
+  const uploadDirText = document.getElementById('upload-dir-text');
+
+  if (uploadDirForm) {
+    uploadDirForm.addEventListener('submit', function() {
+      const files = dirInput.files;
+      const mdFiles = Array.from(files).filter(f => /\.(md|markdown|txt)$/i.test(f.name));
+      if (mdFiles.length === 0) return;
+
+      uploadDirBtn.disabled = true;
+      uploadDirSpinner.classList.remove('hidden');
+      uploadDirText.textContent = 'Processing...';
+      showOverlay('Uploading Directory...', mdFiles.length);
+    });
+  }
+});
+</script>

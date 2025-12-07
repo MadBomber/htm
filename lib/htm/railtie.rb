@@ -68,9 +68,5 @@ class HTM
       end
     end
 
-    # Add generators path
-    config.generators do |g|
-      g.templates.unshift File.expand_path('../generators/templates', __dir__)
-    end
   end
 end

@@ -1,0 +1,15 @@
+# Rails app database (not used - HTM uses its own database)
+# This is required for Rails to boot but can be sqlite/memory
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+
+development:
+  <<: *default
+  database: htm_rails_example_dev
+
+test:
+  <<: *default
+  database: htm_rails_example_test

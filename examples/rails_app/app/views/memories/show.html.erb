@@ -1,0 +1,126 @@
+<div class="space-y-6">
+  <!-- Back link -->
+  <div>
+    <%= link_to memories_path, class: 'inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors' do %>
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Memories
+    <% end %>
+  </div>
+
+  <!-- Memory Detail -->
+  <div class="rounded-lg bg-gray-800 border border-gray-700 overflow-hidden">
+    <div class="p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1">
+          <% if @memory.deleted? %>
+            <div class="mb-4 rounded-md bg-red-900/50 border border-red-500/50 p-3">
+              <p class="text-sm text-red-400">This memory is in trash. Deleted <%= time_ago_in_words(@memory.deleted_at) %> ago.</p>
+            </div>
+          <% end %>
+
+          <p class="text-lg text-gray-200 whitespace-pre-wrap"><%= @memory.content %></p>
+
+          <% if @memory.tags.any? %>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <% @memory.tags.each do |tag| %>
+                <%= link_to memories_path(tag: tag.name), class: 'inline-flex items-center rounded-full bg-indigo-900/50 border border-indigo-500/30 px-3 py-1 text-sm text-indigo-300 hover:bg-indigo-800/50 transition-colors' do %>
+                  <%= tag.name %>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <% if @memory.deleted? %>
+            <%= button_to restore_memory_path(@memory), method: :post, class: 'inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-500 transition-colors' do %>
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Restore
+            <% end %>
+            <%= button_to memory_path(@memory, permanent: true), method: :delete, class: 'inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-500 transition-colors', data: { turbo_confirm: 'Permanently delete this memory? This cannot be undone!' } do %>
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete Forever
+            <% end %>
+          <% else %>
+            <%= link_to edit_memory_path(@memory), class: 'inline-flex items-center gap-2 rounded-md bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors' do %>
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            <% end %>
+            <%= button_to memory_path(@memory), method: :delete, class: 'inline-flex items-center gap-2 rounded-md bg-red-600/80 px-3 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors', data: { turbo_confirm: 'Move this memory to trash?' } do %>
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="border-t border-gray-700 bg-gray-800/50 px-6 py-4">
+      <dl class="grid grid-cols-2 gap-4 sm:grid-cols-4 text-sm">
+        <div>
+          <dt class="text-gray-500">ID</dt>
+          <dd class="mt-1 text-gray-300 font-mono"><%= @memory.id %></dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">Created</dt>
+          <dd class="mt-1 text-gray-300"><%= @memory.created_at.strftime('%Y-%m-%d %H:%M') %></dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">Embedding</dt>
+          <dd class="mt-1">
+            <% if @memory.embedding.present? %>
+              <span class="inline-flex items-center gap-1 text-green-400">
+                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                <%= @memory.embedding.is_a?(Array) ? @memory.embedding.size : 'N/A' %> dimensions
+              </span>
+            <% else %>
+              <span class="inline-flex items-center gap-1 text-yellow-400">
+                <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                Pending
+              </span>
+            <% end %>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-gray-500">Content Hash</dt>
+          <dd class="mt-1 text-gray-300 font-mono text-xs truncate" title="<%= @memory.content_hash %>"><%= @memory.content_hash&.first(12) %>...</dd>
+        </div>
+      </dl>
+
+      <% if @memory.metadata.present? && @memory.metadata.any? %>
+        <div class="mt-4 pt-4 border-t border-gray-700">
+          <dt class="text-gray-500 text-sm mb-2">Metadata</dt>
+          <dd class="rounded-md bg-gray-900 p-3">
+            <pre class="text-xs text-gray-300 overflow-x-auto"><%= JSON.pretty_generate(@memory.metadata) %></pre>
+          </dd>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Related Memories -->
+  <% if @related.any? %>
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+      <h2 class="text-lg font-medium text-white mb-4">Related Memories</h2>
+      <div class="space-y-3">
+        <% @related.each do |memory| %>
+          <%= link_to memory_path(memory['id']), class: 'block rounded-md bg-gray-700/50 p-3 hover:bg-gray-700 transition-colors' do %>
+            <p class="text-sm text-gray-300 line-clamp-2"><%= memory['content'] %></p>
+            <p class="mt-1 text-xs text-gray-500"><%= time_ago_in_words(memory['created_at'].is_a?(Time) ? memory['created_at'] : Time.parse(memory['created_at'].to_s)) %> ago</p>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

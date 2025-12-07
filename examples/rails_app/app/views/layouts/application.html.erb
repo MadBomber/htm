@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-900">
+<head>
+  <title>HTM Memory Explorer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="turbo-cache-control" content="no-preview">
+  <meta name="turbo-refresh-method" content="morph">
+  <meta name="turbo-refresh-scroll" content="preserve">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <%# Tailwind CSS via CDN - perfect for demo apps %>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            htm: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+          },
+        },
+      },
+    }
+  </script>
+
+  <%# Google Fonts %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+
+  <%# Hotwire via CDN - no build step needed %>
+  <script type="module">
+    import * as Turbo from 'https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.12/+esm'
+
+    // Live reload: auto-refresh every 3 seconds using Turbo morphing
+    // This preserves scroll position and smoothly updates only changed elements
+    let autoRefreshEnabled = true;
+    let formFieldFocused = false;
+    let refreshInterval = 3000;
+
+    function autoRefresh() {
+      // Don't refresh if form field is focused (would interrupt typing)
+      if (autoRefreshEnabled && document.visibilityState === 'visible' && !formFieldFocused) {
+        Turbo.visit(window.location.href, { action: 'replace' });
+      }
+    }
+
+    // Start auto-refresh after page loads
+    document.addEventListener('turbo:load', () => {
+      setInterval(autoRefresh, refreshInterval);
+
+      // Pause refresh when any form field is focused
+      document.addEventListener('focusin', (e) => {
+        if (e.target.matches('input, textarea, select')) {
+          formFieldFocused = true;
+        }
+      });
+
+      document.addEventListener('focusout', (e) => {
+        if (e.target.matches('input, textarea, select')) {
+          formFieldFocused = false;
+        }
+      });
+    });
+
+    // Pause refresh when page is hidden
+    document.addEventListener('visibilitychange', () => {
+      // Refresh immediately when tab becomes visible again
+      if (document.visibilityState === 'visible') {
+        autoRefresh();
+      }
+    });
+
+    // Allow toggling from console: window.toggleAutoRefresh()
+    window.toggleAutoRefresh = () => {
+      autoRefreshEnabled = !autoRefreshEnabled;
+      console.log('Auto-refresh:', autoRefreshEnabled ? 'ON' : 'OFF');
+      return autoRefreshEnabled;
+    };
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+
+<body class="h-full bg-gray-900 text-gray-100">
+  <div class="min-h-full">
+    <%= render 'shared/navbar' %>
+
+    <main class="py-6">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <% if flash[:notice] %>
+          <div class="mb-4 rounded-md bg-green-900/50 border border-green-500/50 p-4">
+            <p class="text-sm text-green-400"><%= flash[:notice] %></p>
+          </div>
+        <% end %>
+        <% if flash[:alert] %>
+          <div class="mb-4 rounded-md bg-red-900/50 border border-red-500/50 p-4">
+            <p class="text-sm text-red-400"><%= flash[:alert] %></p>
+          </div>
+        <% end %>
+
+        <%= yield %>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

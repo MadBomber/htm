@@ -1,0 +1,62 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Trash</h1>
+      <p class="mt-1 text-sm text-gray-400">Deleted memories that can be restored</p>
+    </div>
+    <%= link_to memories_path, class: 'inline-flex items-center gap-2 rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors' do %>
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Memories
+    <% end %>
+  </div>
+
+  <!-- Deleted Memories List -->
+  <% if @memories.any? %>
+    <div class="space-y-4">
+      <% @memories.each do |memory| %>
+        <div class="rounded-lg bg-gray-800 border border-red-900/50 p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <%= link_to memory_path(memory), class: 'block group' do %>
+                <p class="text-sm text-gray-400 group-hover:text-gray-300 transition-colors line-clamp-3">
+                  <%= memory.content %>
+                </p>
+              <% end %>
+
+              <div class="mt-3 flex items-center gap-4 text-xs text-gray-500">
+                <span>Deleted <%= time_ago_in_words(memory.deleted_at) %> ago</span>
+                <span>Created <%= time_ago_in_words(memory.created_at) %> ago</span>
+              </div>
+            </div>
+
+            <div class="flex-shrink-0 flex items-center gap-2">
+              <%= button_to restore_memory_path(memory), method: :post, class: 'inline-flex items-center gap-1 rounded-md bg-green-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-600 transition-colors' do %>
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Restore
+              <% end %>
+              <%= button_to memory_path(memory, permanent: true), method: :delete, class: 'inline-flex items-center gap-1 rounded-md bg-red-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 transition-colors', data: { turbo_confirm: 'Permanently delete? This cannot be undone!' } do %>
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Delete Forever
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-8 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+      <h3 class="mt-4 text-lg font-medium text-white">Trash is empty</h3>
+      <p class="mt-2 text-sm text-gray-400">Deleted memories will appear here.</p>
+    </div>
+  <% end %>
+</div>

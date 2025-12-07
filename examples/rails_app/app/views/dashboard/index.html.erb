@@ -1,0 +1,123 @@
+<div class="space-y-8">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-white">HTM Memory Explorer</h1>
+    <p class="mt-1 text-sm text-gray-400">Monitor and explore your Hierarchical Temporal Memory system</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <%= render 'shared/stat_card', title: 'Total Memories', value: @stats[:total_nodes], icon: 'memory', color: 'indigo' %>
+    <%= render 'shared/stat_card', title: 'With Embeddings', value: @stats[:nodes_with_embeddings], icon: 'vector', color: 'green' %>
+    <%= render 'shared/stat_card', title: 'Deleted', value: @stats[:deleted_nodes], icon: 'trash', color: 'red' %>
+    <%= render 'shared/stat_card', title: 'Tags', value: @stats[:total_tags], icon: 'tag', color: 'yellow' %>
+    <%= render 'shared/stat_card', title: 'Robots', value: @stats[:total_robots], icon: 'robot', color: 'purple' %>
+    <%= render 'shared/stat_card', title: 'File Sources', value: @stats[:total_file_sources], icon: 'file', color: 'blue' %>
+  </div>
+
+  <!-- Two Column Layout -->
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <!-- Recent Memories -->
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-medium text-white">Recent Memories</h2>
+        <%= link_to 'View All', memories_path, class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
+      </div>
+      <% if @recent_memories.any? %>
+        <ul class="space-y-3">
+          <% @recent_memories.each do |memory| %>
+            <li class="rounded-md bg-gray-700/50 p-3">
+              <p class="text-sm text-gray-300 line-clamp-2"><%= truncate(memory.content, length: 120) %></p>
+              <div class="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                <span><%= time_ago_in_words(memory.created_at) %> ago</span>
+                <% if memory.embedding.present? %>
+                  <span class="inline-flex items-center rounded-full bg-green-900/50 px-2 py-0.5 text-xs text-green-400">embedded</span>
+                <% end %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="text-sm text-gray-500">No memories stored yet. <%= link_to 'Add one', new_memory_path, class: 'text-indigo-400 hover:text-indigo-300' %>.</p>
+      <% end %>
+    </div>
+
+    <!-- Top Tags -->
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-medium text-white">Top Tags</h2>
+        <%= link_to 'View All', tags_path, class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
+      </div>
+      <% if @top_tags.any? %>
+        <div class="flex flex-wrap gap-2">
+          <% @top_tags.each do |tag| %>
+            <%= link_to tag_path(tag), class: 'group' do %>
+              <span class="inline-flex items-center gap-1 rounded-full bg-indigo-900/50 border border-indigo-500/30 px-3 py-1 text-sm text-indigo-300 hover:bg-indigo-800/50 hover:border-indigo-500/50 transition-colors">
+                <%= tag.name %>
+                <span class="text-xs text-indigo-400/70">(<%= tag.node_count %>)</span>
+              </span>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-500">No tags created yet.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Robots Section -->
+  <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-medium text-white">Active Robots</h2>
+      <%= link_to 'View All', robots_path, class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
+    </div>
+    <% if @robots.any? %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <% @robots.each do |robot| %>
+          <%= link_to robot_path(robot), class: 'block rounded-md bg-gray-700/50 p-4 hover:bg-gray-700 transition-colors' do %>
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0">
+                <div class="h-10 w-10 rounded-full bg-purple-900/50 flex items-center justify-center">
+                  <svg class="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-white"><%= robot.name %></p>
+                <p class="text-xs text-gray-500">Created <%= time_ago_in_words(robot.created_at) %> ago</p>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-500">No robots registered yet.</p>
+    <% end %>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+    <h2 class="text-lg font-medium text-white mb-4">Quick Actions</h2>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to new_memory_path, class: 'inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors' do %>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Memory
+      <% end %>
+      <%= link_to search_path, class: 'inline-flex items-center gap-2 rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors' do %>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        Search Memories
+      <% end %>
+      <%= link_to tags_path(view: 'tree'), class: 'inline-flex items-center gap-2 rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors' do %>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+        View Tag Tree
+      <% end %>
+    </div>
+  </div>
+</div>

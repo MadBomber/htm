@@ -1,0 +1,106 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Robots</h1>
+      <p class="mt-1 text-sm text-gray-400">Manage LLM agents in the hive mind</p>
+    </div>
+    <%= link_to new_robot_path, class: 'inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors' do %>
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      New Robot
+    <% end %>
+  </div>
+
+  <!-- Info Box -->
+  <div class="rounded-lg bg-indigo-900/30 border border-indigo-500/30 p-4">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-indigo-300">
+          <strong>Hive Mind Architecture:</strong> All robots share the same global memory store. Each robot can access memories created by any other robot, enabling collaborative knowledge sharing across agents.
+        </p>
+        <p class="text-sm text-indigo-300/70 mt-2">
+          <strong>Set as Active:</strong> Changes which robot is shown in the header. New memories you create will be associated with the active robot.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Current Robot -->
+  <div class="rounded-lg bg-gray-800 border border-gray-700 p-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-purple-900/50 flex items-center justify-center">
+          <svg class="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm text-gray-400">Currently active</p>
+          <p class="text-lg font-medium text-white"><%= current_robot_name %></p>
+        </div>
+      </div>
+      <span class="inline-flex items-center gap-1 rounded-full bg-green-900/50 border border-green-500/30 px-3 py-1 text-sm text-green-400">
+        <svg class="h-2 w-2" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+        Active
+      </span>
+    </div>
+  </div>
+
+  <!-- Robots List -->
+  <% if @robots.any? %>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <% @robots.each do |robot| %>
+        <div class="rounded-lg bg-gray-800 border border-gray-700 p-5 hover:border-gray-600 transition-colors">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-12 w-12 rounded-full bg-purple-900/50 flex items-center justify-center">
+                <svg class="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-medium text-white"><%= robot.name %></h3>
+                <p class="text-sm text-gray-500">Created <%= time_ago_in_words(robot.created_at) %> ago</p>
+              </div>
+            </div>
+            <% if robot.name == current_robot_name %>
+              <span class="inline-flex items-center rounded-full bg-green-900/50 border border-green-500/30 px-2 py-0.5 text-xs text-green-400">
+                Active
+              </span>
+            <% end %>
+          </div>
+
+          <div class="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between">
+            <p class="text-sm text-gray-400"><%= robot.nodes.count %> memories</p>
+            <div class="flex items-center gap-2">
+              <%= link_to 'View', robot_path(robot), class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
+              <% unless robot.name == current_robot_name %>
+                <%= button_to switch_robot_path(robot), method: :post, class: 'inline-flex items-center gap-1 text-sm text-green-400 hover:text-green-300 bg-transparent border-0 cursor-pointer', title: "Switch to #{robot.name} - new memories will be created under this robot" do %>
+                  <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  Set as Active
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-8 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+      </svg>
+      <h3 class="mt-4 text-lg font-medium text-white">No robots yet</h3>
+      <p class="mt-2 text-sm text-gray-400">Robots are created automatically when you add memories.</p>
+    </div>
+  <% end %>
+</div>

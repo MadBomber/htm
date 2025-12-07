@@ -1,0 +1,71 @@
+<div class="space-y-6">
+  <!-- Back link -->
+  <div>
+    <%= link_to memories_path, class: 'inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors' do %>
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Back to Memories
+    <% end %>
+  </div>
+
+  <!-- Form -->
+  <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+    <h1 class="text-xl font-bold text-white mb-6">Add New Memory</h1>
+
+    <%= form_with url: memories_path, method: :post, class: 'space-y-6' do %>
+      <div>
+        <label for="content" class="block text-sm font-medium text-gray-300 mb-2">Content</label>
+        <textarea
+          name="content"
+          id="content"
+          rows="6"
+          required
+          placeholder="Enter the memory content..."
+          class="w-full rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
+        ></textarea>
+        <p class="mt-1 text-xs text-gray-500">The main content of the memory. Will be embedded for semantic search.</p>
+      </div>
+
+      <div>
+        <label for="tags" class="block text-sm font-medium text-gray-300 mb-2">Tags (optional)</label>
+        <input
+          type="text"
+          name="tags"
+          id="tags"
+          placeholder="database:postgresql, ai:embeddings"
+          class="w-full rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+        <p class="mt-1 text-xs text-gray-500">Comma-separated hierarchical tags. Use colons for namespaces (e.g., database:postgresql).</p>
+      </div>
+
+      <div>
+        <label for="metadata" class="block text-sm font-medium text-gray-300 mb-2">Metadata (optional)</label>
+        <textarea
+          name="metadata"
+          id="metadata"
+          rows="3"
+          placeholder='{"source": "manual", "priority": "high"}'
+          class="w-full rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 font-mono text-sm focus:ring-indigo-500 focus:border-indigo-500"
+        ></textarea>
+        <p class="mt-1 text-xs text-gray-500">Optional JSON metadata. Can be used to filter searches.</p>
+      </div>
+
+      <div class="flex items-center gap-4 pt-4 border-t border-gray-700">
+        <%= submit_tag 'Save Memory', class: 'rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 cursor-pointer transition-colors' %>
+        <%= link_to 'Cancel', memories_path, class: 'rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors' %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Tips -->
+  <div class="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+    <h3 class="text-sm font-medium text-gray-300 mb-2">Tips for good memories</h3>
+    <ul class="text-xs text-gray-400 space-y-1 list-disc list-inside">
+      <li>Be specific and self-contained - each memory should make sense on its own</li>
+      <li>Use hierarchical tags for organization (e.g., project:myapp:authentication)</li>
+      <li>Include relevant context like dates, names, and technical details</li>
+      <li>Embeddings and tags are generated asynchronously after saving</li>
+    </ul>
+  </div>
+</div>

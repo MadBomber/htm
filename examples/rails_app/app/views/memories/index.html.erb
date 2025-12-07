@@ -1,0 +1,81 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Memories</h1>
+      <p class="mt-1 text-sm text-gray-400">Browse and manage stored memories</p>
+    </div>
+    <div class="flex gap-3">
+      <%= link_to deleted_memories_path, class: 'inline-flex items-center gap-2 rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors' do %>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Trash
+      <% end %>
+      <%= link_to new_memory_path, class: 'inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors' do %>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Memory
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="rounded-lg bg-gray-800 border border-gray-700 p-4">
+    <%= form_with url: memories_path, method: :get, class: 'flex flex-wrap gap-4' do %>
+      <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs font-medium text-gray-400 mb-1">Search</label>
+        <%= text_field_tag :search, params[:search], placeholder: 'Search memories...', class: 'w-full rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm focus:ring-indigo-500 focus:border-indigo-500' %>
+      </div>
+      <div class="w-48">
+        <label class="block text-xs font-medium text-gray-400 mb-1">Filter by Tag</label>
+        <%= text_field_tag :tag, params[:tag], placeholder: 'e.g. database:postgresql', class: 'w-full rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 text-sm focus:ring-indigo-500 focus:border-indigo-500' %>
+      </div>
+      <div class="flex items-end">
+        <%= submit_tag 'Filter', class: 'rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 cursor-pointer' %>
+        <% if params[:search].present? || params[:tag].present? %>
+          <%= link_to 'Clear', memories_path, class: 'ml-2 rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600' %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Memories List -->
+  <% if @memories.any? %>
+    <div class="space-y-4">
+      <% @memories.each do |memory| %>
+        <%= render 'memory_card', memory: memory %>
+      <% end %>
+    </div>
+
+    <!-- Pagination -->
+    <% if @total_pages && @total_pages > 1 %>
+      <div class="flex justify-center gap-2">
+        <% if @page > 1 %>
+          <%= link_to "← Previous", memories_path(page: @page - 1, search: params[:search], tag: params[:tag]), class: 'rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600' %>
+        <% end %>
+        <span class="rounded-md bg-gray-800 px-4 py-2 text-sm text-gray-300">
+          Page <%= @page %> of <%= @total_pages %>
+        </span>
+        <% if @page < @total_pages %>
+          <%= link_to "Next →", memories_path(page: @page + 1, search: params[:search], tag: params[:tag]), class: 'rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white hover:bg-gray-600' %>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-8 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+      <h3 class="mt-4 text-lg font-medium text-white">No memories found</h3>
+      <p class="mt-2 text-sm text-gray-400">
+        <% if params[:search].present? || params[:tag].present? %>
+          Try adjusting your filters or <%= link_to 'clear them', memories_path, class: 'text-indigo-400 hover:text-indigo-300' %>.
+        <% else %>
+          Get started by <%= link_to 'adding a new memory', new_memory_path, class: 'text-indigo-400 hover:text-indigo-300' %>.
+        <% end %>
+      </p>
+    </div>
+  <% end %>
+</div>

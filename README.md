@@ -131,8 +131,8 @@ For MCP integration, database setup, and configuration options, see the [full do
 | **Temporal Queries** | "last week", "yesterday", date ranges |
 | **Auto-Tagging** | LLM extracts hierarchical tags automatically |
 | **Robot Groups** | High-availability with failover |
+| **Rails Integration** | Auto-configures via Railtie, uses ActiveJob |
 | **Telemetry** | Optional OpenTelemetry metrics |
-| **Rails Integration** | ActiveRecord models, follows conventions |
 
 ## Requirements
 
@@ -144,10 +144,10 @@ For MCP integration, database setup, and configuration options, see the [full do
 
 **[https://madbomber.github.io/htm](https://madbomber.github.io/htm)**
 
-- [Installation & Setup](https://madbomber.github.io/htm/setup/)
+- [Installation & Setup](https://madbomber.github.io/htm/getting-started/)
 - [MCP Server Guide](https://madbomber.github.io/htm/guides/mcp-server/)
-- [API Reference](https://madbomber.github.io/htm/api/)
 - [Rails Integration](https://madbomber.github.io/htm/guides/rails/)
+- [API Reference](https://madbomber.github.io/htm/api/)
 
 ## Why "Robots" Instead of "Agents"?
 

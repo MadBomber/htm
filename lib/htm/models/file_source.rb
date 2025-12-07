@@ -41,12 +41,14 @@ class HTM
       # - Floating-point rounding errors
       # - Minor timestamp discrepancies across systems
       #
-      # @param current_mtime [Time] Current file modification time
-      # @return [Boolean] true if file modification time differs by more than DELTA_TIME
+      # @param current_mtime [Time, nil] Current file modification time (defaults to reading from filesystem)
+      # @return [Boolean] true if file modification time differs by more than DELTA_TIME, or file doesn't exist
       #
-      def needs_sync?(current_mtime)
+      def needs_sync?(current_mtime = nil)
         return true if mtime.nil?
+        return true unless File.exist?(file_path)
 
+        current_mtime ||= File.mtime(file_path)
         (current_mtime.to_i - mtime.to_i).abs > DELTA_TIME
       end
 

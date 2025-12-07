@@ -1,0 +1,184 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-white">Semantic Search</h1>
+    <p class="mt-1 text-sm text-gray-400">Search memories using vector, full-text, or hybrid strategies</p>
+  </div>
+
+  <!-- Search Form -->
+  <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
+    <%= form_with url: search_path, method: :get, class: 'space-y-4' do %>
+      <div>
+        <label for="query" class="block text-sm font-medium text-gray-300 mb-2">Search Query</label>
+        <div class="flex gap-4">
+          <input
+            type="text"
+            name="query"
+            id="query"
+            value="<%= @query %>"
+            placeholder="Enter your search query..."
+            class="flex-1 rounded-md bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <%= submit_tag 'Search', class: 'rounded-md bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-500 cursor-pointer transition-colors' %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-700">
+        <div>
+          <label for="strategy" class="block text-xs font-medium text-gray-400 mb-1">Strategy</label>
+          <select name="strategy" id="strategy" class="w-full rounded-md bg-gray-700 border-gray-600 text-white text-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="hybrid" <%= 'selected' if @selected_strategy == :hybrid %>>Hybrid</option>
+            <option value="vector" <%= 'selected' if @selected_strategy == :vector %>>Vector (Semantic)</option>
+            <option value="fulltext" <%= 'selected' if @selected_strategy == :fulltext %>>Full-text (Keyword)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="limit" class="block text-xs font-medium text-gray-400 mb-1">Results</label>
+          <select name="limit" id="limit" class="w-full rounded-md bg-gray-700 border-gray-600 text-white text-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="5" <%= 'selected' if @limit == 5 %>>5</option>
+            <option value="10" <%= 'selected' if @limit == 10 %>>10</option>
+            <option value="20" <%= 'selected' if @limit == 20 %>>20</option>
+            <option value="50" <%= 'selected' if @limit == 50 %>>50</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="timeframe" class="block text-xs font-medium text-gray-400 mb-1">Timeframe</label>
+          <select name="timeframe" id="timeframe" class="w-full rounded-md bg-gray-700 border-gray-600 text-white text-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="all time" <%= 'selected' if @timeframe == 'all time' %>>All Time</option>
+            <option value="today" <%= 'selected' if @timeframe == 'today' %>>Today</option>
+            <option value="this week" <%= 'selected' if @timeframe == 'this week' %>>This Week</option>
+            <option value="this month" <%= 'selected' if @timeframe == 'this month' %>>This Month</option>
+            <option value="last year" <%= 'selected' if @timeframe == 'last year' %>>Last Year</option>
+          </select>
+        </div>
+
+        <div class="flex items-end">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="compare" value="true" <%= 'checked' if params[:compare] == 'true' %> class="rounded bg-gray-700 border-gray-600 text-indigo-600 focus:ring-indigo-500">
+            <span class="text-sm text-gray-300">Compare all strategies</span>
+          </label>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Strategy Explanation -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="h-2 w-2 rounded-full bg-blue-400"></div>
+        <h3 class="text-sm font-medium text-white">Vector Search</h3>
+      </div>
+      <p class="text-xs text-gray-400">Uses semantic embeddings for conceptual similarity. Best for finding related content even with different wording.</p>
+    </div>
+    <div class="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="h-2 w-2 rounded-full bg-green-400"></div>
+        <h3 class="text-sm font-medium text-white">Full-text Search</h3>
+      </div>
+      <p class="text-xs text-gray-400">Keyword matching with fuzzy trigram support. Best for exact terms, code, or specific phrases.</p>
+    </div>
+    <div class="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="h-2 w-2 rounded-full bg-purple-400"></div>
+        <h3 class="text-sm font-medium text-white">Hybrid Search</h3>
+      </div>
+      <p class="text-xs text-gray-400">Combines vector and full-text with weighted scoring. Best overall approach for general queries.</p>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <% if @query.present? %>
+    <% if params[:compare] == 'true' %>
+      <!-- Comparison View -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <% @strategies.each do |strategy| %>
+          <div class="rounded-lg bg-gray-800 border border-gray-700 overflow-hidden">
+            <div class="px-4 py-3 bg-gray-800/50 border-b border-gray-700 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="h-2 w-2 rounded-full <%= strategy == :vector ? 'bg-blue-400' : strategy == :fulltext ? 'bg-green-400' : 'bg-purple-400' %>"></div>
+                <h3 class="font-medium text-white capitalize"><%= strategy %></h3>
+              </div>
+              <span class="text-xs text-gray-400"><%= @results["#{strategy}_time".to_sym] %>ms</span>
+            </div>
+            <div class="p-4">
+              <% if @errors[strategy].present? %>
+                <div class="rounded-md bg-red-900/30 border border-red-500/30 p-3">
+                  <p class="text-sm text-red-400">Error: <%= @errors[strategy] %></p>
+                </div>
+              <% else %>
+                <% results = @results[strategy] || [] %>
+                <% if results.any? %>
+                  <ul class="space-y-3">
+                    <% results.each_with_index do |memory, i| %>
+                      <li class="text-sm">
+                        <span class="text-gray-500 font-mono text-xs"><%= i + 1 %>.</span>
+                        <%= link_to memory_path(memory['id']), class: 'text-gray-300 hover:text-white line-clamp-2' do %>
+                          <%= truncate(memory['content'], length: 80) %>
+                        <% end %>
+                      </li>
+                    <% end %>
+                  </ul>
+                <% else %>
+                  <p class="text-sm text-gray-500">No results</p>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <!-- Single Strategy Results -->
+      <div class="rounded-lg bg-gray-800 border border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 bg-gray-800/50 border-b border-gray-700 flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-medium text-white">Results</h2>
+            <p class="text-sm text-gray-400">
+              <%= (@results[@selected_strategy] || []).length %> results using <span class="capitalize"><%= @selected_strategy %></span> strategy
+            </p>
+          </div>
+          <span class="text-sm text-gray-400"><%= @results["#{@selected_strategy}_time".to_sym] %>ms</span>
+        </div>
+
+        <% results = @results[@selected_strategy] || [] %>
+        <% if results.any? %>
+          <ul class="divide-y divide-gray-700">
+            <% results.each_with_index do |memory, i| %>
+              <li class="p-4 hover:bg-gray-700/50 transition-colors">
+                <div class="flex items-start gap-4">
+                  <span class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs text-gray-400 font-mono">
+                    <%= i + 1 %>
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <%= link_to memory_path(memory['id']), class: 'block group' do %>
+                      <p class="text-sm text-gray-300 group-hover:text-white transition-colors">
+                        <%= memory['content'] %>
+                      </p>
+                    <% end %>
+                    <div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                      <span class="font-mono text-gray-600">#<%= memory['id'] %></span>
+                      <span><%= time_ago_in_words(memory['created_at'].is_a?(Time) ? memory['created_at'] : Time.parse(memory['created_at'].to_s)) %> ago</span>
+                      <% if memory['rank'] %>
+                        <span>Rank: <%= memory['rank'].to_f.round(4) %></span>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="p-8 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <h3 class="mt-4 text-lg font-medium text-white">No results found</h3>
+            <p class="mt-2 text-sm text-gray-400">Try a different query or adjust the timeframe.</p>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

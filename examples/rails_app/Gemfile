@@ -1,0 +1,22 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+# Rails - full-stack setup
+gem 'rails', '~> 7.1'
+gem 'puma', '~> 6.0'
+
+# HTM (use local development version)
+gem 'htm', path: '../..'
+
+# PostgreSQL (required for HTM)
+gem 'pg', '~> 1.5'
+
+# Frontend - using CDN for Tailwind and Hotwire (no build step)
+gem 'propshaft'                    # Asset pipeline for CSS/images
+# Pagination uses simple offset/limit (no Kaminari needed)
+
+group :development do
+  gem 'debug_me'
+  gem 'web-console'
+end
