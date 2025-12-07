@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Rails demo application** - Full-featured web UI for exploring HTM capabilities
+  - Located in `examples/rails_app/` - minimal Rails 7.2 application
+  - **Dashboard** - Overview of memories, robots, tags, and files with quick stats
+  - **Memories** - Browse, create, edit, delete, and restore memories with tag filtering
+  - **Search** - Semantic search with vector/fulltext/hybrid strategies and strategy comparison mode
+  - **Tags** - Hierarchical tag browser with memory counts
+  - **Robots** - View robots, switch active robot, see memory associations
+  - **Files** - Load markdown files via path or native file picker, directory uploads, sync tracking
+  - Dark theme UI using Tailwind CSS
+  - Upload progress overlay with stage indicators
+  - Error handling with graceful degradation for search failures
+- **FileSource#needs_sync? default argument** - Now works without argument by reading file mtime from filesystem
 - **RobotGroup MCP tools** - 12 new tools for high-availability robot coordination
   - `CreateGroupTool` - Create a new robot group with shared working memory
   - `ListGroupsTool` - List all active robot groups in the session
