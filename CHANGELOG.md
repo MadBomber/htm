@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.17] - 2025-12-18
 
 ### Added
+- **HTM_ENV environment variable** - Non-Rails users can now use `HTM_ENV` instead of `RAILS_ENV`
+  - Priority: `HTM_ENV` > `RAILS_ENV` > `RACK_ENV` > `'development'`
+  - `HTM.env` returns the current environment name
+  - `HTM.test?`, `HTM.development?`, `HTM.production?` helper methods
+  - Example: `HTM_ENV=test htm_mcp setup`
 - **MCP CLI subcommands** - `bin/htm_mcp` now supports multiple commands for database management
   - `htm_mcp setup` / `htm_mcp init` - Initialize database schema
   - `htm_mcp verify` - Verify database connection, extensions, and migration status

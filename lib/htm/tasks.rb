@@ -8,7 +8,7 @@
 #
 # This will make the following tasks available:
 #
-# Database tasks (all respect RAILS_ENV, default: development):
+# Database tasks (all respect HTM_ENV/RAILS_ENV, default: development):
 #   rake htm:db:create     # Create database if it doesn't exist
 #   rake htm:db:setup      # Set up HTM database schema and run migrations
 #   rake htm:db:migrate    # Run pending database migrations
@@ -20,10 +20,13 @@
 #   rake htm:db:drop       # Drop all HTM tables (destructive!)
 #   rake htm:db:reset      # Drop and recreate database (destructive!)
 #
+# Environment detection priority: HTM_ENV > RAILS_ENV > RACK_ENV > 'development'
+#
 # Examples:
-#   RAILS_ENV=test rake htm:db:create   # Create htm_test database
-#   RAILS_ENV=test rake htm:db:setup    # Setup test database with migrations
-#   RAILS_ENV=test rake htm:db:drop     # Drop test database
+#   HTM_ENV=test rake htm:db:create    # Create htm_test database
+#   HTM_ENV=test rake htm:db:setup     # Setup test database with migrations
+#   HTM_ENV=test rake htm:db:drop      # Drop test database
+#   RAILS_ENV=test rake htm:db:create  # Also works (for Rails apps)
 #
 # Async job tasks:
 #   rake htm:jobs:stats              # Show async job statistics

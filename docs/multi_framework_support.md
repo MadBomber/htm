@@ -131,8 +131,8 @@ node_id = htm.remember("text")  # ~15ms
 HTM automatically detects the appropriate backend:
 
 ```ruby
-# Test environment → :inline
-ENV['RAILS_ENV'] = 'test'
+# Test environment → :inline (uses HTM.env which checks HTM_ENV > RAILS_ENV > RACK_ENV)
+ENV['HTM_ENV'] = 'test'
 HTM.configuration.job_backend  # => :inline
 
 # Rails app → :active_job

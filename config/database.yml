@@ -9,15 +9,18 @@
 # Example HTM_DBURL format:
 #   postgresql://user:password@host:port/database?sslmode=require
 #
+# Environment detection priority:
+#   HTM_ENV > RAILS_ENV > RACK_ENV > 'development'
+#
 # Test database:
-#   Tests always use htm_test database (Rails convention).
-#   Set RAILS_ENV=test or RACK_ENV=test to use the test configuration.
+#   Tests always use htm_test database.
+#   Set HTM_ENV=test (or RAILS_ENV=test) to use the test configuration.
 
 <%
   require 'uri'
 
-  # Determine current environment
-  current_env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+  # Determine current environment (HTM_ENV takes priority for non-Rails users)
+  current_env = ENV['HTM_ENV'] || ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
 
   # Parse connection from HTM_DBURL or use individual variables
   if ENV['HTM_DBURL']

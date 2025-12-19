@@ -329,8 +329,7 @@ class HTM
       end
 
       # Detect test environment - use inline for synchronous execution
-      test_env = ENV['RACK_ENV'] == 'test' || ENV['RAILS_ENV'] == 'test' || ENV['APP_ENV'] == 'test'
-      return :inline if test_env
+      return :inline if HTM.test?
 
       # Detect Rails - prefer ActiveJob
       if defined?(ActiveJob)
@@ -681,6 +680,40 @@ class HTM
 
   class << self
     attr_writer :configuration
+
+    # Get current environment
+    #
+    # Priority: HTM_ENV > RAILS_ENV > RACK_ENV > 'development'
+    #
+    # @return [String] Current environment name
+    #
+    def env
+      ENV['HTM_ENV'] || ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+    end
+
+    # Check if running in test environment
+    #
+    # @return [Boolean]
+    #
+    def test?
+      env == 'test'
+    end
+
+    # Check if running in development environment
+    #
+    # @return [Boolean]
+    #
+    def development?
+      env == 'development'
+    end
+
+    # Check if running in production environment
+    #
+    # @return [Boolean]
+    #
+    def production?
+      env == 'production'
+    end
 
     # Get current configuration
     #

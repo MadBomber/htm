@@ -114,8 +114,7 @@ class HTM
         config = db_url ? parse_connection_url(db_url) : default_config
         raise "Database configuration not found" unless config
 
-        env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
-        puts "Environment: #{env}"
+        puts "Environment: #{HTM.env}"
         puts "Database: #{config[:dbname]}"
 
         conn = PG.connect(config)
@@ -369,16 +368,14 @@ class HTM
         config = db_url ? parse_connection_url(db_url) : default_config
         raise "Database configuration not found" unless config
 
-        env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
-
         conn = PG.connect(config)
 
-        puts "\nHTM Database Information (#{env})"
+        puts "\nHTM Database Information (#{HTM.env})"
         puts "=" * 80
 
         # Connection info
         puts "\nConnection:"
-        puts "  Environment: #{env}"
+        puts "  Environment: #{HTM.env}"
         puts "  Host: #{config[:host]}"
         puts "  Port: #{config[:port]}"
         puts "  Database: #{config[:dbname]}"

@@ -68,14 +68,13 @@ namespace :htm do
       end
     end
 
-    desc "Verify database connection (respects RAILS_ENV)"
+    desc "Verify database connection (respects HTM_ENV/RAILS_ENV)"
     task :verify do
       require 'htm'
 
-      env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
       config = HTM::ActiveRecordConfig.load_database_config
 
-      puts "Verifying HTM database connection (#{env})..."
+      puts "Verifying HTM database connection (#{HTM.env})..."
       puts "  Host: #{config[:host]}"
       puts "  Port: #{config[:port]}"
       puts "  Database: #{config[:database]}"
@@ -107,14 +106,13 @@ namespace :htm do
       end
     end
 
-    desc "Open PostgreSQL console (respects RAILS_ENV)"
+    desc "Open PostgreSQL console (respects HTM_ENV/RAILS_ENV)"
     task :console do
       require 'htm'
 
-      env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
       config = HTM::ActiveRecordConfig.load_database_config
 
-      puts "Connecting to #{config[:database]} (#{env})..."
+      puts "Connecting to #{config[:database]} (#{HTM.env})..."
       exec "psql", "-h", config[:host],
                    "-p", config[:port].to_s,
                    "-U", config[:username],
@@ -416,15 +414,14 @@ namespace :htm do
       end
     end
 
-    desc "Create database if it doesn't exist (respects RAILS_ENV)"
+    desc "Create database if it doesn't exist (respects HTM_ENV/RAILS_ENV)"
     task :create do
       require 'htm'
 
-      env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
       config = HTM::ActiveRecordConfig.load_database_config
       db_name = config[:database]
 
-      puts "Creating database: #{db_name} (#{env})"
+      puts "Creating database: #{db_name} (#{HTM.env})"
 
       admin_config = config.dup
       admin_config[:database] = 'postgres'

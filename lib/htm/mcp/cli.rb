@@ -24,6 +24,10 @@ class HTM
 
           ENVIRONMENT VARIABLES:
 
+            Environment:
+              HTM_ENV                       Environment name: development, test, production
+                                            (priority: HTM_ENV > RAILS_ENV > RACK_ENV > 'development')
+
             Database (required):
               HTM_DBURL                     PostgreSQL connection URL
                                             Example: postgresql://user:pass@localhost:5432/htm_development
@@ -74,11 +78,15 @@ class HTM
 
           EXAMPLES:
             # First-time setup
-            export HTM_DBURL="postgresql://postgres@localhost:5432/htm_development"
+            export HTM_DBURL="postgresql://postgres@localhost:5432/htm"
             htm_mcp setup
 
             # Verify connection
             htm_mcp verify
+
+            # Use test database
+            HTM_ENV=test htm_mcp setup
+            HTM_ENV=test htm_mcp stats
 
             # Start MCP server (for Claude Desktop)
             htm_mcp

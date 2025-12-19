@@ -37,14 +37,11 @@ class HTM
         erb_content = ERB.new(File.read(config_path)).result
         db_config = YAML.safe_load(erb_content, aliases: true)
 
-        # Determine environment
-        env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
-
         # Get configuration for current environment
-        config = db_config[env]
+        config = db_config[HTM.env]
 
         unless config
-          raise "No database configuration found for environment: #{env}"
+          raise "No database configuration found for environment: #{HTM.env}"
         end
 
         # Convert string keys to symbols for ActiveRecord
