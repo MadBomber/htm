@@ -4,7 +4,7 @@ HTM includes a Model Context Protocol (MCP) server that exposes memory capabilit
 
 ## Overview
 
-The MCP server (`bin/htm_mcp.rb`) uses [FastMCP](https://github.com/yjacket/fast-mcp) to expose HTM's memory operations as MCP tools and resources. Any MCP-compatible client can connect to the server and use HTM's memory capabilities.
+The MCP server (`bin/htm_mcp`) uses [FastMCP](https://github.com/yjacket/fast-mcp) to expose HTM's memory operations as MCP tools and resources. Any MCP-compatible client can connect to the server and use HTM's memory capabilities.
 
 ### Key Features
 
@@ -27,7 +27,7 @@ Before using the MCP server, ensure you have:
 2. **PostgreSQL database set up**
    ```bash
    export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
-   rake htm:db:setup
+   htm_mcp setup
    ```
 
 3. **Ollama running** (for embeddings and tag extraction)
@@ -39,13 +39,59 @@ Before using the MCP server, ensure you have:
 
 ## Starting the Server
 
-The MCP server uses STDIO transport which is compatible with most MCP clients.  When you do a `gem install htm` the htm_mcp.rb executable is placed on your $PATH.
+The MCP server uses STDIO transport which is compatible with most MCP clients. When you do a `gem install htm`, the `htm_mcp` executable is placed on your $PATH.
 
 ```bash
-htm_mcp.rb
+htm_mcp
 ```
 
 The server logs to STDERR to avoid corrupting the JSON-RPC protocol on STDOUT.
+
+## CLI Commands
+
+The `htm_mcp` executable includes management commands for database setup and diagnostics:
+
+| Command | Description |
+|---------|-------------|
+| `htm_mcp` | Start the MCP server (default) |
+| `htm_mcp server` | Start the MCP server (explicit) |
+| `htm_mcp setup` | Initialize database schema and run migrations |
+| `htm_mcp init` | Alias for setup |
+| `htm_mcp verify` | Verify database connection, extensions, and migration status |
+| `htm_mcp stats` | Show memory statistics (nodes, tags, robots, database size) |
+| `htm_mcp version` | Show HTM version |
+| `htm_mcp help` | Show help with all environment variables |
+
+### First-Time Setup
+
+```bash
+# Set your database URL
+export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
+
+# Initialize the database
+htm_mcp setup
+
+# Verify everything is working
+htm_mcp verify
+
+# Check memory statistics
+htm_mcp stats
+```
+
+### Migration Status
+
+The `verify` command shows migration status with `+` (applied) and `-` (pending) indicators:
+
+```
+Migration Status
+--------------------------------------------------------------------------------
+  + 20250101000001_create_schema_migrations
+  + 20250101000002_create_robots
+  + 20250101000003_create_nodes
+  - 20250612000001_add_new_feature
+--------------------------------------------------------------------------------
+  3 applied, 1 pending
+```
 
 ## Tools Reference
 
@@ -697,8 +743,22 @@ Add to `~/.config/claude/claude_desktop_config.json` (Linux/macOS) or `%APPDATA%
 {
   "mcpServers": {
     "htm-memory": {
-      "command": "ruby",
-      "args": ["/absolute/path/to/htm/bin/htm_mcp.rb"],
+      "command": "htm_mcp",
+      "env": {
+        "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
+      }
+    }
+  }
+}
+```
+
+If `htm_mcp` is not in your PATH, use the absolute path:
+
+```json
+{
+  "mcpServers": {
+    "htm-memory": {
+      "command": "/path/to/htm_mcp",
       "env": {
         "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
       }
@@ -720,8 +780,7 @@ Add to `~/.claude/claude_code_config.json`:
 {
   "mcpServers": {
     "htm-memory": {
-      "command": "ruby",
-      "args": ["/absolute/path/to/htm/bin/htm_mcp.rb"],
+      "command": "htm_mcp",
       "env": {
         "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
       }
@@ -751,9 +810,7 @@ Add to `~/.config/aia/config.yml`:
 ```yaml
 mcp_servers:
   htm-memory:
-    command: ruby
-    args:
-      - /absolute/path/to/htm/bin/htm_mcp.rb
+    command: htm_mcp
     env:
       HTM_DBURL: postgresql://user@localhost:5432/htm_development
 ```
@@ -763,9 +820,7 @@ For project-specific configuration, add to `.aia/config.yml` in your project roo
 ```yaml
 mcp_servers:
   htm-memory:
-    command: ruby
-    args:
-      - /absolute/path/to/htm/bin/htm_mcp.rb
+    command: htm_mcp
     env:
       HTM_DBURL: postgresql://user@localhost:5432/my_project_htm
 ```
@@ -920,7 +975,7 @@ psql htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
 **Claude Desktop doesn't show HTM tools:**
 1. Verify the config file path is correct for your OS
-2. Check that the path to `htm_mcp.rb` is absolute
+2. Check that `htm_mcp` is in your PATH or use an absolute path
 3. Restart Claude Desktop completely
 4. Check Claude Desktop logs for errors
 
@@ -943,18 +998,51 @@ psql htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
 Enable verbose logging by checking STDERR output:
 ```bash
-ruby bin/htm_mcp.rb 2>&1 | tee mcp_debug.log
+htm_mcp 2>&1 | tee mcp_debug.log
 ```
 
 The server logs all tool calls and errors to STDERR.
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `HTM_DBURL` | PostgreSQL connection URL | Yes |
-| `OLLAMA_URL` | Ollama server URL (default: `http://localhost:11434`) | No |
-| `HTM_ROBOT_NAME` | Default robot name for clients | No |
+Run `htm_mcp help` for a complete list. Key variables:
+
+### Database (required)
+
+| Variable | Description |
+|----------|-------------|
+| `HTM_DBURL` | PostgreSQL connection URL (e.g., `postgresql://user:pass@localhost:5432/htm_development`) |
+
+### Database (alternative to HTM_DBURL)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `HTM_DBNAME` | Database name | - |
+| `HTM_DBHOST` | Database host | `localhost` |
+| `HTM_DBPORT` | Database port | `5432` |
+| `HTM_DBUSER` | Database username | - |
+| `HTM_DBPASS` | Database password | - |
+| `HTM_DBSSLMODE` | SSL mode | `prefer` |
+
+### LLM Providers
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `HTM_EMBEDDING_PROVIDER` | Embedding provider | `ollama` |
+| `HTM_EMBEDDING_MODEL` | Embedding model | `nomic-embed-text:latest` |
+| `HTM_TAG_PROVIDER` | Tag extraction provider | `ollama` |
+| `HTM_TAG_MODEL` | Tag model | `gemma3:latest` |
+| `HTM_OLLAMA_URL` | Ollama server URL | `http://localhost:11434` |
+
+### Other Providers (set API keys as needed)
+
+| Variable | Description |
+|----------|-------------|
+| `HTM_OPENAI_API_KEY` | OpenAI API key |
+| `HTM_ANTHROPIC_API_KEY` | Anthropic API key |
+| `HTM_GEMINI_API_KEY` | Google Gemini API key |
+| `HTM_AZURE_API_KEY` | Azure OpenAI API key |
+| `HTM_AZURE_ENDPOINT` | Azure OpenAI endpoint |
 
 ## Next Steps
 

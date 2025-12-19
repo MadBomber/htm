@@ -232,7 +232,17 @@ export OLLAMA_URL="http://custom-host:11434"
 
 Run the database setup to create HTM's tables and schema:
 
-### Option A: Using Ruby
+### Option A: Using htm_mcp CLI (Recommended)
+
+```bash
+# Initialize the database schema
+htm_mcp setup
+
+# Verify the setup
+htm_mcp verify
+```
+
+### Option B: Using Ruby
 
 ```ruby
 require 'htm'
@@ -241,28 +251,38 @@ require 'htm'
 HTM::Database.setup
 ```
 
-### Option B: Using Command Line
-
-```bash
-ruby -r ./lib/htm -e "HTM::Database.setup"
-```
-
 ### Option C: Using Rake Task (if available)
 
 ```bash
-rake db:setup
+rake htm:db:setup
 ```
 
 This creates the following tables:
 
 - **`nodes`**: Main memory storage with vector embeddings
-- **`relationships`**: Knowledge graph connections
-- **`tags`**: Flexible categorization
+- **`tags`**: Hierarchical categorization
 - **`robots`**: Robot registry
-- **`operations_log`**: Audit trail
+- **`file_sources`**: Source file metadata for loaded documents
 
 !!! success "Schema Created"
     You'll see confirmation messages as each table and index is created.
+
+### htm_mcp CLI Commands
+
+The `htm_mcp` executable provides commands for database management:
+
+| Command | Description |
+|---------|-------------|
+| `htm_mcp setup` | Initialize database schema |
+| `htm_mcp verify` | Verify connection, extensions, and migrations |
+| `htm_mcp stats` | Show memory statistics |
+| `htm_mcp help` | Show all commands and environment variables |
+| `htm_mcp` | Start the MCP server |
+
+```bash
+# Check statistics after setup
+htm_mcp stats
+```
 
 ## Step 6: Verify Installation
 

@@ -50,8 +50,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MCP server test suite** - 59 tests with 174 assertions covering all tools and resources
 
 ### Changed
+- **Renamed `bin/htm_mcp.rb` to `bin/htm_mcp`** - Cleaner executable name without extension
+- **MCP server refactored into modules** - Code moved from monolithic file to `lib/htm/mcp/`:
+  - `lib/htm/mcp/cli.rb` - CLI command handling
+  - `lib/htm/mcp/server.rb` - Server setup and lifecycle
+  - `lib/htm/mcp/tools.rb` - Individual MCP tools (11 tools)
+  - `lib/htm/mcp/group_tools.rb` - Robot group tools (12 tools)
+  - `lib/htm/mcp/resources.rb` - MCP resources (4 resources)
 - **README.md MCP section** - Reorganized tools by category (Session & Memory, Robot Group)
-- **docs/guides/mcp-server.md** - Comprehensive RobotGroup tools documentation with examples
+- **docs/guides/mcp-server.md** - Comprehensive RobotGroup tools documentation with examples, updated for CLI commands
 
 ### Fixed
 - **ontology_test.rb** - Added `configure_htm_with_mocks` to prevent real LLM calls during tests

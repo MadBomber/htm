@@ -38,11 +38,21 @@ HTM includes a Model Context Protocol server with 23 tools for memory management
 {
   "mcpServers": {
     "htm": {
-      "command": "htm_mcp.rb",
+      "command": "htm_mcp",
       "env": { "HTM_DBURL": "postgresql://localhost/htm" }
     }
   }
 }
+```
+
+The `htm_mcp` executable includes CLI commands for database management:
+
+```bash
+htm_mcp setup    # Initialize database schema
+htm_mcp verify   # Check connection and migrations
+htm_mcp stats    # Show memory statistics
+htm_mcp help     # Full help with environment variables
+htm_mcp          # Start MCP server (default)
 ```
 
 Now your AI assistant can remember and recall across sessions:
