@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -876,10 +876,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#option-a-using-ruby" class="md-nav__link">
+  <a href="#option-a-using-htm_mcp-cli-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option A: Using Ruby
+        Option A: Using htm_mcp CLI (Recommended)
       
     </span>
   </a>
@@ -887,10 +887,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#option-b-using-command-line" class="md-nav__link">
+  <a href="#option-b-using-ruby" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option B: Using Command Line
+        Option B: Using Ruby
       
     </span>
   </a>
@@ -902,6 +902,17 @@
     <span class="md-ellipsis">
       
         Option C: Using Rake Task (if available)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#htm_mcp-cli-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        htm_mcp CLI Commands
       
     </span>
   </a>
@@ -4920,10 +4931,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#option-a-using-ruby" class="md-nav__link">
+  <a href="#option-a-using-htm_mcp-cli-recommended" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option A: Using Ruby
+        Option A: Using htm_mcp CLI (Recommended)
       
     </span>
   </a>
@@ -4931,10 +4942,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#option-b-using-command-line" class="md-nav__link">
+  <a href="#option-b-using-ruby" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option B: Using Command Line
+        Option B: Using Ruby
       
     </span>
   </a>
@@ -4946,6 +4957,17 @@
     <span class="md-ellipsis">
       
         Option C: Using Rake Task (if available)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#htm_mcp-cli-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        htm_mcp CLI Commands
       
     </span>
   </a>
@@ -5341,84 +5363,122 @@
 </div>
 <h2 id="step-5-initialize-htm-database-schema">Step 5: Initialize HTM Database Schema<a class="headerlink" href="#step-5-initialize-htm-database-schema" title="Permanent link">&para;</a></h2>
 <p>Run the database setup to create HTM's tables and schema:</p>
-<h3 id="option-a-using-ruby">Option A: Using Ruby<a class="headerlink" href="#option-a-using-ruby" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;htm&#39;</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="c1"># Run database setup</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">setup</span>
+<h3 id="option-a-using-htm_mcp-cli-recommended">Option A: Using htm_mcp CLI (Recommended)<a class="headerlink" href="#option-a-using-htm_mcp-cli-recommended" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Initialize the database schema</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>htm_mcp<span class="w"> </span>setup
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1"># Verify the setup</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>htm_mcp<span class="w"> </span>verify
 </span></code></pre></div>
-<h3 id="option-b-using-command-line">Option B: Using Command Line<a class="headerlink" href="#option-b-using-command-line" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>ruby<span class="w"> </span>-r<span class="w"> </span>./lib/htm<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;HTM::Database.setup&quot;</span>
+<h3 id="option-b-using-ruby">Option B: Using Ruby<a class="headerlink" href="#option-b-using-ruby" title="Permanent link">&para;</a></h3>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;htm&#39;</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="c1"># Run database setup</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">setup</span>
 </span></code></pre></div>
 <h3 id="option-c-using-rake-task-if-available">Option C: Using Rake Task (if available)<a class="headerlink" href="#option-c-using-rake-task-if-available" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>rake<span class="w"> </span>db:setup
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>rake<span class="w"> </span>htm:db:setup
 </span></code></pre></div>
 <p>This creates the following tables:</p>
 <ul>
 <li><strong><code>nodes</code></strong>: Main memory storage with vector embeddings</li>
-<li><strong><code>relationships</code></strong>: Knowledge graph connections</li>
-<li><strong><code>tags</code></strong>: Flexible categorization</li>
+<li><strong><code>tags</code></strong>: Hierarchical categorization</li>
 <li><strong><code>robots</code></strong>: Robot registry</li>
-<li><strong><code>operations_log</code></strong>: Audit trail</li>
+<li><strong><code>file_sources</code></strong>: Source file metadata for loaded documents</li>
 </ul>
 <div class="admonition success">
 <p class="admonition-title">Schema Created</p>
 <p>You'll see confirmation messages as each table and index is created.</p>
 </div>
+<h3 id="htm_mcp-cli-commands">htm_mcp CLI Commands<a class="headerlink" href="#htm_mcp-cli-commands" title="Permanent link">&para;</a></h3>
+<p>The <code>htm_mcp</code> executable provides commands for database management:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>htm_mcp setup</code></td>
+<td>Initialize database schema</td>
+</tr>
+<tr>
+<td><code>htm_mcp verify</code></td>
+<td>Verify connection, extensions, and migrations</td>
+</tr>
+<tr>
+<td><code>htm_mcp stats</code></td>
+<td>Show memory statistics</td>
+</tr>
+<tr>
+<td><code>htm_mcp help</code></td>
+<td>Show all commands and environment variables</td>
+</tr>
+<tr>
+<td><code>htm_mcp</code></td>
+<td>Start the MCP server</td>
+</tr>
+</tbody>
+</table>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Check statistics after setup</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>htm_mcp<span class="w"> </span>stats
+</span></code></pre></div>
 <h2 id="step-6-verify-installation">Step 6: Verify Installation<a class="headerlink" href="#step-6-verify-installation" title="Permanent link">&para;</a></h2>
 <p>Create a test script to verify everything works:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># test_htm_setup.rb</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;htm&#39;</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Testing HTM Installation...&quot;</span>
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>
-</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="c1"># Initialize HTM</span>
-</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="n">htm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
-</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="w">  </span><span class="ss">robot_name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Test Robot&quot;</span><span class="p">,</span>
-</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="w">  </span><span class="ss">working_memory_size</span><span class="p">:</span><span class="w"> </span><span class="mi">128_000</span><span class="p">,</span>
-</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="w">  </span><span class="ss">embedding_service</span><span class="p">:</span><span class="w"> </span><span class="ss">:ollama</span><span class="p">,</span>
-</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a><span class="w">  </span><span class="ss">embedding_model</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;gpt-oss&#39;</span>
-</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="p">)</span>
-</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>
-</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ HTM initialized successfully&quot;</span>
-</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Robot ID: </span><span class="si">#{</span><span class="n">htm</span><span class="o">.</span><span class="n">robot_id</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Robot Name: </span><span class="si">#{</span><span class="n">htm</span><span class="o">.</span><span class="n">robot_name</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a>
-</span><span id="__span-22-18"><a id="__codelineno-22-18" name="__codelineno-22-18" href="#__codelineno-22-18"></a><span class="c1"># Add a test memory</span>
-</span><span id="__span-22-19"><a id="__codelineno-22-19" name="__codelineno-22-19" href="#__codelineno-22-19"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
-</span><span id="__span-22-20"><a id="__codelineno-22-20" name="__codelineno-22-20" href="#__codelineno-22-20"></a><span class="w">  </span><span class="s2">&quot;test_001&quot;</span><span class="p">,</span>
-</span><span id="__span-22-21"><a id="__codelineno-22-21" name="__codelineno-22-21" href="#__codelineno-22-21"></a><span class="w">  </span><span class="s2">&quot;This is a test memory to verify HTM installation.&quot;</span><span class="p">,</span>
-</span><span id="__span-22-22"><a id="__codelineno-22-22" name="__codelineno-22-22" href="#__codelineno-22-22"></a><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:fact</span><span class="p">,</span>
-</span><span id="__span-22-23"><a id="__codelineno-22-23" name="__codelineno-22-23" href="#__codelineno-22-23"></a><span class="w">  </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="o">.</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-22-24"><a id="__codelineno-22-24" name="__codelineno-22-24" href="#__codelineno-22-24"></a><span class="w">  </span><span class="ss">tags</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;test&quot;</span><span class="o">]</span>
-</span><span id="__span-22-25"><a id="__codelineno-22-25" name="__codelineno-22-25" href="#__codelineno-22-25"></a><span class="p">)</span>
-</span><span id="__span-22-26"><a id="__codelineno-22-26" name="__codelineno-22-26" href="#__codelineno-22-26"></a>
-</span><span id="__span-22-27"><a id="__codelineno-22-27" name="__codelineno-22-27" href="#__codelineno-22-27"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ Memory node added successfully&quot;</span>
-</span><span id="__span-22-28"><a id="__codelineno-22-28" name="__codelineno-22-28" href="#__codelineno-22-28"></a>
-</span><span id="__span-22-29"><a id="__codelineno-22-29" name="__codelineno-22-29" href="#__codelineno-22-29"></a><span class="c1"># Retrieve the memory</span>
-</span><span id="__span-22-30"><a id="__codelineno-22-30" name="__codelineno-22-30" href="#__codelineno-22-30"></a><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="s2">&quot;test_001&quot;</span><span class="p">)</span>
-</span><span id="__span-22-31"><a id="__codelineno-22-31" name="__codelineno-22-31" href="#__codelineno-22-31"></a><span class="k">if</span><span class="w"> </span><span class="n">node</span>
-</span><span id="__span-22-32"><a id="__codelineno-22-32" name="__codelineno-22-32" href="#__codelineno-22-32"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ Memory retrieval works&quot;</span>
-</span><span id="__span-22-33"><a id="__codelineno-22-33" name="__codelineno-22-33" href="#__codelineno-22-33"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Content: </span><span class="si">#{</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;value&#39;</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-22-34"><a id="__codelineno-22-34" name="__codelineno-22-34" href="#__codelineno-22-34"></a><span class="k">else</span>
-</span><span id="__span-22-35"><a id="__codelineno-22-35" name="__codelineno-22-35" href="#__codelineno-22-35"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✗ Failed to retrieve memory&quot;</span>
-</span><span id="__span-22-36"><a id="__codelineno-22-36" name="__codelineno-22-36" href="#__codelineno-22-36"></a><span class="k">end</span>
-</span><span id="__span-22-37"><a id="__codelineno-22-37" name="__codelineno-22-37" href="#__codelineno-22-37"></a>
-</span><span id="__span-22-38"><a id="__codelineno-22-38" name="__codelineno-22-38" href="#__codelineno-22-38"></a><span class="c1"># Get stats</span>
-</span><span id="__span-22-39"><a id="__codelineno-22-39" name="__codelineno-22-39" href="#__codelineno-22-39"></a><span class="n">stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">memory_stats</span>
-</span><span id="__span-22-40"><a id="__codelineno-22-40" name="__codelineno-22-40" href="#__codelineno-22-40"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ Memory stats:&quot;</span>
-</span><span id="__span-22-41"><a id="__codelineno-22-41" name="__codelineno-22-41" href="#__codelineno-22-41"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Total nodes: </span><span class="si">#{</span><span class="n">stats</span><span class="o">[</span><span class="ss">:total_nodes</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-22-42"><a id="__codelineno-22-42" name="__codelineno-22-42" href="#__codelineno-22-42"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Working memory: </span><span class="si">#{</span><span class="n">stats</span><span class="o">[</span><span class="ss">:working_memory</span><span class="o">][</span><span class="ss">:node_count</span><span class="o">]</span><span class="si">}</span><span class="s2"> nodes&quot;</span>
-</span><span id="__span-22-43"><a id="__codelineno-22-43" name="__codelineno-22-43" href="#__codelineno-22-43"></a>
-</span><span id="__span-22-44"><a id="__codelineno-22-44" name="__codelineno-22-44" href="#__codelineno-22-44"></a><span class="c1"># Clean up test data</span>
-</span><span id="__span-22-45"><a id="__codelineno-22-45" name="__codelineno-22-45" href="#__codelineno-22-45"></a><span class="n">htm</span><span class="o">.</span><span class="n">forget</span><span class="p">(</span><span class="s2">&quot;test_001&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">confirm</span><span class="p">:</span><span class="w"> </span><span class="ss">:confirmed</span><span class="p">)</span>
-</span><span id="__span-22-46"><a id="__codelineno-22-46" name="__codelineno-22-46" href="#__codelineno-22-46"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ Memory deletion works&quot;</span>
-</span><span id="__span-22-47"><a id="__codelineno-22-47" name="__codelineno-22-47" href="#__codelineno-22-47"></a>
-</span><span id="__span-22-48"><a id="__codelineno-22-48" name="__codelineno-22-48" href="#__codelineno-22-48"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot;=&quot;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span>
-</span><span id="__span-22-49"><a id="__codelineno-22-49" name="__codelineno-22-49" href="#__codelineno-22-49"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ HTM installation verified successfully!&quot;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># test_htm_setup.rb</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;htm&#39;</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Testing HTM Installation...&quot;</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="c1"># Initialize HTM</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="n">htm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="w">  </span><span class="ss">robot_name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Test Robot&quot;</span><span class="p">,</span>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a><span class="w">  </span><span class="ss">working_memory_size</span><span class="p">:</span><span class="w"> </span><span class="mi">128_000</span><span class="p">,</span>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="w">  </span><span class="ss">embedding_service</span><span class="p">:</span><span class="w"> </span><span class="ss">:ollama</span><span class="p">,</span>
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="w">  </span><span class="ss">embedding_model</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;gpt-oss&#39;</span>
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a><span class="p">)</span>
+</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ HTM initialized successfully&quot;</span>
+</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Robot ID: </span><span class="si">#{</span><span class="n">htm</span><span class="o">.</span><span class="n">robot_id</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Robot Name: </span><span class="si">#{</span><span class="n">htm</span><span class="o">.</span><span class="n">robot_name</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-23-17"><a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a>
+</span><span id="__span-23-18"><a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a><span class="c1"># Add a test memory</span>
+</span><span id="__span-23-19"><a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+</span><span id="__span-23-20"><a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a><span class="w">  </span><span class="s2">&quot;test_001&quot;</span><span class="p">,</span>
+</span><span id="__span-23-21"><a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a><span class="w">  </span><span class="s2">&quot;This is a test memory to verify HTM installation.&quot;</span><span class="p">,</span>
+</span><span id="__span-23-22"><a id="__codelineno-23-22" name="__codelineno-23-22" href="#__codelineno-23-22"></a><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:fact</span><span class="p">,</span>
+</span><span id="__span-23-23"><a id="__codelineno-23-23" name="__codelineno-23-23" href="#__codelineno-23-23"></a><span class="w">  </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="o">.</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-23-24"><a id="__codelineno-23-24" name="__codelineno-23-24" href="#__codelineno-23-24"></a><span class="w">  </span><span class="ss">tags</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;test&quot;</span><span class="o">]</span>
+</span><span id="__span-23-25"><a id="__codelineno-23-25" name="__codelineno-23-25" href="#__codelineno-23-25"></a><span class="p">)</span>
+</span><span id="__span-23-26"><a id="__codelineno-23-26" name="__codelineno-23-26" href="#__codelineno-23-26"></a>
+</span><span id="__span-23-27"><a id="__codelineno-23-27" name="__codelineno-23-27" href="#__codelineno-23-27"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ Memory node added successfully&quot;</span>
+</span><span id="__span-23-28"><a id="__codelineno-23-28" name="__codelineno-23-28" href="#__codelineno-23-28"></a>
+</span><span id="__span-23-29"><a id="__codelineno-23-29" name="__codelineno-23-29" href="#__codelineno-23-29"></a><span class="c1"># Retrieve the memory</span>
+</span><span id="__span-23-30"><a id="__codelineno-23-30" name="__codelineno-23-30" href="#__codelineno-23-30"></a><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="s2">&quot;test_001&quot;</span><span class="p">)</span>
+</span><span id="__span-23-31"><a id="__codelineno-23-31" name="__codelineno-23-31" href="#__codelineno-23-31"></a><span class="k">if</span><span class="w"> </span><span class="n">node</span>
+</span><span id="__span-23-32"><a id="__codelineno-23-32" name="__codelineno-23-32" href="#__codelineno-23-32"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ Memory retrieval works&quot;</span>
+</span><span id="__span-23-33"><a id="__codelineno-23-33" name="__codelineno-23-33" href="#__codelineno-23-33"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Content: </span><span class="si">#{</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;value&#39;</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-23-34"><a id="__codelineno-23-34" name="__codelineno-23-34" href="#__codelineno-23-34"></a><span class="k">else</span>
+</span><span id="__span-23-35"><a id="__codelineno-23-35" name="__codelineno-23-35" href="#__codelineno-23-35"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✗ Failed to retrieve memory&quot;</span>
+</span><span id="__span-23-36"><a id="__codelineno-23-36" name="__codelineno-23-36" href="#__codelineno-23-36"></a><span class="k">end</span>
+</span><span id="__span-23-37"><a id="__codelineno-23-37" name="__codelineno-23-37" href="#__codelineno-23-37"></a>
+</span><span id="__span-23-38"><a id="__codelineno-23-38" name="__codelineno-23-38" href="#__codelineno-23-38"></a><span class="c1"># Get stats</span>
+</span><span id="__span-23-39"><a id="__codelineno-23-39" name="__codelineno-23-39" href="#__codelineno-23-39"></a><span class="n">stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">memory_stats</span>
+</span><span id="__span-23-40"><a id="__codelineno-23-40" name="__codelineno-23-40" href="#__codelineno-23-40"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ Memory stats:&quot;</span>
+</span><span id="__span-23-41"><a id="__codelineno-23-41" name="__codelineno-23-41" href="#__codelineno-23-41"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Total nodes: </span><span class="si">#{</span><span class="n">stats</span><span class="o">[</span><span class="ss">:total_nodes</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-23-42"><a id="__codelineno-23-42" name="__codelineno-23-42" href="#__codelineno-23-42"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;  Working memory: </span><span class="si">#{</span><span class="n">stats</span><span class="o">[</span><span class="ss">:working_memory</span><span class="o">][</span><span class="ss">:node_count</span><span class="o">]</span><span class="si">}</span><span class="s2"> nodes&quot;</span>
+</span><span id="__span-23-43"><a id="__codelineno-23-43" name="__codelineno-23-43" href="#__codelineno-23-43"></a>
+</span><span id="__span-23-44"><a id="__codelineno-23-44" name="__codelineno-23-44" href="#__codelineno-23-44"></a><span class="c1"># Clean up test data</span>
+</span><span id="__span-23-45"><a id="__codelineno-23-45" name="__codelineno-23-45" href="#__codelineno-23-45"></a><span class="n">htm</span><span class="o">.</span><span class="n">forget</span><span class="p">(</span><span class="s2">&quot;test_001&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">confirm</span><span class="p">:</span><span class="w"> </span><span class="ss">:confirmed</span><span class="p">)</span>
+</span><span id="__span-23-46"><a id="__codelineno-23-46" name="__codelineno-23-46" href="#__codelineno-23-46"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ Memory deletion works&quot;</span>
+</span><span id="__span-23-47"><a id="__codelineno-23-47" name="__codelineno-23-47" href="#__codelineno-23-47"></a>
+</span><span id="__span-23-48"><a id="__codelineno-23-48" name="__codelineno-23-48" href="#__codelineno-23-48"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">&quot;=&quot;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span>
+</span><span id="__span-23-49"><a id="__codelineno-23-49" name="__codelineno-23-49" href="#__codelineno-23-49"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;✓ HTM installation verified successfully!&quot;</span>
 </span></code></pre></div>
 <p>Run the test:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>ruby<span class="w"> </span>test_htm_setup.rb
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>ruby<span class="w"> </span>test_htm_setup.rb
 </span></code></pre></div>
 <h2 id="environment-variables-reference">Environment Variables Reference<a class="headerlink" href="#environment-variables-reference" title="Permanent link">&para;</a></h2>
 <p>HTM uses the following environment variables:</p>
@@ -5472,79 +5532,79 @@
 </table>
 <h3 id="example-configuration-file">Example Configuration File<a class="headerlink" href="#example-configuration-file" title="Permanent link">&para;</a></h3>
 <p>Create a configuration file for easy loading:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># ~/.bashrc__htm</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgres://user:pass@host:port/db?sslmode=require&quot;</span>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OLLAMA_URL</span><span class="o">=</span><span class="s2">&quot;http://localhost:11434&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># ~/.bashrc__htm</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgres://user:pass@host:port/db?sslmode=require&quot;</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OLLAMA_URL</span><span class="o">=</span><span class="s2">&quot;http://localhost:11434&quot;</span>
 </span></code></pre></div>
 <p>Load it in your shell:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># Add to ~/.bashrc or ~/.zshrc</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc__htm
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># Add to ~/.bashrc or ~/.zshrc</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc__htm
 </span></code></pre></div>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="database-connection-issues">Database Connection Issues<a class="headerlink" href="#database-connection-issues" title="Permanent link">&para;</a></h3>
 <p><strong>Error</strong>: <code>PG::ConnectionBad: connection failed</code></p>
 <p><strong>Solutions</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># 1. Verify HTM_DBURL is set</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DBURL</span>
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="c1"># 2. Test connection manually</span>
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span>
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="c1"># 3. Check if PostgreSQL is running (local installs)</span>
-</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a>pg_ctl<span class="w"> </span>status
-</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>
-</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a><span class="c1"># 4. Verify SSL mode for cloud databases</span>
-</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a><span class="c1"># Ensure URL includes: ?sslmode=require</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># 1. Verify HTM_DBURL is set</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DBURL</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1"># 2. Test connection manually</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="c1"># 3. Check if PostgreSQL is running (local installs)</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>pg_ctl<span class="w"> </span>status
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="c1"># 4. Verify SSL mode for cloud databases</span>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a><span class="c1"># Ensure URL includes: ?sslmode=require</span>
 </span></code></pre></div>
 <h3 id="ollama-connection-issues">Ollama Connection Issues<a class="headerlink" href="#ollama-connection-issues" title="Permanent link">&para;</a></h3>
 <p><strong>Error</strong>: <code>Connection refused - connect(2) for localhost:11434</code></p>
 <p><strong>Solutions</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># 1. Check if Ollama is running</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>curl<span class="w"> </span>http://localhost:11434/api/version
-</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
-</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1"># 2. Start Ollama (macOS)</span>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="c1"># Check Activity Monitor or menu bar</span>
-</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>
-</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="c1"># 3. Restart Ollama service</span>
-</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>killall<span class="w"> </span>ollama
-</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>ollama<span class="w"> </span>serve
-</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>
-</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a><span class="c1"># 4. Verify gpt-oss model is installed</span>
-</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>ollama<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>gpt-oss
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># 1. Check if Ollama is running</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>curl<span class="w"> </span>http://localhost:11434/api/version
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="c1"># 2. Start Ollama (macOS)</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="c1"># Check Activity Monitor or menu bar</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="c1"># 3. Restart Ollama service</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>killall<span class="w"> </span>ollama
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>ollama<span class="w"> </span>serve
+</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a>
+</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="c1"># 4. Verify gpt-oss model is installed</span>
+</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a>ollama<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>gpt-oss
 </span></code></pre></div>
 <h3 id="missing-extensions">Missing Extensions<a class="headerlink" href="#missing-extensions" title="Permanent link">&para;</a></h3>
 <p><strong>Error</strong>: <code>PG::UndefinedObject: extension "pgvector" is not available</code></p>
 <p><strong>Solutions</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># Install pgvector</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/pgvector/pgvector.git
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="nb">cd</span><span class="w"> </span>pgvector
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>make
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>sudo<span class="w"> </span>make<span class="w"> </span>install
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
-</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="c1"># Enable in database</span>
-</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pgvector;&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Install pgvector</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/pgvector/pgvector.git
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="nb">cd</span><span class="w"> </span>pgvector
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>make
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>sudo<span class="w"> </span>make<span class="w"> </span>install
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="c1"># Enable in database</span>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pgvector;&quot;</span>
 </span></code></pre></div>
 <h3 id="ruby-version-issues">Ruby Version Issues<a class="headerlink" href="#ruby-version-issues" title="Permanent link">&para;</a></h3>
 <p><strong>Error</strong>: <code>htm requires Ruby version &gt;= 3.0.0</code></p>
 <p><strong>Solutions</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Check current version</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>ruby<span class="w"> </span>--version
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>
-</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="c1"># Install newer Ruby via rbenv</span>
-</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>rbenv<span class="w"> </span>install<span class="w"> </span><span class="m">3</span>.3.0
-</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>rbenv<span class="w"> </span>global<span class="w"> </span><span class="m">3</span>.3.0
-</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>
-</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="c1"># Verify</span>
-</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a>ruby<span class="w"> </span>--version
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># Check current version</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>ruby<span class="w"> </span>--version
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="c1"># Install newer Ruby via rbenv</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>rbenv<span class="w"> </span>install<span class="w"> </span><span class="m">3</span>.3.0
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>rbenv<span class="w"> </span>global<span class="w"> </span><span class="m">3</span>.3.0
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a><span class="c1"># Verify</span>
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a>ruby<span class="w"> </span>--version
 </span></code></pre></div>
 <h3 id="permission-issues">Permission Issues<a class="headerlink" href="#permission-issues" title="Permanent link">&para;</a></h3>
 <p><strong>Error</strong>: <code>PG::InsufficientPrivilege: permission denied</code></p>
 <p><strong>Solutions</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># Ensure your database user has necessary permissions</span>
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
-</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="s2">  GRANT ALL PRIVILEGES ON DATABASE your_db TO your_user;</span>
-</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="s2">  GRANT ALL ON ALL TABLES IN SCHEMA public TO your_user;</span>
-</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="s2">&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Ensure your database user has necessary permissions</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="s2">  GRANT ALL PRIVILEGES ON DATABASE your_db TO your_user;</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="s2">  GRANT ALL ON ALL TABLES IN SCHEMA public TO your_user;</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="s2">&quot;</span>
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <p>Now that HTM is installed, you're ready to start building:</p>
@@ -5746,10 +5806,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../../assets/js/mathjax.js"></script>
       
