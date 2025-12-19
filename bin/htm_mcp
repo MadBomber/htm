@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# HTM MCP Server with CLI management commands
+#
+# Usage:
+#   htm_mcp              # Start MCP server (default)
+#   htm_mcp server       # Start MCP server (explicit)
+#   htm_mcp setup        # Initialize database
+#   htm_mcp init         # Initialize database (alias for setup)
+#   htm_mcp verify       # Verify database connection
+#   htm_mcp stats        # Show memory statistics
+#   htm_mcp version      # Show HTM version
+#   htm_mcp help         # Show help and environment variables
+
+require_relative '../lib/htm'
+require_relative '../lib/htm/mcp/cli'
+
+# Handle CLI commands (exits if command handled)
+# Returns false if server should start
+unless HTM::MCP::CLI.run(ARGV) == false
+  exit 0
+end
+
+# Start MCP server
+require_relative '../lib/htm/mcp/server'
+HTM::MCP::Server.start

@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.17] - 2025-12-18
+
 ### Added
+- **MCP CLI subcommands** - `bin/htm_mcp` now supports multiple commands for database management
+  - `htm_mcp setup` / `htm_mcp init` - Initialize database schema
+  - `htm_mcp verify` - Verify database connection, extensions, and migration status
+  - `htm_mcp stats` - Show memory statistics including database size and file sources
+  - `htm_mcp version` - Show HTM version
+  - `htm_mcp help` - Comprehensive help with all environment variables
+  - `htm_mcp` / `htm_mcp server` - Start MCP server (default behavior)
+- **Migration status display** - `htm_mcp verify` now shows applied/pending migrations with +/- indicators
+- **Database size in stats** - `htm_mcp stats` displays database size via `pg_size_pretty`
+- **Error suggestions** - CLI provides helpful suggestions for common database errors (connection refused, missing database, auth failures, missing extensions)
 - **Rails demo application** - Full-featured web UI for exploring HTM capabilities
   - Located in `examples/rails_app/` - minimal Rails 7.2 application
   - **Dashboard** - Overview of memories, robots, tags, and files with quick stats

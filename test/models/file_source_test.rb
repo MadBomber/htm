@@ -16,6 +16,17 @@ class FileSourceTest < Minitest::Test
 
     # Clean up test data
     HTM::Models::FileSource.where("file_path LIKE '%test_file_source%'").destroy_all
+
+    # Clean up any temp files created during tests
+    @temp_files&.each { |f| File.delete(f) if File.exist?(f) }
+  end
+
+  # Helper to create a temp file that exists on disk
+  def create_temp_file(path)
+    @temp_files ||= []
+    @temp_files << path
+    File.write(path, "test content")
+    path
   end
 
   # DELTA_TIME constant tests
@@ -34,8 +45,9 @@ class FileSourceTest < Minitest::Test
   end
 
   def test_needs_sync_returns_false_when_difference_within_delta
+    file_path = create_temp_file('/tmp/test_file_source_delta.md')
     source = HTM::Models::FileSource.create!(
-      file_path: '/tmp/test_file_source_delta.md',
+      file_path: file_path,
       mtime: Time.now
     )
 
@@ -46,8 +58,9 @@ class FileSourceTest < Minitest::Test
   end
 
   def test_needs_sync_returns_false_when_difference_exactly_at_delta
+    file_path = create_temp_file('/tmp/test_file_source_exact.md')
     source = HTM::Models::FileSource.create!(
-      file_path: '/tmp/test_file_source_exact.md',
+      file_path: file_path,
       mtime: Time.now
     )
 
@@ -82,8 +95,9 @@ class FileSourceTest < Minitest::Test
   end
 
   def test_needs_sync_returns_false_for_small_negative_difference
+    file_path = create_temp_file('/tmp/test_file_source_small_neg.md')
     source = HTM::Models::FileSource.create!(
-      file_path: '/tmp/test_file_source_small_neg.md',
+      file_path: file_path,
       mtime: Time.now
     )
 

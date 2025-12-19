@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
     end
   end
   spec.bindir = "bin"
-  spec.executables = ["htm_mcp.rb"]
+  spec.executables = ["htm_mcp"]
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
