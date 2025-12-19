@@ -91,12 +91,24 @@ class JobAdapterTest < Minitest::Test
 
   # Test auto-detection in test environment
   def test_auto_detect_inline_in_test_env
-    # Should already be detected as :inline since we're in test environment
+    # Save current environment values
+    saved_htm_env = ENV['HTM_ENV']
+    saved_rails_env = ENV['RAILS_ENV']
+    saved_rack_env = ENV['RACK_ENV']
+
+    # Clear HTM_ENV to test RACK_ENV detection
+    # (HTM_ENV takes priority: HTM_ENV > RAILS_ENV > RACK_ENV)
+    ENV.delete('HTM_ENV')
+    ENV.delete('RAILS_ENV')
     ENV['RACK_ENV'] = 'test'
+
     config = HTM::Configuration.new
     assert_equal :inline, config.job_backend
   ensure
-    ENV.delete('RACK_ENV')
+    # Restore original environment values
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_rails_env ? ENV['RAILS_ENV'] = saved_rails_env : ENV.delete('RAILS_ENV')
+    saved_rack_env ? ENV['RACK_ENV'] = saved_rack_env : ENV.delete('RACK_ENV')
   end
 
   # Test auto-detection with environment variable

@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `htm_mcp stats` - Show memory statistics including database size and file sources
   - `htm_mcp version` - Show HTM version
   - `htm_mcp help` - Comprehensive help with all environment variables
-  - `htm_mcp` / `htm_mcp server` - Start MCP server (default behavior)
+  - `htm_mcp` / `htm_mcp server` / `htm_mcp stdio` - Start MCP server (default behavior)
 - **Migration status display** - `htm_mcp verify` now shows applied/pending migrations with +/- indicators
 - **Database size in stats** - `htm_mcp stats` displays database size via `pg_size_pretty`
 - **Error suggestions** - CLI provides helpful suggestions for common database errors (connection refused, missing database, auth failures, missing extensions)
@@ -66,8 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **docs/guides/mcp-server.md** - Comprehensive RobotGroup tools documentation with examples, updated for CLI commands
 
 ### Fixed
+- **MCP server direct execution** - Added `require 'bundler/setup'` to `bin/htm_mcp` for execution without `bundle exec`
+  - Fixes timeout issues when MCP clients invoke the server directly
+  - Server now loads gems correctly from Gemfile when run as `./bin/htm_mcp`
 - **ontology_test.rb** - Added `configure_htm_with_mocks` to prevent real LLM calls during tests
   - `test_node_creation_without_tags` and `test_empty_tag_array_no_topics` now pass
+- **job_adapter_test.rb** - Fixed environment detection test to properly handle `HTM_ENV` priority
+  - Test now saves and restores all relevant environment variables (`HTM_ENV`, `RAILS_ENV`, `RACK_ENV`)
 
 ## [0.0.15] - 2025-12-06
 

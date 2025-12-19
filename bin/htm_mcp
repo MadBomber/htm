@@ -13,6 +13,10 @@
 #   htm_mcp version      # Show HTM version
 #   htm_mcp help         # Show help and environment variables
 
+# Setup bundler to load gems from Gemfile
+# This allows running the script directly without `bundle exec`
+require 'bundler/setup'
+
 require_relative '../lib/htm'
 require_relative '../lib/htm/mcp/cli'
 

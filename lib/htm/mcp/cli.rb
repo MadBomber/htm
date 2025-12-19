@@ -15,6 +15,7 @@ class HTM
 
           COMMANDS:
             server    Start the MCP server (default if no command given)
+            stdio     Alias for server (for MCP client compatibility)
             setup     Initialize the database schema
             init      Alias for setup
             verify    Verify database connection and extensions
@@ -313,8 +314,9 @@ class HTM
         when 'stats'
           run_stats
           exit 0
-        when 'server', nil
+        when 'server', 'stdio', nil
           # Return false to indicate server should start
+          # 'stdio' is accepted for compatibility with MCP clients that pass it as an argument
           false
         when /^-/
           warn "Unknown option: #{args[0]}"
