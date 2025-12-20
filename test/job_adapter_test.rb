@@ -22,12 +22,12 @@ class JobAdapterTest < Minitest::Test
 
   def teardown
     # Restore original configuration
-    HTM.configuration.job_backend = @original_backend
+    HTM.configuration.job.backend = @original_backend
   end
 
   # Test inline backend
   def test_inline_backend_executes_synchronously
-    HTM.configuration.job_backend = :inline
+    HTM.configuration.job.backend = :inline
 
     # Track job execution
     executed = false
@@ -47,7 +47,7 @@ class JobAdapterTest < Minitest::Test
 
   # Test thread backend
   def test_thread_backend_executes_asynchronously
-    HTM.configuration.job_backend = :thread
+    HTM.configuration.job.backend = :thread
 
     # Track job execution
     executed = false
@@ -69,7 +69,7 @@ class JobAdapterTest < Minitest::Test
 
   # Test unknown backend raises error
   def test_unknown_backend_raises_error
-    HTM.configuration.job_backend = :unknown
+    HTM.configuration.job.backend = :unknown
 
     error = assert_raises(HTM::Error) do
       HTM::JobAdapter.enqueue(@test_job_class, test_param: 'value')
@@ -80,13 +80,14 @@ class JobAdapterTest < Minitest::Test
 
   # Test configuration validation
   def test_configuration_validates_job_backend
-    error = assert_raises(HTM::ValidationError) do
-      HTM.configure do |config|
-        config.job_backend = :invalid_backend
-      end
+    config = HTM::Config.new
+    config.job.backend = :invalid_backend
+
+    error = assert_raises(Anyway::Config::ValidationError) do
+      config.validate_settings!
     end
 
-    assert_match(/job_backend must be one of/, error.message)
+    assert_match(/job\.backend must be one of/, error.message)
   end
 
   # Test auto-detection in test environment
@@ -102,7 +103,7 @@ class JobAdapterTest < Minitest::Test
     ENV.delete('RAILS_ENV')
     ENV['RACK_ENV'] = 'test'
 
-    config = HTM::Configuration.new
+    config = HTM::Config.new
     assert_equal :inline, config.job_backend
   ensure
     # Restore original environment values
@@ -114,7 +115,7 @@ class JobAdapterTest < Minitest::Test
   # Test auto-detection with environment variable
   def test_auto_detect_with_env_variable
     ENV['HTM_JOB_BACKEND'] = 'inline'
-    config = HTM::Configuration.new
+    config = HTM::Config.new
     assert_equal :inline, config.job_backend
   ensure
     ENV.delete('HTM_JOB_BACKEND')
@@ -122,7 +123,7 @@ class JobAdapterTest < Minitest::Test
 
   # Test job parameters are passed correctly
   def test_job_parameters_passed_correctly
-    HTM.configuration.job_backend = :inline
+    HTM.configuration.job.backend = :inline
 
     received_params = nil
     job_class = Class.new do
@@ -141,7 +142,7 @@ class JobAdapterTest < Minitest::Test
 
   # Test error handling in inline mode
   def test_error_handling_in_inline_mode
-    HTM.configuration.job_backend = :inline
+    HTM.configuration.job.backend = :inline
 
     job_class = Class.new do
       define_singleton_method(:perform) do |**params|
@@ -159,7 +160,7 @@ class JobAdapterTest < Minitest::Test
 
   # Test error handling in thread mode
   def test_error_handling_in_thread_mode
-    HTM.configuration.job_backend = :thread
+    HTM.configuration.job.backend = :thread
 
     job_class = Class.new do
       define_singleton_method(:perform) do |**params|

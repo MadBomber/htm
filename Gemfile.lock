@@ -1,8 +1,9 @@
 PATH
   remote: .
   specs:
-    htm (0.0.17)
+    htm (0.0.18)
       activerecord
+      anyway_config (>= 2.6)
       baran
       chronic
       fast-mcp
@@ -38,6 +39,8 @@ GEM
     addressable (2.8.8)
       public_suffix (>= 2.0.2, < 8.0)
     ansi (1.5.0)
+    anyway_config (2.7.2)
+      ruby-next-core (~> 1.0)
     baran (0.2.1)
     base64 (0.3.0)
     bigdecimal (3.3.1)
@@ -144,6 +147,7 @@ GEM
     rb_sys (0.9.123)
       rake-compiler-dock (= 1.10.0)
     rexml (3.4.4)
+    ruby-next-core (1.1.2)
     ruby-progressbar (1.13.0)
     ruby_llm (1.9.1)
       base64
@@ -168,7 +172,7 @@ GEM
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
-    tiktoken_ruby (0.0.13)
+    tiktoken_ruby (0.0.14.1)
       rb_sys (~> 0.9)
     timeout (0.6.0)
     tzinfo (2.0.6)

@@ -12,7 +12,7 @@ class PropositionServiceTest < Minitest::Test
 
     # Configure HTM with mock proposition extractor for tests
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.proposition_extractor = ->(text) {
         # Simple mock that returns propositions based on content
         if text.to_s.downcase.include?("neil armstrong")
@@ -57,7 +57,7 @@ class PropositionServiceTest < Minitest::Test
   def test_extract_with_no_propositions
     # Configure to return empty array
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.proposition_extractor = ->(text) { [] }
     end
 
@@ -229,7 +229,7 @@ class PropositionServiceTest < Minitest::Test
 
   def test_circuit_breaker_opens_after_failures
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.proposition_extractor = ->(_text) {
         raise StandardError, "API unavailable"
       }
@@ -250,7 +250,7 @@ class PropositionServiceTest < Minitest::Test
 
   def test_circuit_breaker_can_be_reset
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.proposition_extractor = ->(_text) {
         raise StandardError, "API unavailable"
       }
@@ -274,7 +274,7 @@ class PropositionServiceTest < Minitest::Test
 
   def test_extract_raises_proposition_error_for_invalid_response_type
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.proposition_extractor = ->(_text) { 12345 }
     end
 

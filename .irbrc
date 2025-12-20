@@ -21,12 +21,12 @@ end
 
 # Configure HTM with sensible defaults for interactive use
 HTM.configure do |config|
-  config.job_backend = :inline
-  config.embedding_provider = :ollama
-  config.embedding_model = 'nomic-embed-text:latest'
-  config.embedding_dimensions = 768
-  config.tag_provider = :ollama
-  config.tag_model = 'gemma3:latest'
+  config.job.backend = :inline
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text:latest'
+  config.embedding.dimensions = 768
+  config.tag.provider = :ollama
+  config.tag.model = 'gemma3:latest'
   config.reset_to_defaults
 end
 puts "✓ HTM configured (inline jobs, Ollama provider)"

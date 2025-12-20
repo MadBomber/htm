@@ -3,14 +3,18 @@
 require 'active_record'
 require 'pg'
 require 'neighbor'
-require 'erb'
-require 'yaml'
 
 class HTM
   # ActiveRecord database configuration and model loading
+  #
+  # Uses HTM::Config for database settings. Configuration can come from:
+  # - config/htm.yml (environment-specific)
+  # - Environment variables (HTM_DB_URL, HTM_DB_HOST, etc.)
+  # - Programmatic configuration via HTM.configure
+  #
   class ActiveRecordConfig
     class << self
-      # Establish database connection from config/database.yml
+      # Establish database connection from HTM::Config
       def establish_connection!
         config = load_database_config
 
@@ -25,27 +29,26 @@ class HTM
         true
       end
 
-      # Load and parse database configuration from YAML with ERB
+      # Load database configuration from HTM::Config
+      #
+      # @return [Hash] ActiveRecord-compatible configuration hash
+      #
       def load_database_config
-        config_path = File.expand_path('../../config/database.yml', __dir__)
+        htm_config = HTM.config
 
-        unless File.exist?(config_path)
-          raise "Database configuration file not found at #{config_path}"
+        # If we have a database URL, parse it
+        if htm_config.database_url
+          htm_config.database_config
+        else
+          # Fall back to legacy config/database.yml if it exists and no config in HTM::Config
+          legacy_config_path = File.expand_path('../../config/database.yml', __dir__)
+
+          if File.exist?(legacy_config_path) && !htm_config.database_configured?
+            load_legacy_database_config(legacy_config_path)
+          else
+            htm_config.database_config
+          end
         end
-
-        # Read and parse ERB
-        erb_content = ERB.new(File.read(config_path)).result
-        db_config = YAML.safe_load(erb_content, aliases: true)
-
-        # Get configuration for current environment
-        config = db_config[HTM.env]
-
-        unless config
-          raise "No database configuration found for environment: #{HTM.env}"
-        end
-
-        # Convert string keys to symbols for ActiveRecord
-        config.transform_keys(&:to_sym)
       end
 
       # Check if connection is established and active
@@ -102,6 +105,27 @@ class HTM
       end
 
       private
+
+      # Load legacy database.yml configuration (for backward compatibility)
+      #
+      # @param config_path [String] Path to database.yml
+      # @return [Hash] ActiveRecord-compatible configuration hash
+      #
+      def load_legacy_database_config(config_path)
+        require 'erb'
+        require 'yaml'
+
+        erb_content = ERB.new(File.read(config_path)).result
+        db_config = YAML.safe_load(erb_content, aliases: true)
+
+        config = db_config[HTM.env]
+
+        unless config
+          raise "No database configuration found for environment: #{HTM.env}"
+        end
+
+        config.transform_keys(&:to_sym)
+      end
 
       # Require all model files
       def require_models

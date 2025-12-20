@@ -209,9 +209,9 @@ module ::Sinatra
 
         # Use Sidekiq if available, otherwise thread-based
         if defined?(::Sidekiq)
-          config.job_backend = :sidekiq
+          config.job.backend = :sidekiq
         else
-          config.job_backend = :thread
+          config.job.backend = :thread
         end
       end
 

@@ -14,7 +14,7 @@ class HTM
   #
   # @example Configure job backend
   #   HTM.configure do |config|
-  #     config.job_backend = :active_job
+  #     config.job.backend = :active_job
   #   end
   #
   # @example Enqueue a job

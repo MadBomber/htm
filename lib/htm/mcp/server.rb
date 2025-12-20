@@ -70,7 +70,7 @@ class HTM
 
       def configure_htm!
         HTM.configure do |config|
-          config.job_backend = :inline  # Synchronous for MCP responses
+          config.job.backend = :inline  # Synchronous for MCP responses
           config.logger = @silent_logger    # Silent logging for MCP
         end
       end

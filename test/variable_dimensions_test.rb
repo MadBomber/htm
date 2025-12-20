@@ -12,14 +12,14 @@ class VariableDimensionsTest < Minitest::Test
   end
 
   def test_supported_providers_constant
-    assert_instance_of Array, HTM::Configuration::SUPPORTED_PROVIDERS
-    assert_includes HTM::Configuration::SUPPORTED_PROVIDERS, :openai
-    assert_includes HTM::Configuration::SUPPORTED_PROVIDERS, :ollama
-    assert_includes HTM::Configuration::SUPPORTED_PROVIDERS, :anthropic
+    assert_instance_of Array, HTM::Config::SUPPORTED_PROVIDERS
+    assert_includes HTM::Config::SUPPORTED_PROVIDERS, :openai
+    assert_includes HTM::Config::SUPPORTED_PROVIDERS, :ollama
+    assert_includes HTM::Config::SUPPORTED_PROVIDERS, :anthropic
   end
 
   def test_default_dimensions_by_provider
-    defaults = HTM::Configuration::DEFAULT_DIMENSIONS
+    defaults = HTM::Config::DEFAULT_DIMENSIONS
     assert_instance_of Hash, defaults
     assert_equal 1536, defaults[:openai]
     assert_equal 768, defaults[:ollama]

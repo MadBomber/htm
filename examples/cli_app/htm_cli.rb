@@ -39,7 +39,7 @@ class HTMCli
     # Configure HTM for CLI usage
     HTM.configure do |config|
       # Use inline mode for synchronous execution
-      config.job_backend = :inline
+      config.job.backend = :inline
 
       # CLI-friendly logging
       config.logger.level = Logger::INFO

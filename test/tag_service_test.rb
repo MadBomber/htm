@@ -12,7 +12,7 @@ class TagServiceTest < Minitest::Test
 
     # Configure HTM with mock tag extractor for tests
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.tag_extractor = ->(text, ontology) {
         # Simple mock that extracts "tags" based on keywords
         tags = []
@@ -104,7 +104,7 @@ class TagServiceTest < Minitest::Test
   def test_extract_with_empty_content
     # Configure to return empty array for empty content
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.tag_extractor = ->(text, ontology) { [] }
     end
 
@@ -231,7 +231,7 @@ class TagServiceTest < Minitest::Test
 
   def test_circuit_breaker_opens_after_failures
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.tag_extractor = ->(_text, _ontology) {
         raise StandardError, "API unavailable"
       }
@@ -252,7 +252,7 @@ class TagServiceTest < Minitest::Test
 
   def test_circuit_breaker_can_be_reset
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.tag_extractor = ->(_text, _ontology) {
         raise StandardError, "API unavailable"
       }
@@ -276,7 +276,7 @@ class TagServiceTest < Minitest::Test
 
   def test_extract_raises_tag_error_for_invalid_response_type
     HTM.configure do |config|
-      config.job_backend = :inline
+      config.job.backend = :inline
       config.tag_extractor = ->(_text, _ontology) { 12345 }
     end
 

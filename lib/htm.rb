@@ -2,7 +2,7 @@
 
 require_relative "htm/version"
 require_relative "htm/errors"
-require_relative "htm/configuration"
+require_relative "htm/config"
 require_relative "htm/circuit_breaker"
 require_relative "htm/active_record_config"
 require_relative "htm/database"
@@ -170,7 +170,7 @@ class HTM
       enqueue_tags_job(node_id, manual_tags: tags)
 
       # Enqueue proposition extraction if enabled and not already a proposition
-      if HTM.configuration.extract_propositions && !metadata[:is_proposition]
+      if HTM.config.extract_propositions && !metadata[:is_proposition]
         enqueue_propositions_job(node_id)
       end
     else
@@ -679,4 +679,125 @@ class HTM
     end
   end
 
+  # ===========================================================================
+  # Class Methods
+  # ===========================================================================
+
+  class << self
+    # Get current configuration (singleton)
+    #
+    # @return [HTM::Config]
+    #
+    def config
+      @config ||= Config.new
+    end
+
+    # Alias for backward compatibility
+    alias configuration config
+
+    # Configure HTM
+    #
+    # @yield [config] Configuration object
+    # @yieldparam config [HTM::Config]
+    #
+    # @example Custom configuration
+    #   HTM.configure do |config|
+    #     config.embedding_generator = ->(text) { MyEmbedder.embed(text) }
+    #     config.tag_extractor = ->(text, ontology) { MyTagger.extract(text, ontology) }
+    #   end
+    #
+    # @example Default configuration
+    #   HTM.configure  # Uses RubyLLM defaults
+    #
+    def configure
+      yield(config) if block_given?
+      config.validate!
+      config
+    end
+
+    # Reset configuration to defaults
+    def reset_configuration!
+      @config = nil
+    end
+
+    # Get current environment
+    #
+    # @return [String] Current environment name
+    #
+    def env
+      Config.env
+    end
+
+    # Check if running in test environment
+    #
+    # @return [Boolean]
+    #
+    def test?
+      env == 'test'
+    end
+
+    # Check if running in development environment
+    #
+    # @return [Boolean]
+    #
+    def development?
+      env == 'development'
+    end
+
+    # Check if running in production environment
+    #
+    # @return [Boolean]
+    #
+    def production?
+      env == 'production'
+    end
+
+    # Generate embedding using EmbeddingService
+    #
+    # @param text [String] Text to embed
+    # @return [Array<Float>] Embedding vector (original, not padded)
+    #
+    def embed(text)
+      result = HTM::EmbeddingService.generate(text)
+      result[:embedding]
+    end
+
+    # Extract tags using TagService
+    #
+    # @param text [String] Text to analyze
+    # @param existing_ontology [Array<String>] Sample of existing tags for context
+    # @return [Array<String>] Extracted and validated tag names
+    #
+    def extract_tags(text, existing_ontology: [])
+      HTM::TagService.extract(text, existing_ontology: existing_ontology)
+    end
+
+    # Extract propositions using PropositionService
+    #
+    # @param text [String] Text to analyze
+    # @return [Array<String>] Extracted atomic propositions
+    #
+    def extract_propositions(text)
+      HTM::PropositionService.extract(text)
+    end
+
+    # Count tokens using configured counter
+    #
+    # @param text [String] Text to count tokens for
+    # @return [Integer] Token count
+    #
+    def count_tokens(text)
+      config.token_counter.call(text)
+    rescue StandardError => e
+      raise HTM::ValidationError, "Token counting failed: #{e.message}"
+    end
+
+    # Get configured logger
+    #
+    # @return [Logger] Configured logger instance
+    #
+    def logger
+      config.logger
+    end
+  end
 end

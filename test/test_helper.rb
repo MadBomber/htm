@@ -112,7 +112,7 @@ def configure_htm_with_mocks(dimensions: 768)
 
   HTM.configure do |config|
     # Use inline backend for synchronous test execution
-    config.job_backend = :inline
+    config.job.backend = :inline
 
     # Mock embedding generator
     config.embedding_generator = ->(text) {
@@ -127,7 +127,7 @@ def configure_htm_with_mocks(dimensions: 768)
     config.proposition_extractor = ->(text) { [] }
 
     # Disable proposition extraction by default in tests
-    config.extract_propositions = false
+    config.proposition.enabled = false
 
     # Mock token counter
     config.token_counter = ->(text) {
@@ -139,7 +139,7 @@ def configure_htm_with_mocks(dimensions: 768)
     }
 
     # Set embedding dimensions
-    config.embedding_dimensions = dimensions
+    config.embedding.dimensions = dimensions
   end
 
   mock_service
@@ -149,7 +149,7 @@ end
 def reset_htm_configuration
   HTM.reset_configuration!
   # Set inline backend for tests
-  HTM.configuration.job_backend = :inline
+  HTM.configuration.job.backend = :inline
 end
 
 # Check if database is available for integration tests

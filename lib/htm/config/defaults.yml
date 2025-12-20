@@ -1,0 +1,187 @@
+# HTM Bundled Defaults
+#
+# This file is the SINGLE SOURCE OF TRUTH for HTM configuration schema.
+# All attributes must be declared here (even if nil) to be recognized.
+# It is bundled with the gem and loaded automatically at lowest priority.
+#
+# Loading priority (lowest to highest):
+# 1. This file (bundled defaults)
+# 2. XDG user config (~/.config/htm/htm.yml)
+# 3. Project config (./config/htm.yml)
+# 4. Local overrides (./config/htm.local.yml)
+# 5. Environment variables (HTM_*)
+# 6. Programmatic (HTM.configure block)
+#
+# Structure:
+# - defaults: Base values for all environments (with nested sections)
+# - development: Overrides for development environment
+# - test: Overrides for test environment
+# - production: Overrides for production environment
+
+# =============================================================================
+# Shared Defaults (base for all environments)
+# =============================================================================
+defaults:
+  # ---------------------------------------------------------------------------
+  # Database Configuration
+  # Access: HTM.config.database.host, HTM.config.database.port, etc.
+  # ---------------------------------------------------------------------------
+  database:
+    url: ~
+    host: localhost
+    port: 5432
+    name: ~
+    user: ~
+    password: ~
+    pool_size: 10
+    timeout: 5000
+    sslmode: prefer
+
+  # ---------------------------------------------------------------------------
+  # Service Configuration
+  # Access: HTM.config.service.name
+  # ---------------------------------------------------------------------------
+  service:
+    name: htm
+
+  # ---------------------------------------------------------------------------
+  # Embedding Configuration
+  # Access: HTM.config.embedding.provider, HTM.config.embedding.model, etc.
+  # ---------------------------------------------------------------------------
+  embedding:
+    provider: ollama
+    model: nomic-embed-text:latest
+    dimensions: 768
+    timeout: 120
+    max_dimension: 2000
+
+  # ---------------------------------------------------------------------------
+  # Tag Extraction Configuration
+  # Access: HTM.config.tag.provider, HTM.config.tag.model, etc.
+  # ---------------------------------------------------------------------------
+  tag:
+    provider: ollama
+    model: gemma3:latest
+    timeout: 180
+    max_depth: 4
+
+  # ---------------------------------------------------------------------------
+  # Proposition Extraction Configuration
+  # Access: HTM.config.proposition.provider, HTM.config.proposition.model, etc.
+  # ---------------------------------------------------------------------------
+  proposition:
+    provider: ollama
+    model: gemma3:latest
+    timeout: 180
+    enabled: false
+
+  # ---------------------------------------------------------------------------
+  # Chunking Configuration (for file loading)
+  # Access: HTM.config.chunking.size, HTM.config.chunking.overlap
+  # ---------------------------------------------------------------------------
+  chunking:
+    size: 1024
+    overlap: 64
+
+  # ---------------------------------------------------------------------------
+  # Circuit Breaker Configuration
+  # Access: HTM.config.circuit_breaker.failure_threshold, etc.
+  # ---------------------------------------------------------------------------
+  circuit_breaker:
+    failure_threshold: 5
+    reset_timeout: 60
+    half_open_max_calls: 3
+
+  # ---------------------------------------------------------------------------
+  # Relevance Scoring Configuration
+  # Access: HTM.config.relevance.semantic_weight, etc.
+  # ---------------------------------------------------------------------------
+  relevance:
+    semantic_weight: 0.5
+    tag_weight: 0.3
+    recency_weight: 0.1
+    access_weight: 0.1
+    recency_half_life_hours: 168.0
+
+  # ---------------------------------------------------------------------------
+  # Job Backend Configuration
+  # Access: HTM.config.job.backend
+  # ---------------------------------------------------------------------------
+  job:
+    backend: ~
+
+  # ---------------------------------------------------------------------------
+  # General Settings
+  # Access: HTM.config.week_start, HTM.config.connection_timeout, etc.
+  # ---------------------------------------------------------------------------
+  week_start: sunday
+  connection_timeout: 30
+  telemetry_enabled: false
+  log_level: info
+
+  # ---------------------------------------------------------------------------
+  # Provider Credentials
+  # Access: HTM.config.providers.openai.api_key, etc.
+  # ---------------------------------------------------------------------------
+  providers:
+    openai:
+      api_key: ~
+      organization: ~
+      project: ~
+
+    anthropic:
+      api_key: ~
+
+    gemini:
+      api_key: ~
+
+    azure:
+      api_key: ~
+      endpoint: ~
+      api_version: '2024-02-01'
+
+    ollama:
+      url: http://localhost:11434
+
+    huggingface:
+      api_key: ~
+
+    openrouter:
+      api_key: ~
+
+    bedrock:
+      access_key: ~
+      secret_key: ~
+      region: us-east-1
+
+    deepseek:
+      api_key: ~
+
+# =============================================================================
+# Development Environment Overrides
+# =============================================================================
+development:
+  database:
+    name: htm_development
+  log_level: debug
+
+# =============================================================================
+# Test Environment Overrides
+# =============================================================================
+test:
+  database:
+    name: htm_test
+  job:
+    backend: inline
+  log_level: warn
+  telemetry_enabled: false
+
+# =============================================================================
+# Production Environment Overrides
+# =============================================================================
+production:
+  database:
+    pool_size: 25
+    sslmode: require
+  log_level: warn
+  telemetry_enabled: true

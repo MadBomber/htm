@@ -32,10 +32,10 @@ class HTM
         config.logger = Rails.logger
 
         # Use ActiveJob for background jobs in Rails
-        config.job_backend = :active_job unless Rails.env.test?
+        config.job.backend = :active_job unless Rails.env.test?
 
         # Use inline execution in test environment for synchronous behavior
-        config.job_backend = :inline if Rails.env.test?
+        config.job.backend = :inline if Rails.env.test?
       end
 
       HTM.logger.info "HTM initialized for Rails application"

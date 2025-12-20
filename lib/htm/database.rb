@@ -472,20 +472,36 @@ class HTM
         }
       end
 
-      # Get default database configuration (respects RAILS_ENV)
+      # Get default database configuration
       #
-      # Uses ActiveRecordConfig which reads from config/database.yml
-      # and respects RAILS_ENV for environment-specific database selection.
+      # Uses HTM::Config for database settings, with fallback to
+      # ActiveRecordConfig for legacy database.yml support.
       #
       # @return [Hash, nil] Connection configuration hash with PG-style keys
       #
       def default_config
-        require_relative 'active_record_config'
+        htm_config = HTM.config
 
-        begin
-          ar_config = HTM::ActiveRecordConfig.load_database_config
+        # Try HTM::Config first
+        if htm_config.database_configured?
+          ar_config = htm_config.database_config
 
           # Convert ActiveRecord config keys to PG-style keys
+          return {
+            host: ar_config[:host],
+            port: ar_config[:port],
+            dbname: ar_config[:database],
+            user: ar_config[:username],
+            password: ar_config[:password],
+            sslmode: ar_config[:sslmode] || 'prefer'
+          }
+        end
+
+        # Fallback to ActiveRecordConfig (legacy database.yml)
+        begin
+          require_relative 'active_record_config'
+          ar_config = HTM::ActiveRecordConfig.load_database_config
+
           {
             host: ar_config[:host],
             port: ar_config[:port],
@@ -495,7 +511,7 @@ class HTM
             sslmode: ar_config[:sslmode] || 'prefer'
           }
         rescue StandardError
-          # Fallback to legacy behavior if ActiveRecordConfig fails
+          # Fallback to legacy environment variables
           if ENV['HTM_DBURL']
             parse_connection_url(ENV['HTM_DBURL'])
           elsif ENV['HTM_DBNAME']

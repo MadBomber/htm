@@ -46,6 +46,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "chronic"
   spec.add_dependency "fast-mcp"
   spec.add_dependency "baran"
+  spec.add_dependency "anyway_config", ">= 2.6"
   # Optional runtime dependencies for different job backends
   # - ActiveJob (bundled with Rails)
   # - Sidekiq (add to Gemfile if using :sidekiq backend)
