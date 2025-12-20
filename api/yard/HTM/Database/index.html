@@ -4228,9 +4228,8 @@
 initialization</p>
 <h1 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h1>
 <h2 id="method-c-default_config">default_config()<a class="headerlink" href="#method-c-default_config" title="Permanent link">&para;</a></h2>
-<p>Get default database configuration (respects RAILS_ENV)</p>
-<p>Uses ActiveRecordConfig which reads from config/database.yml and respects
-RAILS_ENV for environment-specific database selection.
+<p>Get default database configuration (respects HTM_ENV)</p>
+<p>Uses HTM::Config for database settings.
 <strong><code>@return</code></strong> [Hash, nil] Connection configuration hash with PG-style keys</p>
 <h2 id="method-c-drop">drop(db_url nil)<a class="headerlink" href="#method-c-drop" title="Permanent link">&para;</a></h2>
 <p>Drop all HTM tables (respects RAILS_ENV)
@@ -4249,7 +4248,7 @@ comprehensive database documentation including:
 *   Table schemas with comments
 *   Index information
 *   Relationship diagrams
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-info">info(db_url nil)<a class="headerlink" href="#method-c-info" title="Permanent link">&para;</a></h2>
 <p>Show database info (respects RAILS_ENV)
@@ -4262,11 +4261,11 @@ comprehensive database documentation including:
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-migrate">migrate(db_url nil)<a class="headerlink" href="#method-c-migrate" title="Permanent link">&para;</a></h2>
 <p>Run pending database migrations
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-migration_status">migration_status(db_url nil)<a class="headerlink" href="#method-c-migration_status" title="Permanent link">&para;</a></h2>
 <p>Show migration status
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-parse_connection_params">parse_connection_params()<a class="headerlink" href="#method-c-parse_connection_params" title="Permanent link">&para;</a></h2>
 <p>Build config from individual environment variables
@@ -4281,11 +4280,11 @@ comprehensive database documentation including:
 <p>Loads and executes db/seeds.rb file following Rails conventions. All seeding
 logic is contained in db/seeds.rb and reads data from markdown files in
 db/seed_data/ directory.
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <h2 id="method-c-setup">setup(db_url nil, run_migrations: true, dump_schema: false)<a class="headerlink" href="#method-c-setup" title="Permanent link">&para;</a></h2>
 <p>Set up the HTM database schema
-<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)</p>
+<strong><code>@param</code></strong> [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)</p>
 <p><strong><code>@param</code></strong> [Boolean] Whether to run migrations (default: true)</p>
 <p><strong><code>@param</code></strong> [Boolean] Whether to dump schema to db/schema.sql after setup (default: false)</p>
 <p><strong><code>@return</code></strong> [void] </p>
