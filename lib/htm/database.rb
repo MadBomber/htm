@@ -11,7 +11,7 @@ class HTM
     class << self
       # Set up the HTM database schema
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
       # @param run_migrations [Boolean] Whether to run migrations (default: true)
       # @param dump_schema [Boolean] Whether to dump schema to db/schema.sql after setup (default: false)
       # @return [void]
@@ -40,7 +40,7 @@ class HTM
 
       # Run pending database migrations
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
       # @return [void]
       #
       def migrate(db_url = nil)
@@ -57,7 +57,7 @@ class HTM
 
       # Show migration status
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
       # @return [void]
       #
       def migration_status(db_url = nil)
@@ -158,7 +158,7 @@ class HTM
       # All seeding logic is contained in db/seeds.rb and reads data
       # from markdown files in db/seed_data/ directory.
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
       # @return [void]
       #
       def seed(db_url = nil)
@@ -292,7 +292,7 @@ class HTM
       # - Index information
       # - Relationship diagrams
       #
-      # @param db_url [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+      # @param db_url [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
       # @return [void]
       #
       def generate_docs(db_url = nil)
@@ -319,8 +319,8 @@ class HTM
         end
 
         # Get database URL
-        dsn = db_url || ENV['HTM_DBURL']
-        raise "Database configuration not found. Set HTM_DBURL environment variable." unless dsn
+        dsn = db_url || ENV['HTM_DATABASE__URL']
+        raise "Database configuration not found. Set HTM_DATABASE__URL environment variable." unless dsn
 
         # Ensure sslmode is set for local development (tbls requires it)
         unless dsn.include?('sslmode=')
@@ -460,48 +460,31 @@ class HTM
       # @return [Hash, nil] Connection configuration hash
       #
       def parse_connection_params
-        return nil unless ENV['HTM_DBNAME']
+        return nil unless ENV['HTM_DATABASE__NAME']
 
         {
-          host: ENV['HTM_DBHOST'] || 'localhost',
-          port: (ENV['HTM_DBPORT'] || 5432).to_i,
-          dbname: ENV['HTM_DBNAME'],
-          user: ENV['HTM_DBUSER'],
-          password: ENV['HTM_DBPASS'],
-          sslmode: ENV['HTM_DBSSLMODE'] || 'prefer'
+          host: ENV['HTM_DATABASE__HOST'] || 'localhost',
+          port: (ENV['HTM_DATABASE__PORT'] || 5432).to_i,
+          dbname: ENV['HTM_DATABASE__NAME'],
+          user: ENV['HTM_DATABASE__USER'],
+          password: ENV['HTM_DATABASE__PASSWORD'],
+          sslmode: ENV['HTM_DATABASE__SSLMODE'] || 'prefer'
         }
       end
 
       # Get default database configuration
       #
-      # Uses HTM::Config for database settings, with fallback to
-      # ActiveRecordConfig for legacy database.yml support.
+      # Uses HTM::Config for database settings.
       #
       # @return [Hash, nil] Connection configuration hash with PG-style keys
       #
       def default_config
         htm_config = HTM.config
 
-        # Try HTM::Config first
         if htm_config.database_configured?
           ar_config = htm_config.database_config
 
           # Convert ActiveRecord config keys to PG-style keys
-          return {
-            host: ar_config[:host],
-            port: ar_config[:port],
-            dbname: ar_config[:database],
-            user: ar_config[:username],
-            password: ar_config[:password],
-            sslmode: ar_config[:sslmode] || 'prefer'
-          }
-        end
-
-        # Fallback to ActiveRecordConfig (legacy database.yml)
-        begin
-          require_relative 'active_record_config'
-          ar_config = HTM::ActiveRecordConfig.load_database_config
-
           {
             host: ar_config[:host],
             port: ar_config[:port],
@@ -510,13 +493,10 @@ class HTM
             password: ar_config[:password],
             sslmode: ar_config[:sslmode] || 'prefer'
           }
-        rescue StandardError
-          # Fallback to legacy environment variables
-          if ENV['HTM_DBURL']
-            parse_connection_url(ENV['HTM_DBURL'])
-          elsif ENV['HTM_DBNAME']
-            parse_connection_params
-          end
+        elsif ENV['HTM_DATABASE__URL']
+          parse_connection_url(ENV['HTM_DATABASE__URL'])
+        elsif ENV['HTM_DATABASE__NAME']
+          parse_connection_params
         end
       end
 

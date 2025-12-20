@@ -63,7 +63,7 @@ class HTM
           HTM.logger.info "HTM database connection verified"
         rescue StandardError => e
           HTM.logger.warn "HTM database connection check failed: #{e.message}"
-          HTM.logger.warn "Set HTM_DBURL environment variable or configure database.yml"
+          HTM.logger.warn "Set HTM_DATABASE__URL environment variable"
         end
       end
     end

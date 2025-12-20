@@ -70,7 +70,7 @@ class HTM
   #
   # @param working_memory_size [Integer] Maximum tokens for working memory (default: 128,000)
   # @param robot_name [String] Human-readable name for this robot (auto-generated if not provided)
-  # @param db_config [Hash] Database configuration (uses ENV['HTM_DBURL'] if not provided)
+  # @param db_config [Hash] Database configuration (uses ENV['HTM_DATABASE__URL'] if not provided)
   # @param db_pool_size [Integer] Database connection pool size (default: 5)
   # @param db_query_timeout [Integer] Database query timeout in milliseconds (default: 30000)
   # @param db_cache_size [Integer] Number of database query results to cache (default: 1000, use 0 to disable)

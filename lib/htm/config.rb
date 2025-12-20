@@ -239,7 +239,7 @@ class HTM
 
     # Database convenience methods
     def database_url
-      url = database.url || ENV['HTM_DBURL']
+      url = database.url
       return url if url && !url.empty?
 
       build_database_url
@@ -268,7 +268,7 @@ class HTM
     end
 
     def database_configured?
-      url = database.url || ENV['HTM_DBURL']
+      url = database.url
       (url && !url.empty?) || (database.name && !database.name.empty?)
     end
 

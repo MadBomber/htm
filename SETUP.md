@@ -60,10 +60,10 @@ psql htm_development -c "SELECT extname, extversion FROM pg_extension;"
 
 ```bash
 # Add to your ~/.bashrc or ~/.zshrc
-export HTM_DBURL="postgresql://postgres@localhost:5432/htm_development"
+export HTM_DATABASE__URL="postgresql://postgres@localhost:5432/htm_development"
 
 # Or for a specific user with password
-export HTM_DBURL="postgresql://username:password@localhost:5432/htm_development"
+export HTM_DATABASE__URL="postgresql://username:password@localhost:5432/htm_development"
 ```
 
 ### 5. Verify Connection
@@ -136,12 +136,12 @@ export OLLAMA_URL="http://custom-host:11434"
 
 | Variable | Description | Example Value |
 |----------|-------------|---------------|
-| `HTM_DBURL` | Full PostgreSQL connection URL (preferred) | `postgresql://postgres@localhost:5432/htm_development` |
-| `HTM_DBNAME` | Database name (fallback) | `htm_development` |
-| `HTM_DBUSER` | Database user (fallback) | `postgres` |
-| `HTM_DBPASS` | Database password (fallback) | `` |
-| `HTM_DBHOST` | Database host (fallback) | `localhost` |
-| `HTM_DBPORT` | Database port (fallback) | `5432` |
+| `HTM_DATABASE__URL` | Full PostgreSQL connection URL (preferred) | `postgresql://postgres@localhost:5432/htm_development` |
+| `HTM_DATABASE__NAME` | Database name (fallback) | `htm_development` |
+| `HTM_DATABASE__USER` | Database user (fallback) | `postgres` |
+| `HTM_DATABASE__PASSWORD` | Database password (fallback) | `` |
+| `HTM_DATABASE__HOST` | Database host (fallback) | `localhost` |
+| `HTM_DATABASE__PORT` | Database port (fallback) | `5432` |
 | `OLLAMA_URL` | Ollama server URL | `http://localhost:11434` |
 
 ## Development Workflow
@@ -150,7 +150,7 @@ export OLLAMA_URL="http://custom-host:11434"
 
 ```bash
 # 1. Set database URL (if not in shell config)
-export HTM_DBURL="postgresql://postgres@localhost:5432/htm_development"
+export HTM_DATABASE__URL="postgresql://postgres@localhost:5432/htm_development"
 
 # 2. Install dependencies
 bundle install
@@ -196,7 +196,7 @@ HTM/
 │   │   ├── configuration.rb      # Multi-provider LLM config
 │   │   └── version.rb            # Version constant
 ├── config/
-│   └── database.yml              # Database configuration
+│   └── defaults.yml              # Default configuration values
 ├── db/
 │   └── schema.sql                # Database schema
 ├── test/
@@ -248,10 +248,10 @@ If you get connection errors:
 
 ```bash
 # Verify environment variable is set
-echo $HTM_DBURL
+echo $HTM_DATABASE__URL
 
 # Test connection manually
-psql $HTM_DBURL -c "SELECT 1"
+psql $HTM_DATABASE__URL -c "SELECT 1"
 
 # Check PostgreSQL is running
 brew services list | grep postgresql  # macOS

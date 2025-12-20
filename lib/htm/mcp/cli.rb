@@ -25,61 +25,75 @@ class HTM
 
           ENVIRONMENT VARIABLES:
 
+            Note: Nested config uses double underscores (e.g., HTM_EMBEDDING__PROVIDER)
+
             Environment:
               HTM_ENV                       Environment name: development, test, production
                                             (priority: HTM_ENV > RAILS_ENV > RACK_ENV > 'development')
 
-            Database (required):
-              HTM_DBURL                     PostgreSQL connection URL
+            Database:
+              HTM_DATABASE__URL             PostgreSQL connection URL (preferred)
                                             Example: postgresql://user:pass@localhost:5432/htm_development
+              HTM_DATABASE__HOST            Database host (default: localhost)
+              HTM_DATABASE__PORT            Database port (default: 5432)
+              HTM_DATABASE__NAME            Database name
+              HTM_DATABASE__USER            Database username
+              HTM_DATABASE__PASSWORD        Database password
+              HTM_DATABASE__SSLMODE         SSL mode (default: prefer)
+              HTM_DATABASE__POOL_SIZE       Connection pool size (default: 10)
 
-            Database (alternative to HTM_DBURL):
-              HTM_DBNAME                    Database name
-              HTM_DBHOST                    Database host (default: localhost)
-              HTM_DBPORT                    Database port (default: 5432)
-              HTM_DBUSER                    Database username
-              HTM_DBPASS                    Database password
-              HTM_DBSSLMODE                 SSL mode (default: prefer)
+            Embedding:
+              HTM_EMBEDDING__PROVIDER       Provider (default: ollama)
+              HTM_EMBEDDING__MODEL          Model (default: nomic-embed-text:latest)
+              HTM_EMBEDDING__DIMENSIONS     Dimensions (default: 768)
+              HTM_EMBEDDING__TIMEOUT        Timeout seconds (default: 120)
+              HTM_EMBEDDING__MAX_DIMENSION  Max dimensions (default: 2000)
 
-            LLM Providers:
-              HTM_EMBEDDING_PROVIDER        Embedding provider (default: ollama)
-              HTM_EMBEDDING_MODEL           Embedding model (default: nomic-embed-text:latest)
-              HTM_EMBEDDING_DIMENSIONS      Embedding dimensions (default: 768)
-              HTM_TAG_PROVIDER              Tag extraction provider (default: ollama)
-              HTM_TAG_MODEL                 Tag model (default: gemma3:latest)
-              HTM_PROPOSITION_PROVIDER      Proposition provider (default: ollama)
-              HTM_PROPOSITION_MODEL         Proposition model (default: gemma3:latest)
-              HTM_EXTRACT_PROPOSITIONS      Enable propositions (default: false)
+            Tag Extraction:
+              HTM_TAG__PROVIDER             Provider (default: ollama)
+              HTM_TAG__MODEL                Model (default: gemma3:latest)
+              HTM_TAG__TIMEOUT              Timeout seconds (default: 180)
+              HTM_TAG__MAX_DEPTH            Max hierarchy depth (default: 4)
 
-            Ollama (default provider):
-              HTM_OLLAMA_URL                Ollama server URL (default: http://localhost:11434)
-
-            Other Providers (set API keys as needed):
-              HTM_OPENAI_API_KEY            OpenAI API key
-              HTM_ANTHROPIC_API_KEY         Anthropic API key
-              HTM_GEMINI_API_KEY            Google Gemini API key
-              HTM_AZURE_API_KEY             Azure OpenAI API key
-              HTM_AZURE_ENDPOINT            Azure OpenAI endpoint
-
-            Timeouts:
-              HTM_EMBEDDING_TIMEOUT         Embedding timeout seconds (default: 120)
-              HTM_TAG_TIMEOUT               Tag timeout seconds (default: 180)
-              HTM_CONNECTION_TIMEOUT        Connection timeout seconds (default: 30)
+            Proposition Extraction:
+              HTM_PROPOSITION__PROVIDER     Provider (default: ollama)
+              HTM_PROPOSITION__MODEL        Model (default: gemma3:latest)
+              HTM_PROPOSITION__TIMEOUT      Timeout seconds (default: 180)
+              HTM_PROPOSITION__ENABLED      Enable extraction (default: false)
 
             Chunking:
-              HTM_CHUNK_SIZE                Max chars per chunk (default: 1024)
-              HTM_CHUNK_OVERLAP             Chunk overlap chars (default: 64)
+              HTM_CHUNKING__SIZE            Max chars per chunk (default: 1024)
+              HTM_CHUNKING__OVERLAP         Chunk overlap chars (default: 64)
+
+            Job Backend:
+              HTM_JOB__BACKEND              Backend: inline, thread, active_job, sidekiq
+
+            Provider API Keys:
+              HTM_PROVIDERS__OLLAMA__URL           Ollama URL (default: http://localhost:11434)
+              HTM_PROVIDERS__OPENAI__API_KEY       OpenAI API key
+              HTM_PROVIDERS__ANTHROPIC__API_KEY    Anthropic API key
+              HTM_PROVIDERS__GEMINI__API_KEY       Google Gemini API key
+              HTM_PROVIDERS__AZURE__API_KEY        Azure OpenAI API key
+              HTM_PROVIDERS__AZURE__ENDPOINT       Azure OpenAI endpoint
 
             Other:
-              HTM_LOG_LEVEL                 Log level (default: INFO)
-              HTM_JOB_BACKEND               Job backend: inline, thread, active_job, sidekiq
+              HTM_LOG_LEVEL                 Log level (default: info)
+              HTM_CONNECTION_TIMEOUT        Connection timeout seconds (default: 30)
               HTM_TELEMETRY_ENABLED         Enable OpenTelemetry (default: false)
-              HTM_MAX_EMBEDDING_DIMENSION   Max vector dimensions (default: 2000)
-              HTM_MAX_TAG_DEPTH             Max tag hierarchy depth (default: 4)
+
+          OPTIONS:
+            -c, --config [PATH]   Without PATH: output default config to STDOUT
+                                  With PATH: load config from YAML file
 
           EXAMPLES:
+            # Generate a config file template
+            htm_mcp --config > my_config.yml
+
+            # Start server with custom config
+            htm_mcp --config my_config.yml
+
             # First-time setup
-            export HTM_DBURL="postgresql://postgres@localhost:5432/htm"
+            export HTM_DATABASE__URL="postgresql://postgres@localhost:5432/htm"
             htm_mcp setup
 
             # Verify connection
@@ -100,7 +114,7 @@ class HTM
                 "htm-memory": {
                   "command": "/path/to/htm_mcp",
                   "env": {
-                    "HTM_DBURL": "postgresql://postgres@localhost:5432/htm_development"
+                    "HTM_DATABASE__URL": "postgresql://postgres@localhost:5432/htm_development"
                   }
                 }
               }
@@ -109,9 +123,9 @@ class HTM
       end
 
       def check_database_config!
-        unless ENV['HTM_DBURL'] || ENV['HTM_DBNAME']
+        unless ENV['HTM_DATABASE__URL'] || ENV['HTM_DATABASE__NAME']
           warn "Error: Database not configured."
-          warn "Set HTM_DBURL or HTM_DBNAME environment variable."
+          warn "Set HTM_DATABASE__URL or HTM_DATABASE__NAME environment variable."
           warn "Run 'htm_mcp help' for details."
           exit 1
         end
@@ -123,12 +137,12 @@ class HTM
         warn ""
         if msg.include?("does not exist")
           warn "Suggestion: The database does not exist. Create it with:"
-          warn "  createdb #{extract_dbname(ENV['HTM_DBURL'] || ENV['HTM_DBNAME'])}"
+          warn "  createdb #{extract_dbname(ENV['HTM_DATABASE__URL'] || ENV['HTM_DATABASE__NAME'])}"
           warn "Then initialize the schema with:"
           warn "  htm_mcp setup"
         elsif msg.include?("password authentication failed") || msg.include?("no password supplied")
           warn "Suggestion: Check your database credentials."
-          warn "Verify HTM_DBURL has correct username and password:"
+          warn "Verify HTM_DATABASE__URL has correct username and password:"
           warn "  postgresql://USER:PASSWORD@localhost:5432/DATABASE"
         elsif msg.include?("connection refused") || msg.include?("could not connect")
           warn "Suggestion: PostgreSQL server is not running or not accepting connections."
@@ -261,6 +275,101 @@ class HTM
         pending_count
       end
 
+      def output_default_config
+        defaults_path = File.expand_path('../../config/defaults.yml', __dir__)
+        if File.exist?(defaults_path)
+          puts File.read(defaults_path)
+        else
+          warn "Error: defaults.yml not found at #{defaults_path}"
+          exit 1
+        end
+      end
+
+      def load_config_file(path)
+        unless File.exist?(path)
+          warn "Error: Config file not found: #{path}"
+          exit 1
+        end
+
+        begin
+          require 'yaml'
+          config_data = YAML.safe_load(
+            File.read(path),
+            permitted_classes: [Symbol],
+            symbolize_names: true,
+            aliases: true
+          ) || {}
+
+          # Determine which section to use based on environment
+          env = HTM::Config.env.to_sym
+          base = config_data[:defaults] || {}
+          env_overrides = config_data[env] || {}
+
+          # Merge base with environment-specific overrides
+          merged = deep_merge(base, env_overrides)
+
+          apply_config(merged)
+
+          warn "Loaded configuration from: #{path}"
+          warn "Environment: #{env}"
+        rescue => e
+          warn "Error loading config file: #{e.message}"
+          warn e.backtrace.first(5).join("\n") if ENV['DEBUG']
+          exit 1
+        end
+      end
+
+      def deep_merge(base, override)
+        base.merge(override) do |_key, old_val, new_val|
+          if old_val.is_a?(Hash) && new_val.is_a?(Hash)
+            deep_merge(old_val, new_val)
+          else
+            new_val.nil? ? old_val : new_val
+          end
+        end
+      end
+
+      def apply_config(config)
+        HTM.configure do |c|
+          # Apply nested sections
+          apply_section(c, :database, config[:database])
+          apply_section(c, :service, config[:service])
+          apply_section(c, :embedding, config[:embedding])
+          apply_section(c, :tag, config[:tag])
+          apply_section(c, :proposition, config[:proposition])
+          apply_section(c, :chunking, config[:chunking])
+          apply_section(c, :circuit_breaker, config[:circuit_breaker])
+          apply_section(c, :relevance, config[:relevance])
+          apply_section(c, :job, config[:job])
+          apply_section(c, :providers, config[:providers])
+
+          # Apply top-level scalars
+          c.week_start = config[:week_start] if config[:week_start]
+          c.connection_timeout = config[:connection_timeout] if config[:connection_timeout]
+          c.telemetry_enabled = config[:telemetry_enabled] unless config[:telemetry_enabled].nil?
+          c.log_level = config[:log_level] if config[:log_level]
+        end
+      end
+
+      def apply_section(config, section_name, values)
+        return unless values.is_a?(Hash)
+
+        section = config.send(section_name)
+        values.each do |key, value|
+          next if value.nil?
+
+          if value.is_a?(Hash)
+            # Handle nested sections (like providers.openai)
+            subsection = section.send(key)
+            value.each do |subkey, subvalue|
+              subsection.send("#{subkey}=", subvalue) unless subvalue.nil?
+            end
+          else
+            section.send("#{key}=", value)
+          end
+        end
+      end
+
       def run_stats
         puts "HTM Memory Statistics"
         puts "====================="
@@ -298,6 +407,12 @@ class HTM
       end
 
       def run(args)
+        args = args.dup
+
+        # Handle -c / --config option first (can be combined with other commands)
+        config_loaded = handle_config_option(args)
+
+        # Process remaining command
         case args[0]&.downcase
         when 'help', '-h', '--help'
           print_help
@@ -327,6 +442,34 @@ class HTM
           warn "Run 'htm_mcp help' for usage."
           exit 1
         end
+      end
+
+      # Handle -c / --config option, modifying args in place
+      # Returns true if config was loaded, nil otherwise
+      def handle_config_option(args)
+        config_idx = args.index('-c') || args.index('--config')
+        return nil unless config_idx
+
+        # Remove the -c/--config flag
+        args.delete_at(config_idx)
+
+        # Check if next arg is a path (not another flag or command)
+        next_arg = args[config_idx]
+
+        if next_arg.nil? || next_arg.start_with?('-') || command?(next_arg)
+          # No path provided - output default config and exit
+          output_default_config
+          exit 0
+        else
+          # Path provided - load config file
+          config_path = args.delete_at(config_idx)
+          load_config_file(config_path)
+          true
+        end
+      end
+
+      def command?(arg)
+        %w[help version setup init verify stats server stdio].include?(arg.downcase)
       end
     end
   end

@@ -8,10 +8,9 @@ initialization
 
 # Class Methods
 ## default_config() {: #method-c-default_config }
-Get default database configuration (respects RAILS_ENV)
+Get default database configuration (respects HTM_ENV)
 
-Uses ActiveRecordConfig which reads from config/database.yml and respects
-RAILS_ENV for environment-specific database selection.
+Uses HTM::Config for database settings.
 **`@return`** [Hash, nil] Connection configuration hash with PG-style keys
 
 ## drop(db_url nil) {: #method-c-drop }
@@ -37,7 +36,7 @@ comprehensive database documentation including:
 *   Table schemas with comments
 *   Index information
 *   Relationship diagrams
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
 
 **`@return`** [void] 
 
@@ -57,13 +56,13 @@ Uses psql to load the schema file
 
 ## migrate(db_url nil) {: #method-c-migrate }
 Run pending database migrations
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
 
 **`@return`** [void] 
 
 ## migration_status(db_url nil) {: #method-c-migration_status }
 Show migration status
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
 
 **`@return`** [void] 
 
@@ -85,13 +84,13 @@ Seed database with sample data
 Loads and executes db/seeds.rb file following Rails conventions. All seeding
 logic is contained in db/seeds.rb and reads data from markdown files in
 db/seed_data/ directory.
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
 
 **`@return`** [void] 
 
 ## setup(db_url nil, run_migrations: true, dump_schema: false) {: #method-c-setup }
 Set up the HTM database schema
-**`@param`** [String] Database connection URL (uses ENV['HTM_DBURL'] if not provided)
+**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
 
 **`@param`** [Boolean] Whether to run migrations (default: true)
 
