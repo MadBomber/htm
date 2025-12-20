@@ -18,7 +18,7 @@ Supported backends:
 **`@example`**
 ```ruby
 HTM.configure do |config|
-  config.job_backend = :active_job
+  config.job.backend = :active_job
 end
 ```
 **`@example`**

@@ -81,10 +81,10 @@ require 'htm'
 
 # Configure HTM globally (optional - uses Ollama by default)
 HTM.configure do |config|
-  config.embedding_provider = :ollama
-  config.embedding_model = 'nomic-embed-text:latest'
-  config.tag_provider = :ollama
-  config.tag_model = 'gemma3:latest'
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text:latest'
+  config.tag.provider = :ollama
+  config.tag.model = 'gemma3:latest'
 end
 
 # Initialize HTM for your robot

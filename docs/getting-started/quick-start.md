@@ -125,10 +125,10 @@ Create an HTM instance for your robot:
 ```ruby
 # Configure HTM globally (optional - uses Ollama by default)
 HTM.configure do |config|
-  config.embedding_provider = :ollama
-  config.embedding_model = 'nomic-embed-text:latest'
-  config.tag_provider = :ollama
-  config.tag_model = 'gemma3:latest'
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text:latest'
+  config.tag.provider = :ollama
+  config.tag.model = 'gemma3:latest'
 end
 
 # Initialize HTM with a robot name
@@ -338,10 +338,10 @@ puts "=" * 60
 
 # Step 1: Configure and initialize HTM
 HTM.configure do |config|
-  config.embedding_provider = :ollama
-  config.embedding_model = 'nomic-embed-text:latest'
-  config.tag_provider = :ollama
-  config.tag_model = 'gemma3:latest'
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text:latest'
+  config.tag.provider = :ollama
+  config.tag.model = 'gemma3:latest'
 end
 
 htm = HTM.new(
@@ -522,8 +522,8 @@ htm = HTM.new(
 
 # Try different embedding models via configure
 HTM.configure do |config|
-  config.embedding_provider = :ollama
-  config.embedding_model = 'llama3:latest'  # Use Llama3
+  config.embedding.provider = :ollama
+  config.embedding.model = 'llama3:latest'  # Use Llama3
 end
 
 # Try different recall strategies

@@ -16,35 +16,46 @@ HTM uses RubyLLM for multi-provider LLM support. Supported providers:
 *   :deepseek (DeepSeek)
 
 
-**`@example`**
+**`@example`** Using nested configuration sections
 ```ruby
 HTM.configure do |config|
-  config.embedding_provider = :openai
-  config.embedding_model = 'text-embedding-3-small'
-  config.tag_provider = :openai
-  config.tag_model = 'gpt-4o-mini'
+  config.embedding.provider = :openai
+  config.embedding.model = 'text-embedding-3-small'
+  config.tag.provider = :openai
+  config.tag.model = 'gpt-4o-mini'
   config.openai_api_key = ENV['OPENAI_API_KEY']
 end
 ```
-**`@example`**
+**`@example`** Using Ollama (local default)
 ```ruby
 HTM.configure do |config|
-  config.embedding_provider = :ollama
-  config.embedding_model = 'nomic-embed-text'
-  config.tag_provider = :ollama
-  config.tag_model = 'llama3'
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text'
+  config.tag.provider = :ollama
+  config.tag.model = 'llama3'
   config.ollama_url = 'http://localhost:11434'
 end
 ```
-**`@example`**
+**`@example`** Mixed providers
 ```ruby
 HTM.configure do |config|
-  config.embedding_provider = :openai
-  config.embedding_model = 'text-embedding-3-small'
+  config.embedding.provider = :openai
+  config.embedding.model = 'text-embedding-3-small'
   config.openai_api_key = ENV['OPENAI_API_KEY']
-  config.tag_provider = :anthropic
-  config.tag_model = 'claude-3-haiku-20240307'
+  config.tag.provider = :anthropic
+  config.tag.model = 'claude-3-haiku-20240307'
   config.anthropic_api_key = ENV['ANTHROPIC_API_KEY']
+end
+```
+**`@example`** Job and chunking configuration
+```ruby
+HTM.configure do |config|
+  config.job.backend = :inline  # or :sidekiq, :active_job, :thread
+  config.chunking.size = 1024
+  config.chunking.overlap = 64
+  config.proposition.enabled = true
+  config.proposition.provider = :ollama
+  config.proposition.model = 'gemma3:latest'
 end
 ```
 **`@example`**

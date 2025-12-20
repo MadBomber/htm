@@ -15,7 +15,7 @@ require 'htm'
 
 # Configure for CLI (synchronous execution)
 HTM.configure do |config|
-  config.job_backend = :inline  # Jobs run immediately
+  config.job.backend = :inline  # Jobs run immediately
 end
 
 htm = HTM.new(robot_name: "cli_assistant")
@@ -151,7 +151,7 @@ HTM.configuration.job_backend  # => :thread
 
 ```ruby
 HTM.configure do |config|
-  config.job_backend = :inline  # Force synchronous
+  config.job.backend = :inline  # Force synchronous
 end
 ```
 
@@ -177,7 +177,7 @@ export HTM_JOB_BACKEND=inline  # Override auto-detection
 ```ruby
 # Use inline backend
 HTM.configure do |config|
-  config.job_backend = :inline
+  config.job.backend = :inline
 
   # CLI-friendly logging
   config.logger.formatter = proc do |severity, datetime, progname, msg|
@@ -253,8 +253,8 @@ gem 'htm'
 
 # config/initializers/htm.rb (optional)
 HTM.configure do |config|
-  config.embedding_model = 'nomic-embed-text'
-  config.tag_model = 'llama3'
+  config.embedding.model = 'nomic-embed-text'
+  config.tag.model = 'llama3'
 end
 ```
 
@@ -397,8 +397,8 @@ bundle exec sidekiq
 ```ruby
 # Use faster/smaller models
 HTM.configure do |config|
-  config.embedding_model = 'all-minilm'  # Smaller, faster
-  config.tag_model = 'gemma2:2b'         # Smaller model
+  config.embedding.model = 'all-minilm'  # Smaller, faster
+  config.tag.model = 'gemma2:2b'         # Smaller model
 end
 
 # Or disable features
@@ -438,7 +438,7 @@ end
 
 # After (explicit inline):
 HTM.configure do |config|
-  config.job_backend = :inline
+  config.job.backend = :inline
 end
 # Jobs run synchronously, guaranteed to complete
 ```

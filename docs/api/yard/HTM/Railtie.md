@@ -20,8 +20,8 @@ This railtie automatically configures HTM when Rails boots:
 ```ruby
 # config/initializers/htm.rb
 HTM.configure do |config|
-  config.embedding_model = 'custom-model'
-  config.tag_model = 'custom-tag-model'
+  config.embedding.model = 'custom-model'
+  config.tag.model = 'custom-tag-model'
 end
 ```
 

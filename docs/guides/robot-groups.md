@@ -89,10 +89,10 @@ require 'htm'
 
 # Configure HTM
 HTM.configure do |config|
-  config.embedding_provider = :ollama
-  config.embedding_model = 'nomic-embed-text'
-  config.tag_provider = :ollama
-  config.tag_model = 'llama3'
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text'
+  config.tag.provider = :ollama
+  config.tag.model = 'llama3'
 end
 
 # Create a robot group with active and passive members
@@ -386,8 +386,8 @@ group_name = 'distributed-service'
 
 # Configure HTM
 HTM.configure do |config|
-  config.embedding_provider = :ollama
-  config.embedding_model = 'nomic-embed-text'
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text'
 end
 
 # Create HTM instance for this worker
