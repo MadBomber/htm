@@ -6,6 +6,77 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [0.0.18] - 2025-12-20
+### Added
+- **Anyway::Config-based configuration system** - Replaced custom Configuration class with robust multi-source config management
+  - **Multi-layer configuration loading** with priority (lowest to highest):
+    1. Bundled defaults (`lib/htm/config/defaults.yml`)
+    2. XDG user config (`~/.config/htm/htm.yml`)
+    3. Project config (`./config/htm.yml`)
+    4. Local overrides (`./config/htm.local.yml`) - gitignored for secrets
+    5. Environment variables (`HTM_*`)
+    6. Programmatic (`HTM.configure` block)
+  - **Nested configuration access**: `HTM.config.database.host`, `HTM.config.embedding.model`, etc.
+  - **Environment-specific overrides**: Different defaults for development, test, and production environments
+  - **Configuration source tracing**: Debug where each configuration value originated
+- **YAML-based prompt templates** - Tag and proposition extraction prompts now configurable via YAML
+  - Prompts use `%{placeholder}` syntax for runtime interpolation
+  - System and user prompts for tag extraction: `tag.system_prompt`, `tag.user_prompt_template`
+  - System and user prompts for proposition extraction: `proposition.system_prompt`, `proposition.user_prompt_template`
+  - Taxonomy context templates: `tag.taxonomy_context_existing`, `tag.taxonomy_context_empty`
+- **New loaders for configuration sources**:
+  - `HTM::Loaders::DefaultsLoader` - Loads bundled gem defaults from YAML
+  - `HTM::Loaders::XDGConfigLoader` - Loads XDG-compliant user configuration
+- **Configuration management example** - New `examples/config_file_example/` directory
+  - `show_config.rb` - Demonstrates configuration source tracing
+  - Sample configuration files showing override mechanisms
+  - Comprehensive README with configuration patterns
+
+### Changed
+- **BREAKING: Database environment variables renamed** - Migrate from `HTM_DBURL`/`HTM_DB*` to namespaced format
+  - `HTM_DBURL` → `HTM_DATABASE__URL`
+  - `HTM_DATABASE` → `HTM_DATABASE__NAME`
+  - `HTM_DB_USER` → `HTM_DATABASE__USER`
+  - `HTM_DB_PASSWORD` → `HTM_DATABASE__PASSWORD`
+  - `HTM_DB_HOST` → `HTM_DATABASE__HOST`
+  - `HTM_DB_PORT` → `HTM_DATABASE__PORT`
+  - Uses double underscore (`__`) for nested config (Anyway::Config convention)
+- **Configuration access patterns updated** - Direct attributes → nested configuration
+  - `config.embedding_provider` → `config.embedding.provider`
+  - `config.embedding_model` → `config.embedding.model`
+  - `config.tag_provider` → `config.tag.provider`
+  - `config.tag_model` → `config.tag.model`
+  - `config.chunk_size` → `config.chunking.size`
+  - `config.chunk_overlap` → `config.chunking.overlap`
+- **Removed `config/database.yml`** - Replaced by flexible YAML configuration files
+- **Prompt generation refactored** - Hardcoded prompt strings moved to `defaults.yml` templates
+- **MCP CLI enhanced** - Improved command handling and configuration output display
+
+### Removed
+- **`HTM::Configuration` class** - Replaced by `HTM::Config` using Anyway::Config
+- **Legacy database environment variable support** - Must use new `HTM_DATABASE__*` format
+
+### Dependencies
+- Added `anyway_config` gem for configuration management
+
+### Migration Guide
+Update your environment variables:
+```bash
+# Old format
+export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
+
+# New format
+export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
+```
+
+Update configuration access:
+```ruby
+# Old pattern
+HTM.configuration.embedding_model
+
+# New pattern
+HTM.config.embedding.model
+```
 
 ## [0.0.17] - 2025-12-18
 
