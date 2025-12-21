@@ -32,6 +32,43 @@ All examples require:
 
 ## Standalone Scripts
 
+### config_file_example/
+
+**Configuration management with source tracing.**
+
+Demonstrates how HTM uses `anyway_config` for layered configuration from multiple sources, with source tracing to show where each value originated.
+
+```bash
+cd examples/config_file_example
+ruby show_config.rb
+```
+
+**Features:**
+- Configuration priority order (defaults → XDG → project → local → env vars)
+- Source tracing showing origin of each config value
+- `HTM_CONF` environment variable for custom config file paths
+- Environment-specific configuration (`HTM_ENV`)
+- Generating config templates with `htm_mcp config`
+
+**Usage examples:**
+```bash
+# Basic - loads ./config/htm.local.yml automatically
+ruby show_config.rb
+
+# Use custom config file
+HTM_CONF=./custom_config.yml ruby show_config.rb
+
+# Override with environment variables
+HTM_EMBEDDING__MODEL=mxbai-embed-large ruby show_config.rb
+
+# Different environment
+HTM_ENV=production ruby show_config.rb
+```
+
+See [config_file_example/README.md](config_file_example/README.md) for detailed documentation.
+
+---
+
 ### basic_usage.rb
 
 **Getting started with HTM fundamentals.**
@@ -405,6 +442,12 @@ examples/
 ├── custom_llm_configuration.rb    # LLM integration patterns
 ├── file_loader_usage.rb           # Document loading
 ├── timeframe_demo.rb              # Time-based filtering
+├── config_file_example/
+│   ├── show_config.rb             # Config source tracing demo
+│   ├── custom_config.yml          # Example for HTM_CONF
+│   ├── README.md                  # Configuration documentation
+│   └── config/
+│       └── htm.local.yml          # Auto-loaded local overrides
 ├── telemetry/
 │   ├── demo.rb                    # Live Grafana metrics dashboard
 │   ├── README.md
@@ -438,6 +481,7 @@ examples/
 | Use Case | Example |
 |----------|---------|
 | Learning HTM basics | `basic_usage.rb` |
+| Configuration management | `config_file_example/` |
 | Custom LLM integration | `custom_llm_configuration.rb` |
 | Loading documents/files | `file_loader_usage.rb` |
 | Time-based queries | `timeframe_demo.rb` |

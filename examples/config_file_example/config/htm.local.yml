@@ -1,0 +1,34 @@
+# HTM Local Configuration Example
+#
+# This file demonstrates local configuration overrides.
+# Place in ./config/htm.local.yml (typically gitignored)
+#
+# Bundled defaults are loaded automatically from:
+#   lib/htm/config/defaults.yml
+#
+# This file overrides specific values for local development.
+
+# Override database settings for this example
+database:
+  host: localhost
+  port: 5432
+  name: htm_example
+
+# Use local Ollama for embeddings
+embedding:
+  provider: ollama
+  model: nomic-embed-text:latest
+
+# Use local Ollama for tag extraction
+tag:
+  provider: ollama
+  model: gemma3:latest
+
+# Local development settings
+log_level: debug
+telemetry_enabled: false
+
+# Provider endpoints
+providers:
+  ollama:
+    url: http://localhost:11434

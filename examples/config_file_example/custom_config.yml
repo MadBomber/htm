@@ -1,0 +1,22 @@
+# Custom HTM Configuration
+#
+# Use this file with: HTM_CONF=custom_config.yml ruby show_config.rb
+#
+# This demonstrates loading config from an arbitrary file path
+# using the HTM_CONF environment variable.
+
+database:
+  host: custom-db.example.com
+  port: 5433
+  name: htm_custom
+
+embedding:
+  provider: openai
+  model: text-embedding-3-small
+  dimensions: 1536
+
+tag:
+  provider: anthropic
+  model: claude-3-haiku-20240307
+
+log_level: warn
