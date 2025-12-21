@@ -848,73 +848,36 @@ class HTM
 
     # ==========================================================================
     # Prompt Builders
+    #
+    # These methods use configurable prompt templates from defaults.yml.
+    # Templates use %{placeholder} syntax for runtime interpolation.
     # ==========================================================================
 
     def build_tag_extraction_prompt(text, existing_ontology)
       taxonomy_context = if existing_ontology.any?
         sample_tags = existing_ontology.sample([existing_ontology.size, 20].min)
-        "Existing taxonomy paths: #{sample_tags.join(', ')}\n\nPrefer reusing these paths when the text matches their domain."
+        tag.taxonomy_context_existing % { sample_tags: sample_tags.join(', ') }
       else
-        "This is a new taxonomy - establish clear root categories."
+        tag.taxonomy_context_empty
       end
 
-      <<~PROMPT
-        Extract classification tags for this text using a HIERARCHICAL TAXONOMY.
-
-        #{taxonomy_context}
-
-        TAG FORMAT: domain:category:subcategory:term (colon-separated, max #{max_tag_depth} levels)
-
-        LEVEL GUIDELINES:
-        - Level 1 (domain): Broad field (database, ai, web, security, devops)
-        - Level 2 (category): Major subdivision (database:relational, ai:machine-learning)
-        - Level 3 (subcategory): Specific area (database:relational:postgresql)
-        - Level 4 (term): Fine detail, use sparingly (database:relational:postgresql:extensions)
-
-        RULES:
-        1. Each concept belongs to ONE path only
-        2. Use lowercase, hyphens for multi-word terms
-        3. Return 2-5 tags that best classify this text
-        4. Match existing taxonomy paths when applicable
-
-        TEXT: #{text}
-
-        Return ONLY tags, one per line.
-      PROMPT
+      tag.user_prompt_template % {
+        text: text,
+        max_depth: max_tag_depth,
+        taxonomy_context: taxonomy_context
+      }
     end
 
     def build_tag_system_prompt
-      <<~SYSTEM.strip
-        You are a taxonomy classifier that assigns texts to a hierarchical classification tree.
-        Each concept has ONE canonical location in the tree.
-        Output 2-5 classification paths, one per line.
-      SYSTEM
+      tag.system_prompt.to_s.strip
     end
 
     def build_proposition_extraction_prompt(text)
-      <<~PROMPT
-        Extract all ATOMIC factual propositions from the following text.
-
-        An atomic proposition expresses exactly ONE relationship or fact.
-
-        Rules:
-        1. Split compound statements into separate atomic facts
-        2. Each proposition = exactly one fact
-        3. Use full names, never pronouns
-        4. Make each proposition understandable in isolation
-
-        TEXT: #{text}
-
-        Return ONLY atomic propositions, one per line. Use a dash (-) prefix for each.
-      PROMPT
+      proposition.user_prompt_template % { text: text }
     end
 
     def build_proposition_system_prompt
-      <<~SYSTEM.strip
-        You are an atomic fact extraction system. Your goal is maximum decomposition.
-        Break every statement into its smallest possible factual units.
-        Output ONLY propositions, one per line, prefixed with a dash (-).
-      SYSTEM
+      proposition.system_prompt.to_s.strip
     end
   end
 end

@@ -13,17 +13,26 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_default_values
-    config = HTM::Config.new
+    # Temporarily clear HTM env vars to test actual defaults from defaults.yml
+    saved_env = ENV.to_h.select { |k, _| k.start_with?('HTM_') }
+    saved_env.each_key { |k| ENV.delete(k) }
 
-    assert_equal :ollama, config.embedding_provider
-    assert_equal 'nomic-embed-text:latest', config.embedding_model
-    assert_equal 768, config.embedding_dimensions
-    assert_equal :ollama, config.tag_provider
-    assert_equal 'gemma3:latest', config.tag_model
-    assert_equal 120, config.embedding_timeout
-    assert_equal 180, config.tag_timeout
-    assert_equal 30, config.connection_timeout
-    assert_equal :sunday, config.week_start
+    begin
+      config = HTM::Config.new
+
+      assert_equal :ollama, config.embedding_provider
+      assert_equal 'nomic-embed-text:latest', config.embedding_model
+      assert_equal 768, config.embedding_dimensions
+      assert_equal :ollama, config.tag_provider
+      assert_equal 'gemma3:latest', config.tag_model
+      assert_equal 120, config.embedding_timeout
+      assert_equal 180, config.tag_timeout
+      assert_equal 30, config.connection_timeout
+      assert_equal :sunday, config.week_start
+    ensure
+      # Restore env vars
+      saved_env.each { |k, v| ENV[k] = v }
+    end
   end
 
   def test_configure_block

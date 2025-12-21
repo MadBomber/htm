@@ -7,7 +7,55 @@ require "minitest/autorun"
 require "minitest/reporters"
 require "tiktoken_ruby"
 
+# Use SpecReporter with failure summary at end
 Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new]
+
+# Collect failures and errors to display summary at end
+module Minitest
+  class << self
+    attr_accessor :failure_details
+  end
+  self.failure_details = []
+end
+
+# Hook to collect failure details
+module FailureCollector
+  def record(result)
+    super
+    if result.failure
+      Minitest.failure_details << result
+    end
+  end
+end
+
+Minitest::Reporters::SpecReporter.prepend(FailureCollector)
+
+# Print failure summary after all tests complete
+Minitest.after_run do
+  if Minitest.failure_details.any?
+    puts "\n"
+    puts "=" * 70
+    puts "FAILURE SUMMARY (#{Minitest.failure_details.size} failures/errors)"
+    puts "=" * 70
+
+    Minitest.failure_details.each_with_index do |result, idx|
+      puts "\n#{idx + 1}) #{result.class}##{result.name}"
+      puts "-" * 70
+
+      failure = result.failure
+      case failure
+      when Minitest::UnexpectedError
+        puts "Error: #{failure.error.class}: #{failure.error.message}"
+        puts failure.error.backtrace.first(10).map { |line| "  #{line}" }.join("\n")
+      else
+        puts "Failure: #{failure.message}"
+        puts "Location: #{failure.location}"
+      end
+    end
+
+    puts "\n" + "=" * 70
+  end
+end
 
 # Mock embedding service for tests that don't require real Ollama
 class MockEmbeddingService

@@ -58,6 +58,11 @@ defaults:
   # ---------------------------------------------------------------------------
   # Tag Extraction Configuration
   # Access: HTM.config.tag.provider, HTM.config.tag.model, etc.
+  #
+  # Prompt templates use %{placeholder} for runtime interpolation:
+  #   %{text} - the content to extract tags from
+  #   %{max_depth} - maximum tag hierarchy depth
+  #   %{taxonomy_context} - existing taxonomy info or new taxonomy message
   # ---------------------------------------------------------------------------
   tag:
     provider: ollama
@@ -65,15 +70,69 @@ defaults:
     timeout: 180
     max_depth: 4
 
+    system_prompt: |
+      You are a taxonomy classifier that assigns texts to a hierarchical classification tree.
+      Each concept has ONE canonical location in the tree.
+      Output 2-5 classification paths, one per line.
+
+    user_prompt_template: |
+      Extract classification tags for this text using a HIERARCHICAL TAXONOMY.
+
+      %{taxonomy_context}
+
+      TAG FORMAT: domain:category:subcategory:term (colon-separated, max %{max_depth} levels)
+
+      LEVEL GUIDELINES:
+      - Level 1 (domain): Broad field (database, ai, web, security, devops)
+      - Level 2 (category): Major subdivision (database:relational, ai:machine-learning)
+      - Level 3 (subcategory): Specific area (database:relational:postgresql)
+      - Level 4 (term): Fine detail, use sparingly (database:relational:postgresql:extensions)
+
+      RULES:
+      1. Each concept belongs to ONE path only
+      2. Use lowercase, hyphens for multi-word terms
+      3. Return 2-5 tags that best classify this text
+      4. Match existing taxonomy paths when applicable
+
+      TEXT: %{text}
+
+      Return ONLY tags, one per line.
+
+    taxonomy_context_existing: "Existing taxonomy paths: %{sample_tags}\n\nPrefer reusing these paths when the text matches their domain."
+    taxonomy_context_empty: "This is a new taxonomy - establish clear root categories."
+
   # ---------------------------------------------------------------------------
   # Proposition Extraction Configuration
   # Access: HTM.config.proposition.provider, HTM.config.proposition.model, etc.
+  #
+  # Prompt templates use %{placeholder} for runtime interpolation:
+  #   %{text} - the content to extract propositions from
   # ---------------------------------------------------------------------------
   proposition:
     provider: ollama
     model: gemma3:latest
     timeout: 180
     enabled: false
+
+    system_prompt: |
+      You are an atomic fact extraction system. Your goal is maximum decomposition.
+      Break every statement into its smallest possible factual units.
+      Output ONLY propositions, one per line, prefixed with a dash (-).
+
+    user_prompt_template: |
+      Extract all ATOMIC factual propositions from the following text.
+
+      An atomic proposition expresses exactly ONE relationship or fact.
+
+      Rules:
+      1. Split compound statements into separate atomic facts
+      2. Each proposition = exactly one fact
+      3. Use full names, never pronouns
+      4. Make each proposition understandable in isolation
+
+      TEXT: %{text}
+
+      Return ONLY atomic propositions, one per line. Use a dash (-) prefix for each.
 
   # ---------------------------------------------------------------------------
   # Chunking Configuration (for file loading)
