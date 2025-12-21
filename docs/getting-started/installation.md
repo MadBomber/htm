@@ -103,24 +103,24 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 ```bash
 # Add to ~/.bashrc or your preferred config file
-export HTM_DBURL="postgres://username:password@localhost:5432/htm_db"
-export HTM_DBNAME="htm_db"
-export HTM_DBUSER="your_username"
-export HTM_DBPASS="your_password"
-export HTM_DBPORT="5432"
-export HTM_DBHOST="localhost"
+export HTM_DATABASE__URL="postgres://username:password@localhost:5432/htm_db"
+export HTM_DATABASE__NAME="htm_db"
+export HTM_DATABASE__USER="your_username"
+export HTM_DATABASE__PASSWORD="your_password"
+export HTM_DATABASE__PORT="5432"
+export HTM_DATABASE__HOST="localhost"
 
 # Load the configuration
 source ~/.bashrc
 ```
 
 !!! tip "Environment Configuration"
-    HTM automatically uses the `HTM_DBURL` environment variable if available. You can also pass database configuration directly to `HTM.new()`.
+    HTM automatically uses the `HTM_DATABASE__URL` environment variable if available. You can also pass database configuration directly to `HTM.new()`.
 
 Set environment variable:
 
 ```bash
-export HTM_DBURL="postgres://localhost/htm_db"
+export HTM_DATABASE__URL="postgres://localhost/htm_db"
 ```
 
 ## Step 3: Enable PostgreSQL Extensions
@@ -139,7 +139,7 @@ Test your database connection and verify extensions:
 cd /path/to/your/project
 ruby -e "
 require 'pg'
-conn = PG.connect(ENV['HTM_DBURL'])
+conn = PG.connect(ENV['HTM_DATABASE__URL'])
 result = conn.exec('SELECT extname, extversion FROM pg_extension ORDER BY extname')
 result.each { |row| puts \"✓ #{row['extname']}: Version #{row['extversion']}\" }
 conn.close
@@ -352,11 +352,11 @@ HTM uses the following environment variables:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `HTM_DBURL` | PostgreSQL connection URL | - | Yes |
-| `HTM_DBNAME` | Database name | `htm_db` | No |
-| `HTM_DBUSER` | Database user | `postgres` | No |
-| `HTM_DBPASS` | Database password | - | No |
-| `HTM_DBPORT` | Database port | `5432` | No |
+| `HTM_DATABASE__URL` | PostgreSQL connection URL | - | Yes |
+| `HTM_DATABASE__NAME` | Database name | `htm_db` | No |
+| `HTM_DATABASE__USER` | Database user | `postgres` | No |
+| `HTM_DATABASE__PASSWORD` | Database password | - | No |
+| `HTM_DATABASE__PORT` | Database port | `5432` | No |
 | `OLLAMA_URL` | Ollama API URL | `http://localhost:11434` | No |
 
 ### Example Configuration File
@@ -365,7 +365,7 @@ Create a configuration file for easy loading:
 
 ```bash
 # ~/.bashrc__htm
-export HTM_DBURL="postgres://user:pass@host:port/db?sslmode=require"
+export HTM_DATABASE__URL="postgres://user:pass@host:port/db?sslmode=require"
 export OLLAMA_URL="http://localhost:11434"
 ```
 
@@ -385,11 +385,11 @@ source ~/.bashrc__htm
 **Solutions**:
 
 ```bash
-# 1. Verify HTM_DBURL is set
-echo $HTM_DBURL
+# 1. Verify HTM_DATABASE__URL is set
+echo $HTM_DATABASE__URL
 
 # 2. Test connection manually
-psql $HTM_DBURL
+psql $HTM_DATABASE__URL
 
 # 3. Check if PostgreSQL is running (local installs)
 pg_ctl status
@@ -433,7 +433,7 @@ make
 sudo make install
 
 # Enable in database
-psql $HTM_DBURL -c "CREATE EXTENSION IF NOT EXISTS pgvector;"
+psql $HTM_DATABASE__URL -c "CREATE EXTENSION IF NOT EXISTS pgvector;"
 ```
 
 ### Ruby Version Issues
@@ -462,7 +462,7 @@ ruby --version
 
 ```bash
 # Ensure your database user has necessary permissions
-psql $HTM_DBURL -c "
+psql $HTM_DATABASE__URL -c "
   GRANT ALL PRIVILEGES ON DATABASE your_db TO your_user;
   GRANT ALL ON ALL TABLES IN SCHEMA public TO your_user;
 "

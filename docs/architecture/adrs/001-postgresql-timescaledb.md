@@ -145,7 +145,7 @@ CREATE INDEX nodes_type_idx ON nodes (type);
 
 ```ruby
 # Via environment variable (preferred)
-ENV['HTM_DBURL'] = "postgresql://user:pass@host:port/dbname?sslmode=require"
+ENV['HTM_DATABASE__URL'] = "postgresql://user:pass@host:port/dbname?sslmode=require"
 
 # Parsed into connection hash
 {

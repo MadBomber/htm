@@ -14,7 +14,7 @@
 #   bundle exec ruby app.rb
 #
 # Environment:
-#   HTM_DBURL - PostgreSQL connection URL (required)
+#   HTM_DATABASE__URL - PostgreSQL connection URL (required)
 #   REDIS_URL - Redis connection URL (for Sidekiq, default: redis://localhost:6379/0)
 #   OLLAMA_URL - Ollama server URL (default: http://localhost:11434)
 #

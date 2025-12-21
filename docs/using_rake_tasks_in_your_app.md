@@ -63,14 +63,14 @@ Create a `.envrc` file in your application's root:
 
 ```bash
 # .envrc
-export HTM_DBURL="postgresql://user:password@host:port/dbname?sslmode=require"
+export HTM_DATABASE__URL="postgresql://user:password@host:port/dbname?sslmode=require"
 
 # Or use individual parameters
-export HTM_DBHOST="your-host.tsdb.cloud.timescale.com"
-export HTM_DBPORT="37807"
-export HTM_DBNAME="tsdb"
-export HTM_DBUSER="tsdbadmin"
-export HTM_DBPASS="your_password"
+export HTM_DATABASE__HOST="your-host.tsdb.cloud.timescale.com"
+export HTM_DATABASE__PORT="37807"
+export HTM_DATABASE__NAME="tsdb"
+export HTM_DATABASE__USER="tsdbadmin"
+export HTM_DATABASE__PASSWORD="your_password"
 
 # Embedding configuration
 export HTM_EMBEDDINGS_PROVIDER=ollama
@@ -93,7 +93,7 @@ direnv allow
 ### Option 2: Export in Shell
 
 ```bash
-export HTM_DBURL="postgresql://user:password@host:port/dbname?sslmode=require"
+export HTM_DATABASE__URL="postgresql://user:password@host:port/dbname?sslmode=require"
 rake htm:db:info
 ```
 
@@ -103,7 +103,7 @@ rake htm:db:info
 # Rakefile
 
 # Set environment variables programmatically
-ENV['HTM_DBURL'] = "postgresql://user:password@host:port/dbname?sslmode=require"
+ENV['HTM_DATABASE__URL'] = "postgresql://user:password@host:port/dbname?sslmode=require"
 
 # Then load tasks
 require 'htm/tasks'
@@ -122,7 +122,7 @@ require 'htm/tasks'
 
 ```bash
 # .env
-HTM_DBURL=postgresql://user:password@host:port/dbname?sslmode=require
+HTM_DATABASE__URL=postgresql://user:password@host:port/dbname?sslmode=require
 ```
 
 ## Real-World Example
@@ -297,13 +297,13 @@ jobs:
 
       - name: Setup database
         env:
-          HTM_DBURL: postgresql://postgres:postgres@localhost:5432/test
+          HTM_DATABASE__URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
           bundle exec rake htm:db:setup
 
       - name: Run tests
         env:
-          HTM_DBURL: postgresql://postgres:postgres@localhost:5432/test
+          HTM_DATABASE__URL: postgresql://postgres:postgres@localhost:5432/test
         run: |
           bundle exec rake test
 ```
@@ -317,7 +317,7 @@ services:
   app:
     build: .
     environment:
-      - HTM_DBURL=postgresql://postgres:postgres@db:5432/myapp
+      - HTM_DATABASE__URL=postgresql://postgres:postgres@db:5432/myapp
     depends_on:
       - db
     command: bash -c "rake htm:db:setup && rake app:start"
@@ -347,10 +347,10 @@ rake -T
 Error: Database configuration not found
 ```
 
-Solution: Set `HTM_DBURL` environment variable
+Solution: Set `HTM_DATABASE__URL` environment variable
 
 ```bash
-export HTM_DBURL="postgresql://user:password@host:port/dbname"
+export HTM_DATABASE__URL="postgresql://user:password@host:port/dbname"
 rake htm:db:info
 ```
 

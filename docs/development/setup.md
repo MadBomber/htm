@@ -187,11 +187,11 @@ Create or edit `~/.bashrc__tiger`:
 ```bash
 # TimescaleDB Connection Configuration
 export HTM_SERVICE_NAME="db-67977"  # Your service name
-export HTM_DBNAME="tsdb"
-export HTM_DBUSER="tsdbadmin"
-export HTM_DBPASS="your_password_here"
-export HTM_DBPORT="37807"  # Your port number
-export HTM_DBURL="postgres://tsdbadmin:your_password@host:port/tsdb?sslmode=require"
+export HTM_DATABASE__NAME="tsdb"
+export HTM_DATABASE__USER="tsdbadmin"
+export HTM_DATABASE__PASSWORD="your_password_here"
+export HTM_DATABASE__PORT="37807"  # Your port number
+export HTM_DATABASE__URL="postgres://tsdbadmin:your_password@host:port/tsdb?sslmode=require"
 ```
 
 Replace the placeholders with your actual connection details.
@@ -236,11 +236,11 @@ docker-compose up -d
 # Configure environment variables
 cat > ~/.bashrc__tiger <<'EOF'
 export HTM_SERVICE_NAME="local-dev"
-export HTM_DBNAME="tsdb"
-export HTM_DBUSER="tsdbadmin"
-export HTM_DBPASS="devpassword"
-export HTM_DBPORT="5432"
-export HTM_DBURL="postgres://tsdbadmin:devpassword@localhost:5432/tsdb?sslmode=disable"
+export HTM_DATABASE__NAME="tsdb"
+export HTM_DATABASE__USER="tsdbadmin"
+export HTM_DATABASE__PASSWORD="devpassword"
+export HTM_DATABASE__PORT="5432"
+export HTM_DATABASE__URL="postgres://tsdbadmin:devpassword@localhost:5432/tsdb?sslmode=disable"
 EOF
 
 source ~/.bashrc__tiger
@@ -364,7 +364,7 @@ You can also run the schema SQL directly:
 
 ```bash
 # Using psql
-psql $HTM_DBURL -f sql/schema.sql
+psql $HTM_DATABASE__URL -f sql/schema.sql
 
 # Or using Ruby
 ruby -r ./lib/htm -e "HTM::Database.setup"
@@ -478,11 +478,11 @@ HTM uses environment variables for configuration. Here's a complete reference:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `HTM_DBURL` | Full PostgreSQL connection URL (preferred) | `postgres://user:pass@host:port/db?sslmode=require` |
-| `HTM_DBNAME` | Database name | `tsdb` |
-| `HTM_DBUSER` | Database username | `tsdbadmin` |
-| `HTM_DBPASS` | Database password | `your_password` |
-| `HTM_DBPORT` | Database port | `37807` |
+| `HTM_DATABASE__URL` | Full PostgreSQL connection URL (preferred) | `postgres://user:pass@host:port/db?sslmode=require` |
+| `HTM_DATABASE__NAME` | Database name | `tsdb` |
+| `HTM_DATABASE__USER` | Database username | `tsdbadmin` |
+| `HTM_DATABASE__PASSWORD` | Database password | `your_password` |
+| `HTM_DATABASE__PORT` | Database port | `37807` |
 | `HTM_SERVICE_NAME` | Service identifier (informational) | `db-67977` |
 
 ### Ollama Variables
@@ -515,10 +515,10 @@ source ~/.bashrc__tiger
 
 ```bash
 # Verify environment variables are set
-echo $HTM_DBURL
+echo $HTM_DATABASE__URL
 
 # Test connection directly with psql
-psql $HTM_DBURL
+psql $HTM_DATABASE__URL
 
 # Check if service is running (TimescaleDB Cloud)
 # Visit your Timescale Cloud dashboard
@@ -559,7 +559,7 @@ ollama pull gpt-oss
 ruby enable_extensions.rb
 
 # Check extension status
-psql $HTM_DBURL -c "SELECT extname, extversion FROM pg_extension ORDER BY extname"
+psql $HTM_DATABASE__URL -c "SELECT extname, extversion FROM pg_extension ORDER BY extname"
 
 # For TimescaleDB Cloud, extensions should be pre-installed
 # For local PostgreSQL, ensure you're using timescale/timescaledb-ha image
@@ -615,11 +615,11 @@ If you see SSL certificate errors:
 
 ```bash
 # Ensure sslmode is set in connection URL
-echo $HTM_DBURL | grep sslmode
+echo $HTM_DATABASE__URL | grep sslmode
 # Should show: sslmode=require
 
 # For local development without SSL
-export HTM_DBURL="postgres://user:pass@localhost:5432/tsdb?sslmode=disable"
+export HTM_DATABASE__URL="postgres://user:pass@localhost:5432/tsdb?sslmode=disable"
 ```
 
 ### Ruby Version Issues

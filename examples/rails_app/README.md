@@ -25,7 +25,7 @@ A full-stack Rails application demonstrating HTM integration with a compelling U
 bundle install
 
 # Ensure HTM database is set up
-export HTM_DBURL="postgresql://localhost/htm_development"
+export HTM_DATABASE__URL="postgresql://localhost/htm_development"
 
 # Install Tailwind CSS
 rails tailwindcss:install

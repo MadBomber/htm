@@ -13,7 +13,7 @@
 #   ruby htm_cli.rb
 #
 # Environment:
-#   HTM_DBURL - PostgreSQL connection URL (required)
+#   HTM_DATABASE__URL - PostgreSQL connection URL (required)
 #   OLLAMA_URL - Ollama server URL (default: http://localhost:11434)
 #
 
@@ -376,12 +376,12 @@ class HTMCli
 end
 
 # Check database configuration
-unless ENV['HTM_DBURL']
+unless ENV['HTM_DATABASE__URL']
   puts
-  puts "[✗] Error: HTM_DBURL environment variable not set"
+  puts "[✗] Error: HTM_DATABASE__URL environment variable not set"
   puts
   puts "Please set your database connection URL:"
-  puts "  export HTM_DBURL='postgresql://postgres@localhost:5432/htm_development'"
+  puts "  export HTM_DATABASE__URL='postgresql://postgres@localhost:5432/htm_development'"
   puts
   puts "See SETUP.md for database setup instructions."
   puts

@@ -138,7 +138,7 @@ class DefaultsLoaderTest < Minitest::Test
 
     # Test environment should have inline job_backend
     assert_equal :inline, config.job_backend
-    # Test environment should have htm_test database.name (but can be overridden by HTM_DBURL)
-    # Note: db_name may be parsed from HTM_DBURL if set
+    # Test environment should have htm_test database.name (but can be overridden by HTM_DATABASE__URL)
+    # Note: db_name may be parsed from HTM_DATABASE__URL if set
   end
 end

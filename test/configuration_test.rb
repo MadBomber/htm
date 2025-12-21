@@ -205,9 +205,9 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_url_from_components
-    # Temporarily clear HTM_DBURL so component-based URL building works
-    saved_dburl = ENV['HTM_DBURL']
-    ENV.delete('HTM_DBURL')
+    # Temporarily clear HTM_DATABASE__URL so component-based URL building works
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV.delete('HTM_DATABASE__URL')
 
     config = HTM::Config.new
     config.database.host = 'dbhost'
@@ -219,7 +219,7 @@ class ConfigurationTest < Minitest::Test
     expected_url = 'postgresql://myuser:mypass@dbhost:5433/mydb'
     assert_equal expected_url, config.database_url
   ensure
-    saved_dburl ? ENV['HTM_DBURL'] = saved_dburl : ENV.delete('HTM_DBURL')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
   end
 
   def test_database_url_takes_precedence
@@ -232,9 +232,9 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_configured
-    # Temporarily clear HTM_DBURL to test component-based configuration
-    saved_dburl = ENV['HTM_DBURL']
-    ENV.delete('HTM_DBURL')
+    # Temporarily clear HTM_DATABASE__URL to test component-based configuration
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV.delete('HTM_DATABASE__URL')
 
     config = HTM::Config.new
 
@@ -246,13 +246,13 @@ class ConfigurationTest < Minitest::Test
     config.database.name = 'test_db'
     assert config.database_configured?
   ensure
-    saved_dburl ? ENV['HTM_DBURL'] = saved_dburl : ENV.delete('HTM_DBURL')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
   end
 
   def test_database_config_hash
-    # Temporarily clear HTM_DBURL so component-based config is used
-    saved_dburl = ENV['HTM_DBURL']
-    ENV.delete('HTM_DBURL')
+    # Temporarily clear HTM_DATABASE__URL so component-based config is used
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV.delete('HTM_DATABASE__URL')
 
     config = HTM::Config.new
     config.database.host = 'localhost'
@@ -271,6 +271,6 @@ class ConfigurationTest < Minitest::Test
     assert_equal 'test_user', db_config[:username]
     assert_equal 5, db_config[:pool]
   ensure
-    saved_dburl ? ENV['HTM_DBURL'] = saved_dburl : ENV.delete('HTM_DBURL')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
   end
 end

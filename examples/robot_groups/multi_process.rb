@@ -13,7 +13,7 @@
 # 4. Dynamic scaling by spawning new processes
 #
 # Prerequisites:
-# 1. Set HTM_DBURL environment variable
+# 1. Set HTM_DATABASE__URL environment variable
 # 2. Initialize database schema: rake db_setup
 
 require_relative '../../lib/htm'
@@ -36,7 +36,7 @@ class RobotProcess
 
     # Spawn the worker process
     @stdin, @stdout, @stderr, @wait_thread = Open3.popen3(
-      { 'HTM_DBURL' => ENV['HTM_DBURL'] },
+      { 'HTM_DATABASE__URL' => ENV['HTM_DATABASE__URL'] },
       'ruby', WORKER_SCRIPT, name, group_name
     )
     @pid = @wait_thread.pid
@@ -119,9 +119,9 @@ def run_demo
 
   BANNER
 
-  unless ENV['HTM_DBURL']
-    puts 'ERROR: HTM_DBURL not set.'
-    puts '  export HTM_DBURL="postgresql://user@localhost:5432/htm_development"'
+  unless ENV['HTM_DATABASE__URL']
+    puts 'ERROR: HTM_DATABASE__URL not set.'
+    puts '  export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"'
     exit 1
   end
 

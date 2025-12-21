@@ -13,7 +13,7 @@ namespace :app do
   desc "Start the example application"
   task :start do
     puts "\n=== Starting Example HTM Application ==="
-    puts "Database configured: #{ENV['HTM_DBURL'] ? 'Yes' : 'No'}"
+    puts "Database configured: #{ENV['HTM_DATABASE__URL'] ? 'Yes' : 'No'}"
     puts "\nRun 'rake -T' to see all available tasks"
     puts "Run 'rake -T htm:db' to see HTM database tasks\n\n"
 
@@ -63,7 +63,7 @@ task :help do
       rake htm:db:reset      Drop and recreate database
 
     Environment:
-      export HTM_DBURL="postgresql://user:pass@host:port/dbname"
+      export HTM_DATABASE__URL="postgresql://user:pass@host:port/dbname"
 
     See docs/using_rake_tasks_in_your_app.md for more information.
 

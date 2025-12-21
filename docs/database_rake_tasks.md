@@ -143,7 +143,7 @@ Opens an interactive PostgreSQL console (psql).
 
 **What it does:**
 - Launches `psql` connected to your HTM database
-- Uses connection parameters from `HTM_DBURL` or `.envrc`
+- Uses connection parameters from `HTM_DATABASE__URL` or `.envrc`
 - Allows you to run SQL queries directly
 
 **Example:**
@@ -237,7 +237,7 @@ rake htm:db:info
 
 ### Method 2: Manual Export
 ```bash
-export HTM_DBURL="postgresql://user:password@host:port/dbname?sslmode=require"
+export HTM_DATABASE__URL="postgresql://user:password@host:port/dbname?sslmode=require"
 rake htm:db:info
 ```
 
@@ -293,12 +293,12 @@ rake htm:db:migrate       # Run new migrations only
 
 ### "Database configuration not found"
 - Run `direnv allow` in the project directory
-- Or manually export `HTM_DBURL`
-- Verify: `echo $HTM_DBURL`
+- Or manually export `HTM_DATABASE__URL`
+- Verify: `echo $HTM_DATABASE__URL`
 
 ### "Connection refused"
 - Check database is running
-- Verify host/port in `HTM_DBURL`
+- Verify host/port in `HTM_DATABASE__URL`
 - Test: `rake htm:db:test`
 
 ### "Extension not found"

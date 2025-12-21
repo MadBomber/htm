@@ -9,7 +9,7 @@ require_relative "test_helper"
 #
 # Prerequisites:
 # - fast-mcp gem installed
-# - Database configured (HTM_DBURL)
+# - Database configured (HTM_DATABASE__URL)
 #
 class MCPServerTest < Minitest::Test
   def setup

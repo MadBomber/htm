@@ -163,20 +163,43 @@ class HTM
     # ==========================================================================
 
     TO_SYMBOL = ->(v) { v.nil? ? nil : v.to_s.to_sym }
-    TO_CONFIG_SECTION = ->(v) { v.is_a?(ConfigSection) ? v : ConfigSection.new(v || {}) }
+
+    # Create a coercion that merges incoming value with SCHEMA defaults for a section.
+    # This ensures env vars like HTM_DATABASE__URL don't lose other defaults.
+    def self.config_section_with_defaults(section_key)
+      defaults = SCHEMA[section_key] || {}
+      ->(v) {
+        return v if v.is_a?(ConfigSection)
+        incoming = v || {}
+        # Deep merge: defaults first, then overlay incoming values
+        merged = deep_merge_hashes(defaults.dup, incoming)
+        ConfigSection.new(merged)
+      }
+    end
+
+    # Deep merge helper for coercion
+    def self.deep_merge_hashes(base, overlay)
+      base.merge(overlay) do |_key, old_val, new_val|
+        if old_val.is_a?(Hash) && new_val.is_a?(Hash)
+          deep_merge_hashes(old_val, new_val)
+        else
+          new_val.nil? ? old_val : new_val
+        end
+      end
+    end
 
     coerce_types(
-      # Nested sections -> ConfigSection objects
-      database: TO_CONFIG_SECTION,
-      service: TO_CONFIG_SECTION,
-      embedding: TO_CONFIG_SECTION,
-      tag: TO_CONFIG_SECTION,
-      proposition: TO_CONFIG_SECTION,
-      chunking: TO_CONFIG_SECTION,
-      circuit_breaker: TO_CONFIG_SECTION,
-      relevance: TO_CONFIG_SECTION,
-      job: TO_CONFIG_SECTION,
-      providers: TO_CONFIG_SECTION,
+      # Nested sections -> ConfigSection objects (with SCHEMA defaults merged)
+      database: config_section_with_defaults(:database),
+      service: config_section_with_defaults(:service),
+      embedding: config_section_with_defaults(:embedding),
+      tag: config_section_with_defaults(:tag),
+      proposition: config_section_with_defaults(:proposition),
+      chunking: config_section_with_defaults(:chunking),
+      circuit_breaker: config_section_with_defaults(:circuit_breaker),
+      relevance: config_section_with_defaults(:relevance),
+      job: config_section_with_defaults(:job),
+      providers: config_section_with_defaults(:providers),
 
       # Top-level symbols
       week_start: TO_SYMBOL,
@@ -251,6 +274,9 @@ class HTM
 
       require 'uri'
       uri = URI.parse(url)
+
+      # Coercion now merges env vars with SCHEMA defaults, so pool_size/timeout
+      # are always available even when only HTM_DATABASE__URL is set
       {
         adapter: 'postgresql',
         host: uri.host,

@@ -153,19 +153,28 @@ def reset_htm_configuration
 end
 
 # Check if database is available for integration tests
-# Returns true if HTM_DBURL is set and we can connect
+# Returns true if database is configured (via URL or individual settings) and we can connect
 def database_available?
   return @database_available if defined?(@database_available)
 
-  unless ENV['HTM_DBURL']
-    @database_available = false
-    return false
-  end
-
   begin
-    # Try to establish connection
+    # Check if connection is already established and working
+    if HTM::ActiveRecordConfig.connected?
+      @database_available = true
+      return true
+    end
+
+    # Check if database is configured via the config system
+    # This works with HTM_DATABASE__URL env var OR individual settings
+    # from defaults.yml (e.g., htm_test for test environment)
+    unless HTM.config.database_configured?
+      @database_available = false
+      return false
+    end
+
+    # Establish connection using HTM's config
     HTM::ActiveRecordConfig.establish_connection!
-    @database_available = true
+    @database_available = HTM::ActiveRecordConfig.connected?
   rescue => e
     @database_available = false
   end
@@ -177,7 +186,7 @@ end
 # Use in setup: `skip_without_database` (returns early if DB not available)
 def skip_without_database
   unless database_available?
-    skip "Database not configured or unavailable. Set HTM_DBURL to run database tests."
+    skip "Database not configured or unavailable. Set HTM_DATABASE__URL or ensure defaults.yml database settings are correct."
   end
 end
 

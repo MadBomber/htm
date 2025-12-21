@@ -23,8 +23,8 @@ The seeding process uses environment variables for configuration. All settings h
 
 ### Database Settings
 
-- `HTM_DBURL` - Full PostgreSQL connection URL (required)
-- Or individual settings: `HTM_DBHOST`, `HTM_DBPORT`, `HTM_DBNAME`, `HTM_DBUSER`, `HTM_DBPASS`
+- `HTM_DATABASE__URL` - Full PostgreSQL connection URL (required)
+- Or individual settings: `HTM_DATABASE__HOST`, `HTM_DATABASE__PORT`, `HTM_DATABASE__NAME`, `HTM_DATABASE__USER`, `HTM_DATABASE__PASSWORD`
 
 ### Other Settings
 

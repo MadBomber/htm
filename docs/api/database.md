@@ -38,7 +38,7 @@ HTM::Database.setup(db_url = nil)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `db_url` | String, nil | `ENV['HTM_DBURL']` | Database connection URL |
+| `db_url` | String, nil | `ENV['HTM_DATABASE__URL']` | Database connection URL |
 
 #### Returns
 
@@ -170,25 +170,25 @@ HTM::Database.parse_connection_params()
 #### Returns
 
 - `Hash` - Connection configuration
-- `nil` - If `ENV['HTM_DBNAME']` not set
+- `nil` - If `ENV['HTM_DATABASE__NAME']` not set
 
 #### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HTM_DBHOST` | Database hostname | `'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com'` |
-| `HTM_DBPORT` | Database port | `37807` |
-| `HTM_DBNAME` | Database name | *required* |
-| `HTM_DBUSER` | Database user | *required* |
-| `HTM_DBPASS` | Database password | *required* |
+| `HTM_DATABASE__HOST` | Database hostname | `'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com'` |
+| `HTM_DATABASE__PORT` | Database port | `37807` |
+| `HTM_DATABASE__NAME` | Database name | *required* |
+| `HTM_DATABASE__USER` | Database user | *required* |
+| `HTM_DATABASE__PASSWORD` | Database password | *required* |
 
 #### Examples
 
 ```ruby
 # Set environment variables
-ENV['HTM_DBNAME'] = 'tsdb'
-ENV['HTM_DBUSER'] = 'tsdbadmin'
-ENV['HTM_DBPASS'] = 'secret'
+ENV['HTM_DATABASE__NAME'] = 'tsdb'
+ENV['HTM_DATABASE__USER'] = 'tsdbadmin'
+ENV['HTM_DATABASE__PASSWORD'] = 'secret'
 
 config = HTM::Database.parse_connection_params()
 # => {
@@ -201,14 +201,14 @@ config = HTM::Database.parse_connection_params()
 # }
 
 # Custom host and port
-ENV['HTM_DBHOST'] = 'localhost'
-ENV['HTM_DBPORT'] = '5432'
+ENV['HTM_DATABASE__HOST'] = 'localhost'
+ENV['HTM_DATABASE__PORT'] = '5432'
 
 config = HTM::Database.parse_connection_params()
 # => { host: "localhost", port: 5432, ... }
 
-# Without HTM_DBNAME
-ENV.delete('HTM_DBNAME')
+# Without HTM_DATABASE__NAME
+ENV.delete('HTM_DATABASE__NAME')
 config = HTM::Database.parse_connection_params()
 # => nil
 ```
@@ -230,29 +230,29 @@ HTM::Database.default_config()
 
 #### Priority Order
 
-1. `ENV['HTM_DBURL']` - Parse connection URL
-2. `ENV['HTM_DBNAME']` - Parse individual params
+1. `ENV['HTM_DATABASE__URL']` - Parse connection URL
+2. `ENV['HTM_DATABASE__NAME']` - Parse individual params
 3. `nil` - No configuration available
 
 #### Examples
 
 ```ruby
-# Using HTM_DBURL
-ENV['HTM_DBURL'] = 'postgresql://user:pass@host/db'
+# Using HTM_DATABASE__URL
+ENV['HTM_DATABASE__URL'] = 'postgresql://user:pass@host/db'
 config = HTM::Database.default_config
 # => Parsed from URL
 
-# Using HTM_DBNAME
-ENV.delete('HTM_DBURL')
-ENV['HTM_DBNAME'] = 'mydb'
-ENV['HTM_DBUSER'] = 'user'
-ENV['HTM_DBPASS'] = 'pass'
+# Using HTM_DATABASE__NAME
+ENV.delete('HTM_DATABASE__URL')
+ENV['HTM_DATABASE__NAME'] = 'mydb'
+ENV['HTM_DATABASE__USER'] = 'user'
+ENV['HTM_DATABASE__PASSWORD'] = 'pass'
 config = HTM::Database.default_config
 # => Parsed from params
 
 # No configuration
-ENV.delete('HTM_DBURL')
-ENV.delete('HTM_DBNAME')
+ENV.delete('HTM_DATABASE__URL')
+ENV.delete('HTM_DATABASE__NAME')
 config = HTM::Database.default_config
 # => nil
 
@@ -341,33 +341,33 @@ Using URL (recommended):
 
 ```bash
 # In ~/.bashrc__tiger
-export HTM_DBURL='postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require'
+export HTM_DATABASE__URL='postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require'
 ```
 
 Using individual variables:
 
 ```bash
 # In ~/.bashrc__tiger
-export HTM_DBHOST='xxx.tsdb.cloud.timescale.com'
-export HTM_DBPORT=37807
-export HTM_DBNAME='tsdb'
-export HTM_DBUSER='tsdbadmin'
-export HTM_DBPASS='your_password'
+export HTM_DATABASE__HOST='xxx.tsdb.cloud.timescale.com'
+export HTM_DATABASE__PORT=37807
+export HTM_DATABASE__NAME='tsdb'
+export HTM_DATABASE__USER='tsdbadmin'
+export HTM_DATABASE__PASSWORD='your_password'
 ```
 
 ### Local PostgreSQL
 
 ```bash
-export HTM_DBURL='postgresql://localhost/htm_dev'
+export HTM_DATABASE__URL='postgresql://localhost/htm_dev'
 
 # Or with auth
-export HTM_DBURL='postgresql://user:pass@localhost:5432/htm_dev'
+export HTM_DATABASE__URL='postgresql://user:pass@localhost:5432/htm_dev'
 ```
 
 ### Docker PostgreSQL
 
 ```bash
-export HTM_DBURL='postgresql://postgres:postgres@localhost:5432/htm'
+export HTM_DATABASE__URL='postgresql://postgres:postgres@localhost:5432/htm'
 ```
 
 ---
@@ -402,7 +402,7 @@ if config
   puts "Port: #{config[:port]}"
 else
   puts "No database configuration found"
-  puts "Please set HTM_DBURL or HTM_DBNAME environment variables"
+  puts "Please set HTM_DATABASE__URL or HTM_DATABASE__NAME environment variables"
 end
 
 # Test connection
@@ -493,7 +493,7 @@ pg_isready -h localhost -p 5432
 psql -h localhost -U user -d dbname
 
 # Verify environment
-echo $HTM_DBURL
+echo $HTM_DATABASE__URL
 ```
 
 ### Permission Denied
@@ -576,7 +576,7 @@ end
 config = HTM::Database.default_config
 
 unless config
-  raise "Database not configured. Please set HTM_DBURL environment variable. " \
+  raise "Database not configured. Please set HTM_DATABASE__URL environment variable. " \
         "See README.md for configuration instructions."
 end
 ```

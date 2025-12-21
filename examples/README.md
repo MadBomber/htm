@@ -8,12 +8,12 @@ All examples require:
 
 1. **PostgreSQL Database** with pgvector extension:
    ```bash
-   export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
+   export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
    ```
 
    > **Note**: Database selection now respects `RAILS_ENV`. If `RAILS_ENV` is set,
-   > HTM extracts the base name from `HTM_DBURL` and appends the environment suffix.
-   > For example, with `HTM_DBURL=...htm_development` and `RAILS_ENV=test`, HTM
+   > HTM extracts the base name from `HTM_DATABASE__URL` and appends the environment suffix.
+   > For example, with `HTM_DATABASE__URL=...htm_development` and `HTM_ENV=test`, HTM
    > connects to `htm_test`. When `RAILS_ENV` is unset (typical for examples),
    > behavior is unchanged.
 
@@ -184,7 +184,7 @@ ruby examples/mcp_server.rb
       "command": "ruby",
       "args": ["/path/to/htm/examples/mcp_server.rb"],
       "env": {
-        "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
+        "HTM_DATABASE__URL": "postgresql://user@localhost:5432/htm_development"
       }
     }
   }
@@ -260,7 +260,7 @@ ollama pull gpt-oss  # Or your preferred model
 ```
 
 **Environment Variables:**
-- `HTM_DBURL` - PostgreSQL connection (required)
+- `HTM_DATABASE__URL` - PostgreSQL connection (required)
 - `OLLAMA_URL` - Ollama server URL (default: http://localhost:11434)
 - `OLLAMA_MODEL` - Model to use (default: gpt-oss:latest)
 - `HTM_ROBOT_NAME` - Robot name (optional, prompts if not set)
@@ -313,7 +313,7 @@ bundle exec ruby app.rb
 - Tag tree visualization
 
 **Environment Variables:**
-- `HTM_DBURL` - PostgreSQL connection (required)
+- `HTM_DATABASE__URL` - PostgreSQL connection (required)
 - `REDIS_URL` - Redis for Sidekiq (default: redis://localhost:6379/0)
 - `SESSION_SECRET` - Session encryption key
 

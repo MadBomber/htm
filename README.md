@@ -39,7 +39,7 @@ HTM includes a Model Context Protocol server with 23 tools for memory management
   "mcpServers": {
     "htm": {
       "command": "htm_mcp",
-      "env": { "HTM_DBURL": "postgresql://localhost/htm" }
+      "env": { "HTM_DATABASE__URL": "postgresql://localhost/htm" }
     }
   }
 }

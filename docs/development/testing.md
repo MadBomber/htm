@@ -244,7 +244,7 @@ Testing with real database:
 ```ruby
 class DatabaseIntegrationTest < Minitest::Test
   def setup
-    skip "Database not configured" unless ENV['HTM_DBURL']
+    skip "Database not configured" unless ENV['HTM_DATABASE__URL']
 
     @htm = HTM.new(
       robot_name: "Test Robot",

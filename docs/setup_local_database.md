@@ -63,12 +63,12 @@ Update your `.envrc` file (already done):
 
 ```bash
 # Database connection - Localhost PostgreSQL
-export HTM_DBHOST=localhost
-export HTM_DBPORT=5432
-export HTM_DBNAME=htm_development
-export HTM_DBUSER=${USER}
-export HTM_DBPASS=
-export HTM_DBURL="postgresql://${HTM_DBUSER}@${HTM_DBHOST}:${HTM_DBPORT}/${HTM_DBNAME}?sslmode=prefer"
+export HTM_DATABASE__HOST=localhost
+export HTM_DATABASE__PORT=5432
+export HTM_DATABASE__NAME=htm_development
+export HTM_DATABASE__USER=${USER}
+export HTM_DATABASE__PASSWORD=
+export HTM_DATABASE__URL="postgresql://${HTM_DATABASE__USER}@${HTM_DATABASE__HOST}:${HTM_DATABASE__PORT}/${HTM_DATABASE__NAME}?sslmode=prefer"
 
 # Client-side embedding generation
 export HTM_EMBEDDINGS_PROVIDER=ollama
@@ -209,7 +209,7 @@ ollama serve
 **Solution:**
 ```bash
 direnv allow
-echo $HTM_DBURL  # Verify it's set
+echo $HTM_DATABASE__URL  # Verify it's set
 ```
 
 ## Switching Back to TimescaleDB Cloud
@@ -218,21 +218,21 @@ To switch back to TimescaleDB Cloud (production), edit `.envrc`:
 
 ```bash
 # Comment out localhost config
-# export HTM_DBHOST=localhost
-# export HTM_DBPORT=5432
-# export HTM_DBNAME=htm_development
-# export HTM_DBUSER=${USER}
-# export HTM_DBPASS=
-# export HTM_DBURL="postgresql://${HTM_DBUSER}@${HTM_DBHOST}:${HTM_DBPORT}/${HTM_DBNAME}?sslmode=prefer"
+# export HTM_DATABASE__HOST=localhost
+# export HTM_DATABASE__PORT=5432
+# export HTM_DATABASE__NAME=htm_development
+# export HTM_DATABASE__USER=${USER}
+# export HTM_DATABASE__PASSWORD=
+# export HTM_DATABASE__URL="postgresql://${HTM_DATABASE__USER}@${HTM_DATABASE__HOST}:${HTM_DATABASE__PORT}/${HTM_DATABASE__NAME}?sslmode=prefer"
 
 # Uncomment TimescaleDB Cloud config
 export HTM_SERVICE_NAME=$TIGER_SERVICE_NAME
-export HTM_DBURL=$TIGER_DBURL
-export HTM_DBNAME=$TIGER_DBNAME
-export HTM_DBUSER=$TIGER_DBUSER
-export HTM_DBPASS=$TIGER_DBPASS
-export HTM_DBHOST=$TIGER_DBHOST
-export HTM_DBPORT=$TIGER_DBPORT
+export HTM_DATABASE__URL=$TIGER_DBURL
+export HTM_DATABASE__NAME=$TIGER_DBNAME
+export HTM_DATABASE__USER=$TIGER_DBUSER
+export HTM_DATABASE__PASSWORD=$TIGER_DBPASS
+export HTM_DATABASE__HOST=$TIGER_DBHOST
+export HTM_DATABASE__PORT=$TIGER_DBPORT
 ```
 
 Then reload:

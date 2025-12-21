@@ -10,16 +10,21 @@ Rake::TestTask.new(:test) do |t|
   t.verbose = true
 end
 
-# Ensure test task runs with RAILS_ENV=test
+# Ensure test task runs with HTM_ENV=test (takes priority over RAILS_ENV/RACK_ENV)
 task :test do
-  ENV['RAILS_ENV'] = 'test'
+  ENV['HTM_ENV'] = 'test'
 end
 
 # Prepend environment setup before test runs
 Rake::Task[:test].enhance [:set_test_env]
 
 task :set_test_env do
-  ENV['RAILS_ENV'] = 'test'
+  ENV['HTM_ENV'] = 'test'
+  # Set database URL if not already configured
+  # Uses current system user for local PostgreSQL connection
+  unless ENV['HTM_DATABASE__URL']
+    ENV['HTM_DATABASE__URL'] = "postgresql://#{ENV['USER']}@localhost:5432/htm_test"
+  end
 end
 
 task default: :test

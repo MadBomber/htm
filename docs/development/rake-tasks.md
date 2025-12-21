@@ -56,7 +56,7 @@ Running migrations...
 
 **What it does:**
 
-- Connects to PostgreSQL using `HTM_DBURL`
+- Connects to PostgreSQL using `HTM_DATABASE__URL`
 - Verifies required extensions (pgvector, pg_trgm)
 - Creates all HTM tables (robots, nodes, tags, file_sources, etc.)
 - Runs all pending ActiveRecord migrations
@@ -906,7 +906,7 @@ Rebuilding tags for 1,542 nodes...
 bundle install
 
 # Set database URL
-export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
+export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
 
 # Create and setup database
 rake htm:db:create
@@ -1012,17 +1012,17 @@ All tasks require database configuration. Set one of these:
 
 | Variable | Description |
 |----------|-------------|
-| `HTM_DBURL` | Full PostgreSQL connection URL (preferred) |
-| `HTM_DBHOST` | Database host |
-| `HTM_DBPORT` | Database port |
-| `HTM_DBNAME` | Database name |
-| `HTM_DBUSER` | Database username |
-| `HTM_DBPASS` | Database password |
+| `HTM_DATABASE__URL` | Full PostgreSQL connection URL (preferred) |
+| `HTM_DATABASE__HOST` | Database host |
+| `HTM_DATABASE__PORT` | Database port |
+| `HTM_DATABASE__NAME` | Database name |
+| `HTM_DATABASE__USER` | Database username |
+| `HTM_DATABASE__PASSWORD` | Database password |
 
 **Example:**
 
 ```bash
-export HTM_DBURL="postgresql://user:password@localhost:5432/htm_development"
+export HTM_DATABASE__URL="postgresql://user:password@localhost:5432/htm_development"
 ```
 
 ---
@@ -1031,10 +1031,10 @@ export HTM_DBURL="postgresql://user:password@localhost:5432/htm_development"
 
 ### "Database configuration not found"
 
-Set the `HTM_DBURL` environment variable:
+Set the `HTM_DATABASE__URL` environment variable:
 
 ```bash
-export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
+export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
 ```
 
 ### "Extension not found"

@@ -573,7 +573,7 @@ Single-process demo showing:
 - Real-time sync via LISTEN/NOTIFY
 
 ```bash
-HTM_DBURL="postgresql://user@localhost:5432/htm_dev" ruby examples/robot_groups/same_process.rb
+HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_dev" ruby examples/robot_groups/same_process.rb
 ```
 
 ### multi_process.rb
@@ -585,7 +585,7 @@ Multi-process demo showing:
 - Dynamic scaling by spawning new processes
 
 ```bash
-HTM_DBURL="postgresql://user@localhost:5432/htm_dev" ruby examples/robot_groups/multi_process.rb
+HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_dev" ruby examples/robot_groups/multi_process.rb
 ```
 
 ### robot_worker.rb

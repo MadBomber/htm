@@ -606,10 +606,10 @@ curl http://localhost:11434/api/version
 
 ### Issue: "Database connection failed"
 
-**Solution**: Verify your `HTM_DBURL` is set:
+**Solution**: Verify your `HTM_DATABASE__URL` is set:
 
 ```bash
-echo $HTM_DBURL
+echo $HTM_DATABASE__URL
 # Should show your connection string
 ```
 

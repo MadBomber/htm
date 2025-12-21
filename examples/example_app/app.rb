@@ -16,8 +16,8 @@ class ExampleApp
     config = HTM::Database.default_config
     unless config
       puts "\n⚠ Database not configured!"
-      puts "Set HTM_DBURL environment variable:"
-      puts "  export HTM_DBURL='postgresql://user:pass@host:port/dbname'"
+      puts "Set HTM_DATABASE__URL environment variable:"
+      puts "  export HTM_DATABASE__URL='postgresql://user:pass@host:port/dbname'"
       puts "\nOr run: rake app:bootstrap"
       return
     end

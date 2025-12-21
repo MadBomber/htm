@@ -15,7 +15,7 @@
 #   HTM_EMBEDDING_TIMEOUT - Embedding generation timeout in seconds (default: 120)
 #   HTM_TAG_TIMEOUT - Tag generation timeout in seconds (default: 180)
 #   HTM_CONNECTION_TIMEOUT - LLM connection timeout in seconds (default: 30)
-#   HTM_DBURL - Database connection URL
+#   HTM_DATABASE__URL - Database connection URL
 #
 # Usage:
 #   rake htm:db:seed
@@ -64,7 +64,7 @@ end
 puts "✓ HTM configured"
 puts
 
-# Create HTM instance (uses default database config from ENV['HTM_DBURL'])
+# Create HTM instance (uses default database config from ENV['HTM_DATABASE__URL'])
 htm = HTM.new(robot_name: ENV['HTM_ROBOT_NAME'] || "Seed Robot")
 
 # Add sample conversation messages

@@ -4,7 +4,7 @@
 # Timeframe Demo - Demonstrates the various ways to use timeframes with recall
 #
 # Run with:
-#   HTM_DBURL="postgresql://localhost/htm_development" ruby examples/timeframe_demo.rb
+#   HTM_DATABASE__URL="postgresql://localhost/htm_development" ruby examples/timeframe_demo.rb
 
 require_relative "../lib/htm"
 

@@ -273,7 +273,7 @@ LIMIT $3;
 ruby enable_extensions.rb
 
 # 2. Run database schema with triggers
-psql $HTM_DBURL < sql/schema.sql
+psql $HTM_DATABASE__URL < sql/schema.sql
 
 # 3. Use HTM normally - embeddings automatic!
 ruby -r ./lib/htm -e "HTM.new(robot_name: 'Bot').add_node('test', 'value')"
@@ -283,16 +283,16 @@ ruby -r ./lib/htm -e "HTM.new(robot_name: 'Bot').add_node('test', 'value')"
 
 ```bash
 # 1. Backup database
-pg_dump $HTM_DBURL > htm_backup.sql
+pg_dump $HTM_DATABASE__URL > htm_backup.sql
 
 # 2. Enable pgai extension
 ruby enable_extensions.rb
 
 # 3. Apply new schema (adds triggers)
-psql $HTM_DBURL < sql/schema.sql
+psql $HTM_DATABASE__URL < sql/schema.sql
 
 # 4. (Optional) Regenerate embeddings with new model
-psql $HTM_DBURL -c "UPDATE nodes SET value = value;"
+psql $HTM_DATABASE__URL -c "UPDATE nodes SET value = value;"
 # This triggers embedding regeneration for all nodes
 ```
 

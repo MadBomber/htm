@@ -333,7 +333,7 @@ htm.add_node('memory_001', 'PostgreSQL with TimescaleDB handles time-series data
 HTM::Database.migrate
 
 # 2. (Optional) Re-extract topics for existing nodes
-psql $HTM_DBURL -c "UPDATE nodes SET value = value;"
+psql $HTM_DATABASE__URL -c "UPDATE nodes SET value = value;"
 # Triggers topic extraction for all existing nodes
 ```
 

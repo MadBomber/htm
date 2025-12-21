@@ -15,7 +15,7 @@ This example demonstrates using HTM in a command-line application with synchrono
 1. **PostgreSQL Database**
    ```bash
    # Set database connection URL
-   export HTM_DBURL='postgresql://user:pass@host:port/dbname'
+   export HTM_DATABASE__URL='postgresql://user:pass@host:port/dbname'
 
    # Or use your existing config
    source ~/.bashrc__tiger
@@ -246,10 +246,10 @@ end
 
 ```bash
 # Verify database URL
-echo $HTM_DBURL
+echo $HTM_DATABASE__URL
 
 # Test connection
-psql $HTM_DBURL -c "SELECT version();"
+psql $HTM_DATABASE__URL -c "SELECT version();"
 
 # Initialize schema if needed
 cd ../.. && rake db_setup

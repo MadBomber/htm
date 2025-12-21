@@ -4,7 +4,7 @@
 # Basic usage example for HTM
 #
 # Prerequisites:
-# 1. Set HTM_DBURL environment variable (see SETUP.md)
+# 1. Set HTM_DATABASE__URL environment variable (see SETUP.md)
 # 2. Initialize database schema: rake db_setup
 # 3. Install dependencies: bundle install
 
@@ -14,9 +14,9 @@ puts "HTM Basic Usage Example"
 puts "=" * 60
 
 # Check environment
-unless ENV['HTM_DBURL']
-  puts "ERROR: HTM_DBURL not set. Please set it:"
-  puts "  export HTM_DBURL=\"postgresql://postgres@localhost:5432/htm_development\""
+unless ENV['HTM_DATABASE__URL']
+  puts "ERROR: HTM_DATABASE__URL not set. Please set it:"
+  puts "  export HTM_DATABASE__URL=\"postgresql://postgres@localhost:5432/htm_development\""
   puts "See SETUP.md for details."
   exit 1
 end

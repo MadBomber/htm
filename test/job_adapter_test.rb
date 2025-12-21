@@ -114,11 +114,12 @@ class JobAdapterTest < Minitest::Test
 
   # Test auto-detection with environment variable
   def test_auto_detect_with_env_variable
-    ENV['HTM_JOB_BACKEND'] = 'inline'
+    # Nested config uses double-underscore: HTM_JOB__BACKEND
+    ENV['HTM_JOB__BACKEND'] = 'inline'
     config = HTM::Config.new
     assert_equal :inline, config.job_backend
   ensure
-    ENV.delete('HTM_JOB_BACKEND')
+    ENV.delete('HTM_JOB__BACKEND')
   end
 
   # Test job parameters are passed correctly

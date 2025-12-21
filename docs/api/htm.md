@@ -49,7 +49,7 @@ HTM.new(
 |-----------|------|---------|-------------|
 | `working_memory_size` | Integer | `128_000` | Maximum tokens for working memory |
 | `robot_name` | String, nil | `"robot_#{uuid[0..7]}"` | Human-readable name |
-| `db_config` | Hash, nil | From `ENV['HTM_DBURL']` | Database configuration |
+| `db_config` | Hash, nil | From `ENV['HTM_DATABASE__URL']` | Database configuration |
 | `db_pool_size` | Integer | `5` | Database connection pool size |
 | `db_query_timeout` | Integer | `30_000` | Query timeout in milliseconds |
 | `db_cache_size` | Integer | `1000` | Query cache size (0 to disable) |

@@ -115,7 +115,7 @@ We will use **PostgreSQL with TimescaleDB** as the primary storage backend for H
 ### Connection Configuration
 ```ruby
 # Via environment variable (preferred)
-ENV['HTM_DBURL'] = "postgresql://user:pass@host:port/dbname?sslmode=require"
+ENV['HTM_DATABASE__URL'] = "postgresql://user:pass@host:port/dbname?sslmode=require"
 
 # Parsed into connection hash
 {

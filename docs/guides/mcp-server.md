@@ -26,7 +26,7 @@ Before using the MCP server, ensure you have:
 
 2. **PostgreSQL database set up**
    ```bash
-   export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
+   export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
    htm_mcp setup
    ```
 
@@ -66,7 +66,7 @@ The `htm_mcp` executable includes management commands for database setup and dia
 
 ```bash
 # Set your database URL
-export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
+export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
 
 # Initialize the database
 htm_mcp setup
@@ -745,7 +745,7 @@ Add to `~/.config/claude/claude_desktop_config.json` (Linux/macOS) or `%APPDATA%
     "htm-memory": {
       "command": "htm_mcp",
       "env": {
-        "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
+        "HTM_DATABASE__URL": "postgresql://user@localhost:5432/htm_development"
       }
     }
   }
@@ -760,7 +760,7 @@ If `htm_mcp` is not in your PATH, use the absolute path:
     "htm-memory": {
       "command": "/path/to/htm_mcp",
       "env": {
-        "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
+        "HTM_DATABASE__URL": "postgresql://user@localhost:5432/htm_development"
       }
     }
   }
@@ -782,7 +782,7 @@ Add to `~/.claude/claude_code_config.json`:
     "htm-memory": {
       "command": "htm_mcp",
       "env": {
-        "HTM_DBURL": "postgresql://user@localhost:5432/htm_development"
+        "HTM_DATABASE__URL": "postgresql://user@localhost:5432/htm_development"
       }
     }
   }
@@ -812,7 +812,7 @@ mcp_servers:
   htm-memory:
     command: htm_mcp
     env:
-      HTM_DBURL: postgresql://user@localhost:5432/htm_development
+      HTM_DATABASE__URL: postgresql://user@localhost:5432/htm_development
 ```
 
 For project-specific configuration, add to `.aia/config.yml` in your project root:
@@ -822,7 +822,7 @@ mcp_servers:
   htm-memory:
     command: htm_mcp
     env:
-      HTM_DBURL: postgresql://user@localhost:5432/my_project_htm
+      HTM_DATABASE__URL: postgresql://user@localhost:5432/my_project_htm
 ```
 
 ## Usage Examples
@@ -952,9 +952,9 @@ This will find `database:postgresql` even with the typo.
 gem install fast-mcp
 ```
 
-**Error: `HTM_DBURL not set`**
+**Error: `HTM_DATABASE__URL not set`**
 ```bash
-export HTM_DBURL="postgresql://user@localhost:5432/htm_development"
+export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
 ```
 
 ### Database Connection Issues
@@ -982,7 +982,7 @@ psql htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 **Claude Code doesn't recognize tools:**
 1. Run `/mcp` to refresh MCP connections
 2. Verify config is valid JSON
-3. Check that HTM_DBURL is set in the env section
+3. Check that HTM_DATABASE__URL is set in the env section
 
 ### Embedding/Tag Errors
 
@@ -1011,17 +1011,17 @@ Run `htm_mcp help` for a complete list. Key variables:
 
 | Variable | Description |
 |----------|-------------|
-| `HTM_DBURL` | PostgreSQL connection URL (e.g., `postgresql://user:pass@localhost:5432/htm_development`) |
+| `HTM_DATABASE__URL` | PostgreSQL connection URL (e.g., `postgresql://user:pass@localhost:5432/htm_development`) |
 
-### Database (alternative to HTM_DBURL)
+### Database (alternative to HTM_DATABASE__URL)
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HTM_DBNAME` | Database name | - |
-| `HTM_DBHOST` | Database host | `localhost` |
-| `HTM_DBPORT` | Database port | `5432` |
-| `HTM_DBUSER` | Database username | - |
-| `HTM_DBPASS` | Database password | - |
+| `HTM_DATABASE__NAME` | Database name | - |
+| `HTM_DATABASE__HOST` | Database host | `localhost` |
+| `HTM_DATABASE__PORT` | Database port | `5432` |
+| `HTM_DATABASE__USER` | Database username | - |
+| `HTM_DATABASE__PASSWORD` | Database password | - |
 | `HTM_DBSSLMODE` | SSL mode | `prefer` |
 
 ### LLM Providers

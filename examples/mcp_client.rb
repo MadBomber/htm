@@ -10,7 +10,7 @@
 # Prerequisites:
 # 1. Install gems: gem install ruby_llm-mcp
 # 2. Have Ollama running with gpt-oss model: ollama pull gpt-oss
-# 3. Set HTM_DBURL environment variable
+# 3. Set HTM_DATABASE__URL environment variable
 # 4. The htm_mcp executable must be available (this client will launch it)
 #
 # Usage:
@@ -57,9 +57,9 @@ class HTMMcpClient
   private
 
   def validate_environment
-    unless ENV['HTM_DBURL']
-      warn 'Error: HTM_DBURL not set.'
-      warn '  export HTM_DBURL="postgresql://postgres@localhost:5432/htm_development"'
+    unless ENV['HTM_DATABASE__URL']
+      warn 'Error: HTM_DATABASE__URL not set.'
+      warn '  export HTM_DATABASE__URL="postgresql://postgres@localhost:5432/htm_development"'
       exit 1
     end
 
@@ -103,7 +103,7 @@ class HTMMcpClient
         command: RbConfig.ruby,
         args: [MCP_SERVER_PATH],
         env: {
-          'HTM_DBURL' => ENV['HTM_DBURL'],
+          'HTM_DATABASE__URL' => ENV['HTM_DATABASE__URL'],
           'OLLAMA_URL' => OLLAMA_URL
         }
       }

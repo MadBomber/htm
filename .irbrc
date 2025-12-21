@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # HTM Interactive Development Console
-# Usage: HTM_DBURL="postgresql://user@localhost:5432/htm_development" irb
+# Usage: HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development" irb
 
 require_relative 'lib/htm'
 require 'debug_me'
