@@ -32,14 +32,14 @@ class ExampleApp
       c.logger.level = Logger::INFO
 
       # Configure embedding generation (using Ollama)
-      c.embedding_provider = :ollama
-      c.embedding_model = 'nomic-embed-text'
-      c.embedding_dimensions = 768
-      c.ollama_url = ENV['OLLAMA_URL'] || 'http://localhost:11434'
+      c.embedding.provider = :ollama
+      c.embedding.model = 'nomic-embed-text'
+      c.embedding.dimensions = 768
+      c.providers.ollama.url = ENV['OLLAMA_URL'] || 'http://localhost:11434'
 
       # Configure tag extraction (using Ollama - using smaller/faster model)
-      c.tag_provider = :ollama
-      c.tag_model = 'gemma3'  # Smaller model (3.3GB) for faster tag generation
+      c.tag.provider = :ollama
+      c.tag.model = 'gemma3'  # Smaller model (3.3GB) for faster tag generation
 
       # Apply default implementations
       c.reset_to_defaults

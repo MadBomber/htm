@@ -86,7 +86,7 @@ Unlike web applications, CLI apps use `:inline` job backend:
 
 ```ruby
 HTM.configure do |config|
-  config.job_backend = :inline  # Execute jobs synchronously
+  config.job.backend = :inline  # Execute jobs synchronously
 end
 ```
 
@@ -197,8 +197,8 @@ end
 
 ```ruby
 HTM.configure do |config|
-  config.embedding_model = 'custom-embedding-model'
-  config.tag_model = 'custom-tag-model'
+  config.embedding.model = 'custom-embedding-model'
+  config.tag.model = 'custom-tag-model'
 end
 ```
 
@@ -206,8 +206,8 @@ end
 
 ```ruby
 HTM.configure do |config|
-  config.embedding_timeout = 60   # 1 minute
-  config.tag_timeout = 120        # 2 minutes
+  config.embedding.timeout = 60   # 1 minute
+  config.tag.timeout = 120        # 2 minutes
 end
 ```
 

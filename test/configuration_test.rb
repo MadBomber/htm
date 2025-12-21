@@ -205,7 +205,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_url_from_components
-    # Temporarily clear HTM_DATABASE__URL so component-based URL building works
+    # Temporarily clear database URL env var so component-based URL building works
     saved_dburl = ENV['HTM_DATABASE__URL']
     ENV.delete('HTM_DATABASE__URL')
 
@@ -232,7 +232,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_configured
-    # Temporarily clear HTM_DATABASE__URL to test component-based configuration
+    # Temporarily clear database URL env var to test component-based configuration
     saved_dburl = ENV['HTM_DATABASE__URL']
     ENV.delete('HTM_DATABASE__URL')
 
@@ -250,7 +250,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_config_hash
-    # Temporarily clear HTM_DATABASE__URL so component-based config is used
+    # Temporarily clear database URL env var so component-based config is used
     saved_dburl = ENV['HTM_DATABASE__URL']
     ENV.delete('HTM_DATABASE__URL')
 

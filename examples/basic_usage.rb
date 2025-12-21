@@ -4,8 +4,10 @@
 # Basic usage example for HTM
 #
 # Prerequisites:
-# 1. Set HTM_DATABASE__URL environment variable (see SETUP.md)
-# 2. Initialize database schema: rake db_setup
+# 1. Configure database via environment or config file:
+#    - HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
+#    - Or individual vars: HTM_DATABASE__HOST, HTM_DATABASE__NAME, etc.
+# 2. Initialize database schema: rake htm:db:setup
 # 3. Install dependencies: bundle install
 
 require_relative '../lib/htm'
@@ -13,26 +15,31 @@ require_relative '../lib/htm'
 puts "HTM Basic Usage Example"
 puts "=" * 60
 
-# Check environment
-unless ENV['HTM_DATABASE__URL']
-  puts "ERROR: HTM_DATABASE__URL not set. Please set it:"
-  puts "  export HTM_DATABASE__URL=\"postgresql://postgres@localhost:5432/htm_development\""
-  puts "See SETUP.md for details."
+# Check database configuration using the config system
+unless HTM.config.database_configured?
+  puts "ERROR: Database not configured. Set one of:"
+  puts "  export HTM_DATABASE__URL=\"postgresql://user@localhost:5432/htm_development\""
+  puts "  Or configure in ~/.config/htm/htm.yml"
+  puts "Run 'bin/htm_mcp help' for all configuration options."
   exit 1
 end
 
 begin
-  # Configure HTM globally (uses Ollama by default)
+  # Configure HTM globally (uses Ollama by default from defaults.yml)
   puts "\n1. Configuring HTM with Ollama provider..."
   HTM.configure do |config|
-    config.embedding_provider = :ollama
-    config.embedding_model = 'nomic-embed-text:latest'  # Ollama models need :tag suffix
-    config.embedding_dimensions = 768
-    config.tag_provider = :ollama
-    config.tag_model = 'gemma3:latest'  # Ollama models need :tag suffix
-    config.reset_to_defaults  # Apply settings
+    config.embedding.provider = :ollama
+    config.embedding.model = 'nomic-embed-text:latest'
+    config.embedding.dimensions = 768
+    config.tag.provider = :ollama
+    config.tag.model = 'gemma3:latest'
+    # Use inline job backend for synchronous execution in examples
+    # (In production, use :thread or :sidekiq for async processing)
+    config.job.backend = :inline
+    # Quiet the logs for cleaner output
+    config.log_level = :warn
   end
-  puts "✓ HTM configured with Ollama provider"
+  puts "✓ HTM configured with Ollama provider (inline job backend)"
 
   # Initialize HTM for 'Code Helper' robot
   puts "\n2. Initializing HTM for 'Code Helper' robot..."
@@ -43,7 +50,7 @@ begin
   puts "✓ HTM initialized"
   puts "  Robot ID: #{htm.robot_id}"
   puts "  Robot Name: #{htm.robot_name}"
-  puts "  Embedding Service: Ollama (#{HTM.configuration.embedding_model})"
+  puts "  Embedding Service: #{HTM.config.embedding.provider} (#{HTM.config.embedding.model})"
 
   # Remember some information
   puts "\n3. Remembering information..."
@@ -63,15 +70,18 @@ begin
   )
   puts "✓ Remembered fact about user preferences (node #{node_id_3})"
 
-  # Sleep briefly to allow async embedding/tag jobs to start
-  sleep 0.5
+  # With inline backend, embeddings and tags are generated synchronously
+  # No sleep needed - memories are immediately searchable
 
-  # Demonstrate recall
-  puts "\n4. Recalling memories about 'database'..."
+  # Demonstrate recall using fulltext search (keyword matching)
+  # Note: hybrid search requires fulltext matches first, so search terms
+  # must appear in the stored content. Use fulltext for keyword matching.
+  puts "\n4. Recalling memories about 'PostgreSQL'..."
   memories = htm.recall(
-    "database",
+    "PostgreSQL",  # This word appears in the stored content
     timeframe: (Time.now - 3600)..Time.now,  # Last hour
     limit: 5,
+    strategy: :fulltext,  # Keyword matching (words must appear in content)
     raw: true  # Return full node data (id, content, etc.)
   )
   puts "✓ Found #{memories.length} memories"

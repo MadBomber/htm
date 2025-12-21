@@ -294,7 +294,7 @@ class HTM
     end
 
     def database_configured?
-      url = database.url
+      url = database_url
       (url && !url.empty?) || (database.name && !database.name.empty?)
     end
 

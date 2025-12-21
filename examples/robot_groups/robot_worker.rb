@@ -37,11 +37,11 @@ end
 
 # Configure HTM with logger to stderr (keep stdout clean for JSON)
 HTM.configure do |config|
-  config.embedding_provider = :ollama
-  config.embedding_model = 'nomic-embed-text:latest'
-  config.embedding_dimensions = 768
-  config.tag_provider = :ollama
-  config.tag_model = 'gemma3:latest'
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text:latest'
+  config.embedding.dimensions = 768
+  config.tag.provider = :ollama
+  config.tag.model = 'gemma3:latest'
   config.logger = Logger.new($stderr, level: Logger::WARN)
 end
 
