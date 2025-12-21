@@ -17,10 +17,6 @@
          <lastmod>2025-12-21</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/htm/telemetry/</loc>
-         <lastmod>2025-12-21</lastmod>
-    </url>
-    <url>
          <loc>https://madbomber.github.io/htm/using_rake_tasks_in_your_app/</loc>
          <lastmod>2025-12-21</lastmod>
     </url>
@@ -73,7 +69,11 @@
          <lastmod>2025-12-21</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/htm/api/yard/HTM/Configuration/</loc>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Config/</loc>
+         <lastmod>2025-12-21</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/ConfigSection/</loc>
          <lastmod>2025-12-21</lastmod>
     </url>
     <url>
@@ -349,6 +349,10 @@
          <lastmod>2025-12-21</lastmod>
     </url>
     <url>
+         <loc>https://madbomber.github.io/htm/examples/config-files/</loc>
+         <lastmod>2025-12-21</lastmod>
+    </url>
+    <url>
          <loc>https://madbomber.github.io/htm/examples/file-loading/</loc>
          <lastmod>2025-12-21</lastmod>
     </url>
@@ -361,7 +365,19 @@
          <lastmod>2025-12-21</lastmod>
     </url>
     <url>
+         <loc>https://madbomber.github.io/htm/examples/rails-integration/</loc>
+         <lastmod>2025-12-21</lastmod>
+    </url>
+    <url>
          <loc>https://madbomber.github.io/htm/examples/robot-groups/</loc>
+         <lastmod>2025-12-21</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/examples/sinatra-integration/</loc>
+         <lastmod>2025-12-21</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/examples/standalone-app/</loc>
          <lastmod>2025-12-21</lastmod>
     </url>
     <url>
