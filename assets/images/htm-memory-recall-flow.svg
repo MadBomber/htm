@@ -19,9 +19,9 @@
   <rect x="240" y="180" width="190" height="60" fill="rgba(255, 152, 0, 0.3)" stroke="#2196F3" stroke-width="3" rx="8"/>
   <text x="335" y="215" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="bold">EmbeddingService</text>
 
-  <!-- Ollama/OpenAI -->
+  <!-- LLM Provider -->
   <rect x="480" y="180" width="180" height="60" fill="rgba(255, 193, 7, 0.3)" stroke="#FFC107" stroke-width="3" rx="8"/>
-  <text x="570" y="215" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="bold">Ollama/OpenAI</text>
+  <text x="570" y="215" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="bold">LLM Provider</text>
 
   <!-- LongTermMemory -->
   <rect x="240" y="300" width="180" height="60" fill="rgba(156, 39, 176, 0.3)" stroke="#9C27B0" stroke-width="3" rx="8"/>
