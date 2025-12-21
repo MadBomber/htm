@@ -5498,7 +5498,7 @@
 <tr>
 <td><code>db_url</code></td>
 <td>String, nil</td>
-<td><code>ENV['HTM_DBURL']</code></td>
+<td><code>ENV['HTM_DATABASE__URL']</code></td>
 <td>Database connection URL</td>
 </tr>
 </tbody>
@@ -5622,7 +5622,7 @@
 <h4 id="returns_2">Returns<a class="headerlink" href="#returns_2" title="Permanent link">&para;</a></h4>
 <ul>
 <li><code>Hash</code> - Connection configuration</li>
-<li><code>nil</code> - If <code>ENV['HTM_DBNAME']</code> not set</li>
+<li><code>nil</code> - If <code>ENV['HTM_DATABASE__NAME']</code> not set</li>
 </ul>
 <h4 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h4>
 <table>
@@ -5635,27 +5635,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>HTM_DBHOST</code></td>
+<td><code>HTM_DATABASE__HOST</code></td>
 <td>Database hostname</td>
 <td><code>'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com'</code></td>
 </tr>
 <tr>
-<td><code>HTM_DBPORT</code></td>
+<td><code>HTM_DATABASE__PORT</code></td>
 <td>Database port</td>
 <td><code>37807</code></td>
 </tr>
 <tr>
-<td><code>HTM_DBNAME</code></td>
+<td><code>HTM_DATABASE__NAME</code></td>
 <td>Database name</td>
 <td><em>required</em></td>
 </tr>
 <tr>
-<td><code>HTM_DBUSER</code></td>
+<td><code>HTM_DATABASE__USER</code></td>
 <td>Database user</td>
 <td><em>required</em></td>
 </tr>
 <tr>
-<td><code>HTM_DBPASS</code></td>
+<td><code>HTM_DATABASE__PASSWORD</code></td>
 <td>Database password</td>
 <td><em>required</em></td>
 </tr>
@@ -5663,9 +5663,9 @@
 </table>
 <h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Set environment variables</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBNAME&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tsdb&#39;</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBUSER&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tsdbadmin&#39;</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBPASS&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;secret&#39;</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__NAME&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tsdb&#39;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__USER&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tsdbadmin&#39;</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__PASSWORD&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;secret&#39;</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
 </span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_params</span><span class="p">()</span>
 </span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># =&gt; {</span>
@@ -5678,14 +5678,14 @@
 </span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="c1"># }</span>
 </span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
 </span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="c1"># Custom host and port</span>
-</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBHOST&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;localhost&#39;</span>
-</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBPORT&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;5432&#39;</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__HOST&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;localhost&#39;</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__PORT&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;5432&#39;</span>
 </span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>
 </span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_params</span><span class="p">()</span>
 </span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="c1"># =&gt; { host: &quot;localhost&quot;, port: 5432, ... }</span>
 </span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
-</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="c1"># Without HTM_DBNAME</span>
-</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DBNAME&#39;</span><span class="p">)</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="c1"># Without HTM_DATABASE__NAME</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DATABASE__NAME&#39;</span><span class="p">)</span>
 </span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_params</span><span class="p">()</span>
 </span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="c1"># =&gt; nil</span>
 </span></code></pre></div>
@@ -5701,27 +5701,27 @@
 </ul>
 <h4 id="priority-order">Priority Order<a class="headerlink" href="#priority-order" title="Permanent link">&para;</a></h4>
 <ol>
-<li><code>ENV['HTM_DBURL']</code> - Parse connection URL</li>
-<li><code>ENV['HTM_DBNAME']</code> - Parse individual params</li>
+<li><code>ENV['HTM_DATABASE__URL']</code> - Parse connection URL</li>
+<li><code>ENV['HTM_DATABASE__NAME']</code> - Parse individual params</li>
 <li><code>nil</code> - No configuration available</li>
 </ol>
 <h4 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Using HTM_DBURL</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBURL&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;postgresql://user:pass@host/db&#39;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Using HTM_DATABASE__URL</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__URL&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;postgresql://user:pass@host/db&#39;</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">default_config</span>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># =&gt; Parsed from URL</span>
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># Using HTM_DBNAME</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DBURL&#39;</span><span class="p">)</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBNAME&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;mydb&#39;</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBUSER&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;user&#39;</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DBPASS&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;pass&#39;</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># Using HTM_DATABASE__NAME</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DATABASE__URL&#39;</span><span class="p">)</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__NAME&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;mydb&#39;</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__USER&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;user&#39;</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__PASSWORD&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;pass&#39;</span>
 </span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">default_config</span>
 </span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># =&gt; Parsed from params</span>
 </span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
 </span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="c1"># No configuration</span>
-</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DBURL&#39;</span><span class="p">)</span>
-</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DBNAME&#39;</span><span class="p">)</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DATABASE__URL&#39;</span><span class="p">)</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DATABASE__NAME&#39;</span><span class="p">)</span>
 </span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">default_config</span>
 </span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="c1"># =&gt; nil</span>
 </span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>
@@ -5824,24 +5824,24 @@
 <h3 id="timescaledb-cloud">TimescaleDB Cloud<a class="headerlink" href="#timescaledb-cloud" title="Permanent link">&para;</a></h3>
 <p>Using URL (recommended):</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># In ~/.bashrc__tiger</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s1">&#39;postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require&#39;</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require&#39;</span>
 </span></code></pre></div>
 <p>Using individual variables:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># In ~/.bashrc__tiger</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBHOST</span><span class="o">=</span><span class="s1">&#39;xxx.tsdb.cloud.timescale.com&#39;</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBPORT</span><span class="o">=</span><span class="m">37807</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBNAME</span><span class="o">=</span><span class="s1">&#39;tsdb&#39;</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBUSER</span><span class="o">=</span><span class="s1">&#39;tsdbadmin&#39;</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBPASS</span><span class="o">=</span><span class="s1">&#39;your_password&#39;</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__HOST</span><span class="o">=</span><span class="s1">&#39;xxx.tsdb.cloud.timescale.com&#39;</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PORT</span><span class="o">=</span><span class="m">37807</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__NAME</span><span class="o">=</span><span class="s1">&#39;tsdb&#39;</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__USER</span><span class="o">=</span><span class="s1">&#39;tsdbadmin&#39;</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PASSWORD</span><span class="o">=</span><span class="s1">&#39;your_password&#39;</span>
 </span></code></pre></div>
 <h3 id="local-postgresql">Local PostgreSQL<a class="headerlink" href="#local-postgresql" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s1">&#39;postgresql://localhost/htm_dev&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://localhost/htm_dev&#39;</span>
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="c1"># Or with auth</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s1">&#39;postgresql://user:pass@localhost:5432/htm_dev&#39;</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://user:pass@localhost:5432/htm_dev&#39;</span>
 </span></code></pre></div>
 <h3 id="docker-postgresql">Docker PostgreSQL<a class="headerlink" href="#docker-postgresql" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s1">&#39;postgresql://postgres:postgres@localhost:5432/htm&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://postgres:postgres@localhost:5432/htm&#39;</span>
 </span></code></pre></div>
 <hr />
 <h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
@@ -5868,7 +5868,7 @@
 </span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Port: </span><span class="si">#{</span><span class="n">config</span><span class="o">[</span><span class="ss">:port</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span>
 </span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="k">else</span>
 </span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;No database configuration found&quot;</span>
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Please set HTM_DBURL or HTM_DBNAME environment variables&quot;</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Please set HTM_DATABASE__URL or HTM_DATABASE__NAME environment variables&quot;</span>
 </span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="k">end</span>
 </span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>
 </span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="c1"># Test connection</span>
@@ -5939,7 +5939,7 @@
 </span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>psql<span class="w"> </span>-h<span class="w"> </span>localhost<span class="w"> </span>-U<span class="w"> </span>user<span class="w"> </span>-d<span class="w"> </span>dbname
 </span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
 </span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="c1"># Verify environment</span>
-</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DBURL</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span>
 </span></code></pre></div>
 <h3 id="permission-denied">Permission Denied<a class="headerlink" href="#permission-denied" title="Permanent link">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>PG::InsufficientPrivilege: ERROR:  permission denied for schema public
@@ -5998,7 +5998,7 @@
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">default_config</span>
 </span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>
 </span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="k">unless</span><span class="w"> </span><span class="n">config</span>
-</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span><span class="k">raise</span><span class="w"> </span><span class="s2">&quot;Database not configured. Please set HTM_DBURL environment variable. &quot;</span><span class="w"> </span><span class="p">\</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span><span class="k">raise</span><span class="w"> </span><span class="s2">&quot;Database not configured. Please set HTM_DATABASE__URL environment variable. &quot;</span><span class="w"> </span><span class="p">\</span>
 </span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="w">        </span><span class="s2">&quot;See README.md for configuration instructions.&quot;</span>
 </span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="k">end</span>
 </span></code></pre></div>

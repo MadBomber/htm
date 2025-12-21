@@ -5899,11 +5899,11 @@
 <p>Create or edit <code>~/.bashrc__tiger</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># TimescaleDB Connection Configuration</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_SERVICE_NAME</span><span class="o">=</span><span class="s2">&quot;db-67977&quot;</span><span class="w">  </span><span class="c1"># Your service name</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBNAME</span><span class="o">=</span><span class="s2">&quot;tsdb&quot;</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBUSER</span><span class="o">=</span><span class="s2">&quot;tsdbadmin&quot;</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBPASS</span><span class="o">=</span><span class="s2">&quot;your_password_here&quot;</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBPORT</span><span class="o">=</span><span class="s2">&quot;37807&quot;</span><span class="w">  </span><span class="c1"># Your port number</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgres://tsdbadmin:your_password@host:port/tsdb?sslmode=require&quot;</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__NAME</span><span class="o">=</span><span class="s2">&quot;tsdb&quot;</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__USER</span><span class="o">=</span><span class="s2">&quot;tsdbadmin&quot;</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PASSWORD</span><span class="o">=</span><span class="s2">&quot;your_password_here&quot;</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PORT</span><span class="o">=</span><span class="s2">&quot;37807&quot;</span><span class="w">  </span><span class="c1"># Your port number</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgres://tsdbadmin:your_password@host:port/tsdb?sslmode=require&quot;</span>
 </span></code></pre></div>
 <p>Replace the placeholders with your actual connection details.</p>
 <h4 id="5-load-environment-variables">5. Load Environment Variables<a class="headerlink" href="#5-load-environment-variables" title="Permanent link">&para;</a></h4>
@@ -5940,11 +5940,11 @@
 </span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a><span class="c1"># Configure environment variables</span>
 </span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>cat<span class="w"> </span>&gt;<span class="w"> </span>~/.bashrc__tiger<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
 </span><span id="__span-12-25"><a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a><span class="s">export HTM_SERVICE_NAME=&quot;local-dev&quot;</span>
-</span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a><span class="s">export HTM_DBNAME=&quot;tsdb&quot;</span>
-</span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a><span class="s">export HTM_DBUSER=&quot;tsdbadmin&quot;</span>
-</span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a><span class="s">export HTM_DBPASS=&quot;devpassword&quot;</span>
-</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a><span class="s">export HTM_DBPORT=&quot;5432&quot;</span>
-</span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a><span class="s">export HTM_DBURL=&quot;postgres://tsdbadmin:devpassword@localhost:5432/tsdb?sslmode=disable&quot;</span>
+</span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a><span class="s">export HTM_DATABASE__NAME=&quot;tsdb&quot;</span>
+</span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a><span class="s">export HTM_DATABASE__USER=&quot;tsdbadmin&quot;</span>
+</span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a><span class="s">export HTM_DATABASE__PASSWORD=&quot;devpassword&quot;</span>
+</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a><span class="s">export HTM_DATABASE__PORT=&quot;5432&quot;</span>
+</span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a><span class="s">export HTM_DATABASE__URL=&quot;postgres://tsdbadmin:devpassword@localhost:5432/tsdb?sslmode=disable&quot;</span>
 </span><span id="__span-12-31"><a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a><span class="s">EOF</span>
 </span><span id="__span-12-32"><a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a>
 </span><span id="__span-12-33"><a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc__tiger
@@ -6020,7 +6020,7 @@
 <h3 id="alternative-manual-setup">Alternative: Manual Setup<a class="headerlink" href="#alternative-manual-setup" title="Permanent link">&para;</a></h3>
 <p>You can also run the schema SQL directly:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Using psql</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-f<span class="w"> </span>sql/schema.sql
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>-f<span class="w"> </span>sql/schema.sql
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
 </span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># Or using Ruby</span>
 </span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>ruby<span class="w"> </span>-r<span class="w"> </span>./lib/htm<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;HTM::Database.setup&quot;</span>
@@ -6111,27 +6111,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>HTM_DBURL</code></td>
+<td><code>HTM_DATABASE__URL</code></td>
 <td>Full PostgreSQL connection URL (preferred)</td>
 <td><code>postgres://user:pass@host:port/db?sslmode=require</code></td>
 </tr>
 <tr>
-<td><code>HTM_DBNAME</code></td>
+<td><code>HTM_DATABASE__NAME</code></td>
 <td>Database name</td>
 <td><code>tsdb</code></td>
 </tr>
 <tr>
-<td><code>HTM_DBUSER</code></td>
+<td><code>HTM_DATABASE__USER</code></td>
 <td>Database username</td>
 <td><code>tsdbadmin</code></td>
 </tr>
 <tr>
-<td><code>HTM_DBPASS</code></td>
+<td><code>HTM_DATABASE__PASSWORD</code></td>
 <td>Database password</td>
 <td><code>your_password</code></td>
 </tr>
 <tr>
-<td><code>HTM_DBPORT</code></td>
+<td><code>HTM_DATABASE__PORT</code></td>
 <td>Database port</td>
 <td><code>37807</code></td>
 </tr>
@@ -6173,10 +6173,10 @@
 <p><strong>Symptoms</strong>: Connection refused or timeout errors</p>
 <p><strong>Solutions</strong>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="c1"># Verify environment variables are set</span>
-</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DBURL</span>
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span>
 </span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>
 </span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="c1"># Test connection directly with psql</span>
-</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span>
+</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span>
 </span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a>
 </span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a><span class="c1"># Check if service is running (TimescaleDB Cloud)</span>
 </span><span id="__span-33-8"><a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a><span class="c1"># Visit your Timescale Cloud dashboard</span>
@@ -6207,7 +6207,7 @@
 </span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>ruby<span class="w"> </span>enable_extensions.rb
 </span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>
 </span><span id="__span-35-4"><a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a><span class="c1"># Check extension status</span>
-</span><span id="__span-35-5"><a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;SELECT extname, extversion FROM pg_extension ORDER BY extname&quot;</span>
+</span><span id="__span-35-5"><a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;SELECT extname, extversion FROM pg_extension ORDER BY extname&quot;</span>
 </span><span id="__span-35-6"><a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a>
 </span><span id="__span-35-7"><a id="__codelineno-35-7" name="__codelineno-35-7" href="#__codelineno-35-7"></a><span class="c1"># For TimescaleDB Cloud, extensions should be pre-installed</span>
 </span><span id="__span-35-8"><a id="__codelineno-35-8" name="__codelineno-35-8" href="#__codelineno-35-8"></a><span class="c1"># For local PostgreSQL, ensure you&#39;re using timescale/timescaledb-ha image</span>
@@ -6249,11 +6249,11 @@
 <h3 id="ssltls-issues">SSL/TLS Issues<a class="headerlink" href="#ssltls-issues" title="Permanent link">&para;</a></h3>
 <p>If you see SSL certificate errors:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="c1"># Ensure sslmode is set in connection URL</span>
-</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>sslmode
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>sslmode
 </span><span id="__span-38-3"><a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a><span class="c1"># Should show: sslmode=require</span>
 </span><span id="__span-38-4"><a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a>
 </span><span id="__span-38-5"><a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a><span class="c1"># For local development without SSL</span>
-</span><span id="__span-38-6"><a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgres://user:pass@localhost:5432/tsdb?sslmode=disable&quot;</span>
+</span><span id="__span-38-6"><a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgres://user:pass@localhost:5432/tsdb?sslmode=disable&quot;</span>
 </span></code></pre></div>
 <h3 id="ruby-version-issues">Ruby Version Issues<a class="headerlink" href="#ruby-version-issues" title="Permanent link">&para;</a></h3>
 <p>If you see Ruby version errors:</p>

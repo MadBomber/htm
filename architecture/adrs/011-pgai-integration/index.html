@@ -5356,23 +5356,23 @@
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>ruby<span class="w"> </span>enable_extensions.rb
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># 2. Run database schema with triggers</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>&lt;<span class="w"> </span>sql/schema.sql
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>&lt;<span class="w"> </span>sql/schema.sql
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># 3. Use HTM normally - embeddings automatic!</span>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>ruby<span class="w"> </span>-r<span class="w"> </span>./lib/htm<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;HTM.new(robot_name: &#39;Bot&#39;).add_node(&#39;test&#39;, &#39;value&#39;)&quot;</span>
 </span></code></pre></div>
 <h3 id="for-existing-installations">For Existing Installations<a class="headerlink" href="#for-existing-installations" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># 1. Backup database</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>pg_dump<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>&gt;<span class="w"> </span>htm_backup.sql
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>pg_dump<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>&gt;<span class="w"> </span>htm_backup.sql
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># 2. Enable pgai extension</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>ruby<span class="w"> </span>enable_extensions.rb
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># 3. Apply new schema (adds triggers)</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>&lt;<span class="w"> </span>sql/schema.sql
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>&lt;<span class="w"> </span>sql/schema.sql
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="c1"># 4. (Optional) Regenerate embeddings with new model</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;UPDATE nodes SET value = value;&quot;</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;UPDATE nodes SET value = value;&quot;</span>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="c1"># This triggers embedding regeneration for all nodes</span>
 </span></code></pre></div>
 <h3 id="code-migration">Code Migration<a class="headerlink" href="#code-migration" title="Permanent link">&para;</a></h3>

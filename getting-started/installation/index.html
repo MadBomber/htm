@@ -5274,22 +5274,22 @@
 </span></code></pre></div>
 <h3 id="configure-environment-variables">Configure Environment Variables<a class="headerlink" href="#configure-environment-variables" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Add to ~/.bashrc or your preferred config file</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgres://username:password@localhost:5432/htm_db&quot;</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBNAME</span><span class="o">=</span><span class="s2">&quot;htm_db&quot;</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBUSER</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBPASS</span><span class="o">=</span><span class="s2">&quot;your_password&quot;</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBPORT</span><span class="o">=</span><span class="s2">&quot;5432&quot;</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBHOST</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgres://username:password@localhost:5432/htm_db&quot;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__NAME</span><span class="o">=</span><span class="s2">&quot;htm_db&quot;</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__USER</span><span class="o">=</span><span class="s2">&quot;your_username&quot;</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PASSWORD</span><span class="o">=</span><span class="s2">&quot;your_password&quot;</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PORT</span><span class="o">=</span><span class="s2">&quot;5432&quot;</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__HOST</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span>
 </span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="c1"># Load the configuration</span>
 </span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc
 </span></code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Environment Configuration</p>
-<p>HTM automatically uses the <code>HTM_DBURL</code> environment variable if available. You can also pass database configuration directly to <code>HTM.new()</code>.</p>
+<p>HTM automatically uses the <code>HTM_DATABASE__URL</code> environment variable if available. You can also pass database configuration directly to <code>HTM.new()</code>.</p>
 </div>
 <p>Set environment variable:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgres://localhost/htm_db&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgres://localhost/htm_db&quot;</span>
 </span></code></pre></div>
 <h2 id="step-3-enable-postgresql-extensions">Step 3: Enable PostgreSQL Extensions<a class="headerlink" href="#step-3-enable-postgresql-extensions" title="Permanent link">&para;</a></h2>
 <p>HTM requires two PostgreSQL extensions:</p>
@@ -5303,7 +5303,7 @@
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">cd</span><span class="w"> </span>/path/to/your/project
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>ruby<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;</span>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="s2">require &#39;pg&#39;</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="s2">conn = PG.connect(ENV[&#39;HTM_DBURL&#39;])</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="s2">conn = PG.connect(ENV[&#39;HTM_DATABASE__URL&#39;])</span>
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="s2">result = conn.exec(&#39;SELECT extname, extversion FROM pg_extension ORDER BY extname&#39;)</span>
 </span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="s2">result.each { |row| puts \&quot;✓ #{row[&#39;extname&#39;]}: Version #{row[&#39;extversion&#39;]}\&quot; }</span>
 </span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="s2">conn.close</span>
@@ -5493,31 +5493,31 @@
 </thead>
 <tbody>
 <tr>
-<td><code>HTM_DBURL</code></td>
+<td><code>HTM_DATABASE__URL</code></td>
 <td>PostgreSQL connection URL</td>
 <td>-</td>
 <td>Yes</td>
 </tr>
 <tr>
-<td><code>HTM_DBNAME</code></td>
+<td><code>HTM_DATABASE__NAME</code></td>
 <td>Database name</td>
 <td><code>htm_db</code></td>
 <td>No</td>
 </tr>
 <tr>
-<td><code>HTM_DBUSER</code></td>
+<td><code>HTM_DATABASE__USER</code></td>
 <td>Database user</td>
 <td><code>postgres</code></td>
 <td>No</td>
 </tr>
 <tr>
-<td><code>HTM_DBPASS</code></td>
+<td><code>HTM_DATABASE__PASSWORD</code></td>
 <td>Database password</td>
 <td>-</td>
 <td>No</td>
 </tr>
 <tr>
-<td><code>HTM_DBPORT</code></td>
+<td><code>HTM_DATABASE__PORT</code></td>
 <td>Database port</td>
 <td><code>5432</code></td>
 <td>No</td>
@@ -5533,7 +5533,7 @@
 <h3 id="example-configuration-file">Example Configuration File<a class="headerlink" href="#example-configuration-file" title="Permanent link">&para;</a></h3>
 <p>Create a configuration file for easy loading:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># ~/.bashrc__htm</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgres://user:pass@host:port/db?sslmode=require&quot;</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgres://user:pass@host:port/db?sslmode=require&quot;</span>
 </span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">OLLAMA_URL</span><span class="o">=</span><span class="s2">&quot;http://localhost:11434&quot;</span>
 </span></code></pre></div>
 <p>Load it in your shell:</p>
@@ -5544,11 +5544,11 @@
 <h3 id="database-connection-issues">Database Connection Issues<a class="headerlink" href="#database-connection-issues" title="Permanent link">&para;</a></h3>
 <p><strong>Error</strong>: <code>PG::ConnectionBad: connection failed</code></p>
 <p><strong>Solutions</strong>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># 1. Verify HTM_DBURL is set</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DBURL</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># 1. Verify HTM_DATABASE__URL is set</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span>
 </span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
 </span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1"># 2. Test connection manually</span>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span>
 </span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>
 </span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="c1"># 3. Check if PostgreSQL is running (local installs)</span>
 </span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>pg_ctl<span class="w"> </span>status
@@ -5582,7 +5582,7 @@
 </span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>sudo<span class="w"> </span>make<span class="w"> </span>install
 </span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>
 </span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="c1"># Enable in database</span>
-</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pgvector;&quot;</span>
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pgvector;&quot;</span>
 </span></code></pre></div>
 <h3 id="ruby-version-issues">Ruby Version Issues<a class="headerlink" href="#ruby-version-issues" title="Permanent link">&para;</a></h3>
 <p><strong>Error</strong>: <code>htm requires Ruby version &gt;= 3.0.0</code></p>
@@ -5601,7 +5601,7 @@
 <p><strong>Error</strong>: <code>PG::InsufficientPrivilege: permission denied</code></p>
 <p><strong>Solutions</strong>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># Ensure your database user has necessary permissions</span>
-</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>psql<span class="w"> </span><span class="nv">$HTM_DBURL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
 </span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="s2">  GRANT ALL PRIVILEGES ON DATABASE your_db TO your_user;</span>
 </span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="s2">  GRANT ALL ON ALL TABLES IN SCHEMA public TO your_user;</span>
 </span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="s2">&quot;</span>

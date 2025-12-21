@@ -5012,7 +5012,7 @@
 - Failover simulation
 - Dynamic scaling
 - Real-time sync via LISTEN/NOTIFY</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_dev&quot;</span><span class="w"> </span>ruby<span class="w"> </span>examples/robot_groups/same_process.rb
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_dev&quot;</span><span class="w"> </span>ruby<span class="w"> </span>examples/robot_groups/same_process.rb
 </span></code></pre></div>
 <h3 id="multi_processrb">multi_process.rb<a class="headerlink" href="#multi_processrb" title="Permanent link">&para;</a></h3>
 <p>Multi-process demo showing:
@@ -5020,7 +5020,7 @@
 - Cross-process synchronization
 - Failover when a process dies
 - Dynamic scaling by spawning new processes</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_dev&quot;</span><span class="w"> </span>ruby<span class="w"> </span>examples/robot_groups/multi_process.rb
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_dev&quot;</span><span class="w"> </span>ruby<span class="w"> </span>examples/robot_groups/multi_process.rb
 </span></code></pre></div>
 <h3 id="robot_workerrb">robot_worker.rb<a class="headerlink" href="#robot_workerrb" title="Permanent link">&para;</a></h3>
 <p>Standalone worker process that:

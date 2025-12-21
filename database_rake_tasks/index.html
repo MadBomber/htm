@@ -5153,7 +5153,7 @@
 <p>Opens an interactive PostgreSQL console (psql).</p>
 <p><strong>What it does:</strong>
 - Launches <code>psql</code> connected to your HTM database
-- Uses connection parameters from <code>HTM_DBURL</code> or <code>.envrc</code>
+- Uses connection parameters from <code>HTM_DATABASE__URL</code> or <code>.envrc</code>
 - Allows you to run SQL queries directly</p>
 <p><strong>Example:</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:db:console
@@ -5222,7 +5222,7 @@
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>rake<span class="w"> </span>htm:db:info
 </span></code></pre></div>
 <h3 id="method-2-manual-export">Method 2: Manual Export<a class="headerlink" href="#method-2-manual-export" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@host:port/dbname?sslmode=require&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@host:port/dbname?sslmode=require&quot;</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>rake<span class="w"> </span>htm:db:info
 </span></code></pre></div>
 <h3 id="method-3-source-tiger-credentials">Method 3: Source Tiger Credentials<a class="headerlink" href="#method-3-source-tiger-credentials" title="Permanent link">&para;</a></h3>
@@ -5262,13 +5262,13 @@
 <h3 id="database-configuration-not-found">"Database configuration not found"<a class="headerlink" href="#database-configuration-not-found" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Run <code>direnv allow</code> in the project directory</li>
-<li>Or manually export <code>HTM_DBURL</code></li>
-<li>Verify: <code>echo $HTM_DBURL</code></li>
+<li>Or manually export <code>HTM_DATABASE__URL</code></li>
+<li>Verify: <code>echo $HTM_DATABASE__URL</code></li>
 </ul>
 <h3 id="connection-refused">"Connection refused"<a class="headerlink" href="#connection-refused" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Check database is running</li>
-<li>Verify host/port in <code>HTM_DBURL</code></li>
+<li>Verify host/port in <code>HTM_DATABASE__URL</code></li>
 <li>Test: <code>rake htm:db:test</code></li>
 </ul>
 <h3 id="extension-not-found">"Extension not found"<a class="headerlink" href="#extension-not-found" title="Permanent link">&para;</a></h3>

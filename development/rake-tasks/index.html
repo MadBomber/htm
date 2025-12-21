@@ -6203,7 +6203,7 @@
 </span></code></pre></div>
 <p><strong>What it does:</strong></p>
 <ul>
-<li>Connects to PostgreSQL using <code>HTM_DBURL</code></li>
+<li>Connects to PostgreSQL using <code>HTM_DATABASE__URL</code></li>
 <li>Verifies required extensions (pgvector, pg_trgm)</li>
 <li>Creates all HTM tables (robots, nodes, tags, file_sources, etc.)</li>
 <li>Runs all pending ActiveRecord migrations</li>
@@ -6820,7 +6820,7 @@
 </span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>bundle<span class="w"> </span>install
 </span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>
 </span><span id="__span-46-4"><a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a><span class="c1"># Set database URL</span>
-</span><span id="__span-46-5"><a id="__codelineno-46-5" name="__codelineno-46-5" href="#__codelineno-46-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+</span><span id="__span-46-5"><a id="__codelineno-46-5" name="__codelineno-46-5" href="#__codelineno-46-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span><span id="__span-46-6"><a id="__codelineno-46-6" name="__codelineno-46-6" href="#__codelineno-46-6"></a>
 </span><span id="__span-46-7"><a id="__codelineno-46-7" name="__codelineno-46-7" href="#__codelineno-46-7"></a><span class="c1"># Create and setup database</span>
 </span><span id="__span-46-8"><a id="__codelineno-46-8" name="__codelineno-46-8" href="#__codelineno-46-8"></a>rake<span class="w"> </span>htm:db:create
@@ -6914,39 +6914,39 @@
 </thead>
 <tbody>
 <tr>
-<td><code>HTM_DBURL</code></td>
+<td><code>HTM_DATABASE__URL</code></td>
 <td>Full PostgreSQL connection URL (preferred)</td>
 </tr>
 <tr>
-<td><code>HTM_DBHOST</code></td>
+<td><code>HTM_DATABASE__HOST</code></td>
 <td>Database host</td>
 </tr>
 <tr>
-<td><code>HTM_DBPORT</code></td>
+<td><code>HTM_DATABASE__PORT</code></td>
 <td>Database port</td>
 </tr>
 <tr>
-<td><code>HTM_DBNAME</code></td>
+<td><code>HTM_DATABASE__NAME</code></td>
 <td>Database name</td>
 </tr>
 <tr>
-<td><code>HTM_DBUSER</code></td>
+<td><code>HTM_DATABASE__USER</code></td>
 <td>Database username</td>
 </tr>
 <tr>
-<td><code>HTM_DBPASS</code></td>
+<td><code>HTM_DATABASE__PASSWORD</code></td>
 <td>Database password</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Example:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@localhost:5432/htm_development&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@localhost:5432/htm_development&quot;</span>
 </span></code></pre></div>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="database-configuration-not-found">"Database configuration not found"<a class="headerlink" href="#database-configuration-not-found" title="Permanent link">&para;</a></h3>
-<p>Set the <code>HTM_DBURL</code> environment variable:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+<p>Set the <code>HTM_DATABASE__URL</code> environment variable:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span></code></pre></div>
 <h3 id="extension-not-found">"Extension not found"<a class="headerlink" href="#extension-not-found" title="Permanent link">&para;</a></h3>
 <p>Install required PostgreSQL extensions:</p>

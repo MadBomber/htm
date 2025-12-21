@@ -2216,10 +2216,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#database-alternative-to-htm_dburl" class="md-nav__link">
+  <a href="#database-alternative-to-htm_database__url" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Database (alternative to HTM_DBURL)
+        Database (alternative to HTM_DATABASE__URL)
       
     </span>
   </a>
@@ -5581,10 +5581,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#database-alternative-to-htm_dburl" class="md-nav__link">
+  <a href="#database-alternative-to-htm_database__url" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Database (alternative to HTM_DBURL)
+        Database (alternative to HTM_DATABASE__URL)
       
     </span>
   </a>
@@ -5733,7 +5733,7 @@
 </li>
 <li>
 <p><strong>PostgreSQL database set up</strong>
-   <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>htm_mcp<span class="w"> </span>setup
 </span></code></pre></div></p>
 </li>
@@ -5796,7 +5796,7 @@
 </table>
 <h3 id="first-time-setup">First-Time Setup<a class="headerlink" href="#first-time-setup" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Set your database URL</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Initialize the database</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>htm_mcp<span class="w"> </span>setup
@@ -6306,7 +6306,7 @@
 </span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="w">    </span><span class="nt">&quot;htm-memory&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-35-4"><a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a><span class="w">      </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;htm_mcp&quot;</span><span class="p">,</span>
 </span><span id="__span-35-5"><a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a><span class="w">      </span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-35-6"><a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a><span class="w">        </span><span class="nt">&quot;HTM_DBURL&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+</span><span id="__span-35-6"><a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a><span class="w">        </span><span class="nt">&quot;HTM_DATABASE__URL&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span><span id="__span-35-7"><a id="__codelineno-35-7" name="__codelineno-35-7" href="#__codelineno-35-7"></a><span class="w">      </span><span class="p">}</span>
 </span><span id="__span-35-8"><a id="__codelineno-35-8" name="__codelineno-35-8" href="#__codelineno-35-8"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-35-9"><a id="__codelineno-35-9" name="__codelineno-35-9" href="#__codelineno-35-9"></a><span class="w">  </span><span class="p">}</span>
@@ -6318,7 +6318,7 @@
 </span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a><span class="w">    </span><span class="nt">&quot;htm-memory&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a><span class="w">      </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/htm_mcp&quot;</span><span class="p">,</span>
 </span><span id="__span-36-5"><a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a><span class="w">      </span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-36-6"><a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a><span class="w">        </span><span class="nt">&quot;HTM_DBURL&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+</span><span id="__span-36-6"><a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a><span class="w">        </span><span class="nt">&quot;HTM_DATABASE__URL&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span><span id="__span-36-7"><a id="__codelineno-36-7" name="__codelineno-36-7" href="#__codelineno-36-7"></a><span class="w">      </span><span class="p">}</span>
 </span><span id="__span-36-8"><a id="__codelineno-36-8" name="__codelineno-36-8" href="#__codelineno-36-8"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-36-9"><a id="__codelineno-36-9" name="__codelineno-36-9" href="#__codelineno-36-9"></a><span class="w">  </span><span class="p">}</span>
@@ -6335,7 +6335,7 @@
 </span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a><span class="w">    </span><span class="nt">&quot;htm-memory&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-37-4"><a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a><span class="w">      </span><span class="nt">&quot;command&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;htm_mcp&quot;</span><span class="p">,</span>
 </span><span id="__span-37-5"><a id="__codelineno-37-5" name="__codelineno-37-5" href="#__codelineno-37-5"></a><span class="w">      </span><span class="nt">&quot;env&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-37-6"><a id="__codelineno-37-6" name="__codelineno-37-6" href="#__codelineno-37-6"></a><span class="w">        </span><span class="nt">&quot;HTM_DBURL&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+</span><span id="__span-37-6"><a id="__codelineno-37-6" name="__codelineno-37-6" href="#__codelineno-37-6"></a><span class="w">        </span><span class="nt">&quot;HTM_DATABASE__URL&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span><span id="__span-37-7"><a id="__codelineno-37-7" name="__codelineno-37-7" href="#__codelineno-37-7"></a><span class="w">      </span><span class="p">}</span>
 </span><span id="__span-37-8"><a id="__codelineno-37-8" name="__codelineno-37-8" href="#__codelineno-37-8"></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-37-9"><a id="__codelineno-37-9" name="__codelineno-37-9" href="#__codelineno-37-9"></a><span class="w">  </span><span class="p">}</span>
@@ -6358,14 +6358,14 @@
 </span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a><span class="w">  </span><span class="nt">htm-memory</span><span class="p">:</span>
 </span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">htm_mcp</span>
 </span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
-</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="w">      </span><span class="nt">HTM_DBURL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql://user@localhost:5432/htm_development</span>
+</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="w">      </span><span class="nt">HTM_DATABASE__URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql://user@localhost:5432/htm_development</span>
 </span></code></pre></div>
 <p>For project-specific configuration, add to <code>.aia/config.yml</code> in your project root:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="nt">mcp_servers</span><span class="p">:</span>
 </span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a><span class="w">  </span><span class="nt">htm-memory</span><span class="p">:</span>
 </span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">htm_mcp</span>
 </span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a><span class="w">    </span><span class="nt">env</span><span class="p">:</span>
-</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="w">      </span><span class="nt">HTM_DBURL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql://user@localhost:5432/my_project_htm</span>
+</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="w">      </span><span class="nt">HTM_DATABASE__URL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgresql://user@localhost:5432/my_project_htm</span>
 </span></code></pre></div>
 <h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
 <h3 id="basic-workflow">Basic Workflow<a class="headerlink" href="#basic-workflow" title="Permanent link">&para;</a></h3>
@@ -6480,8 +6480,8 @@
 <p><strong>Error: <code>fast-mcp gem not found</code></strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-55-1"><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a>gem<span class="w"> </span>install<span class="w"> </span>fast-mcp
 </span></code></pre></div></p>
-<p><strong>Error: <code>HTM_DBURL not set</code></strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-56-1"><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DBURL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+<p><strong>Error: <code>HTM_DATABASE__URL not set</code></strong>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-56-1"><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span></code></pre></div></p>
 <h3 id="database-connection-issues">Database Connection Issues<a class="headerlink" href="#database-connection-issues" title="Permanent link">&para;</a></h3>
 <p><strong>Error: <code>could not connect to server</code></strong>
@@ -6502,7 +6502,7 @@
 <p><strong>Claude Code doesn't recognize tools:</strong>
 1. Run <code>/mcp</code> to refresh MCP connections
 2. Verify config is valid JSON
-3. Check that HTM_DBURL is set in the env section</p>
+3. Check that HTM_DATABASE__URL is set in the env section</p>
 <h3 id="embeddingtag-errors">Embedding/Tag Errors<a class="headerlink" href="#embeddingtag-errors" title="Permanent link">&para;</a></h3>
 <p><strong>Error: <code>Connection refused</code> (Ollama)</strong>
 1. Start Ollama: <code>ollama serve</code>
@@ -6527,12 +6527,12 @@
 </thead>
 <tbody>
 <tr>
-<td><code>HTM_DBURL</code></td>
+<td><code>HTM_DATABASE__URL</code></td>
 <td>PostgreSQL connection URL (e.g., <code>postgresql://user:pass@localhost:5432/htm_development</code>)</td>
 </tr>
 </tbody>
 </table>
-<h3 id="database-alternative-to-htm_dburl">Database (alternative to HTM_DBURL)<a class="headerlink" href="#database-alternative-to-htm_dburl" title="Permanent link">&para;</a></h3>
+<h3 id="database-alternative-to-htm_database__url">Database (alternative to HTM_DATABASE__URL)<a class="headerlink" href="#database-alternative-to-htm_database__url" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -6543,27 +6543,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>HTM_DBNAME</code></td>
+<td><code>HTM_DATABASE__NAME</code></td>
 <td>Database name</td>
 <td>-</td>
 </tr>
 <tr>
-<td><code>HTM_DBHOST</code></td>
+<td><code>HTM_DATABASE__HOST</code></td>
 <td>Database host</td>
 <td><code>localhost</code></td>
 </tr>
 <tr>
-<td><code>HTM_DBPORT</code></td>
+<td><code>HTM_DATABASE__PORT</code></td>
 <td>Database port</td>
 <td><code>5432</code></td>
 </tr>
 <tr>
-<td><code>HTM_DBUSER</code></td>
+<td><code>HTM_DATABASE__USER</code></td>
 <td>Database username</td>
 <td>-</td>
 </tr>
 <tr>
-<td><code>HTM_DBPASS</code></td>
+<td><code>HTM_DATABASE__PASSWORD</code></td>
 <td>Database password</td>
 <td>-</td>
 </tr>
