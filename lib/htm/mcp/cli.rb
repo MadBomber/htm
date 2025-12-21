@@ -8,7 +8,7 @@ class HTM
 
       def print_help
         puts <<~HELP
-          HTM MCP Server - Memory management for AI assistants
+          HTM MCP Server v#{HTM::VERSION} - Memory management for AI assistants
 
           USAGE:
             htm_mcp [COMMAND]
@@ -20,6 +20,7 @@ class HTM
             init      Alias for setup
             verify    Verify database connection and extensions
             stats     Show memory statistics
+            config    Output default configuration to STDOUT
             version   Show HTM version
             help      Show this help message
 
@@ -276,7 +277,7 @@ class HTM
       end
 
       def output_default_config
-        defaults_path = File.expand_path('../../config/defaults.yml', __dir__)
+        defaults_path = File.expand_path('../config/defaults.yml', __dir__)
         if File.exist?(defaults_path)
           puts File.read(defaults_path)
         else
@@ -416,32 +417,30 @@ class HTM
         case args[0]&.downcase
         when 'help', '-h', '--help'
           print_help
-          exit 0
         when 'version', '-v', '--version'
           puts "HTM #{HTM::VERSION}"
-          exit 0
         when 'setup', 'init'
           run_setup
-          exit 0
         when 'verify'
           run_verify
-          exit 0
         when 'stats'
           run_stats
-          exit 0
+        when 'config'
+          output_default_config
         when 'server', 'stdio', nil
           # Return false to indicate server should start
           # 'stdio' is accepted for compatibility with MCP clients that pass it as an argument
-          false
+          return false
         when /^-/
-          warn "Unknown option: #{args[0]}"
-          warn "Run 'htm_mcp help' for usage."
+          $stderr.puts "Unknown option: #{args[0]}"
+          $stderr.puts "Run 'htm_mcp help' for usage."
           exit 1
         else
-          warn "Unknown command: #{args[0]}"
-          warn "Run 'htm_mcp help' for usage."
+          $stderr.puts "Unknown command: #{args[0]}"
+          $stderr.puts "Run 'htm_mcp help' for usage."
           exit 1
         end
+        true
       end
 
       # Handle -c / --config option, modifying args in place
@@ -469,7 +468,7 @@ class HTM
       end
 
       def command?(arg)
-        %w[help version setup init verify stats server stdio].include?(arg.downcase)
+        %w[help version setup init verify stats config server stdio].include?(arg.downcase)
       end
     end
   end
