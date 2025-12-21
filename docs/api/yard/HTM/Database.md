@@ -8,7 +8,7 @@ initialization
 
 # Class Methods
 ## default_config() {: #method-c-default_config }
-Get default database configuration (respects HTM_ENV)
+Get default database configuration
 
 Uses HTM::Config for database settings.
 **`@return`** [Hash, nil] Connection configuration hash with PG-style keys

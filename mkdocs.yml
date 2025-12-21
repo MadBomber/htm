@@ -48,7 +48,6 @@ theme:
     - navigation.tracking
     - navigation.tabs
     - navigation.tabs.sticky
-    - navigation.sections
     - navigation.path
     - navigation.indexes
     - navigation.top
@@ -166,29 +165,37 @@ extra:
 
 # Navigation
 nav:
-  - Home: index.md
+  - Home:
+      - Overview: index.md
+      - MCP (htm_mcp):
+          - Server (htm_mcp): guides/mcp-server.md
+          - Example Usage: examples/mcp-client.md
+      - Features:
+          - Configuration: guides/configuration.md
+          - Hierarchical Tags: guides/tags.md
+          - Propositions: guides/propositions.md
+          - File Loading: guides/file-loading.md
+          - Telemetry: guides/telemetry.md
+          - Multi-Robot Systems: guides/multi-robot.md
+          - Robot Groups (Advanced): guides/robot-groups.md
+          - Search Strategies: guides/search-strategies.md
+      - Examples:
+          - examples/index.md
+          - Basic Usage: examples/basic-usage.md
+          - Standalone App: examples/standalone-app.md
+          - LLM Configuration: examples/llm-configuration.md
+          - Config Files: examples/config-files.md
+          - File Loading: examples/file-loading.md
+          - Timeframes: examples/timeframes.md
+          - Robot Groups: examples/robot-groups.md
+          - Telemetry: examples/telemetry.md
+          - Framework Integration:
+              - Rails App: examples/rails-integration.md
+              - Sinatra App: examples/sinatra-integration.md
   - Getting Started:
       - getting-started/index.md
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quick-start.md
-  - Features:
-      - Configuration: guides/configuration.md
-      - MCP Server: guides/mcp-server.md
-      - Hierarchical Tags: guides/tags.md
-      - Propositions: guides/propositions.md
-      - File Loading: guides/file-loading.md
-      - Telemetry: guides/telemetry.md
-      - Robot Groups: guides/multi-robot.md
-      - Search Strategies: guides/search-strategies.md
-  - Examples:
-      - examples/index.md
-      - Basic Usage: examples/basic-usage.md
-      - LLM Configuration: examples/llm-configuration.md
-      - File Loading: examples/file-loading.md
-      - Timeframes: examples/timeframes.md
-      - Robot Groups: examples/robot-groups.md
-      - MCP Client: examples/mcp-client.md
-      - Telemetry: examples/telemetry.md
   - Architecture:
       - architecture/index.md
       - Overview: architecture/overview.md

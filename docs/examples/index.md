@@ -35,14 +35,6 @@ ruby examples/<example_name>.rb
 | [MCP Client](mcp-client.md) | Interactive AI chat with memory tools |
 | [Telemetry](telemetry.md) | Prometheus metrics and Grafana visualization |
 
-### Framework Integration
-
-| Example | Description |
-|---------|-------------|
-| [Rails App](../guides/getting-started.md#rails-integration) | Integration with Rails applications |
-| [Sinatra App](../guides/getting-started.md#sinatra-integration) | Integration with Sinatra applications |
-| [CLI App](../guides/getting-started.md#standalone-ruby) | Standalone Ruby CLI applications |
-
 ## Quick Reference
 
 ### Basic Operations
