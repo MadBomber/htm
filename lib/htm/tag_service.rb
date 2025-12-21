@@ -65,9 +65,6 @@ class HTM
     # @raise [CircuitBreakerOpenError] If circuit breaker is open
     #
     def self.extract(content, existing_ontology: [])
-      HTM.logger.debug "TagService: Extracting tags from #{content.length} chars"
-      HTM.logger.debug "TagService: Using ontology with #{existing_ontology.size} existing tags"
-
       # Use circuit breaker to protect against cascading failures
       raw_tags = circuit_breaker.call do
         HTM.configuration.tag_extractor.call(content, existing_ontology)
@@ -77,11 +74,7 @@ class HTM
       parsed_tags = parse_tags(raw_tags)
 
       # Validate and filter tags
-      valid_tags = validate_and_filter_tags(parsed_tags)
-
-      HTM.logger.debug "TagService: Extracted #{valid_tags.length} valid tags: #{valid_tags.join(', ')}"
-
-      valid_tags
+      validate_and_filter_tags(parsed_tags)
 
     rescue HTM::CircuitBreakerOpenError
       # Re-raise circuit breaker errors without wrapping

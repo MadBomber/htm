@@ -60,8 +60,6 @@ class HTM
         # Convert job class to ActiveJob if needed
         active_job_class = to_active_job_class(job_class)
         active_job_class.perform_later(**params)
-
-        HTM.logger.debug "Enqueued #{job_class.name} via ActiveJob with params: #{params.inspect}"
       end
 
       # Enqueue job using Sidekiq directly
@@ -76,38 +74,26 @@ class HTM
         # Sidekiq 7.x requires native JSON types - convert symbol keys to strings
         json_params = params.transform_keys(&:to_s)
         sidekiq_class.perform_async(json_params)
-
-        HTM.logger.debug "Enqueued #{job_class.name} via Sidekiq with params: #{params.inspect}"
       end
 
       # Execute job inline (synchronously)
       def enqueue_inline(job_class, **params)
-        HTM.logger.debug "Executing #{job_class.name} inline with params: #{params.inspect}"
-
         begin
           job_class.perform(**params)
-          HTM.logger.debug "Completed #{job_class.name} inline execution"
         rescue StandardError => e
           HTM.logger.error "Inline job #{job_class.name} failed: #{e.class.name} - #{e.message}"
-          HTM.logger.debug e.backtrace.first(5).join("\n")
         end
       end
 
       # Execute job in background thread (legacy)
       def enqueue_thread(job_class, **params)
         Thread.new do
-          HTM.logger.debug "Executing #{job_class.name} in thread with params: #{params.inspect}"
-
           begin
             job_class.perform(**params)
-            HTM.logger.debug "Completed #{job_class.name} thread execution"
           rescue StandardError => e
             HTM.logger.error "Thread job #{job_class.name} failed: #{e.class.name} - #{e.message}"
-            HTM.logger.debug e.backtrace.first(5).join("\n")
           end
         end
-
-        HTM.logger.debug "Started thread for #{job_class.name}"
       rescue StandardError => e
         HTM.logger.error "Failed to start thread for #{job_class.name}: #{e.message}"
       end

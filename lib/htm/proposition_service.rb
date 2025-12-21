@@ -67,8 +67,6 @@ class HTM
     # @raise [PropositionError] If extraction fails
     #
     def self.extract(content)
-      HTM.logger.debug "PropositionService: Extracting propositions from #{content.length} chars"
-
       # Use circuit breaker to protect against cascading failures
       raw_propositions = circuit_breaker.call do
         HTM.configuration.proposition_extractor.call(content)
@@ -78,11 +76,7 @@ class HTM
       parsed_propositions = parse_propositions(raw_propositions)
 
       # Validate and filter propositions
-      valid_propositions = validate_and_filter_propositions(parsed_propositions)
-
-      HTM.logger.debug "PropositionService: Extracted #{valid_propositions.length} valid propositions"
-
-      valid_propositions
+      validate_and_filter_propositions(parsed_propositions)
 
     rescue HTM::CircuitBreakerOpenError
       # Re-raise circuit breaker errors without wrapping
@@ -128,10 +122,7 @@ class HTM
 
       propositions.each do |proposition|
         # Check minimum length
-        if proposition.length < MIN_PROPOSITION_LENGTH
-          HTM.logger.debug "PropositionService: Proposition too short, skipping: #{proposition}"
-          next
-        end
+        next if proposition.length < MIN_PROPOSITION_LENGTH
 
         # Check maximum length
         if proposition.length > MAX_PROPOSITION_LENGTH
@@ -141,7 +132,6 @@ class HTM
 
         # Check for actual content (not just punctuation/whitespace)
         unless proposition.match?(/[a-zA-Z]{3,}/)
-          HTM.logger.debug "PropositionService: Proposition lacks content, skipping: #{proposition}"
           next
         end
 

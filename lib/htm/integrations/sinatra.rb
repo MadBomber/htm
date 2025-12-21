@@ -138,7 +138,6 @@ class HTM
           return if @@db_config
 
           @@db_config = HTM::ActiveRecordConfig.load_database_config
-          HTM.logger.debug "HTM database config stored for thread-safe access"
         end
       end
 
@@ -160,15 +159,13 @@ class HTM
         # Re-establish connection using stored config
         if @@db_config
           ActiveRecord::Base.establish_connection(@@db_config)
-          HTM.logger.debug "HTM database connection established for request thread"
         else
           raise "HTM database config not stored - call register_htm at app startup"
         end
-      rescue ActiveRecord::ConnectionNotDefined, ActiveRecord::ConnectionNotEstablished => e
+      rescue ActiveRecord::ConnectionNotDefined, ActiveRecord::ConnectionNotEstablished
         # Pool doesn't exist, establish connection
         if @@db_config
           ActiveRecord::Base.establish_connection(@@db_config)
-          HTM.logger.debug "HTM database connection established for request thread"
         else
           raise "HTM database config not stored - call register_htm at app startup"
         end
@@ -226,7 +223,6 @@ module ::Sinatra
       end
 
       HTM.logger.info "HTM registered with Sinatra application"
-      HTM.logger.debug "HTM job backend: #{HTM.configuration.job_backend}"
     end
   end
 end

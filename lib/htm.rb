@@ -251,7 +251,6 @@ class HTM
     normalized_timeframe = if timeframe == :auto
       result = HTM::Timeframe.normalize(:auto, query: topic)
       search_query = result.query  # Use cleaned query for search
-      HTM.logger.debug "Auto-extracted timeframe: #{result.extracted.inspect}" if result.extracted
       result.timeframe
     else
       HTM::Timeframe.normalize(timeframe)
@@ -595,7 +594,6 @@ class HTM
         tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
         HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
       end
-      HTM.logger.debug "Added #{manual_tags.length} manual tags to node #{node_id}"
     end
 
     # Enqueue tag generation using configured job backend

@@ -31,17 +31,12 @@ class HTM
         end
 
         # Skip if already has embedding
-        if node.embedding.present?
-          HTM.logger.debug "GenerateEmbeddingJob: Node #{node_id} already has embedding, skipping"
-          return
-        end
+        return if node.embedding.present?
 
         provider = HTM.configuration.embedding_provider.to_s
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
         begin
-          HTM.logger.debug "GenerateEmbeddingJob: Generating embedding for node #{node_id}"
-
           # Generate and process embedding using EmbeddingService
           result = HTM::EmbeddingService.generate(node.content)
 
@@ -77,7 +72,6 @@ class HTM
 
           # Log unexpected errors
           HTM.logger.error "GenerateEmbeddingJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
-          HTM.logger.debug e.backtrace.first(5).join("\n")
         end
       end
     end

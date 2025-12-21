@@ -37,8 +37,6 @@ class HTM
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
         begin
-          HTM.logger.debug "GenerateTagsJob: Extracting tags for node #{node_id}"
-
           # Get existing ontology for context (sample of recent tags)
           existing_ontology = HTM::Models::Tag
             .order(created_at: :desc)
@@ -47,11 +45,7 @@ class HTM
 
           # Extract and validate tags using TagService
           tag_names = HTM::TagService.extract(node.content, existing_ontology: existing_ontology)
-
-          if tag_names.empty?
-            HTM.logger.debug "GenerateTagsJob: No tags extracted for node #{node_id}"
-            return
-          end
+          return if tag_names.empty?
 
           # Create or find tags and associate with node
           tag_names.each do |tag_name|
@@ -102,7 +96,6 @@ class HTM
 
           # Log unexpected errors
           HTM.logger.error "GenerateTagsJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
-          HTM.logger.debug e.backtrace.first(5).join("\n")
         end
       end
     end

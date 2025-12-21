@@ -33,21 +33,12 @@ class HTM
         end
 
         # Skip if this node is already a proposition (prevent recursion)
-        if node.metadata&.dig('is_proposition')
-          HTM.logger.debug "GeneratePropositionsJob: Node #{node_id} is a proposition, skipping"
-          return
-        end
+        return if node.metadata&.dig('is_proposition')
 
         begin
-          HTM.logger.debug "GeneratePropositionsJob: Extracting propositions for node #{node_id}"
-
           # Extract propositions using PropositionService
           propositions = HTM::PropositionService.extract(node.content)
-
-          if propositions.empty?
-            HTM.logger.debug "GeneratePropositionsJob: No propositions extracted for node #{node_id}"
-            return
-          end
+          return if propositions.empty?
 
           HTM.logger.info "GeneratePropositionsJob: Extracted #{propositions.length} propositions for node #{node_id}"
 
@@ -95,7 +86,6 @@ class HTM
         rescue StandardError => e
           # Log unexpected errors
           HTM.logger.error "GeneratePropositionsJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
-          HTM.logger.debug e.backtrace.first(5).join("\n")
         end
       end
     end

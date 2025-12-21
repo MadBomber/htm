@@ -68,8 +68,6 @@ class HTM
     # @raise [CircuitBreakerOpenError] If circuit breaker is open
     #
     def self.generate(text)
-      HTM.logger.debug "EmbeddingService: Generating embedding for #{text.length} chars"
-
       # Use circuit breaker to protect against cascading failures
       raw_embedding = circuit_breaker.call do
         HTM.configuration.embedding_generator.call(text)
@@ -94,8 +92,6 @@ class HTM
 
       # Format for database storage
       storage_string = format_for_storage(storage_embedding)
-
-      HTM.logger.debug "EmbeddingService: Generated #{actual_dimension}D embedding (padded to #{max_dim})"
 
       {
         embedding: raw_embedding,

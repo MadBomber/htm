@@ -39,7 +39,6 @@ class HTM
       end
 
       HTM.logger.info "HTM initialized for Rails application"
-      HTM.logger.debug "HTM job backend: #{HTM.configuration.job_backend}"
     end
 
     # Load Rake tasks

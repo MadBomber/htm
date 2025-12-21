@@ -73,8 +73,6 @@ class HTM
             HTM.logger.warn "CircuitBreaker[#{@name}]: Circuit is OPEN, failing fast"
             raise CircuitBreakerOpenError, "Circuit breaker '#{@name}' is open. Service unavailable."
           end
-        when :half_open
-          HTM.logger.debug "CircuitBreaker[#{@name}]: Circuit is HALF-OPEN, testing service"
         end
       end
 
