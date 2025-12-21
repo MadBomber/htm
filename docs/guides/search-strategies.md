@@ -108,9 +108,9 @@ Vector search finds memories based on semantic similarity using embeddings.
 ```
 User Query: "database optimization techniques"
       ↓
-   Ollama Embedding (gpt-oss)
+   Embedding via RubyLLM (Ollama, OpenAI, etc.)
       ↓
-  [0.234, -0.567, 0.123, ...]  ← 1536-dimensional vector
+  [0.234, -0.567, 0.123, ...]  ← Vector representation
       ↓
    PostgreSQL + pgvector
       ↓
@@ -927,7 +927,7 @@ end
 
 ```ruby
 # If vector search returns nothing:
-# 1. Check Ollama is running
+# 1. Check your LLM provider is accessible (Ollama running, API key set, etc.)
 # 2. Try broader query
 # 3. Widen timeframe
 # 4. Fall back to full-text

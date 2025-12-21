@@ -10,7 +10,7 @@ Setting up HTM for development involves:
 2. Installing Ruby and system dependencies
 3. Installing Ruby gem dependencies
 4. Setting up TimescaleDB database
-5. Configuring Ollama for embeddings
+5. Configuring an LLM provider (Ollama, OpenAI, etc.)
 6. Verifying your setup
 7. Running tests and examples
 
@@ -274,77 +274,94 @@ ruby enable_extensions.rb
 
 This ensures that TimescaleDB, pgvector, and pg_trgm extensions are enabled.
 
-## Step 5: Set Up Ollama for Embeddings
+## Step 5: Configure LLM Provider
 
-HTM uses Ollama (via RubyLLM) to generate vector embeddings for semantic search.
+HTM uses RubyLLM to generate vector embeddings and extract tags. RubyLLM supports multiple providers, so you can choose what works best for your development environment.
 
-### Install Ollama
+### Supported Providers
 
-#### macOS
+| Provider | Best For | Setup Required |
+|----------|----------|----------------|
+| **Ollama** (default) | Local development, privacy | Install Ollama + models |
+| **OpenAI** | Production, high-quality | API key only |
+| **Anthropic** | Claude models for tags | API key only |
+| **Gemini** | Google Cloud users | API key only |
 
+### Option A: Ollama (Recommended for Development)
+
+Ollama runs locally with no API costs.
+
+#### Install Ollama
+
+**macOS:**
 ```bash
-# Download and install from official site
+# Direct download
 curl https://ollama.ai/install.sh | sh
 
 # Or using Homebrew
 brew install ollama
 ```
 
-#### Linux
-
+**Linux:**
 ```bash
 curl https://ollama.ai/install.sh | sh
 ```
 
-### Start Ollama Service
+#### Start Ollama Service
 
-Ollama typically starts automatically after installation. Verify it's running:
+Ollama typically starts automatically. Verify it's running:
 
 ```bash
-# Check if Ollama is running
 curl http://localhost:11434/api/version
-
-# Expected output:
-# {"version":"0.1.x"}
 ```
 
-If not running, start it manually:
+If not running:
 
 ```bash
-# macOS - Ollama runs as a background service
-# Check Activity Monitor or start from Applications
-
+# macOS - Check Activity Monitor or start from Applications
 # Linux
 ollama serve &
 ```
 
-### Pull the gpt-oss Model
-
-HTM uses the `gpt-oss` model by default:
+#### Pull Required Models
 
 ```bash
-# Pull the model (downloads ~4GB)
-ollama pull gpt-oss
+# Pull embedding model
+ollama pull nomic-embed-text
 
-# Verify the model is available
+# Pull tag extraction model
+ollama pull gemma3:latest
+
+# Verify models
 ollama list
-# Should show gpt-oss in the list
 ```
 
-### Test Embedding Generation
+#### Configure Custom URL (Optional)
 
 ```bash
-# Test that embeddings work
-ollama run gpt-oss "Hello, HTM!"
-```
-
-### Optional: Configure Custom Ollama URL
-
-If Ollama is running on a different host or port:
-
-```bash
-# Add to ~/.bashrc__tiger
 export OLLAMA_URL="http://custom-host:11434"
+```
+
+### Option B: OpenAI (Recommended for Production)
+
+```bash
+export OPENAI_API_KEY="sk-..."
+```
+
+Configure in your code:
+```ruby
+HTM.configure do |config|
+  config.embedding.provider = :openai
+  config.embedding.model = 'text-embedding-3-small'
+end
+```
+
+### Option C: Other Providers
+
+Set the appropriate API key:
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GEMINI_API_KEY="..."
 ```
 
 ## Step 6: Initialize Database Schema
@@ -420,11 +437,11 @@ HTM Basic Usage Example
 ============================================================
 
 1. Initializing HTM for 'Code Helper' robot...
-   Using RubyLLM with Ollama provider and gpt-oss model for embeddings
+   Using RubyLLM with configured provider for embeddings
 ✓ HTM initialized
   Robot ID: robot-abc123
   Robot Name: Code Helper
-  Embedding Service: Ollama (gpt-oss via RubyLLM)
+  Embedding Service: Configured provider via RubyLLM
 
 2. Adding memory nodes...
 ✓ Added decision about database choice
@@ -485,11 +502,14 @@ HTM uses environment variables for configuration. Here's a complete reference:
 | `HTM_DATABASE__PORT` | Database port | `37807` |
 | `HTM_SERVICE_NAME` | Service identifier (informational) | `db-67977` |
 
-### Ollama Variables
+### LLM Provider Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `OLLAMA_URL` | Ollama API URL (optional) | `http://localhost:11434` |
+| `OLLAMA_URL` | Ollama API URL (if using Ollama) | `http://localhost:11434` |
+| `OPENAI_API_KEY` | OpenAI API key (if using OpenAI) | `sk-...` |
+| `ANTHROPIC_API_KEY` | Anthropic API key (if using Anthropic) | `sk-ant-...` |
+| `GEMINI_API_KEY` | Gemini API key (if using Gemini) | `...` |
 
 ### Managing Environment Files
 
@@ -497,7 +517,7 @@ You can organize your environment variables using multiple files:
 
 ```bash
 # ~/.bashrc__tiger - Database configuration
-# ~/.bashrc__ollama - Ollama configuration (if needed)
+# LLM provider environment variables (set based on your chosen provider)
 
 # Load all configuration files in ~/.bashrc
 source ~/.bashrc__tiger
@@ -527,11 +547,11 @@ psql $HTM_DATABASE__URL
 docker ps | grep timescale
 ```
 
-#### "Ollama connection refused"
+#### "LLM provider connection failed"
 
 **Symptoms**: Embedding generation fails
 
-**Solutions**:
+**Solutions for Ollama**:
 
 ```bash
 # Verify Ollama is running
@@ -541,11 +561,23 @@ curl http://localhost:11434/api/version
 # macOS: Start from Applications or Activity Monitor
 # Linux: ollama serve &
 
-# Check if model is downloaded
-ollama list | grep gpt-oss
+# Check if models are downloaded
+ollama list | grep nomic-embed-text
 
-# Pull model if missing
-ollama pull gpt-oss
+# Pull models if missing
+ollama pull nomic-embed-text
+ollama pull gemma3:latest
+```
+
+**Solutions for Cloud Providers**:
+
+```bash
+# Verify API key is set
+echo $OPENAI_API_KEY
+echo $ANTHROPIC_API_KEY
+
+# Test API connectivity
+curl https://api.openai.com/v1/models -H "Authorization: Bearer $OPENAI_API_KEY"
 ```
 
 #### "Extension not available"
@@ -602,7 +634,7 @@ rake db_setup
 source ~/.bashrc__tiger
 env | grep TIGER
 
-# Check Ollama is running
+# Check LLM provider (if using Ollama)
 curl http://localhost:11434/api/version
 
 # Run tests with verbose output

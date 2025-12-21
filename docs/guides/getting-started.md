@@ -8,26 +8,47 @@ Before starting, ensure you have:
 
 1. **Ruby 3.0+** installed
 2. **PostgreSQL with TimescaleDB** (or access to a TimescaleDB cloud instance)
-3. **Ollama** installed and running (for embeddings)
+3. **LLM Provider** configured - Ollama (default for local development), OpenAI, Anthropic, Gemini, or others via RubyLLM
 4. Basic understanding of Ruby and LLMs
 
-### Installing Ollama
+### Configuring an LLM Provider
 
-HTM uses Ollama for generating vector embeddings by default:
+HTM uses RubyLLM which supports multiple providers for generating embeddings and extracting tags.
+
+**Option A: Ollama (Recommended for Local Development)**
 
 ```bash
 # Install Ollama
 curl https://ollama.ai/install.sh | sh
 
-# Pull the gpt-oss model (default for HTM)
-ollama pull gpt-oss
+# Pull required models
+ollama pull nomic-embed-text
+ollama pull gemma3:latest
 
 # Verify Ollama is running
 curl http://localhost:11434/api/version
 ```
 
+**Option B: OpenAI (Recommended for Production)**
+
+```bash
+export OPENAI_API_KEY="sk-..."
+```
+
+Configure HTM:
+```ruby
+HTM.configure do |config|
+  config.embedding.provider = :openai
+  config.embedding.model = 'text-embedding-3-small'
+end
+```
+
+**Option C: Other Providers** (Anthropic, Gemini, Azure, Bedrock, DeepSeek)
+
+Set the appropriate API key and configure HTM with your preferred provider.
+
 !!! tip
-    The gpt-oss model provides high-quality embeddings optimized for semantic search. HTM uses these embeddings to understand the meaning of your memories, not just keyword matches.
+    HTM uses vector embeddings to understand the semantic meaning of your memories, not just keyword matches. Any provider will work—choose based on your privacy, cost, and quality requirements.
 
 ## Installation
 
@@ -463,9 +484,9 @@ htm.forget(node_id, soft: false, confirm: :confirmed)
 
 ## Troubleshooting
 
-### Ollama Connection Issues
+### LLM Provider Connection Issues
 
-If you see embedding errors:
+**If using Ollama:**
 
 ```bash
 # Check Ollama is running
@@ -474,8 +495,18 @@ curl http://localhost:11434/api/version
 # If not running, start it
 ollama serve
 
-# Verify the model is available
+# Verify the models are available
 ollama list
+```
+
+**If using cloud providers:**
+
+```bash
+# Verify API key is set
+echo $OPENAI_API_KEY      # or ANTHROPIC_API_KEY, GEMINI_API_KEY, etc.
+
+# Test connectivity
+curl https://api.openai.com/v1/models -H "Authorization: Bearer $OPENAI_API_KEY"
 ```
 
 ### Database Connection Issues

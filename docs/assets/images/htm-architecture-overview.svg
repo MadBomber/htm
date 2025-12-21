@@ -46,8 +46,8 @@
   <!-- Embedding Service -->
   <rect x="500" y="520" width="280" height="100" fill="rgba(255, 152, 0, 0.3)" stroke="#FF9800" stroke-width="3" rx="8"/>
   <text x="640" y="555" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">Embedding Service</text>
-  <text x="640" y="580" text-anchor="middle" fill="#B0B0B0" font-size="13">(Ollama/RubyLLM)</text>
-  <text x="640" y="603" text-anchor="middle" fill="#B0B0B0" font-size="13">gpt-oss model</text>
+  <text x="640" y="580" text-anchor="middle" fill="#B0B0B0" font-size="13">(RubyLLM Multi-Provider)</text>
+  <text x="640" y="603" text-anchor="middle" fill="#B0B0B0" font-size="13">Configurable model</text>
 
   <!-- Notes -->
   <rect x="30" y="500" width="360" height="160" fill="rgba(33, 150, 243, 0.1)" stroke="#2196F3" stroke-width="2" rx="5" stroke-dasharray="5,5"/>
@@ -56,7 +56,7 @@
   <text x="40" y="570" fill="#B0B0B0" font-size="11">• <tspan fill="#2196F3" font-weight="bold">HTM API</tspan>: Main interface for memory operations</text>
   <text x="40" y="590" fill="#B0B0B0" font-size="11">• <tspan fill="#2196F3" font-weight="bold">Working Memory</tspan>: Fast, token-limited cache</text>
   <text x="40" y="610" fill="#B0B0B0" font-size="11">• <tspan fill="#9C27B0" font-weight="bold">Long-term Memory</tspan>: Durable PostgreSQL storage</text>
-  <text x="40" y="630" fill="#B0B0B0" font-size="11">• <tspan fill="#FF9800" font-weight="bold">Embedding Service</tspan>: Vector generation via Ollama</text>
+  <text x="40" y="630" fill="#B0B0B0" font-size="11">• <tspan fill="#FF9800" font-weight="bold">Embedding Service</tspan>: Vector generation via RubyLLM</text>
   <text x="40" y="650" fill="#B0B0B0" font-size="11">• <tspan fill="#FFC107" font-weight="bold">Eviction/Recall</tspan>: Automatic memory management</text>
 
   <!-- Markers -->

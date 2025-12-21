@@ -48,7 +48,7 @@ HTM follows a "never forget unless explicitly told" principle:
 
 HTM uses advanced Retrieval-Augmented Generation techniques:
 
-- **Vector Similarity Search**: Semantic search using pgvector with embeddings from Ollama
+- **Vector Similarity Search**: Semantic search using pgvector with embeddings via RubyLLM (multiple providers supported)
 - **Full-Text Search**: PostgreSQL full-text search for keyword matching
 - **Hybrid Search**: Combines both vector and full-text for best results
 - **Temporal Filtering**: Natural language time queries like "last week" or "yesterday"
@@ -79,10 +79,12 @@ Here's how simple it is to get started with HTM:
 ```ruby
 require 'htm'
 
-# Configure HTM globally (optional - uses Ollama by default)
+# Configure HTM globally (optional - defaults to Ollama for local development)
+# HTM uses RubyLLM which supports multiple providers:
+# :ollama (default), :openai, :anthropic, :gemini, :azure, :bedrock, :deepseek
 HTM.configure do |config|
-  config.embedding.provider = :ollama
-  config.embedding.model = 'nomic-embed-text:latest'
+  config.embedding.provider = :ollama           # or :openai, etc.
+  config.embedding.model = 'nomic-embed-text'   # provider-specific model
   config.tag.provider = :ollama
   config.tag.model = 'gemma3:latest'
 end
@@ -146,7 +148,7 @@ HTM consists of several key components working together:
 - **HTM API**: Main interface for all memory operations
 - **WorkingMemory**: Token-limited in-memory cache for immediate LLM use
 - **LongTermMemory**: PostgreSQL-backed durable storage
-- **EmbeddingService**: Generates vector embeddings via RubyLLM and Ollama
+- **EmbeddingService**: Generates vector embeddings via RubyLLM (supports Ollama, OpenAI, Anthropic, Gemini, Azure, Bedrock, DeepSeek, and more)
 - **Database**: Schema management and connection pooling
 
 ## Memory Types
@@ -166,7 +168,7 @@ Each type can have custom importance scores, tags, and relationships.
 
 Ready to add intelligent memory to your LLM application? Follow these steps:
 
-1. **[Installation](getting-started/installation.md)**: Set up HTM, PostgreSQL, TimescaleDB, and Ollama
+1. **[Installation](getting-started/installation.md)**: Set up HTM, PostgreSQL, and your preferred LLM provider
 2. **[Quick Start](getting-started/quick-start.md)**: Build your first HTM-powered application in 5 minutes
 3. **[User Guide](guides/getting-started.md)**: Deep dive into all HTM features
 4. **[API Reference](api/htm.md)**: Complete API documentation

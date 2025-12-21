@@ -123,10 +123,11 @@ puts "=" * 60
 Create an HTM instance for your robot:
 
 ```ruby
-# Configure HTM globally (optional - uses Ollama by default)
+# Configure HTM globally (optional - defaults to Ollama for local development)
+# HTM uses RubyLLM which supports: :ollama, :openai, :anthropic, :gemini, :azure, :bedrock, :deepseek
 HTM.configure do |config|
-  config.embedding.provider = :ollama
-  config.embedding.model = 'nomic-embed-text:latest'
+  config.embedding.provider = :ollama           # or :openai, etc.
+  config.embedding.model = 'nomic-embed-text'   # provider-specific model
   config.tag.provider = :ollama
   config.tag.model = 'gemma3:latest'
 end
@@ -336,10 +337,11 @@ require 'htm'
 puts "My First HTM Application"
 puts "=" * 60
 
-# Step 1: Configure and initialize HTM
+# Step 1: Configure and initialize HTM (optional - uses Ollama by default)
+# Supports: :ollama, :openai, :anthropic, :gemini, :azure, :bedrock, :deepseek
 HTM.configure do |config|
   config.embedding.provider = :ollama
-  config.embedding.model = 'nomic-embed-text:latest'
+  config.embedding.model = 'nomic-embed-text'
   config.tag.provider = :ollama
   config.tag.model = 'gemma3:latest'
 end
@@ -520,10 +522,15 @@ htm = HTM.new(
   working_memory_size: 256_000  # 256k tokens
 )
 
-# Try different embedding models via configure
+# Try different providers or models
 HTM.configure do |config|
-  config.embedding.provider = :ollama
-  config.embedding.model = 'llama3:latest'  # Use Llama3
+  # Use OpenAI for production
+  config.embedding.provider = :openai
+  config.embedding.model = 'text-embedding-3-small'
+
+  # Or use Ollama locally with different model
+  # config.embedding.provider = :ollama
+  # config.embedding.model = 'mxbai-embed-large'
 end
 
 # Try different recall strategies
@@ -595,13 +602,21 @@ htm.remember(
 
 ## Troubleshooting Quick Start
 
-### Issue: "Connection refused" error
+### Issue: "Connection refused" error (Ollama)
 
 **Solution**: Make sure Ollama is running:
 
 ```bash
 curl http://localhost:11434/api/version
-# If this fails, start Ollama
+# If this fails, start Ollama with: ollama serve
+```
+
+### Issue: "API key invalid" error (cloud providers)
+
+**Solution**: Verify your API key is set:
+
+```bash
+echo $OPENAI_API_KEY  # or ANTHROPIC_API_KEY, GEMINI_API_KEY, etc.
 ```
 
 ### Issue: "Database connection failed"
@@ -615,12 +630,14 @@ echo $HTM_DATABASE__URL
 
 ### Issue: Embeddings taking too long
 
-**Solution**: Check Ollama's status and ensure the model is downloaded:
+**Solution for Ollama**: Check the model is downloaded:
 
 ```bash
 ollama list | grep nomic-embed-text
 # Should show nomic-embed-text model
 ```
+
+**Solution for cloud providers**: Check your internet connection and API status.
 
 ### Issue: Memory not found during recall
 

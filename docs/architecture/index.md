@@ -29,7 +29,7 @@ HTM provides intelligent memory management through five core components that wor
   <!-- Embedding Service -->
   <rect x="550" y="200" width="200" height="120" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
   <text x="650" y="235" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Embedding Service</text>
-  <text x="650" y="255" text-anchor="middle" fill="#B0B0B0" font-size="11">Ollama/OpenAI</text>
+  <text x="650" y="255" text-anchor="middle" fill="#B0B0B0" font-size="11">Multi-Provider (RubyLLM)</text>
   <text x="650" y="275" text-anchor="middle" fill="#B0B0B0" font-size="11">Vector Embeddings</text>
   <text x="650" y="295" text-anchor="middle" fill="#B0B0B0" font-size="11">Semantic Search</text>
 
@@ -113,12 +113,14 @@ Durable PostgreSQL storage for permanent knowledge retention. All memories are s
 
 Generates vector embeddings for semantic search and manages token counting for memory management.
 
-**Supported Providers:**
+**Supported Providers (via RubyLLM):**
 
-- **Ollama** (default): Local embedding models (gpt-oss, nomic-embed-text, mxbai-embed-large)
+- **Ollama** (default): Local embedding models (nomic-embed-text, mxbai-embed-large)
 - **OpenAI**: text-embedding-3-small, text-embedding-3-large
-- **Cohere**: embed-english-v3.0, embed-multilingual-v3.0
-- **Local**: Transformers.js for browser/edge deployment
+- **Gemini**: text-embedding-004
+- **Azure**: Azure OpenAI Service
+- **Bedrock**: Amazon Titan, Cohere models
+- **DeepSeek**: DeepSeek embeddings
 
 **Related ADRs:** [ADR-003](adrs/003-ollama-embeddings.md)
 
@@ -284,7 +286,7 @@ Explore detailed architecture documentation:
 | **Time-Series** | TimescaleDB | Hypertable partitioning, compression |
 | **Vector Search** | pgvector | Semantic similarity (HNSW) |
 | **Full-Text** | pg_trgm | Fuzzy text matching |
-| **Embeddings** | Ollama/OpenAI | Vector generation |
+| **Embeddings** | RubyLLM (multi-provider) | Vector generation |
 | **Connection Pool** | connection_pool gem | Database connection management |
 | **Testing** | Minitest | Test framework |
 
@@ -318,7 +320,7 @@ Explore detailed architecture documentation:
 
 - **Working Memory**: Limited by process RAM (~1-2GB for 128K tokens)
 - **Database**: PostgreSQL scales to TBs with proper indexing
-- **Embeddings**: Local models (Ollama) bounded by GPU/CPU
+- **Embeddings**: Local models (Ollama) bounded by GPU/CPU; cloud providers scale independently
 
 ### Horizontal Scaling
 

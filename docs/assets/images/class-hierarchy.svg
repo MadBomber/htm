@@ -43,7 +43,7 @@
   <text x="70" y="370" fill="#B0B0B0" font-size="10">• <tspan fill="#4CAF50" font-weight="bold">HTM</tspan>: Main API interface coordinating all components</text>
   <text x="70" y="388" fill="#B0B0B0" font-size="10">• <tspan fill="#2196F3" font-weight="bold">WorkingMemory</tspan>: Fast, token-limited in-memory cache</text>
   <text x="70" y="406" fill="#B0B0B0" font-size="10">• <tspan fill="#9C27B0" font-weight="bold">LongTermMemory</tspan>: Durable PostgreSQL storage with RAG search</text>
-  <text x="380" y="388" fill="#B0B0B0" font-size="10">• <tspan fill="#FF9800" font-weight="bold">EmbeddingService</tspan>: Vector generation via Ollama/OpenAI</text>
+  <text x="380" y="388" fill="#B0B0B0" font-size="10">• <tspan fill="#FF9800" font-weight="bold">EmbeddingService</tspan>: Vector generation via RubyLLM</text>
   <text x="380" y="406" fill="#B0B0B0" font-size="10">• <tspan fill="#FFC107" font-weight="bold">Database</tspan>: Schema management and connections</text>
 
   <!-- Markers -->

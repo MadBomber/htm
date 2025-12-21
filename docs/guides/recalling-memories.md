@@ -39,7 +39,7 @@ end
   <!-- Step 2: Generate Embedding -->
   <rect x="290" y="70" width="200" height="80" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
   <text x="390" y="95" text-anchor="middle" fill="#2196F3" font-size="14" font-weight="bold">2. Generate Embedding</text>
-  <text x="390" y="120" text-anchor="middle" fill="#B0B0B0" font-size="10">Ollama/OpenAI</text>
+  <text x="390" y="120" text-anchor="middle" fill="#B0B0B0" font-size="10">LLM Provider (RubyLLM)</text>
   <text x="390" y="135" text-anchor="middle" fill="#B0B0B0" font-size="10">[0.23, -0.57, ...]</text>
 
   <!-- Arrow 2 to 3 -->
@@ -221,7 +221,7 @@ memories = htm.recall(
 
 **How it works**:
 
-1. Converts your topic to a vector embedding via Ollama
+1. Converts your topic to a vector embedding via your configured provider (Ollama, OpenAI, etc.)
 2. Finds memories with similar embeddings using cosine similarity
 3. Returns results ordered by semantic similarity
 
@@ -865,9 +865,9 @@ htm.recall(timeframe: "...", topic: "...", limit: 100)
   .first(10)
 ```
 
-### Ollama Connection Issues
+### LLM Provider Connection Issues
 
-If vector search fails:
+If vector search fails (Ollama not running, API key invalid, etc.):
 
 ```ruby
 begin

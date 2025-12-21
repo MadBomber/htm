@@ -87,12 +87,13 @@ channel.stop_listening
 ```ruby
 require 'htm'
 
-# Configure HTM
+# Configure HTM (optional - uses Ollama by default)
+# Supports: :ollama, :openai, :anthropic, :gemini, :azure, :bedrock, :deepseek
 HTM.configure do |config|
   config.embedding.provider = :ollama
   config.embedding.model = 'nomic-embed-text'
   config.tag.provider = :ollama
-  config.tag.model = 'llama3'
+  config.tag.model = 'gemma3:latest'
 end
 
 # Create a robot group with active and passive members
@@ -384,9 +385,9 @@ require 'htm'
 worker_name = ARGV[0] || "worker-#{Process.pid}"
 group_name = 'distributed-service'
 
-# Configure HTM
+# Configure HTM (uses configured provider, defaults to Ollama)
 HTM.configure do |config|
-  config.embedding.provider = :ollama
+  config.embedding.provider = :ollama  # or :openai, :gemini, etc.
   config.embedding.model = 'nomic-embed-text'
 end
 

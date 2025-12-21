@@ -1,23 +1,25 @@
-# ADR-003: Ollama as Default Embedding Provider
+# ADR-003: Default Embedding Provider Selection
 
-**Status**: Accepted (Reinstated After ADR-011 Reversal)
+**Status**: Accepted (Updated for Multi-Provider Support)
 
-**Date**: 2025-10-25 (Updated: 2025-10-27)
+**Date**: 2025-10-25 (Updated: 2025-12-21)
 
 **Decision Makers**: Dewayne VanHoozer, Claude (Anthropic)
 
 ---
 
-!!! success "Architecture Status (October 2025)"
-    **October 27, 2025**: This ADR is once again the current architecture. Following the reversal of ADR-011, HTM has returned to client-side embedding generation using Ollama as the default provider. Embeddings are generated in Ruby before database insertion.
+!!! success "Architecture Status"
+    HTM uses RubyLLM for embedding generation, supporting multiple providers. **Ollama is the default** for local development, but users can configure any supported provider (OpenAI, Anthropic, Gemini, Azure, Bedrock, DeepSeek) based on their requirements.
 
 ## Quick Summary
 
-HTM uses **Ollama with the nomic-embed-text model** as the default embedding provider, prioritizing local-first, privacy-preserving operation with zero API costs while supporting pluggable alternatives (OpenAI).
+HTM uses **Ollama with the nomic-embed-text model** as the **default** embedding provider for local development, prioritizing local-first, privacy-preserving operation with zero API costs. However, **HTM fully supports multiple providers** through RubyLLM, allowing users to choose OpenAI, Gemini, Azure, Bedrock, or other providers for production deployments.
 
-**Why**: Local embeddings eliminate API costs, preserve privacy, and enable offline operation while maintaining good semantic search quality.
+**Why Ollama as default**: Local embeddings eliminate API costs, preserve privacy, and enable offline operation—ideal for development and privacy-sensitive applications.
 
-**Impact**: Users must install Ollama locally, trading convenience for privacy and cost savings. Client-side embedding generation provides reliable operation without complex database extension dependencies.
+**Why multi-provider support**: Production deployments may require higher-quality embeddings, managed services, or integration with existing cloud infrastructure.
+
+**Impact**: Ollama is recommended for getting started quickly, but users can easily switch providers via configuration for their specific needs.
 
 ---
 
@@ -47,7 +49,16 @@ HTM requires vector embeddings for semantic search functionality. Embeddings con
 
 ## Decision
 
-We will use **Ollama with the gpt-oss model** as the default embedding provider for HTM, while supporting pluggable alternatives (OpenAI, Cohere, etc.).
+We will use **Ollama with the nomic-embed-text model** as the **default** embedding provider for HTM, while providing **full support for multiple providers** through RubyLLM:
+
+- **Ollama** (default) - Local, privacy-preserving, free
+- **OpenAI** - High-quality, production-ready
+- **Gemini** - Google Cloud integration
+- **Azure** - Enterprise Azure deployments
+- **Bedrock** - AWS integration
+- **DeepSeek** - Cost-effective alternative
+
+Users configure their preferred provider via `HTM.configure` or environment variables.
 
 ---
 
@@ -205,38 +216,36 @@ end
 
 ### User Configuration
 
-!!! info "pgai Configuration"
-    With pgai, configuration sets database session variables. Embedding generation happens automatically via triggers.
+Configure your preferred provider globally or per-instance:
 
 ```ruby
-# Default: Ollama with nomic-embed-text (768 dimensions)
+# Global configuration (recommended)
+HTM.configure do |config|
+  # Ollama (default for development)
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text'
+
+  # Or OpenAI (recommended for production)
+  # config.embedding.provider = :openai
+  # config.embedding.model = 'text-embedding-3-small'
+
+  # Or Gemini
+  # config.embedding.provider = :gemini
+  # config.embedding.model = 'text-embedding-004'
+end
+
+# Initialize HTM
 htm = HTM.new(robot_name: "My Robot")
 
-# Explicit Ollama configuration
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_provider: :ollama,
-  embedding_model: 'nomic-embed-text'
-)
+# Add memory - embedding generated via configured provider
+htm.remember("PostgreSQL is awesome", tags: ["database"])
+```
 
-# Use different Ollama model
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_provider: :ollama,
-  embedding_model: 'mxbai-embed-large',  # 1024 dimensions
-  embedding_dimensions: 1024
-)
-
-# Use OpenAI
-htm = HTM.new(
-  robot_name: "My Robot",
-  embedding_provider: :openai,
-  embedding_model: 'text-embedding-3-small'  # 1536 dimensions
-)
-
-# Add node - embedding generated automatically by database trigger!
-htm.add_node("fact_001", "PostgreSQL is awesome", type: :fact)
-# No embedding parameter needed - pgai handles it in the database
+**Environment variables for cloud providers:**
+```bash
+export OPENAI_API_KEY="sk-..."      # For OpenAI
+export GEMINI_API_KEY="..."         # For Gemini
+export ANTHROPIC_API_KEY="sk-..."   # For Anthropic
 ```
 
 ---

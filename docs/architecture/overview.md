@@ -64,7 +64,7 @@ HTM implements a layered architecture with clear separation of concerns between 
 - **Client-Side Generation**: Generate embeddings before database insertion
 - **Token Counting**: Estimate token counts for strings
 - **Model Management**: Handle different models per provider
-- **Provider Support**: Ollama (default) and OpenAI
+- **Multi-Provider Support**: Ollama (default), OpenAI, Anthropic, Gemini, Azure, Bedrock, DeepSeek via RubyLLM
 
 !!! info "Architecture Change (October 2025)"
     Embeddings are generated client-side in Ruby before database insertion. This provides reliable, cross-platform operation without complex database extension dependencies.
@@ -257,13 +257,17 @@ gem 'tiktoken_ruby', '~> 0.0.6'      # Token counting (OpenAI-compatible)
 
 ### Embedding Providers
 
-!!! info "Client-Side Generation"
-    Embeddings are generated client-side in Ruby before database insertion. This provides reliable, cross-platform operation.
+!!! info "Multi-Provider Support via RubyLLM"
+    HTM uses RubyLLM for embedding generation, supporting multiple providers. Choose based on your requirements for privacy, cost, and quality.
 
 | Provider | Models | Dimensions | Speed | Cost |
 |----------|--------|------------|-------|------|
-| **Ollama** (default) | nomic-embed-text, mxbai-embed-large, all-minilm | 384-1024 | Fast (local HTTP) | Free |
-| **OpenAI** | text-embedding-3-small, text-embedding-ada-002 | 1536 | Fast (API) | $0.0001/1K tokens |
+| **Ollama** (default) | nomic-embed-text, mxbai-embed-large | 384-1024 | Fast (local) | Free |
+| **OpenAI** | text-embedding-3-small, text-embedding-3-large | 1536-3072 | Fast (API) | $0.0001/1K tokens |
+| **Gemini** | text-embedding-004 | 768 | Fast (API) | Varies |
+| **Azure** | OpenAI models via Azure | 1536 | Fast (API) | Enterprise pricing |
+| **Bedrock** | Amazon Titan, Cohere | Varies | Fast (API) | AWS pricing |
+| **DeepSeek** | DeepSeek embeddings | Varies | Fast (API) | Competitive |
 
 ## Performance Characteristics
 

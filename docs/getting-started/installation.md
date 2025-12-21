@@ -8,7 +8,7 @@ Before installing HTM, ensure you have:
 
 - **Ruby 3.0 or higher** - HTM requires modern Ruby features
 - **PostgreSQL 17+** - For the database backend
-- **Ollama** - For generating vector embeddings (via RubyLLM)
+- **LLM Provider** - For generating embeddings and tags (Ollama is the default for local development, but OpenAI, Anthropic, Gemini, and others are also supported via RubyLLM)
 
 ### Check Your Ruby Version
 
@@ -156,14 +156,29 @@ Expected output:
 !!! warning "Missing Extensions"
     If extensions are missing, you may need to install them. On Debian/Ubuntu: `sudo apt-get install postgresql-17-pgvector`. On macOS: `brew install pgvector`.
 
-## Step 4: Install Ollama
+## Step 4: Configure LLM Provider
 
-HTM uses [Ollama](https://ollama.ai/) via RubyLLM for generating vector embeddings.
+HTM uses RubyLLM to generate vector embeddings and extract tags. RubyLLM supports multiple providers, allowing you to choose what works best for your use case.
 
-### Install Ollama
+### Supported Providers
 
-#### macOS
+| Provider | Best For | API Key Required |
+|----------|----------|------------------|
+| **Ollama** (default) | Local development, privacy, no API costs | No |
+| **OpenAI** | Production, high-quality embeddings | Yes (`OPENAI_API_KEY`) |
+| **Anthropic** | Tag extraction with Claude models | Yes (`ANTHROPIC_API_KEY`) |
+| **Gemini** | Google Cloud integration | Yes (`GEMINI_API_KEY`) |
+| **Azure** | Enterprise Azure deployments | Yes (Azure credentials) |
+| **Bedrock** | AWS integration | Yes (AWS credentials) |
+| **DeepSeek** | Cost-effective alternative | Yes (`DEEPSEEK_API_KEY`) |
 
+### Option A: Ollama (Recommended for Local Development)
+
+Ollama runs locally with no API costs and keeps your data private.
+
+#### Install Ollama
+
+**macOS:**
 ```bash
 # Option 1: Direct download
 curl https://ollama.ai/install.sh | sh
@@ -172,17 +187,15 @@ curl https://ollama.ai/install.sh | sh
 brew install ollama
 ```
 
-#### Linux
-
+**Linux:**
 ```bash
 curl https://ollama.ai/install.sh | sh
 ```
 
-#### Windows
-
+**Windows:**
 Download the installer from [https://ollama.ai/download](https://ollama.ai/download)
 
-### Start Ollama Service
+#### Start Ollama Service
 
 ```bash
 # Ollama typically starts automatically
@@ -190,34 +203,20 @@ Download the installer from [https://ollama.ai/download](https://ollama.ai/downl
 curl http://localhost:11434/api/version
 ```
 
-Expected output:
-
-```json
-{"version":"0.1.x"}
-```
-
-### Pull the gpt-oss Model
-
-HTM uses the `gpt-oss` model by default:
+#### Pull Required Models
 
 ```bash
-# Download the model
-ollama pull gpt-oss
+# Download embedding model
+ollama pull nomic-embed-text
 
-# Verify the model is available
+# Download tag extraction model
+ollama pull gemma3:latest
+
+# Verify models are available
 ollama list
 ```
 
-You should see `gpt-oss` in the list.
-
-### Test Embedding Generation
-
-```bash
-# Test that embeddings work
-ollama run gpt-oss "Hello, world!"
-```
-
-### Custom Ollama URL (Optional)
+#### Configure Environment (Optional)
 
 If Ollama is running on a different host or port:
 
@@ -225,8 +224,47 @@ If Ollama is running on a different host or port:
 export OLLAMA_URL="http://custom-host:11434"
 ```
 
-!!! tip "Ollama Model Selection"
-    HTM defaults to `gpt-oss`, but you can use any embedding model supported by Ollama. Just pass `embedding_model: 'your-model'` to `HTM.new()`.
+### Option B: OpenAI (Recommended for Production)
+
+OpenAI provides high-quality embeddings with simple API access.
+
+```bash
+# Set your API key
+export OPENAI_API_KEY="sk-..."
+```
+
+Configure HTM to use OpenAI:
+
+```ruby
+HTM.configure do |config|
+  config.embedding.provider = :openai
+  config.embedding.model = 'text-embedding-3-small'
+  config.tag.provider = :openai
+  config.tag.model = 'gpt-4o-mini'
+end
+```
+
+### Option C: Other Providers
+
+For Anthropic, Gemini, Azure, Bedrock, or DeepSeek, set the appropriate API key and configure HTM:
+
+```bash
+# Example: Anthropic
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Example: Gemini
+export GEMINI_API_KEY="..."
+```
+
+```ruby
+HTM.configure do |config|
+  config.tag.provider = :anthropic
+  config.tag.model = 'claude-3-haiku-20240307'
+end
+```
+
+!!! tip "Mix and Match Providers"
+    You can use different providers for embeddings and tags. For example, use Ollama for local embedding generation and OpenAI for tag extraction.
 
 ## Step 5: Initialize HTM Database Schema
 
@@ -297,10 +335,9 @@ puts "Testing HTM Installation..."
 # Initialize HTM
 htm = HTM.new(
   robot_name: "Test Robot",
-  working_memory_size: 128_000,
-  embedding_service: :ollama,
-  embedding_model: 'gpt-oss'
+  working_memory_size: 128_000
 )
+# Uses configured provider, or defaults to Ollama
 
 puts "✓ HTM initialized successfully"
 puts "  Robot ID: #{htm.robot_id}"
@@ -357,7 +394,10 @@ HTM uses the following environment variables:
 | `HTM_DATABASE__USER` | Database user | `postgres` | No |
 | `HTM_DATABASE__PASSWORD` | Database password | - | No |
 | `HTM_DATABASE__PORT` | Database port | `5432` | No |
-| `OLLAMA_URL` | Ollama API URL | `http://localhost:11434` | No |
+| `OLLAMA_URL` | Ollama API URL (if using Ollama) | `http://localhost:11434` | No |
+| `OPENAI_API_KEY` | OpenAI API key (if using OpenAI) | - | No |
+| `ANTHROPIC_API_KEY` | Anthropic API key (if using Anthropic) | - | No |
+| `GEMINI_API_KEY` | Gemini API key (if using Gemini) | - | No |
 
 ### Example Configuration File
 
@@ -366,7 +406,12 @@ Create a configuration file for easy loading:
 ```bash
 # ~/.bashrc__htm
 export HTM_DATABASE__URL="postgres://user:pass@host:port/db?sslmode=require"
+# Ollama (for local development)
 export OLLAMA_URL="http://localhost:11434"
+
+# Or use cloud providers:
+# export OPENAI_API_KEY="sk-..."
+# export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 Load it in your shell:
@@ -398,11 +443,11 @@ pg_ctl status
 # Ensure URL includes: ?sslmode=require
 ```
 
-### Ollama Connection Issues
+### LLM Provider Connection Issues
 
-**Error**: `Connection refused - connect(2) for localhost:11434`
+**Error**: `Connection refused` (Ollama) or `API key invalid` (cloud providers)
 
-**Solutions**:
+**Solutions for Ollama**:
 
 ```bash
 # 1. Check if Ollama is running
@@ -415,8 +460,19 @@ curl http://localhost:11434/api/version
 killall ollama
 ollama serve
 
-# 4. Verify gpt-oss model is installed
-ollama list | grep gpt-oss
+# 4. Verify embedding model is installed
+ollama list | grep nomic-embed-text
+```
+
+**Solutions for Cloud Providers**:
+
+```bash
+# Verify API key is set
+echo $OPENAI_API_KEY
+echo $ANTHROPIC_API_KEY
+
+# Test API connectivity
+curl https://api.openai.com/v1/models -H "Authorization: Bearer $OPENAI_API_KEY"
 ```
 
 ### Missing Extensions
@@ -491,7 +547,8 @@ If you encounter issues:
 
 ## Additional Resources
 
-- **Ollama Documentation**: [https://ollama.ai/](https://ollama.ai/)
+- **RubyLLM Documentation**: [https://rubyllm.com/](https://rubyllm.com/) - Multi-provider LLM interface
+- **Ollama Documentation**: [https://ollama.ai/](https://ollama.ai/) - Local LLM provider
+- **OpenAI API**: [https://platform.openai.com/docs/](https://platform.openai.com/docs/) - Cloud embeddings
 - **pgvector Documentation**: [https://github.com/pgvector/pgvector](https://github.com/pgvector/pgvector)
 - **PostgreSQL Documentation**: [https://www.postgresql.org/docs/](https://www.postgresql.org/docs/)
-- **RubyLLM Documentation**: [https://github.com/madbomber/ruby_llm](https://github.com/madbomber/ruby_llm)

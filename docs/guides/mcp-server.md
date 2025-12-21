@@ -30,11 +30,19 @@ Before using the MCP server, ensure you have:
    htm_mcp setup
    ```
 
-3. **Ollama running** (for embeddings and tag extraction)
+3. **LLM provider configured** (for embeddings and tag extraction)
+
+   **Option A: Ollama (default for local development)**
    ```bash
    ollama serve
    ollama pull nomic-embed-text
-   ollama pull llama3
+   ollama pull gemma3:latest
+   ```
+
+   **Option B: Cloud providers** (OpenAI, Anthropic, etc.)
+   ```bash
+   export OPENAI_API_KEY="sk-..."
+   # Configure via HTM.configure or environment variables
    ```
 
 ## Starting the Server
@@ -681,8 +689,8 @@ Memory statistics as JSON.
   "current_robot": "my-assistant",
   "robot_id": 5,
   "robot_initialized": true,
-  "embedding_provider": "ollama",
-  "embedding_model": "nomic-embed-text"
+  "embedding_provider": "ollama",  // or "openai", "gemini", etc.
+  "embedding_model": "nomic-embed-text"  // provider-specific model
 }
 ```
 
@@ -986,12 +994,18 @@ psql htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
 ### Embedding/Tag Errors
 
-**Error: `Connection refused` (Ollama)**
+**Error: `Connection refused` (when using Ollama)**
 1. Start Ollama: `ollama serve`
 2. Pull required models:
    ```bash
    ollama pull nomic-embed-text
-   ollama pull llama3
+   ollama pull gemma3:latest
+   ```
+
+**Error: `API key invalid` (when using cloud providers)**
+1. Verify the API key is set:
+   ```bash
+   echo $OPENAI_API_KEY  # or ANTHROPIC_API_KEY, GEMINI_API_KEY
    ```
 
 ### Debugging
@@ -1026,19 +1040,23 @@ Run `htm_mcp help` for a complete list. Key variables:
 
 ### LLM Providers
 
+HTM uses RubyLLM which supports multiple providers. Defaults to Ollama for local development.
+
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HTM_EMBEDDING_PROVIDER` | Embedding provider | `ollama` |
-| `HTM_EMBEDDING_MODEL` | Embedding model | `nomic-embed-text:latest` |
+| `HTM_EMBEDDING_PROVIDER` | Embedding provider (`ollama`, `openai`, `gemini`, etc.) | `ollama` |
+| `HTM_EMBEDDING_MODEL` | Embedding model (provider-specific) | `nomic-embed-text` |
 | `HTM_TAG_PROVIDER` | Tag extraction provider | `ollama` |
 | `HTM_TAG_MODEL` | Tag model | `gemma3:latest` |
-| `HTM_OLLAMA_URL` | Ollama server URL | `http://localhost:11434` |
+| `HTM_OLLAMA_URL` | Ollama server URL (if using Ollama) | `http://localhost:11434` |
 
-### Other Providers (set API keys as needed)
+### Cloud Provider API Keys
 
 | Variable | Description |
 |----------|-------------|
-| `HTM_OPENAI_API_KEY` | OpenAI API key |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `ANTHROPIC_API_KEY` | Anthropic API key |
+| `GEMINI_API_KEY` | Google Gemini API key |
 | `HTM_ANTHROPIC_API_KEY` | Anthropic API key |
 | `HTM_GEMINI_API_KEY` | Google Gemini API key |
 | `HTM_AZURE_API_KEY` | Azure OpenAI API key |

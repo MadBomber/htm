@@ -13,9 +13,9 @@
   <path d="M 350 170 L 430 170 L 430 200" stroke="#F44336" stroke-width="2" fill="none" marker-end="url(#arrow1)"/>
   <path d="M 350 170 L 580 170 L 580 200" stroke="#F44336" stroke-width="2" fill="none" marker-end="url(#arrow1)"/>
 
-  <!-- Ollama connection failed -->
+  <!-- Provider connection failed -->
   <rect x="20" y="200" width="200" height="50" fill="rgba(255, 152, 0, 0.3)" stroke="#FF9800" stroke-width="2" rx="6"/>
-  <text x="120" y="230" text-anchor="middle" fill="#FFFFFF" font-size="12">"Ollama connection failed"</text>
+  <text x="120" y="230" text-anchor="middle" fill="#FFFFFF" font-size="12">"Provider connection failed"</text>
 
   <!-- OpenAI API error -->
   <rect x="240" y="200" width="200" height="50" fill="rgba(255, 152, 0, 0.3)" stroke="#FF9800" stroke-width="2" rx="6"/>

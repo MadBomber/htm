@@ -4,15 +4,21 @@ Client-side embedding generation service for HTM.
 
 ## Overview
 
-`HTM::EmbeddingService` generates vector embeddings for text content before database insertion. It supports multiple embedding providers:
+`HTM::EmbeddingService` generates vector embeddings for text content before database insertion. It uses RubyLLM to support multiple embedding providers:
 
-- **Ollama** - Local embedding server (default, via `nomic-embed-text` model)
-- **OpenAI** - OpenAI's `text-embedding-3-small` model
+- **Ollama** - Local embedding server (default for development)
+- **OpenAI** - OpenAI's embedding models
+- **Anthropic** - For tag extraction (via chat models)
+- **Gemini** - Google's embedding models
+- **Azure** - Azure OpenAI deployments
+- **Bedrock** - AWS Bedrock models
+- **DeepSeek** - DeepSeek embeddings
 
 The service also provides token counting for working memory management.
 
 **Architecture:**
-- Ruby application generates embeddings via HTTP call to Ollama/OpenAI
+- Ruby application generates embeddings via RubyLLM
+- RubyLLM handles provider-specific API calls
 - Embeddings are passed to PostgreSQL during INSERT
 - Simple, reliable, cross-platform operation
 
@@ -34,7 +40,6 @@ Create a new embedding service instance.
 HTM::EmbeddingService.new(
   provider = :ollama,
   model: 'nomic-embed-text',
-  ollama_url: nil,
   dimensions: nil
 )
 ```
@@ -43,10 +48,11 @@ HTM::EmbeddingService.new(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `provider` | Symbol | `:ollama` | Embedding provider (`:ollama`, `:openai`) |
-| `model` | String | `'nomic-embed-text'` | Model name for the provider |
-| `ollama_url` | String, nil | `ENV['OLLAMA_URL']` or `'http://localhost:11434'` | Ollama server URL |
+| `provider` | Symbol | `:ollama` | Embedding provider (`:ollama`, `:openai`, `:gemini`, `:azure`, `:bedrock`, `:deepseek`) |
+| `model` | String | Provider-dependent | Model name for the provider |
 | `dimensions` | Integer, nil | Auto-detected | Expected embedding dimensions |
+
+**Provider-specific configuration** is handled via environment variables (see RubyLLM documentation).
 
 #### Returns
 
@@ -58,20 +64,19 @@ HTM::EmbeddingService.new(
 
 #### Examples
 
-**Default Ollama configuration:**
+**Default configuration (uses Ollama):**
 
 ```ruby
 service = HTM::EmbeddingService.new
-# Uses Ollama at http://localhost:11434 with nomic-embed-text (768 dimensions)
+# Uses Ollama with nomic-embed-text (768 dimensions)
 ```
 
-**Custom Ollama model:**
+**Ollama with custom model:**
 
 ```ruby
 service = HTM::EmbeddingService.new(
   :ollama,
   model: 'mxbai-embed-large',
-  ollama_url: 'http://localhost:11434',
   dimensions: 1024
 )
 ```
@@ -87,15 +92,27 @@ service = HTM::EmbeddingService.new(
 )
 ```
 
-**HTM automatically initializes EmbeddingService:**
+**Gemini configuration:**
 
 ```ruby
-htm = HTM.new(
-  robot_name: "Assistant",
-  embedding_provider: :ollama,
-  embedding_model: 'nomic-embed-text'
+# Requires GEMINI_API_KEY environment variable
+service = HTM::EmbeddingService.new(
+  :gemini,
+  model: 'text-embedding-004',
+  dimensions: 768
 )
-# EmbeddingService configured automatically
+```
+
+**HTM global configuration (recommended):**
+
+```ruby
+HTM.configure do |config|
+  config.embedding.provider = :openai  # or :ollama, :gemini, etc.
+  config.embedding.model = 'text-embedding-3-small'
+end
+
+htm = HTM.new(robot_name: "Assistant")
+# EmbeddingService configured automatically from global config
 ```
 
 ---
@@ -144,21 +161,24 @@ begin
   embedding = service.embed("some text")
 rescue HTM::EmbeddingError => e
   puts "Embedding failed: #{e.message}"
-  # Check Ollama is running: curl http://localhost:11434/api/tags
+  # For Ollama: Check if running with `curl http://localhost:11434/api/tags`
+  # For cloud providers: Check API key is set correctly
 end
 ```
 
 #### Implementation Details
 
-**Ollama provider:**
-- Makes HTTP POST to `/api/embeddings`
-- Returns dense vector representation
-- Requires Ollama server running locally
+All providers are handled through RubyLLM, which provides a consistent interface across providers.
 
-**OpenAI provider:**
-- Makes HTTP POST to OpenAI API
-- Requires `OPENAI_API_KEY` environment variable
-- API costs: $0.0001 per 1K tokens
+**Ollama:** Local HTTP calls, requires Ollama server running
+
+**OpenAI:** Cloud API calls, requires `OPENAI_API_KEY`
+
+**Gemini:** Cloud API calls, requires `GEMINI_API_KEY`
+
+**Azure:** Cloud API calls, requires Azure credentials
+
+**Bedrock:** AWS API calls, requires AWS credentials
 
 ---
 
@@ -207,11 +227,13 @@ htm.add_message(
 
 ## Embedding Providers
 
-### Ollama (Default)
+HTM uses RubyLLM which supports multiple providers. Choose based on your requirements for privacy, cost, and quality.
+
+### Ollama (Default for Development)
 
 **Status**: ✅ Fully implemented
 
-Local embedding server with various models, accessed via HTTP.
+Local embedding server with various models.
 
 **Installation:**
 
@@ -234,25 +256,10 @@ ollama pull nomic-embed-text
 **Configuration:**
 
 ```ruby
-service = HTM::EmbeddingService.new(
-  :ollama,
-  model: 'nomic-embed-text',
-  ollama_url: 'http://localhost:11434'
-)
-
-embedding = service.embed("test text")
-```
-
-**Troubleshooting:**
-
-If Ollama is unavailable, embedding generation will fail:
-
-```ruby
-# Check Ollama is running
-system("curl http://localhost:11434/api/tags")
-
-# Start Ollama if needed
-system("ollama serve")
+HTM.configure do |config|
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text'
+end
 ```
 
 **Advantages:**
@@ -264,15 +271,14 @@ system("ollama serve")
 **Disadvantages:**
 - ❌ Requires local installation
 - ❌ Uses local compute resources
-- ❌ Slightly lower quality than OpenAI
 
 ---
 
-### OpenAI
+### OpenAI (Recommended for Production)
 
 **Status**: ✅ Fully implemented
 
-Uses OpenAI's embedding API, accessed via HTTP.
+Uses OpenAI's embedding API.
 
 **Configuration:**
 
@@ -281,13 +287,10 @@ export OPENAI_API_KEY="sk-..."
 ```
 
 ```ruby
-service = HTM::EmbeddingService.new(
-  :openai,
-  model: 'text-embedding-3-small'
-)
-
-# Add message - embedding generated via OpenAI API
-embedding = service.embed("test text")
+HTM.configure do |config|
+  config.embedding.provider = :openai
+  config.embedding.model = 'text-embedding-3-small'
+end
 ```
 
 **Models:**
@@ -295,20 +298,7 @@ embedding = service.embed("test text")
 | Model | Dimensions | Speed | Cost |
 |-------|------------|-------|------|
 | `text-embedding-3-small` | 1536 | Fast | $0.0001/1K tokens |
-| `text-embedding-ada-002` | 1536 | Fast | $0.0001/1K tokens |
-
-**Error Handling:**
-
-```ruby
-begin
-  service = HTM::EmbeddingService.new(:openai)
-  embedding = service.embed("test")
-rescue HTM::EmbeddingError => e
-  if e.message.include?("API key")
-    puts "Set OPENAI_API_KEY environment variable"
-  end
-end
-```
+| `text-embedding-3-large` | 3072 | Fast | $0.00013/1K tokens |
 
 **Advantages:**
 - ✅ High quality embeddings
@@ -316,10 +306,44 @@ end
 - ✅ Managed service
 
 **Disadvantages:**
-- ❌ API costs ($0.0001 per 1K tokens)
+- ❌ API costs
 - ❌ Requires internet connection
-- ❌ Data sent to OpenAI servers
-- ❌ Requires API key management
+- ❌ Data sent to cloud
+
+---
+
+### Other Providers
+
+**Gemini:**
+```bash
+export GEMINI_API_KEY="..."
+```
+```ruby
+HTM.configure do |config|
+  config.embedding.provider = :gemini
+  config.embedding.model = 'text-embedding-004'
+end
+```
+
+**Azure OpenAI:**
+```bash
+export AZURE_OPENAI_API_KEY="..."
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
+```
+
+**AWS Bedrock:**
+```bash
+export AWS_ACCESS_KEY_ID="..."
+export AWS_SECRET_ACCESS_KEY="..."
+export AWS_REGION="us-east-1"
+```
+
+**DeepSeek:**
+```bash
+export DEEPSEEK_API_KEY="..."
+```
+
+See the [RubyLLM documentation](https://rubyllm.com/) for complete provider configuration.
 
 ---
 
@@ -335,15 +359,17 @@ end
 system("ollama serve")
 ```
 
-**OpenAI API key missing:**
+**API key missing (cloud providers):**
 
 ```ruby
-# Error: OPENAI_API_KEY not set
+# Error: API key not set
 # Solution: Set environment variable
-ENV['OPENAI_API_KEY'] = 'sk-...'
+ENV['OPENAI_API_KEY'] = 'sk-...'     # For OpenAI
+ENV['ANTHROPIC_API_KEY'] = 'sk-...'  # For Anthropic
+ENV['GEMINI_API_KEY'] = '...'        # For Gemini
 ```
 
-**Invalid model:**
+**Invalid model (Ollama):**
 
 ```ruby
 # Error: Model not found
@@ -368,9 +394,10 @@ Based on typical production workloads:
 | Ollama | nomic-embed-text | 20ms | 40ms | Free |
 | Ollama | mxbai-embed-large | 30ms | 60ms | Free |
 | OpenAI | text-embedding-3-small | 40ms | 80ms | $0.10 |
+| Gemini | text-embedding-004 | 50ms | 90ms | Varies |
 
 **Factors affecting latency:**
-- Network latency (Ollama local vs OpenAI remote)
+- Network latency (local providers vs cloud)
 - Text length (longer text = more tokens = slower)
 - Model size (larger models = slower)
 - System load (CPU/GPU utilization)
@@ -380,14 +407,17 @@ Based on typical production workloads:
 **Use appropriate model size:**
 
 ```ruby
-# Fast but lower quality
-service = HTM::EmbeddingService.new(:ollama, model: 'all-minilm')
+# Fast but lower quality (Ollama)
+HTM.configure { |c| c.embedding.model = 'all-minilm' }
 
-# Balanced (recommended)
-service = HTM::EmbeddingService.new(:ollama, model: 'nomic-embed-text')
+# Balanced - Ollama (recommended for development)
+HTM.configure { |c| c.embedding.model = 'nomic-embed-text' }
 
-# Slower but higher quality
-service = HTM::EmbeddingService.new(:ollama, model: 'mxbai-embed-large')
+# High quality - OpenAI (recommended for production)
+HTM.configure do |c|
+  c.embedding.provider = :openai
+  c.embedding.model = 'text-embedding-3-small'
+end
 ```
 
 **Batch operations:**
@@ -410,12 +440,12 @@ end
 HTM initializes `EmbeddingService` automatically:
 
 ```ruby
-htm = HTM.new(
-  robot_name: "Assistant",
-  embedding_provider: :ollama,        # Optional, default
-  embedding_model: 'nomic-embed-text' # Optional, default
-)
+HTM.configure do |config|
+  config.embedding.provider = :ollama  # or :openai, :gemini, etc.
+  config.embedding.model = 'nomic-embed-text'
+end
 
+htm = HTM.new(robot_name: "Assistant")
 # EmbeddingService is ready to use internally
 ```
 
@@ -426,13 +456,13 @@ sequenceDiagram
     participant App as Application
     participant HTM as HTM
     participant ES as EmbeddingService
-    participant Ollama as Ollama/OpenAI
+    participant LLM as LLM Provider (via RubyLLM)
     participant DB as PostgreSQL
 
     App->>HTM: add_message(content)
     HTM->>ES: embed(content)
-    ES->>Ollama: HTTP POST /api/embeddings
-    Ollama->>ES: embedding vector
+    ES->>LLM: Generate embedding
+    LLM->>ES: embedding vector
     ES->>HTM: Array<Float>
     HTM->>DB: INSERT with embedding
     DB->>HTM: node_id
@@ -484,21 +514,20 @@ puts "Token count: #{tokens}"
 ### Multiple Providers
 
 ```ruby
-# Ollama for development
-dev_service = HTM::EmbeddingService.new(
-  :ollama,
-  model: 'nomic-embed-text'
-)
+# Configure for development (Ollama)
+HTM.configure do |config|
+  config.embedding.provider = :ollama
+  config.embedding.model = 'nomic-embed-text'
+end
 
-# OpenAI for production
-prod_service = HTM::EmbeddingService.new(
-  :openai,
-  model: 'text-embedding-3-small'
-)
+# Configure for production (OpenAI)
+HTM.configure do |config|
+  config.embedding.provider = :openai
+  config.embedding.model = 'text-embedding-3-small'
+end
 
-# Same interface
-dev_embedding = dev_service.embed("test")
-prod_embedding = prod_service.embed("test")
+# Same interface regardless of provider
+embedding = HTM::EmbeddingService.new.embed("test")
 ```
 
 ### Custom Model Dimensions
@@ -521,6 +550,7 @@ embedding = service.embed("text")
 
 - [HTM API](htm.md) - Main HTM class
 - [LongTermMemory API](long-term-memory.md) - Storage layer
-- [ADR-003: Ollama Embeddings](../architecture/adrs/003-ollama-embeddings.md) - Architecture decision
-- [Ollama Documentation](https://ollama.ai/docs) - Ollama setup guide
-- [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings) - OpenAI API docs
+- [ADR-003: Default Embedding Provider](../architecture/adrs/003-ollama-embeddings.md) - Architecture decision for defaults
+- [RubyLLM Documentation](https://rubyllm.com/) - Multi-provider LLM interface
+- [Ollama Documentation](https://ollama.ai/docs) - Local LLM provider
+- [OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings) - Cloud embeddings
