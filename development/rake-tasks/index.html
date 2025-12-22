@@ -4387,6 +4387,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rake-htmdbpurge_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rake htm:db:purge_all
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4700,10 +4711,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#rake-htmjobsprocess" class="md-nav__link">
+  <a href="#rake-htmjobsprocess_all" class="md-nav__link">
     <span class="md-ellipsis">
       
-        rake htm:jobs:process
+        rake htm:jobs:process_all
       
     </span>
   </a>
@@ -6279,6 +6290,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rake-htmdbpurge_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rake htm:db:purge_all
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6592,10 +6614,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#rake-htmjobsprocess" class="md-nav__link">
+  <a href="#rake-htmjobsprocess_all" class="md-nav__link">
     <span class="md-ellipsis">
       
-        rake htm:jobs:process
+        rake htm:jobs:process_all
       
     </span>
   </a>
@@ -7007,7 +7029,7 @@
 
 
 <h1 id="htm-rake-tasks-reference">HTM Rake Tasks Reference<a class="headerlink" href="#htm-rake-tasks-reference" title="Permanent link">&para;</a></h1>
-<p>Complete reference for all HTM rake tasks. HTM provides 44 rake tasks organized into five namespaces for managing the database, documentation, file loading, background jobs, and tag management.</p>
+<p>Complete reference for all HTM rake tasks. HTM provides 46+ rake tasks organized into five namespaces for managing the database, documentation, file loading, background jobs, and tag management.</p>
 <h2 id="quick-reference">Quick Reference<a class="headerlink" href="#quick-reference" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># List all HTM tasks</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>rake<span class="w"> </span>-T<span class="w"> </span>htm
@@ -7254,106 +7276,160 @@
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="c1"># Runs drop (with confirmation) then setup</span>
 </span></code></pre></div>
 <hr />
+<h4 id="rake-htmdbpurge_all"><code>rake htm:db:purge_all</code><a class="headerlink" href="#rake-htmdbpurge_all" title="Permanent link">&para;</a></h4>
+<p>Permanently removes all soft-deleted records from all tables, including orphaned join table entries, orphaned propositions, and orphaned robots.</p>
+<div class="admonition danger">
+<p class="admonition-title">Warning</p>
+<p>This task permanently deletes data and cannot be undone!</p>
+</div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:db:purge_all
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>HTM<span class="w"> </span>Purge<span class="w"> </span>All<span class="w"> </span>Soft-Deleted<span class="w"> </span><span class="nv">Records</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="o">============================================================</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>Records<span class="w"> </span>to<span class="w"> </span>permanently<span class="w"> </span>delete:
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>--------------------------------------------------------------
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>Soft-deleted<span class="w"> </span>nodes:<span class="w">              </span><span class="m">23</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>Soft-deleted<span class="w"> </span>node_tags:<span class="w">          </span><span class="m">45</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>Soft-deleted<span class="w"> </span>robot_nodes:<span class="w">        </span><span class="m">12</span>
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>Orphaned<span class="w"> </span>node_tags:<span class="w">              </span><span class="m">3</span>
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>Orphaned<span class="w"> </span>robot_nodes:<span class="w">            </span><span class="m">1</span>
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>Orphaned<span class="w"> </span>propositions:<span class="w">           </span><span class="m">5</span>
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>Orphaned<span class="w"> </span>robots<span class="w"> </span><span class="o">(</span>no<span class="w"> </span>nodes<span class="o">)</span>:<span class="w">      </span><span class="m">2</span>
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>--------------------------------------------------------------
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>Total<span class="w"> </span>records<span class="w"> </span>to<span class="w"> </span>delete:<span class="w">         </span><span class="m">91</span>
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>
+</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>Proceed<span class="w"> </span>with<span class="w"> </span>permanent<span class="w"> </span>deletion?<span class="w"> </span><span class="o">(</span>yes/no<span class="o">)</span>:<span class="w"> </span>yes
+</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>
+</span><span id="__span-17-20"><a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>Deleting<span class="w"> </span>records...
+</span><span id="__span-17-21"><a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a><span class="w">  </span>Deleted<span class="w"> </span><span class="m">45</span><span class="w"> </span>soft-deleted<span class="w"> </span>node_tags<span class="w"> </span>entries
+</span><span id="__span-17-22"><a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a><span class="w">  </span>Deleted<span class="w"> </span><span class="m">3</span><span class="w"> </span>orphaned<span class="w"> </span>node_tags<span class="w"> </span>entries
+</span><span id="__span-17-23"><a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a><span class="w">  </span>Deleted<span class="w"> </span><span class="m">12</span><span class="w"> </span>soft-deleted<span class="w"> </span>robot_nodes<span class="w"> </span>entries
+</span><span id="__span-17-24"><a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a><span class="w">  </span>Deleted<span class="w"> </span><span class="m">1</span><span class="w"> </span>orphaned<span class="w"> </span>robot_nodes<span class="w"> </span>entries
+</span><span id="__span-17-25"><a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="w">  </span>Deleted<span class="w"> </span><span class="m">5</span><span class="w"> </span>orphaned<span class="w"> </span>propositions
+</span><span id="__span-17-26"><a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a><span class="w">  </span>Deleted<span class="w"> </span><span class="m">23</span><span class="w"> </span>soft-deleted<span class="w"> </span>nodes
+</span><span id="__span-17-27"><a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a><span class="w">  </span>Deleted<span class="w"> </span><span class="m">2</span><span class="w"> </span>orphaned<span class="w"> </span>robots
+</span><span id="__span-17-28"><a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a>
+</span><span id="__span-17-29"><a id="__codelineno-17-29" name="__codelineno-17-29" href="#__codelineno-17-29"></a>✓<span class="w"> </span>Purge<span class="w"> </span>complete!
+</span></code></pre></div>
+<p><strong>What it removes:</strong></p>
+<ul>
+<li><strong>Soft-deleted records</strong>: Nodes, node_tags, and robot_nodes with <code>deleted_at</code> set</li>
+<li><strong>Orphaned join entries</strong>: node_tags and robot_nodes pointing to non-existent nodes</li>
+<li><strong>Orphaned propositions</strong>: Proposition nodes whose <code>source_node_id</code> no longer exists</li>
+<li><strong>Orphaned robots</strong>: Robots with no associated memory nodes</li>
+</ul>
+<p><strong>Deletion order</strong> (for referential integrity):</p>
+<ol>
+<li>Soft-deleted node_tags</li>
+<li>Orphaned node_tags</li>
+<li>Soft-deleted robot_nodes</li>
+<li>Orphaned robot_nodes</li>
+<li>Orphaned propositions</li>
+<li>Soft-deleted nodes</li>
+<li>Orphaned robots</li>
+</ol>
+<hr />
 <h2 id="documentation-tasks-htmdoc">Documentation Tasks (<code>htm:doc:*</code>)<a class="headerlink" href="#documentation-tasks-htmdoc" title="Permanent link">&para;</a></h2>
 <p>Tasks for generating API documentation, database diagrams, and building the documentation site.</p>
 <h3 id="all-in-one">All-in-One<a class="headerlink" href="#all-in-one" title="Permanent link">&para;</a></h3>
 <h4 id="rake-htmdocall"><code>rake htm:doc:all</code><a class="headerlink" href="#rake-htmdocall" title="Permanent link">&para;</a></h4>
 <p>Generates all documentation (database docs, YARD API docs), builds the MkDocs site, and starts the local preview server.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:all
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>Generating<span class="w"> </span>database<span class="w"> </span>documentation...
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>✓<span class="w"> </span>Created<span class="w"> </span>docs/database/public.nodes.md
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">  </span>✓<span class="w"> </span>Created<span class="w"> </span>docs/database/schema.svg
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">  </span>...
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>Generating<span class="w"> </span>YARD<span class="w"> </span>documentation...
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="w">  </span>✓<span class="w"> </span>Created<span class="w"> </span>docs/api/yard/
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>Running<span class="w"> </span>mkdocs<span class="w"> </span>build...
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="w">  </span>✓<span class="w"> </span>Site<span class="w"> </span>built<span class="w"> </span><span class="k">in</span><span class="w"> </span>site/
-</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>Starting<span class="w"> </span>preview<span class="w"> </span>server<span class="w"> </span>at<span class="w"> </span>http://127.0.0.1:8000/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:all
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>Generating<span class="w"> </span>database<span class="w"> </span>documentation...
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span>✓<span class="w"> </span>Created<span class="w"> </span>docs/database/public.nodes.md
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span>✓<span class="w"> </span>Created<span class="w"> </span>docs/database/schema.svg
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span>...
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>Generating<span class="w"> </span>YARD<span class="w"> </span>documentation...
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span>✓<span class="w"> </span>Created<span class="w"> </span>docs/api/yard/
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>Running<span class="w"> </span>mkdocs<span class="w"> </span>build...
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">  </span>✓<span class="w"> </span>Site<span class="w"> </span>built<span class="w"> </span><span class="k">in</span><span class="w"> </span>site/
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>Starting<span class="w"> </span>preview<span class="w"> </span>server<span class="w"> </span>at<span class="w"> </span>http://127.0.0.1:8000/
 </span></code></pre></div>
 <hr />
 <h3 id="individual-documentation-tasks">Individual Documentation Tasks<a class="headerlink" href="#individual-documentation-tasks" title="Permanent link">&para;</a></h3>
 <h4 id="rake-htmdocdb"><code>rake htm:doc:db</code><a class="headerlink" href="#rake-htmdocdb" title="Permanent link">&para;</a></h4>
 <p>Generates database documentation including table markdown files and ERD diagrams.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:db
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>Generating<span class="w"> </span>database<span class="w"> </span>documentation...
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span>Connecting<span class="w"> </span>to<span class="w"> </span>htm_development...
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span>Generating<span class="w"> </span>table<span class="w"> </span>documentation...
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">    </span>✓<span class="w"> </span>public.nodes.md
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">    </span>✓<span class="w"> </span>public.robots.md
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">    </span>✓<span class="w"> </span>public.tags.md
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">    </span>✓<span class="w"> </span>public.file_sources.md
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">    </span>✓<span class="w"> </span>public.node_tags.md
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span>✓<span class="w"> </span>public.robot_nodes.md
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">  </span>Generating<span class="w"> </span>diagrams...
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">    </span>✓<span class="w"> </span>schema.svg<span class="w"> </span><span class="o">(</span>full<span class="w"> </span>ERD<span class="o">)</span>
-</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">    </span>✓<span class="w"> </span>public.nodes.svg
-</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">    </span>✓<span class="w"> </span>public.robots.svg
-</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">    </span>...
-</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a>✓<span class="w"> </span>Database<span class="w"> </span>documentation<span class="w"> </span>generated<span class="w"> </span><span class="k">in</span><span class="w"> </span>docs/database/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:db
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>Generating<span class="w"> </span>database<span class="w"> </span>documentation...
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span>Connecting<span class="w"> </span>to<span class="w"> </span>htm_development...
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span>Generating<span class="w"> </span>table<span class="w"> </span>documentation...
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">    </span>✓<span class="w"> </span>public.nodes.md
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">    </span>✓<span class="w"> </span>public.robots.md
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">    </span>✓<span class="w"> </span>public.tags.md
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">    </span>✓<span class="w"> </span>public.file_sources.md
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="w">    </span>✓<span class="w"> </span>public.node_tags.md
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">    </span>✓<span class="w"> </span>public.robot_nodes.md
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">  </span>Generating<span class="w"> </span>diagrams...
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="w">    </span>✓<span class="w"> </span>schema.svg<span class="w"> </span><span class="o">(</span>full<span class="w"> </span>ERD<span class="o">)</span>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="w">    </span>✓<span class="w"> </span>public.nodes.svg
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="w">    </span>✓<span class="w"> </span>public.robots.svg
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="w">    </span>...
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>✓<span class="w"> </span>Database<span class="w"> </span>documentation<span class="w"> </span>generated<span class="w"> </span><span class="k">in</span><span class="w"> </span>docs/database/
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmdocyard"><code>rake htm:doc:yard</code><a class="headerlink" href="#rake-htmdocyard" title="Permanent link">&para;</a></h4>
 <p>Generates YARD API documentation from Ruby source code.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:yard
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>Generating<span class="w"> </span>YARD<span class="w"> </span>documentation...
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span>Parsing<span class="w"> </span>lib/**/*.rb...
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span>Generating<span class="w"> </span>HTML...
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>✓<span class="w"> </span>YARD<span class="w"> </span>documentation<span class="w"> </span>generated<span class="w"> </span><span class="k">in</span><span class="w"> </span>docs/api/yard/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:yard
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>Generating<span class="w"> </span>YARD<span class="w"> </span>documentation...
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span>Parsing<span class="w"> </span>lib/**/*.rb...
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span>Generating<span class="w"> </span>HTML...
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>✓<span class="w"> </span>YARD<span class="w"> </span>documentation<span class="w"> </span>generated<span class="w"> </span><span class="k">in</span><span class="w"> </span>docs/api/yard/
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmdocsite"><code>rake htm:doc:site</code><a class="headerlink" href="#rake-htmdocsite" title="Permanent link">&para;</a></h4>
 <p>Builds the MkDocs documentation site.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:site
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>Running<span class="w"> </span>mkdocs<span class="w"> </span>build...
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span>INFO<span class="w"> </span>-<span class="w"> </span>Cleaning<span class="w"> </span>site<span class="w"> </span>directory
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span>INFO<span class="w"> </span>-<span class="w"> </span>Building<span class="w"> </span>documentation<span class="w"> </span>to<span class="w"> </span>directory:<span class="w"> </span>site
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">  </span>INFO<span class="w"> </span>-<span class="w"> </span>Documentation<span class="w"> </span>built<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">2</span>.34<span class="w"> </span>seconds
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>✓<span class="w"> </span>Site<span class="w"> </span>built<span class="w"> </span><span class="k">in</span><span class="w"> </span>site/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:site
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>Running<span class="w"> </span>mkdocs<span class="w"> </span>build...
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span>INFO<span class="w"> </span>-<span class="w"> </span>Cleaning<span class="w"> </span>site<span class="w"> </span>directory
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="w">  </span>INFO<span class="w"> </span>-<span class="w"> </span>Building<span class="w"> </span>documentation<span class="w"> </span>to<span class="w"> </span>directory:<span class="w"> </span>site
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">  </span>INFO<span class="w"> </span>-<span class="w"> </span>Documentation<span class="w"> </span>built<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">2</span>.34<span class="w"> </span>seconds
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>✓<span class="w"> </span>Site<span class="w"> </span>built<span class="w"> </span><span class="k">in</span><span class="w"> </span>site/
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmdocserve"><code>rake htm:doc:serve</code><a class="headerlink" href="#rake-htmdocserve" title="Permanent link">&para;</a></h4>
 <p>Starts the MkDocs development server for live preview.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:serve
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>Starting<span class="w"> </span>MkDocs<span class="w"> </span>server...
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>INFO<span class="w"> </span>-<span class="w"> </span>Building<span class="w"> </span>documentation...
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>INFO<span class="w"> </span>-<span class="w"> </span>Serving<span class="w"> </span>on<span class="w"> </span>http://127.0.0.1:8000/
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="c1"># Press Ctrl+C to stop</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:serve
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>Starting<span class="w"> </span>MkDocs<span class="w"> </span>server...
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>INFO<span class="w"> </span>-<span class="w"> </span>Building<span class="w"> </span>documentation...
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>INFO<span class="w"> </span>-<span class="w"> </span>Serving<span class="w"> </span>on<span class="w"> </span>http://127.0.0.1:8000/
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="c1"># Press Ctrl+C to stop</span>
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmdocclean"><code>rake htm:doc:clean</code><a class="headerlink" href="#rake-htmdocclean" title="Permanent link">&para;</a></h4>
 <p>Removes generated documentation files.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:clean
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>Cleaning<span class="w"> </span>generated<span class="w"> </span>documentation...
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span>✓<span class="w"> </span>Removed<span class="w"> </span>site/
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">  </span>✓<span class="w"> </span>Removed<span class="w"> </span>docs/api/yard/
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>✓<span class="w"> </span>Documentation<span class="w"> </span>cleaned
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:clean
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>Cleaning<span class="w"> </span>generated<span class="w"> </span>documentation...
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span>✓<span class="w"> </span>Removed<span class="w"> </span>site/
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span>✓<span class="w"> </span>Removed<span class="w"> </span>docs/api/yard/
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>✓<span class="w"> </span>Documentation<span class="w"> </span>cleaned
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmdocdeploy"><code>rake htm:doc:deploy</code><a class="headerlink" href="#rake-htmdocdeploy" title="Permanent link">&para;</a></h4>
 <p>Deploys documentation to GitHub Pages.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:deploy
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>Deploying<span class="w"> </span>to<span class="w"> </span>GitHub<span class="w"> </span>Pages...
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span>Building<span class="w"> </span>site...
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span>Pushing<span class="w"> </span>to<span class="w"> </span>gh-pages<span class="w"> </span>branch...
-</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>✓<span class="w"> </span>Documentation<span class="w"> </span>deployed<span class="w"> </span>to<span class="w"> </span>https://madbomber.github.io/htm/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:deploy
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>Deploying<span class="w"> </span>to<span class="w"> </span>GitHub<span class="w"> </span>Pages...
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">  </span>Building<span class="w"> </span>site...
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">  </span>Pushing<span class="w"> </span>to<span class="w"> </span>gh-pages<span class="w"> </span>branch...
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>✓<span class="w"> </span>Documentation<span class="w"> </span>deployed<span class="w"> </span>to<span class="w"> </span>https://madbomber.github.io/htm/
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmdocvalidate"><code>rake htm:doc:validate</code><a class="headerlink" href="#rake-htmdocvalidate" title="Permanent link">&para;</a></h4>
 <p>Validates documentation for broken links and formatting issues.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:validate
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>Validating<span class="w"> </span>documentation...
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">  </span>Checking<span class="w"> </span>internal<span class="w"> </span>links...
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">  </span>Checking<span class="w"> </span>code<span class="w"> </span>blocks...
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">  </span>Checking<span class="w"> </span>images...
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>✓<span class="w"> </span>All<span class="w"> </span><span class="m">127</span><span class="w"> </span>pages<span class="w"> </span>validated
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:validate
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>Validating<span class="w"> </span>documentation...
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">  </span>Checking<span class="w"> </span>internal<span class="w"> </span>links...
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">  </span>Checking<span class="w"> </span>code<span class="w"> </span>blocks...
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="w">  </span>Checking<span class="w"> </span>images...
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>✓<span class="w"> </span>All<span class="w"> </span><span class="m">127</span><span class="w"> </span>pages<span class="w"> </span>validated
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmdocchangelog"><code>rake htm:doc:changelog</code><a class="headerlink" href="#rake-htmdocchangelog" title="Permanent link">&para;</a></h4>
 <p>Generates changelog from git history.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:changelog
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>Generating<span class="w"> </span>changelog...
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">  </span>Analyzing<span class="w"> </span>commits<span class="w"> </span>since<span class="w"> </span>v0.5.0...
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>✓<span class="w"> </span>CHANGELOG.md<span class="w"> </span>updated
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:doc:changelog
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>Generating<span class="w"> </span>changelog...
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">  </span>Analyzing<span class="w"> </span>commits<span class="w"> </span>since<span class="w"> </span>v0.5.0...
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>✓<span class="w"> </span>CHANGELOG.md<span class="w"> </span>updated
 </span></code></pre></div>
 <hr />
 <h2 id="file-loading-tasks-htmfiles">File Loading Tasks (<code>htm:files:*</code>)<a class="headerlink" href="#file-loading-tasks-htmfiles" title="Permanent link">&para;</a></h2>
@@ -7361,204 +7437,189 @@
 <h3 id="loading-files">Loading Files<a class="headerlink" href="#loading-files" title="Permanent link">&para;</a></h3>
 <h4 id="rake-htmfilesloadpath"><code>rake htm:files:load[path]</code><a class="headerlink" href="#rake-htmfilesloadpath" title="Permanent link">&para;</a></h4>
 <p>Loads a single file into HTM memory. Supports markdown files with YAML frontmatter.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:load[docs/guide.md]&#39;</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>Loading<span class="w"> </span>docs/guide.md...
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">  </span>Extracting<span class="w"> </span>frontmatter...
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="w">  </span>Chunking<span class="w"> </span>content<span class="w"> </span><span class="o">(</span><span class="m">1024</span><span class="w"> </span>chars,<span class="w"> </span><span class="m">64</span><span class="w"> </span>overlap<span class="o">)</span>...
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="w">  </span>Creating<span class="w"> </span>nodes...
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>✓<span class="w"> </span>Created<span class="w"> </span><span class="m">5</span><span class="w"> </span>chunks<span class="w"> </span>from<span class="w"> </span>docs/guide.md
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a>
-</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="c1"># Force reload even if unchanged</span>
-</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a>$<span class="w"> </span><span class="nv">FORCE</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:load[docs/guide.md]&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:load[docs/guide.md]&#39;</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>Loading<span class="w"> </span>docs/guide.md...
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">  </span>Extracting<span class="w"> </span>frontmatter...
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">  </span>Chunking<span class="w"> </span>content<span class="w"> </span><span class="o">(</span><span class="m">1024</span><span class="w"> </span>chars,<span class="w"> </span><span class="m">64</span><span class="w"> </span>overlap<span class="o">)</span>...
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="w">  </span>Creating<span class="w"> </span>nodes...
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>✓<span class="w"> </span>Created<span class="w"> </span><span class="m">5</span><span class="w"> </span>chunks<span class="w"> </span>from<span class="w"> </span>docs/guide.md
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="c1"># Force reload even if unchanged</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>$<span class="w"> </span><span class="nv">FORCE</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:load[docs/guide.md]&#39;</span>
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmfilesload_dirpathpattern"><code>rake htm:files:load_dir[path,pattern]</code><a class="headerlink" href="#rake-htmfilesload_dirpathpattern" title="Permanent link">&para;</a></h4>
 <p>Loads all matching files from a directory recursively.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:load_dir[docs/]&#39;</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>Loading<span class="w"> </span>files<span class="w"> </span>from<span class="w"> </span>docs/...
-</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">  </span>✓<span class="w"> </span>docs/guide.md<span class="w"> </span><span class="o">(</span><span class="m">5</span><span class="w"> </span>chunks<span class="o">)</span>
-</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">  </span>✓<span class="w"> </span>docs/api/reference.md<span class="w"> </span><span class="o">(</span><span class="m">12</span><span class="w"> </span>chunks<span class="o">)</span>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="w">  </span>✓<span class="w"> </span>docs/examples/basic.md<span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="w"> </span>chunks<span class="o">)</span>
-</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>✓<span class="w"> </span>Loaded<span class="w"> </span><span class="m">3</span><span class="w"> </span>files,<span class="w"> </span><span class="m">20</span><span class="w"> </span>total<span class="w"> </span>chunks
-</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>
-</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="c1"># Custom glob pattern</span>
-</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:load_dir[content/,**/*.txt]&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:load_dir[docs/]&#39;</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>Loading<span class="w"> </span>files<span class="w"> </span>from<span class="w"> </span>docs/...
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span>✓<span class="w"> </span>docs/guide.md<span class="w"> </span><span class="o">(</span><span class="m">5</span><span class="w"> </span>chunks<span class="o">)</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="w">  </span>✓<span class="w"> </span>docs/api/reference.md<span class="w"> </span><span class="o">(</span><span class="m">12</span><span class="w"> </span>chunks<span class="o">)</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="w">  </span>✓<span class="w"> </span>docs/examples/basic.md<span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="w"> </span>chunks<span class="o">)</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>✓<span class="w"> </span>Loaded<span class="w"> </span><span class="m">3</span><span class="w"> </span>files,<span class="w"> </span><span class="m">20</span><span class="w"> </span>total<span class="w"> </span>chunks
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="c1"># Custom glob pattern</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:load_dir[content/,**/*.txt]&#39;</span>
 </span></code></pre></div>
 <hr />
 <h3 id="file-management">File Management<a class="headerlink" href="#file-management" title="Permanent link">&para;</a></h3>
 <h4 id="rake-htmfileslist"><code>rake htm:files:list</code><a class="headerlink" href="#rake-htmfileslist" title="Permanent link">&para;</a></h4>
 <p>Lists all file sources loaded into HTM.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:files:list
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>Loaded<span class="w"> </span>File<span class="w"> </span><span class="nv">Sources</span>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="o">================================================================================</span>
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>ID<span class="w"> </span><span class="p">|</span><span class="w"> </span>Path<span class="w">                      </span><span class="p">|</span><span class="w"> </span>Chunks<span class="w"> </span><span class="p">|</span><span class="w"> </span>Last<span class="w"> </span>Synced<span class="w">         </span><span class="p">|</span><span class="w"> </span>Needs<span class="w"> </span>Sync?
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>---<span class="p">|</span>---------------------------<span class="p">|</span>--------<span class="p">|</span>---------------------<span class="p">|</span>------------
-</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="m">1</span><span class="w">  </span><span class="p">|</span><span class="w"> </span>docs/guide.md<span class="w">             </span><span class="p">|</span><span class="w"> </span><span class="m">5</span><span class="w">      </span><span class="p">|</span><span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:30:00<span class="w"> </span><span class="p">|</span><span class="w"> </span>No
-</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="m">2</span><span class="w">  </span><span class="p">|</span><span class="w"> </span>docs/api/reference.md<span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">12</span><span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:30:01<span class="w"> </span><span class="p">|</span><span class="w"> </span>No
-</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="m">3</span><span class="w">  </span><span class="p">|</span><span class="w"> </span>docs/examples/basic.md<span class="w">    </span><span class="p">|</span><span class="w"> </span><span class="m">3</span><span class="w">      </span><span class="p">|</span><span class="w"> </span><span class="m">2025</span>-01-14<span class="w"> </span><span class="m">09</span>:00:00<span class="w"> </span><span class="p">|</span><span class="w"> </span>Yes
-</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a>
-</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a>Total:<span class="w"> </span><span class="m">3</span><span class="w"> </span>files,<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="nv">chunks</span>
-</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="o">================================================================================</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:files:list
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>Loaded<span class="w"> </span>File<span class="w"> </span><span class="nv">Sources</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="o">================================================================================</span>
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>ID<span class="w"> </span><span class="p">|</span><span class="w"> </span>Path<span class="w">                      </span><span class="p">|</span><span class="w"> </span>Chunks<span class="w"> </span><span class="p">|</span><span class="w"> </span>Last<span class="w"> </span>Synced<span class="w">         </span><span class="p">|</span><span class="w"> </span>Needs<span class="w"> </span>Sync?
+</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>---<span class="p">|</span>---------------------------<span class="p">|</span>--------<span class="p">|</span>---------------------<span class="p">|</span>------------
+</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a><span class="m">1</span><span class="w">  </span><span class="p">|</span><span class="w"> </span>docs/guide.md<span class="w">             </span><span class="p">|</span><span class="w"> </span><span class="m">5</span><span class="w">      </span><span class="p">|</span><span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:30:00<span class="w"> </span><span class="p">|</span><span class="w"> </span>No
+</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a><span class="m">2</span><span class="w">  </span><span class="p">|</span><span class="w"> </span>docs/api/reference.md<span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">12</span><span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:30:01<span class="w"> </span><span class="p">|</span><span class="w"> </span>No
+</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a><span class="m">3</span><span class="w">  </span><span class="p">|</span><span class="w"> </span>docs/examples/basic.md<span class="w">    </span><span class="p">|</span><span class="w"> </span><span class="m">3</span><span class="w">      </span><span class="p">|</span><span class="w"> </span><span class="m">2025</span>-01-14<span class="w"> </span><span class="m">09</span>:00:00<span class="w"> </span><span class="p">|</span><span class="w"> </span>Yes
+</span><span id="__span-29-10"><a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a>
+</span><span id="__span-29-11"><a id="__codelineno-29-11" name="__codelineno-29-11" href="#__codelineno-29-11"></a>Total:<span class="w"> </span><span class="m">3</span><span class="w"> </span>files,<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="nv">chunks</span>
+</span><span id="__span-29-12"><a id="__codelineno-29-12" name="__codelineno-29-12" href="#__codelineno-29-12"></a><span class="o">================================================================================</span>
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmfilesinfopath"><code>rake htm:files:info[path]</code><a class="headerlink" href="#rake-htmfilesinfopath" title="Permanent link">&para;</a></h4>
 <p>Shows detailed information about a loaded file.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:info[docs/guide.md]&#39;</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>File<span class="w"> </span>Source:<span class="w"> </span>docs/guide.md
-</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="o">================================================================================</span>
-</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>ID:<span class="w"> </span><span class="m">1</span>
-</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>Path:<span class="w"> </span>docs/guide.md
-</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>Last<span class="w"> </span>Modified:<span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:29:45
-</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>Last<span class="w"> </span>Synced:<span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:30:00
-</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a>Needs<span class="w"> </span>Sync:<span class="w"> </span>No
-</span><span id="__span-29-10"><a id="__codelineno-29-10" name="__codelineno-29-10" href="#__codelineno-29-10"></a>
-</span><span id="__span-29-11"><a id="__codelineno-29-11" name="__codelineno-29-11" href="#__codelineno-29-11"></a>Frontmatter:
-</span><span id="__span-29-12"><a id="__codelineno-29-12" name="__codelineno-29-12" href="#__codelineno-29-12"></a><span class="w">  </span>title:<span class="w"> </span>Getting<span class="w"> </span>Started<span class="w"> </span>Guide
-</span><span id="__span-29-13"><a id="__codelineno-29-13" name="__codelineno-29-13" href="#__codelineno-29-13"></a><span class="w">  </span>author:<span class="w"> </span>Dewayne<span class="w"> </span>VanHoozer
-</span><span id="__span-29-14"><a id="__codelineno-29-14" name="__codelineno-29-14" href="#__codelineno-29-14"></a><span class="w">  </span>tags:<span class="w"> </span><span class="o">[</span>guide,<span class="w"> </span>tutorial<span class="o">]</span>
-</span><span id="__span-29-15"><a id="__codelineno-29-15" name="__codelineno-29-15" href="#__codelineno-29-15"></a>
-</span><span id="__span-29-16"><a id="__codelineno-29-16" name="__codelineno-29-16" href="#__codelineno-29-16"></a>Chunks:<span class="w"> </span><span class="m">5</span>
-</span><span id="__span-29-17"><a id="__codelineno-29-17" name="__codelineno-29-17" href="#__codelineno-29-17"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">101</span>:<span class="w"> </span><span class="s2">&quot;# Getting Started\n\nWelcome to HTM...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">1024</span><span class="w"> </span>chars<span class="o">)</span>
-</span><span id="__span-29-18"><a id="__codelineno-29-18" name="__codelineno-29-18" href="#__codelineno-29-18"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">102</span>:<span class="w"> </span><span class="s2">&quot;## Installation\n\nAdd HTM to your...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">987</span><span class="w"> </span>chars<span class="o">)</span>
-</span><span id="__span-29-19"><a id="__codelineno-29-19" name="__codelineno-29-19" href="#__codelineno-29-19"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">103</span>:<span class="w"> </span><span class="s2">&quot;## Basic Usage\n\nHere&#39;s how to...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">1024</span><span class="w"> </span>chars<span class="o">)</span>
-</span><span id="__span-29-20"><a id="__codelineno-29-20" name="__codelineno-29-20" href="#__codelineno-29-20"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">104</span>:<span class="w"> </span><span class="s2">&quot;### Adding Memories\n\nUse the...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">856</span><span class="w"> </span>chars<span class="o">)</span>
-</span><span id="__span-29-21"><a id="__codelineno-29-21" name="__codelineno-29-21" href="#__codelineno-29-21"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">105</span>:<span class="w"> </span><span class="s2">&quot;## Next Steps\n\nNow that you...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">432</span><span class="w"> </span>chars<span class="o">)</span>
-</span><span id="__span-29-22"><a id="__codelineno-29-22" name="__codelineno-29-22" href="#__codelineno-29-22"></a><span class="o">================================================================================</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:info[docs/guide.md]&#39;</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>File<span class="w"> </span>Source:<span class="w"> </span>docs/guide.md
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="o">================================================================================</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>ID:<span class="w"> </span><span class="m">1</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>Path:<span class="w"> </span>docs/guide.md
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>Last<span class="w"> </span>Modified:<span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:29:45
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a>Last<span class="w"> </span>Synced:<span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:30:00
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a>Needs<span class="w"> </span>Sync:<span class="w"> </span>No
+</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a>
+</span><span id="__span-30-11"><a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a>Frontmatter:
+</span><span id="__span-30-12"><a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a><span class="w">  </span>title:<span class="w"> </span>Getting<span class="w"> </span>Started<span class="w"> </span>Guide
+</span><span id="__span-30-13"><a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a><span class="w">  </span>author:<span class="w"> </span>Dewayne<span class="w"> </span>VanHoozer
+</span><span id="__span-30-14"><a id="__codelineno-30-14" name="__codelineno-30-14" href="#__codelineno-30-14"></a><span class="w">  </span>tags:<span class="w"> </span><span class="o">[</span>guide,<span class="w"> </span>tutorial<span class="o">]</span>
+</span><span id="__span-30-15"><a id="__codelineno-30-15" name="__codelineno-30-15" href="#__codelineno-30-15"></a>
+</span><span id="__span-30-16"><a id="__codelineno-30-16" name="__codelineno-30-16" href="#__codelineno-30-16"></a>Chunks:<span class="w"> </span><span class="m">5</span>
+</span><span id="__span-30-17"><a id="__codelineno-30-17" name="__codelineno-30-17" href="#__codelineno-30-17"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">101</span>:<span class="w"> </span><span class="s2">&quot;# Getting Started\n\nWelcome to HTM...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">1024</span><span class="w"> </span>chars<span class="o">)</span>
+</span><span id="__span-30-18"><a id="__codelineno-30-18" name="__codelineno-30-18" href="#__codelineno-30-18"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">102</span>:<span class="w"> </span><span class="s2">&quot;## Installation\n\nAdd HTM to your...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">987</span><span class="w"> </span>chars<span class="o">)</span>
+</span><span id="__span-30-19"><a id="__codelineno-30-19" name="__codelineno-30-19" href="#__codelineno-30-19"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">103</span>:<span class="w"> </span><span class="s2">&quot;## Basic Usage\n\nHere&#39;s how to...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">1024</span><span class="w"> </span>chars<span class="o">)</span>
+</span><span id="__span-30-20"><a id="__codelineno-30-20" name="__codelineno-30-20" href="#__codelineno-30-20"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">104</span>:<span class="w"> </span><span class="s2">&quot;### Adding Memories\n\nUse the...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">856</span><span class="w"> </span>chars<span class="o">)</span>
+</span><span id="__span-30-21"><a id="__codelineno-30-21" name="__codelineno-30-21" href="#__codelineno-30-21"></a><span class="w">  </span>ID<span class="w"> </span><span class="m">105</span>:<span class="w"> </span><span class="s2">&quot;## Next Steps\n\nNow that you...&quot;</span><span class="w"> </span><span class="o">(</span><span class="m">432</span><span class="w"> </span>chars<span class="o">)</span>
+</span><span id="__span-30-22"><a id="__codelineno-30-22" name="__codelineno-30-22" href="#__codelineno-30-22"></a><span class="o">================================================================================</span>
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmfilesunloadpath"><code>rake htm:files:unload[path]</code><a class="headerlink" href="#rake-htmfilesunloadpath" title="Permanent link">&para;</a></h4>
 <p>Removes a file from HTM memory (soft-deletes all chunks and removes file source).</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:unload[docs/old-guide.md]&#39;</span>
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>Unloading<span class="w"> </span>docs/old-guide.md...
-</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span>Soft-deleting<span class="w"> </span><span class="m">5</span><span class="w"> </span>chunks...
-</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">  </span>Removing<span class="w"> </span>file<span class="w"> </span>source...
-</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>✓<span class="w"> </span>File<span class="w"> </span>unloaded
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:files:unload[docs/old-guide.md]&#39;</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>Unloading<span class="w"> </span>docs/old-guide.md...
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span>Soft-deleting<span class="w"> </span><span class="m">5</span><span class="w"> </span>chunks...
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span>Removing<span class="w"> </span>file<span class="w"> </span>source...
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>✓<span class="w"> </span>File<span class="w"> </span>unloaded
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmfilessync"><code>rake htm:files:sync</code><a class="headerlink" href="#rake-htmfilessync" title="Permanent link">&para;</a></h4>
 <p>Syncs all loaded files, reloading any that have changed on disk.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:files:sync
-</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>Syncing<span class="w"> </span>loaded<span class="w"> </span>files...
-</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a><span class="w">  </span>docs/guide.md<span class="w"> </span>-<span class="w"> </span>unchanged
-</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="w">  </span>docs/api/reference.md<span class="w"> </span>-<span class="w"> </span>unchanged
-</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a><span class="w">  </span>docs/examples/basic.md<span class="w"> </span>-<span class="w"> </span>CHANGED,<span class="w"> </span>reloading...
-</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a><span class="w">    </span>✓<span class="w"> </span>Reloaded<span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="w"> </span>chunks<span class="w"> </span>updated<span class="o">)</span>
-</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a>✓<span class="w"> </span>Sync<span class="w"> </span>complete:<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>updated
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:files:sync
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>Syncing<span class="w"> </span>loaded<span class="w"> </span>files...
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a><span class="w">  </span>docs/guide.md<span class="w"> </span>-<span class="w"> </span>unchanged
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="w">  </span>docs/api/reference.md<span class="w"> </span>-<span class="w"> </span>unchanged
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="w">  </span>docs/examples/basic.md<span class="w"> </span>-<span class="w"> </span>CHANGED,<span class="w"> </span>reloading...
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="w">    </span>✓<span class="w"> </span>Reloaded<span class="w"> </span><span class="o">(</span><span class="m">3</span><span class="w"> </span>chunks<span class="w"> </span>updated<span class="o">)</span>
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a>✓<span class="w"> </span>Sync<span class="w"> </span>complete:<span class="w"> </span><span class="m">1</span><span class="w"> </span>file<span class="w"> </span>updated
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmfilesstats"><code>rake htm:files:stats</code><a class="headerlink" href="#rake-htmfilesstats" title="Permanent link">&para;</a></h4>
 <p>Shows file loading statistics.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:files:stats
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>
-</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>File<span class="w"> </span>Loading<span class="w"> </span><span class="nv">Statistics</span>
-</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="o">================================================================================</span>
-</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>Total<span class="w"> </span>Files:<span class="w"> </span><span class="m">12</span>
-</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>Total<span class="w"> </span>Chunks:<span class="w"> </span><span class="m">1</span>,542
-</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a>Average<span class="w"> </span>Chunks<span class="w"> </span>per<span class="w"> </span>File:<span class="w"> </span><span class="m">128</span>.5
-</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>
-</span><span id="__span-32-9"><a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a>Chunk<span class="w"> </span>Size<span class="w"> </span>Distribution:
-</span><span id="__span-32-10"><a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a><span class="w">  </span>&lt;<span class="w"> </span><span class="m">256</span><span class="w"> </span>chars:<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="o">(</span><span class="m">1</span>.5%<span class="o">)</span>
-</span><span id="__span-32-11"><a id="__codelineno-32-11" name="__codelineno-32-11" href="#__codelineno-32-11"></a><span class="w">  </span><span class="m">256</span>-512<span class="w"> </span>chars:<span class="w"> </span><span class="m">156</span><span class="w"> </span><span class="o">(</span><span class="m">10</span>.1%<span class="o">)</span>
-</span><span id="__span-32-12"><a id="__codelineno-32-12" name="__codelineno-32-12" href="#__codelineno-32-12"></a><span class="w">  </span><span class="m">512</span>-1024<span class="w"> </span>chars:<span class="w"> </span><span class="m">1</span>,363<span class="w"> </span><span class="o">(</span><span class="m">88</span>.4%<span class="o">)</span>
-</span><span id="__span-32-13"><a id="__codelineno-32-13" name="__codelineno-32-13" href="#__codelineno-32-13"></a>
-</span><span id="__span-32-14"><a id="__codelineno-32-14" name="__codelineno-32-14" href="#__codelineno-32-14"></a>File<span class="w"> </span>Types:
-</span><span id="__span-32-15"><a id="__codelineno-32-15" name="__codelineno-32-15" href="#__codelineno-32-15"></a><span class="w">  </span>.md:<span class="w"> </span><span class="m">12</span><span class="w"> </span>files<span class="w"> </span><span class="o">(</span><span class="m">100</span>%<span class="o">)</span>
-</span><span id="__span-32-16"><a id="__codelineno-32-16" name="__codelineno-32-16" href="#__codelineno-32-16"></a>
-</span><span id="__span-32-17"><a id="__codelineno-32-17" name="__codelineno-32-17" href="#__codelineno-32-17"></a>Sync<span class="w"> </span>Status:
-</span><span id="__span-32-18"><a id="__codelineno-32-18" name="__codelineno-32-18" href="#__codelineno-32-18"></a><span class="w">  </span>Up<span class="w"> </span>to<span class="w"> </span>date:<span class="w"> </span><span class="m">11</span><span class="w"> </span>files
-</span><span id="__span-32-19"><a id="__codelineno-32-19" name="__codelineno-32-19" href="#__codelineno-32-19"></a><span class="w">  </span>Needs<span class="w"> </span>sync:<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="nv">file</span>
-</span><span id="__span-32-20"><a id="__codelineno-32-20" name="__codelineno-32-20" href="#__codelineno-32-20"></a><span class="o">================================================================================</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:files:stats
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>File<span class="w"> </span>Loading<span class="w"> </span><span class="nv">Statistics</span>
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="o">================================================================================</span>
+</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a>Total<span class="w"> </span>Files:<span class="w"> </span><span class="m">12</span>
+</span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a>Total<span class="w"> </span>Chunks:<span class="w"> </span><span class="m">1</span>,542
+</span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a>Average<span class="w"> </span>Chunks<span class="w"> </span>per<span class="w"> </span>File:<span class="w"> </span><span class="m">128</span>.5
+</span><span id="__span-33-8"><a id="__codelineno-33-8" name="__codelineno-33-8" href="#__codelineno-33-8"></a>
+</span><span id="__span-33-9"><a id="__codelineno-33-9" name="__codelineno-33-9" href="#__codelineno-33-9"></a>Chunk<span class="w"> </span>Size<span class="w"> </span>Distribution:
+</span><span id="__span-33-10"><a id="__codelineno-33-10" name="__codelineno-33-10" href="#__codelineno-33-10"></a><span class="w">  </span>&lt;<span class="w"> </span><span class="m">256</span><span class="w"> </span>chars:<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="o">(</span><span class="m">1</span>.5%<span class="o">)</span>
+</span><span id="__span-33-11"><a id="__codelineno-33-11" name="__codelineno-33-11" href="#__codelineno-33-11"></a><span class="w">  </span><span class="m">256</span>-512<span class="w"> </span>chars:<span class="w"> </span><span class="m">156</span><span class="w"> </span><span class="o">(</span><span class="m">10</span>.1%<span class="o">)</span>
+</span><span id="__span-33-12"><a id="__codelineno-33-12" name="__codelineno-33-12" href="#__codelineno-33-12"></a><span class="w">  </span><span class="m">512</span>-1024<span class="w"> </span>chars:<span class="w"> </span><span class="m">1</span>,363<span class="w"> </span><span class="o">(</span><span class="m">88</span>.4%<span class="o">)</span>
+</span><span id="__span-33-13"><a id="__codelineno-33-13" name="__codelineno-33-13" href="#__codelineno-33-13"></a>
+</span><span id="__span-33-14"><a id="__codelineno-33-14" name="__codelineno-33-14" href="#__codelineno-33-14"></a>File<span class="w"> </span>Types:
+</span><span id="__span-33-15"><a id="__codelineno-33-15" name="__codelineno-33-15" href="#__codelineno-33-15"></a><span class="w">  </span>.md:<span class="w"> </span><span class="m">12</span><span class="w"> </span>files<span class="w"> </span><span class="o">(</span><span class="m">100</span>%<span class="o">)</span>
+</span><span id="__span-33-16"><a id="__codelineno-33-16" name="__codelineno-33-16" href="#__codelineno-33-16"></a>
+</span><span id="__span-33-17"><a id="__codelineno-33-17" name="__codelineno-33-17" href="#__codelineno-33-17"></a>Sync<span class="w"> </span>Status:
+</span><span id="__span-33-18"><a id="__codelineno-33-18" name="__codelineno-33-18" href="#__codelineno-33-18"></a><span class="w">  </span>Up<span class="w"> </span>to<span class="w"> </span>date:<span class="w"> </span><span class="m">11</span><span class="w"> </span>files
+</span><span id="__span-33-19"><a id="__codelineno-33-19" name="__codelineno-33-19" href="#__codelineno-33-19"></a><span class="w">  </span>Needs<span class="w"> </span>sync:<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="nv">file</span>
+</span><span id="__span-33-20"><a id="__codelineno-33-20" name="__codelineno-33-20" href="#__codelineno-33-20"></a><span class="o">================================================================================</span>
 </span></code></pre></div>
 <hr />
 <h2 id="job-tasks-htmjobs">Job Tasks (<code>htm:jobs:*</code>)<a class="headerlink" href="#job-tasks-htmjobs" title="Permanent link">&para;</a></h2>
-<p>Tasks for managing HTM background jobs (embedding generation, tag extraction, proposition extraction).</p>
+<p>Tasks for managing HTM background jobs (embedding generation, tag extraction, proposition extraction). All processing tasks include progress bars with ETA display for visual feedback during long-running operations.</p>
 <h3 id="processing-jobs">Processing Jobs<a class="headerlink" href="#processing-jobs" title="Permanent link">&para;</a></h3>
-<h4 id="rake-htmjobsprocess"><code>rake htm:jobs:process</code><a class="headerlink" href="#rake-htmjobsprocess" title="Permanent link">&para;</a></h4>
-<p>Processes all pending background jobs (embeddings, tags, propositions).</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:process
-</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>Processing<span class="w"> </span>pending<span class="w"> </span>jobs...
-</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="w">  </span>Embedding<span class="w"> </span>jobs:<span class="w"> </span><span class="m">5</span><span class="w"> </span>pending
-</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="w">  </span>Tag<span class="w"> </span>jobs:<span class="w"> </span><span class="m">8</span><span class="w"> </span>pending
-</span><span id="__span-33-5"><a id="__codelineno-33-5" name="__codelineno-33-5" href="#__codelineno-33-5"></a><span class="w">  </span>Proposition<span class="w"> </span>jobs:<span class="w"> </span><span class="m">0</span><span class="w"> </span>pending
-</span><span id="__span-33-6"><a id="__codelineno-33-6" name="__codelineno-33-6" href="#__codelineno-33-6"></a><span class="w">  </span>Processing...
-</span><span id="__span-33-7"><a id="__codelineno-33-7" name="__codelineno-33-7" href="#__codelineno-33-7"></a>✓<span class="w"> </span>Processed<span class="w"> </span><span class="m">13</span><span class="w"> </span><span class="nb">jobs</span><span class="w"> </span><span class="o">(</span><span class="m">13</span><span class="w"> </span>successful,<span class="w"> </span><span class="m">0</span><span class="w"> </span>failed<span class="o">)</span>
+<h4 id="rake-htmjobsprocess_all"><code>rake htm:jobs:process_all</code><a class="headerlink" href="#rake-htmjobsprocess_all" title="Permanent link">&para;</a></h4>
+<p>Processes all pending background jobs in sequence: embeddings, then tags, then propositions.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:process_all
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="c1"># Runs process_embeddings, process_tags, process_propositions in sequence</span>
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmjobsprocess_embeddings"><code>rake htm:jobs:process_embeddings</code><a class="headerlink" href="#rake-htmjobsprocess_embeddings" title="Permanent link">&para;</a></h4>
-<p>Processes only pending embedding generation jobs.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:process_embeddings
-</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>Processing<span class="w"> </span>embedding<span class="w"> </span>jobs...
-</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="w">  </span><span class="m">5</span><span class="w"> </span>pending<span class="w"> </span><span class="nb">jobs</span>
-</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="w">  </span>Processing...
-</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="w">    </span>✓<span class="w"> </span>Node<span class="w"> </span><span class="m">1542</span><span class="w"> </span>-<span class="w"> </span>embedding<span class="w"> </span>generated<span class="w"> </span><span class="o">(</span><span class="m">768</span><span class="w"> </span>dimensions<span class="o">)</span>
-</span><span id="__span-34-6"><a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a><span class="w">    </span>✓<span class="w"> </span>Node<span class="w"> </span><span class="m">1543</span><span class="w"> </span>-<span class="w"> </span>embedding<span class="w"> </span>generated<span class="w"> </span><span class="o">(</span><span class="m">768</span><span class="w"> </span>dimensions<span class="o">)</span>
-</span><span id="__span-34-7"><a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a><span class="w">    </span>...
-</span><span id="__span-34-8"><a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a>✓<span class="w"> </span>Processed<span class="w"> </span><span class="m">5</span><span class="w"> </span>embedding<span class="w"> </span><span class="nb">jobs</span>
+<p>Processes nodes without embeddings, generating vector embeddings via the configured LLM provider. Shows a progress bar with ETA for visual feedback.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:process_embeddings
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>Processing<span class="w"> </span><span class="m">50</span><span class="w"> </span>nodes<span class="w"> </span>without<span class="w"> </span>embeddings...
+</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>Embeddings:<span class="w"> </span><span class="p">|</span>████████████████████████████████<span class="p">|</span><span class="w"> </span><span class="m">50</span>/50<span class="w"> </span><span class="o">(</span><span class="m">100</span>%<span class="o">)</span><span class="w"> </span>Time:<span class="w"> </span><span class="m">00</span>:01:45
+</span><span id="__span-35-4"><a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a>✓<span class="w"> </span>Generated<span class="w"> </span>embeddings<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="m">50</span><span class="w"> </span>nodes
 </span></code></pre></div>
+<p><strong>Progress bar format:</strong> <code>Title: |████████████| count/total (percent%) ETA: mm:ss</code></p>
 <hr />
 <h4 id="rake-htmjobsprocess_tags"><code>rake htm:jobs:process_tags</code><a class="headerlink" href="#rake-htmjobsprocess_tags" title="Permanent link">&para;</a></h4>
-<p>Processes only pending tag extraction jobs.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:process_tags
-</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>Processing<span class="w"> </span>tag<span class="w"> </span>jobs...
-</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a><span class="w">  </span><span class="m">8</span><span class="w"> </span>pending<span class="w"> </span><span class="nb">jobs</span>
-</span><span id="__span-35-4"><a id="__codelineno-35-4" name="__codelineno-35-4" href="#__codelineno-35-4"></a><span class="w">  </span>Processing...
-</span><span id="__span-35-5"><a id="__codelineno-35-5" name="__codelineno-35-5" href="#__codelineno-35-5"></a><span class="w">    </span>✓<span class="w"> </span>Node<span class="w"> </span><span class="m">1542</span><span class="w"> </span>-<span class="w"> </span>extracted<span class="w"> </span><span class="m">3</span><span class="w"> </span>tags
-</span><span id="__span-35-6"><a id="__codelineno-35-6" name="__codelineno-35-6" href="#__codelineno-35-6"></a><span class="w">    </span>✓<span class="w"> </span>Node<span class="w"> </span><span class="m">1543</span><span class="w"> </span>-<span class="w"> </span>extracted<span class="w"> </span><span class="m">2</span><span class="w"> </span>tags
-</span><span id="__span-35-7"><a id="__codelineno-35-7" name="__codelineno-35-7" href="#__codelineno-35-7"></a><span class="w">    </span>...
-</span><span id="__span-35-8"><a id="__codelineno-35-8" name="__codelineno-35-8" href="#__codelineno-35-8"></a>✓<span class="w"> </span>Processed<span class="w"> </span><span class="m">8</span><span class="w"> </span>tag<span class="w"> </span><span class="nb">jobs</span>
+<p>Processes nodes without tags, extracting hierarchical tags via the configured LLM provider. Shows a progress bar with ETA for visual feedback.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:process_tags
+</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>Processing<span class="w"> </span><span class="m">50</span><span class="w"> </span>nodes<span class="w"> </span>without<span class="w"> </span>tags...
+</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>Tags:<span class="w"> </span><span class="p">|</span>████████████████████████████████<span class="p">|</span><span class="w"> </span><span class="m">50</span>/50<span class="w"> </span><span class="o">(</span><span class="m">100</span>%<span class="o">)</span><span class="w"> </span>Time:<span class="w"> </span><span class="m">00</span>:02:30
+</span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>✓<span class="w"> </span>Extracted<span class="w"> </span>tags<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="m">50</span><span class="w"> </span>nodes
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmjobsprocess_propositions"><code>rake htm:jobs:process_propositions</code><a class="headerlink" href="#rake-htmjobsprocess_propositions" title="Permanent link">&para;</a></h4>
-<p>Processes only pending proposition extraction jobs.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:process_propositions
-</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>Processing<span class="w"> </span>proposition<span class="w"> </span>jobs...
-</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a><span class="w">  </span><span class="m">3</span><span class="w"> </span>pending<span class="w"> </span><span class="nb">jobs</span>
-</span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a><span class="w">  </span>Processing...
-</span><span id="__span-36-5"><a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a><span class="w">    </span>✓<span class="w"> </span>Node<span class="w"> </span><span class="m">1542</span><span class="w"> </span>-<span class="w"> </span>extracted<span class="w"> </span><span class="m">5</span><span class="w"> </span>propositions
-</span><span id="__span-36-6"><a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a><span class="w">    </span>✓<span class="w"> </span>Node<span class="w"> </span><span class="m">1543</span><span class="w"> </span>-<span class="w"> </span>extracted<span class="w"> </span><span class="m">3</span><span class="w"> </span>propositions
-</span><span id="__span-36-7"><a id="__codelineno-36-7" name="__codelineno-36-7" href="#__codelineno-36-7"></a><span class="w">    </span>...
-</span><span id="__span-36-8"><a id="__codelineno-36-8" name="__codelineno-36-8" href="#__codelineno-36-8"></a>✓<span class="w"> </span>Processed<span class="w"> </span><span class="m">3</span><span class="w"> </span>proposition<span class="w"> </span>jobs,<span class="w"> </span>created<span class="w"> </span><span class="m">12</span><span class="w"> </span>proposition<span class="w"> </span>nodes
+<p>Extracts atomic propositions from nodes that haven't been processed yet. Tracks processed nodes via <code>source_node_id</code> metadata on proposition nodes. Shows a progress bar with ETA.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:process_propositions
+</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>Processing<span class="w"> </span><span class="m">25</span><span class="w"> </span>nodes<span class="w"> </span><span class="k">for</span><span class="w"> </span>proposition<span class="w"> </span>extraction...
+</span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>Propositions:<span class="w"> </span><span class="p">|</span>████████████████████████████████<span class="p">|</span><span class="w"> </span><span class="m">25</span>/25<span class="w"> </span><span class="o">(</span><span class="m">100</span>%<span class="o">)</span><span class="w"> </span>Time:<span class="w"> </span><span class="m">00</span>:03:15
+</span><span id="__span-37-4"><a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a>✓<span class="w"> </span>Extracted<span class="w"> </span>propositions<span class="w"> </span>from<span class="w"> </span><span class="m">25</span><span class="w"> </span>nodes,<span class="w"> </span>created<span class="w"> </span><span class="m">89</span><span class="w"> </span>proposition<span class="w"> </span>nodes
 </span></code></pre></div>
+<p><strong>Note:</strong> Only nodes that don't already have propositions extracted will be processed. The task tracks this by checking for proposition nodes with matching <code>source_node_id</code> in metadata.</p>
 <hr />
 <h3 id="job-status">Job Status<a class="headerlink" href="#job-status" title="Permanent link">&para;</a></h3>
 <h4 id="rake-htmjobsstatus"><code>rake htm:jobs:status</code><a class="headerlink" href="#rake-htmjobsstatus" title="Permanent link">&para;</a></h4>
 <p>Shows status of background job queues.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:status
-</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>
-</span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>HTM<span class="w"> </span>Job<span class="w"> </span>Queue<span class="w"> </span><span class="nv">Status</span>
-</span><span id="__span-37-4"><a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a><span class="o">================================================================================</span>
-</span><span id="__span-37-5"><a id="__codelineno-37-5" name="__codelineno-37-5" href="#__codelineno-37-5"></a>Queue<span class="w">           </span><span class="p">|</span><span class="w"> </span>Pending<span class="w"> </span><span class="p">|</span><span class="w"> </span>Processing<span class="w"> </span><span class="p">|</span><span class="w"> </span>Completed<span class="w"> </span><span class="p">|</span><span class="w"> </span>Failed
-</span><span id="__span-37-6"><a id="__codelineno-37-6" name="__codelineno-37-6" href="#__codelineno-37-6"></a>----------------<span class="p">|</span>---------<span class="p">|</span>------------<span class="p">|</span>-----------<span class="p">|</span>-------
-</span><span id="__span-37-7"><a id="__codelineno-37-7" name="__codelineno-37-7" href="#__codelineno-37-7"></a>Embeddings<span class="w">      </span><span class="p">|</span><span class="w"> </span><span class="m">5</span><span class="w">       </span><span class="p">|</span><span class="w"> </span><span class="m">0</span><span class="w">          </span><span class="p">|</span><span class="w"> </span><span class="m">1</span>,537<span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
-</span><span id="__span-37-8"><a id="__codelineno-37-8" name="__codelineno-37-8" href="#__codelineno-37-8"></a>Tags<span class="w">            </span><span class="p">|</span><span class="w"> </span><span class="m">8</span><span class="w">       </span><span class="p">|</span><span class="w"> </span><span class="m">0</span><span class="w">          </span><span class="p">|</span><span class="w"> </span><span class="m">1</span>,421<span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">2</span>
-</span><span id="__span-37-9"><a id="__codelineno-37-9" name="__codelineno-37-9" href="#__codelineno-37-9"></a>Propositions<span class="w">    </span><span class="p">|</span><span class="w"> </span><span class="m">0</span><span class="w">       </span><span class="p">|</span><span class="w"> </span><span class="m">0</span><span class="w">          </span><span class="p">|</span><span class="w"> </span><span class="m">4</span>,892<span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
-</span><span id="__span-37-10"><a id="__codelineno-37-10" name="__codelineno-37-10" href="#__codelineno-37-10"></a>
-</span><span id="__span-37-11"><a id="__codelineno-37-11" name="__codelineno-37-11" href="#__codelineno-37-11"></a>Last<span class="w"> </span>processed:<span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:30:00
-</span><span id="__span-37-12"><a id="__codelineno-37-12" name="__codelineno-37-12" href="#__codelineno-37-12"></a><span class="o">================================================================================</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:status
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>
+</span><span id="__span-38-3"><a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a>HTM<span class="w"> </span>Job<span class="w"> </span>Queue<span class="w"> </span><span class="nv">Status</span>
+</span><span id="__span-38-4"><a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a><span class="o">================================================================================</span>
+</span><span id="__span-38-5"><a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a>Queue<span class="w">           </span><span class="p">|</span><span class="w"> </span>Pending<span class="w"> </span><span class="p">|</span><span class="w"> </span>Processing<span class="w"> </span><span class="p">|</span><span class="w"> </span>Completed<span class="w"> </span><span class="p">|</span><span class="w"> </span>Failed
+</span><span id="__span-38-6"><a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a>----------------<span class="p">|</span>---------<span class="p">|</span>------------<span class="p">|</span>-----------<span class="p">|</span>-------
+</span><span id="__span-38-7"><a id="__codelineno-38-7" name="__codelineno-38-7" href="#__codelineno-38-7"></a>Embeddings<span class="w">      </span><span class="p">|</span><span class="w"> </span><span class="m">5</span><span class="w">       </span><span class="p">|</span><span class="w"> </span><span class="m">0</span><span class="w">          </span><span class="p">|</span><span class="w"> </span><span class="m">1</span>,537<span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
+</span><span id="__span-38-8"><a id="__codelineno-38-8" name="__codelineno-38-8" href="#__codelineno-38-8"></a>Tags<span class="w">            </span><span class="p">|</span><span class="w"> </span><span class="m">8</span><span class="w">       </span><span class="p">|</span><span class="w"> </span><span class="m">0</span><span class="w">          </span><span class="p">|</span><span class="w"> </span><span class="m">1</span>,421<span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">2</span>
+</span><span id="__span-38-9"><a id="__codelineno-38-9" name="__codelineno-38-9" href="#__codelineno-38-9"></a>Propositions<span class="w">    </span><span class="p">|</span><span class="w"> </span><span class="m">0</span><span class="w">       </span><span class="p">|</span><span class="w"> </span><span class="m">0</span><span class="w">          </span><span class="p">|</span><span class="w"> </span><span class="m">4</span>,892<span class="w">     </span><span class="p">|</span><span class="w"> </span><span class="m">0</span>
+</span><span id="__span-38-10"><a id="__codelineno-38-10" name="__codelineno-38-10" href="#__codelineno-38-10"></a>
+</span><span id="__span-38-11"><a id="__codelineno-38-11" name="__codelineno-38-11" href="#__codelineno-38-11"></a>Last<span class="w"> </span>processed:<span class="w"> </span><span class="m">2025</span>-01-15<span class="w"> </span><span class="m">10</span>:30:00
+</span><span id="__span-38-12"><a id="__codelineno-38-12" name="__codelineno-38-12" href="#__codelineno-38-12"></a><span class="o">================================================================================</span>
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmjobsretry_failed"><code>rake htm:jobs:retry_failed</code><a class="headerlink" href="#rake-htmjobsretry_failed" title="Permanent link">&para;</a></h4>
 <p>Retries all failed jobs.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:retry_failed
-</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>Retrying<span class="w"> </span>failed<span class="w"> </span>jobs...
-</span><span id="__span-38-3"><a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a><span class="w">  </span><span class="m">2</span><span class="w"> </span>failed<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>found
-</span><span id="__span-38-4"><a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a><span class="w">  </span>Retrying...
-</span><span id="__span-38-5"><a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a><span class="w">    </span>✓<span class="w"> </span>Tag<span class="w"> </span>job<span class="w"> </span><span class="k">for</span><span class="w"> </span>node<span class="w"> </span><span class="m">892</span><span class="w"> </span>-<span class="w"> </span>success
-</span><span id="__span-38-6"><a id="__codelineno-38-6" name="__codelineno-38-6" href="#__codelineno-38-6"></a><span class="w">    </span>✓<span class="w"> </span>Tag<span class="w"> </span>job<span class="w"> </span><span class="k">for</span><span class="w"> </span>node<span class="w"> </span><span class="m">1023</span><span class="w"> </span>-<span class="w"> </span>success
-</span><span id="__span-38-7"><a id="__codelineno-38-7" name="__codelineno-38-7" href="#__codelineno-38-7"></a>✓<span class="w"> </span>Retried<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="nb">jobs</span><span class="w"> </span><span class="o">(</span><span class="m">2</span><span class="w"> </span>successful<span class="o">)</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:retry_failed
+</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>Retrying<span class="w"> </span>failed<span class="w"> </span>jobs...
+</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a><span class="w">  </span><span class="m">2</span><span class="w"> </span>failed<span class="w"> </span><span class="nb">jobs</span><span class="w"> </span>found
+</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="w">  </span>Retrying...
+</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="w">    </span>✓<span class="w"> </span>Tag<span class="w"> </span>job<span class="w"> </span><span class="k">for</span><span class="w"> </span>node<span class="w"> </span><span class="m">892</span><span class="w"> </span>-<span class="w"> </span>success
+</span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a><span class="w">    </span>✓<span class="w"> </span>Tag<span class="w"> </span>job<span class="w"> </span><span class="k">for</span><span class="w"> </span>node<span class="w"> </span><span class="m">1023</span><span class="w"> </span>-<span class="w"> </span>success
+</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>✓<span class="w"> </span>Retried<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="nb">jobs</span><span class="w"> </span><span class="o">(</span><span class="m">2</span><span class="w"> </span>successful<span class="o">)</span>
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmjobsclear"><code>rake htm:jobs:clear</code><a class="headerlink" href="#rake-htmjobsclear" title="Permanent link">&para;</a></h4>
 <p>Clears all pending jobs from queues. Requires confirmation.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:clear
-</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>Are<span class="w"> </span>you<span class="w"> </span>sure<span class="w"> </span>you<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>clear<span class="w"> </span>all<span class="w"> </span>pending<span class="w"> </span>jobs?<span class="w"> </span><span class="o">(</span>yes/no<span class="o">)</span>:<span class="w"> </span>yes
-</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>Clearing<span class="w"> </span>job<span class="w"> </span>queues...
-</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="w">  </span>✓<span class="w"> </span>Cleared<span class="w"> </span><span class="m">5</span><span class="w"> </span>embedding<span class="w"> </span><span class="nb">jobs</span>
-</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="w">  </span>✓<span class="w"> </span>Cleared<span class="w"> </span><span class="m">8</span><span class="w"> </span>tag<span class="w"> </span><span class="nb">jobs</span>
-</span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a><span class="w">  </span>✓<span class="w"> </span>Cleared<span class="w"> </span><span class="m">0</span><span class="w"> </span>proposition<span class="w"> </span><span class="nb">jobs</span>
-</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>✓<span class="w"> </span>All<span class="w"> </span>queues<span class="w"> </span>cleared
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:jobs:clear
+</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>Are<span class="w"> </span>you<span class="w"> </span>sure<span class="w"> </span>you<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>clear<span class="w"> </span>all<span class="w"> </span>pending<span class="w"> </span>jobs?<span class="w"> </span><span class="o">(</span>yes/no<span class="o">)</span>:<span class="w"> </span>yes
+</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>Clearing<span class="w"> </span>job<span class="w"> </span>queues...
+</span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a><span class="w">  </span>✓<span class="w"> </span>Cleared<span class="w"> </span><span class="m">5</span><span class="w"> </span>embedding<span class="w"> </span><span class="nb">jobs</span>
+</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="w">  </span>✓<span class="w"> </span>Cleared<span class="w"> </span><span class="m">8</span><span class="w"> </span>tag<span class="w"> </span><span class="nb">jobs</span>
+</span><span id="__span-40-6"><a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a><span class="w">  </span>✓<span class="w"> </span>Cleared<span class="w"> </span><span class="m">0</span><span class="w"> </span>proposition<span class="w"> </span><span class="nb">jobs</span>
+</span><span id="__span-40-7"><a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a>✓<span class="w"> </span>All<span class="w"> </span>queues<span class="w"> </span>cleared
 </span></code></pre></div>
 <hr />
 <h2 id="tag-tasks-htmtags">Tag Tasks (<code>htm:tags:*</code>)<a class="headerlink" href="#tag-tasks-htmtags" title="Permanent link">&para;</a></h2>
@@ -7566,79 +7627,79 @@
 <h3 id="visualization">Visualization<a class="headerlink" href="#visualization" title="Permanent link">&para;</a></h3>
 <h4 id="rake-htmtagstree"><code>rake htm:tags:tree</code><a class="headerlink" href="#rake-htmtagstree" title="Permanent link">&para;</a></h4>
 <p>Displays the tag hierarchy as a text tree.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:tree
-</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>Tag<span class="w"> </span><span class="nv">Hierarchy</span>
-</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a><span class="o">================================================================================</span>
-</span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a>database
-</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a>├──<span class="w"> </span>postgresql
-</span><span id="__span-40-6"><a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>│<span class="w">   </span>├──<span class="w"> </span>extensions
-</span><span id="__span-40-7"><a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a>│<span class="w">   </span>│<span class="w">   </span>├──<span class="w"> </span>pgvector
-</span><span id="__span-40-8"><a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a>│<span class="w">   </span>│<span class="w">   </span>└──<span class="w"> </span>pg_trgm
-</span><span id="__span-40-9"><a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a>│<span class="w">   </span>└──<span class="w"> </span>performance
-</span><span id="__span-40-10"><a id="__codelineno-40-10" name="__codelineno-40-10" href="#__codelineno-40-10"></a>└──<span class="w"> </span>redis
-</span><span id="__span-40-11"><a id="__codelineno-40-11" name="__codelineno-40-11" href="#__codelineno-40-11"></a><span class="w">    </span>└──<span class="w"> </span>caching
-</span><span id="__span-40-12"><a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a>ai
-</span><span id="__span-40-13"><a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a>├──<span class="w"> </span>embeddings
-</span><span id="__span-40-14"><a id="__codelineno-40-14" name="__codelineno-40-14" href="#__codelineno-40-14"></a>│<span class="w">   </span>└──<span class="w"> </span>ollama
-</span><span id="__span-40-15"><a id="__codelineno-40-15" name="__codelineno-40-15" href="#__codelineno-40-15"></a>├──<span class="w"> </span>llm
-</span><span id="__span-40-16"><a id="__codelineno-40-16" name="__codelineno-40-16" href="#__codelineno-40-16"></a>│<span class="w">   </span>├──<span class="w"> </span>anthropic
-</span><span id="__span-40-17"><a id="__codelineno-40-17" name="__codelineno-40-17" href="#__codelineno-40-17"></a>│<span class="w">   </span>└──<span class="w"> </span>openai
-</span><span id="__span-40-18"><a id="__codelineno-40-18" name="__codelineno-40-18" href="#__codelineno-40-18"></a>└──<span class="w"> </span><span class="nv">rag</span>
-</span><span id="__span-40-19"><a id="__codelineno-40-19" name="__codelineno-40-19" href="#__codelineno-40-19"></a><span class="o">================================================================================</span>
-</span><span id="__span-40-20"><a id="__codelineno-40-20" name="__codelineno-40-20" href="#__codelineno-40-20"></a>
-</span><span id="__span-40-21"><a id="__codelineno-40-21" name="__codelineno-40-21" href="#__codelineno-40-21"></a><span class="c1"># Filter by prefix</span>
-</span><span id="__span-40-22"><a id="__codelineno-40-22" name="__codelineno-40-22" href="#__codelineno-40-22"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:tags:tree[database]&#39;</span>
-</span><span id="__span-40-23"><a id="__codelineno-40-23" name="__codelineno-40-23" href="#__codelineno-40-23"></a>database
-</span><span id="__span-40-24"><a id="__codelineno-40-24" name="__codelineno-40-24" href="#__codelineno-40-24"></a>├──<span class="w"> </span>postgresql
-</span><span id="__span-40-25"><a id="__codelineno-40-25" name="__codelineno-40-25" href="#__codelineno-40-25"></a>│<span class="w">   </span>├──<span class="w"> </span>extensions
-</span><span id="__span-40-26"><a id="__codelineno-40-26" name="__codelineno-40-26" href="#__codelineno-40-26"></a>│<span class="w">   </span>│<span class="w">   </span>├──<span class="w"> </span>pgvector
-</span><span id="__span-40-27"><a id="__codelineno-40-27" name="__codelineno-40-27" href="#__codelineno-40-27"></a>│<span class="w">   </span>│<span class="w">   </span>└──<span class="w"> </span>pg_trgm
-</span><span id="__span-40-28"><a id="__codelineno-40-28" name="__codelineno-40-28" href="#__codelineno-40-28"></a>│<span class="w">   </span>└──<span class="w"> </span>performance
-</span><span id="__span-40-29"><a id="__codelineno-40-29" name="__codelineno-40-29" href="#__codelineno-40-29"></a>└──<span class="w"> </span>redis
-</span><span id="__span-40-30"><a id="__codelineno-40-30" name="__codelineno-40-30" href="#__codelineno-40-30"></a><span class="w">    </span>└──<span class="w"> </span>caching
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:tree
+</span><span id="__span-41-2"><a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>Tag<span class="w"> </span><span class="nv">Hierarchy</span>
+</span><span id="__span-41-3"><a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a><span class="o">================================================================================</span>
+</span><span id="__span-41-4"><a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a>database
+</span><span id="__span-41-5"><a id="__codelineno-41-5" name="__codelineno-41-5" href="#__codelineno-41-5"></a>├──<span class="w"> </span>postgresql
+</span><span id="__span-41-6"><a id="__codelineno-41-6" name="__codelineno-41-6" href="#__codelineno-41-6"></a>│<span class="w">   </span>├──<span class="w"> </span>extensions
+</span><span id="__span-41-7"><a id="__codelineno-41-7" name="__codelineno-41-7" href="#__codelineno-41-7"></a>│<span class="w">   </span>│<span class="w">   </span>├──<span class="w"> </span>pgvector
+</span><span id="__span-41-8"><a id="__codelineno-41-8" name="__codelineno-41-8" href="#__codelineno-41-8"></a>│<span class="w">   </span>│<span class="w">   </span>└──<span class="w"> </span>pg_trgm
+</span><span id="__span-41-9"><a id="__codelineno-41-9" name="__codelineno-41-9" href="#__codelineno-41-9"></a>│<span class="w">   </span>└──<span class="w"> </span>performance
+</span><span id="__span-41-10"><a id="__codelineno-41-10" name="__codelineno-41-10" href="#__codelineno-41-10"></a>└──<span class="w"> </span>redis
+</span><span id="__span-41-11"><a id="__codelineno-41-11" name="__codelineno-41-11" href="#__codelineno-41-11"></a><span class="w">    </span>└──<span class="w"> </span>caching
+</span><span id="__span-41-12"><a id="__codelineno-41-12" name="__codelineno-41-12" href="#__codelineno-41-12"></a>ai
+</span><span id="__span-41-13"><a id="__codelineno-41-13" name="__codelineno-41-13" href="#__codelineno-41-13"></a>├──<span class="w"> </span>embeddings
+</span><span id="__span-41-14"><a id="__codelineno-41-14" name="__codelineno-41-14" href="#__codelineno-41-14"></a>│<span class="w">   </span>└──<span class="w"> </span>ollama
+</span><span id="__span-41-15"><a id="__codelineno-41-15" name="__codelineno-41-15" href="#__codelineno-41-15"></a>├──<span class="w"> </span>llm
+</span><span id="__span-41-16"><a id="__codelineno-41-16" name="__codelineno-41-16" href="#__codelineno-41-16"></a>│<span class="w">   </span>├──<span class="w"> </span>anthropic
+</span><span id="__span-41-17"><a id="__codelineno-41-17" name="__codelineno-41-17" href="#__codelineno-41-17"></a>│<span class="w">   </span>└──<span class="w"> </span>openai
+</span><span id="__span-41-18"><a id="__codelineno-41-18" name="__codelineno-41-18" href="#__codelineno-41-18"></a>└──<span class="w"> </span><span class="nv">rag</span>
+</span><span id="__span-41-19"><a id="__codelineno-41-19" name="__codelineno-41-19" href="#__codelineno-41-19"></a><span class="o">================================================================================</span>
+</span><span id="__span-41-20"><a id="__codelineno-41-20" name="__codelineno-41-20" href="#__codelineno-41-20"></a>
+</span><span id="__span-41-21"><a id="__codelineno-41-21" name="__codelineno-41-21" href="#__codelineno-41-21"></a><span class="c1"># Filter by prefix</span>
+</span><span id="__span-41-22"><a id="__codelineno-41-22" name="__codelineno-41-22" href="#__codelineno-41-22"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:tags:tree[database]&#39;</span>
+</span><span id="__span-41-23"><a id="__codelineno-41-23" name="__codelineno-41-23" href="#__codelineno-41-23"></a>database
+</span><span id="__span-41-24"><a id="__codelineno-41-24" name="__codelineno-41-24" href="#__codelineno-41-24"></a>├──<span class="w"> </span>postgresql
+</span><span id="__span-41-25"><a id="__codelineno-41-25" name="__codelineno-41-25" href="#__codelineno-41-25"></a>│<span class="w">   </span>├──<span class="w"> </span>extensions
+</span><span id="__span-41-26"><a id="__codelineno-41-26" name="__codelineno-41-26" href="#__codelineno-41-26"></a>│<span class="w">   </span>│<span class="w">   </span>├──<span class="w"> </span>pgvector
+</span><span id="__span-41-27"><a id="__codelineno-41-27" name="__codelineno-41-27" href="#__codelineno-41-27"></a>│<span class="w">   </span>│<span class="w">   </span>└──<span class="w"> </span>pg_trgm
+</span><span id="__span-41-28"><a id="__codelineno-41-28" name="__codelineno-41-28" href="#__codelineno-41-28"></a>│<span class="w">   </span>└──<span class="w"> </span>performance
+</span><span id="__span-41-29"><a id="__codelineno-41-29" name="__codelineno-41-29" href="#__codelineno-41-29"></a>└──<span class="w"> </span>redis
+</span><span id="__span-41-30"><a id="__codelineno-41-30" name="__codelineno-41-30" href="#__codelineno-41-30"></a><span class="w">    </span>└──<span class="w"> </span>caching
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmtagsmermaid"><code>rake htm:tags:mermaid</code><a class="headerlink" href="#rake-htmtagsmermaid" title="Permanent link">&para;</a></h4>
 <p>Exports tag hierarchy to Mermaid flowchart format in <code>tags.md</code>.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:mermaid
-</span><span id="__span-41-2"><a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>Exporting<span class="w"> </span>tag<span class="w"> </span>hierarchy<span class="w"> </span>to<span class="w"> </span>Mermaid<span class="w"> </span>format...
-</span><span id="__span-41-3"><a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a>✓<span class="w"> </span>Exported<span class="w"> </span>to<span class="w"> </span>tags.md
-</span><span id="__span-41-4"><a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a>
-</span><span id="__span-41-5"><a id="__codelineno-41-5" name="__codelineno-41-5" href="#__codelineno-41-5"></a><span class="c1"># Filter by prefix</span>
-</span><span id="__span-41-6"><a id="__codelineno-41-6" name="__codelineno-41-6" href="#__codelineno-41-6"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:tags:mermaid[ai]&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:mermaid
+</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>Exporting<span class="w"> </span>tag<span class="w"> </span>hierarchy<span class="w"> </span>to<span class="w"> </span>Mermaid<span class="w"> </span>format...
+</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>✓<span class="w"> </span>Exported<span class="w"> </span>to<span class="w"> </span>tags.md
+</span><span id="__span-42-4"><a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>
+</span><span id="__span-42-5"><a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a><span class="c1"># Filter by prefix</span>
+</span><span id="__span-42-6"><a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:tags:mermaid[ai]&#39;</span>
 </span></code></pre></div>
 <p><strong>Output (<code>tags.md</code>):</strong>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>```mermaid
-</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>graph TD
-</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>    database[&quot;database&quot;]
-</span><span id="__span-42-4"><a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>    database_postgresql[&quot;postgresql&quot;]
-</span><span id="__span-42-5"><a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a>    database --&gt; database_postgresql
-</span><span id="__span-42-6"><a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a>    database_postgresql_extensions[&quot;extensions&quot;]
-</span><span id="__span-42-7"><a id="__codelineno-42-7" name="__codelineno-42-7" href="#__codelineno-42-7"></a>    database_postgresql --&gt; database_postgresql_extensions
-</span><span id="__span-42-8"><a id="__codelineno-42-8" name="__codelineno-42-8" href="#__codelineno-42-8"></a>    ...
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>```mermaid
+</span><span id="__span-43-2"><a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>graph TD
+</span><span id="__span-43-3"><a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>    database[&quot;database&quot;]
+</span><span id="__span-43-4"><a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>    database_postgresql[&quot;postgresql&quot;]
+</span><span id="__span-43-5"><a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a>    database --&gt; database_postgresql
+</span><span id="__span-43-6"><a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a>    database_postgresql_extensions[&quot;extensions&quot;]
+</span><span id="__span-43-7"><a id="__codelineno-43-7" name="__codelineno-43-7" href="#__codelineno-43-7"></a>    database_postgresql --&gt; database_postgresql_extensions
+</span><span id="__span-43-8"><a id="__codelineno-43-8" name="__codelineno-43-8" href="#__codelineno-43-8"></a>    ...
 </span></code></pre></div></p>
 <hr />
 <h4 id="rake-htmtagssvg"><code>rake htm:tags:svg</code><a class="headerlink" href="#rake-htmtagssvg" title="Permanent link">&para;</a></h4>
 <p>Exports tag hierarchy to SVG diagram in <code>tags.svg</code>.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:svg
-</span><span id="__span-43-2"><a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>Exporting<span class="w"> </span>tag<span class="w"> </span>hierarchy<span class="w"> </span>to<span class="w"> </span>SVG...
-</span><span id="__span-43-3"><a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>✓<span class="w"> </span>Exported<span class="w"> </span>to<span class="w"> </span>tags.svg
-</span><span id="__span-43-4"><a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>
-</span><span id="__span-43-5"><a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a><span class="c1"># Filter by prefix</span>
-</span><span id="__span-43-6"><a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:tags:svg[web]&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:svg
+</span><span id="__span-44-2"><a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>Exporting<span class="w"> </span>tag<span class="w"> </span>hierarchy<span class="w"> </span>to<span class="w"> </span>SVG...
+</span><span id="__span-44-3"><a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>✓<span class="w"> </span>Exported<span class="w"> </span>to<span class="w"> </span>tags.svg
+</span><span id="__span-44-4"><a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a>
+</span><span id="__span-44-5"><a id="__codelineno-44-5" name="__codelineno-44-5" href="#__codelineno-44-5"></a><span class="c1"># Filter by prefix</span>
+</span><span id="__span-44-6"><a id="__codelineno-44-6" name="__codelineno-44-6" href="#__codelineno-44-6"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:tags:svg[web]&#39;</span>
 </span></code></pre></div>
 <hr />
 <h4 id="rake-htmtagsexport"><code>rake htm:tags:export</code><a class="headerlink" href="#rake-htmtagsexport" title="Permanent link">&para;</a></h4>
 <p>Exports tag hierarchy to all formats (text, Mermaid, SVG).</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:export
-</span><span id="__span-44-2"><a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>Exporting<span class="w"> </span>tag<span class="w"> </span>hierarchy...
-</span><span id="__span-44-3"><a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a><span class="w">  </span>✓<span class="w"> </span>tags.txt<span class="w"> </span><span class="o">(</span>text<span class="w"> </span>tree<span class="o">)</span>
-</span><span id="__span-44-4"><a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a><span class="w">  </span>✓<span class="w"> </span>tags.md<span class="w"> </span><span class="o">(</span>Mermaid<span class="w"> </span>flowchart<span class="o">)</span>
-</span><span id="__span-44-5"><a id="__codelineno-44-5" name="__codelineno-44-5" href="#__codelineno-44-5"></a><span class="w">  </span>✓<span class="w"> </span>tags.svg<span class="w"> </span><span class="o">(</span>SVG<span class="w"> </span>diagram<span class="o">)</span>
-</span><span id="__span-44-6"><a id="__codelineno-44-6" name="__codelineno-44-6" href="#__codelineno-44-6"></a>✓<span class="w"> </span>Exported<span class="w"> </span>to<span class="w"> </span><span class="m">3</span><span class="w"> </span>formats
-</span><span id="__span-44-7"><a id="__codelineno-44-7" name="__codelineno-44-7" href="#__codelineno-44-7"></a>
-</span><span id="__span-44-8"><a id="__codelineno-44-8" name="__codelineno-44-8" href="#__codelineno-44-8"></a><span class="c1"># Filter by prefix</span>
-</span><span id="__span-44-9"><a id="__codelineno-44-9" name="__codelineno-44-9" href="#__codelineno-44-9"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:tags:export[database]&#39;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:export
+</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>Exporting<span class="w"> </span>tag<span class="w"> </span>hierarchy...
+</span><span id="__span-45-3"><a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a><span class="w">  </span>✓<span class="w"> </span>tags.txt<span class="w"> </span><span class="o">(</span>text<span class="w"> </span>tree<span class="o">)</span>
+</span><span id="__span-45-4"><a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a><span class="w">  </span>✓<span class="w"> </span>tags.md<span class="w"> </span><span class="o">(</span>Mermaid<span class="w"> </span>flowchart<span class="o">)</span>
+</span><span id="__span-45-5"><a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a><span class="w">  </span>✓<span class="w"> </span>tags.svg<span class="w"> </span><span class="o">(</span>SVG<span class="w"> </span>diagram<span class="o">)</span>
+</span><span id="__span-45-6"><a id="__codelineno-45-6" name="__codelineno-45-6" href="#__codelineno-45-6"></a>✓<span class="w"> </span>Exported<span class="w"> </span>to<span class="w"> </span><span class="m">3</span><span class="w"> </span>formats
+</span><span id="__span-45-7"><a id="__codelineno-45-7" name="__codelineno-45-7" href="#__codelineno-45-7"></a>
+</span><span id="__span-45-8"><a id="__codelineno-45-8" name="__codelineno-45-8" href="#__codelineno-45-8"></a><span class="c1"># Filter by prefix</span>
+</span><span id="__span-45-9"><a id="__codelineno-45-9" name="__codelineno-45-9" href="#__codelineno-45-9"></a>$<span class="w"> </span>rake<span class="w"> </span><span class="s1">&#39;htm:tags:export[database]&#39;</span>
 </span></code></pre></div>
 <hr />
 <h3 id="tag-management">Tag Management<a class="headerlink" href="#tag-management" title="Permanent link">&para;</a></h3>
@@ -7648,102 +7709,102 @@
 <p class="admonition-title">Warning</p>
 <p>This task clears all existing tags and re-extracts them using your configured LLM provider. It can take significant time for large databases.</p>
 </div>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:rebuild
-</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>Are<span class="w"> </span>you<span class="w"> </span>sure<span class="w"> </span>you<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>rebuild<span class="w"> </span>all<span class="w"> </span>tags?<span class="w"> </span>This<span class="w"> </span>will<span class="w"> </span>clear<span class="w"> </span>existing<span class="w"> </span>tags.<span class="w"> </span><span class="o">(</span>yes/no<span class="o">)</span>:<span class="w"> </span>yes
-</span><span id="__span-45-3"><a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>Rebuilding<span class="w"> </span>tags<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="m">1</span>,542<span class="w"> </span>nodes...
-</span><span id="__span-45-4"><a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a><span class="w">  </span>Clearing<span class="w"> </span>existing<span class="w"> </span>tags...
-</span><span id="__span-45-5"><a id="__codelineno-45-5" name="__codelineno-45-5" href="#__codelineno-45-5"></a><span class="w">  </span>Extracting<span class="w"> </span>tags...
-</span><span id="__span-45-6"><a id="__codelineno-45-6" name="__codelineno-45-6" href="#__codelineno-45-6"></a><span class="w">    </span>Processing:<span class="w"> </span><span class="m">100</span>%<span class="w"> </span><span class="p">|</span>████████████████████████████████<span class="p">|</span><span class="w"> </span><span class="m">1542</span>/1542
-</span><span id="__span-45-7"><a id="__codelineno-45-7" name="__codelineno-45-7" href="#__codelineno-45-7"></a>✓<span class="w"> </span>Rebuilt<span class="w"> </span>tags:<span class="w"> </span><span class="m">287</span><span class="w"> </span>unique<span class="w"> </span>tags,<span class="w"> </span><span class="m">4</span>,891<span class="w"> </span>node-tag<span class="w"> </span>associations
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:tags:rebuild
+</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>Are<span class="w"> </span>you<span class="w"> </span>sure<span class="w"> </span>you<span class="w"> </span>want<span class="w"> </span>to<span class="w"> </span>rebuild<span class="w"> </span>all<span class="w"> </span>tags?<span class="w"> </span>This<span class="w"> </span>will<span class="w"> </span>clear<span class="w"> </span>existing<span class="w"> </span>tags.<span class="w"> </span><span class="o">(</span>yes/no<span class="o">)</span>:<span class="w"> </span>yes
+</span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>Rebuilding<span class="w"> </span>tags<span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="m">1</span>,542<span class="w"> </span>nodes...
+</span><span id="__span-46-4"><a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a><span class="w">  </span>Clearing<span class="w"> </span>existing<span class="w"> </span>tags...
+</span><span id="__span-46-5"><a id="__codelineno-46-5" name="__codelineno-46-5" href="#__codelineno-46-5"></a><span class="w">  </span>Extracting<span class="w"> </span>tags...
+</span><span id="__span-46-6"><a id="__codelineno-46-6" name="__codelineno-46-6" href="#__codelineno-46-6"></a><span class="w">    </span>Processing:<span class="w"> </span><span class="m">100</span>%<span class="w"> </span><span class="p">|</span>████████████████████████████████<span class="p">|</span><span class="w"> </span><span class="m">1542</span>/1542
+</span><span id="__span-46-7"><a id="__codelineno-46-7" name="__codelineno-46-7" href="#__codelineno-46-7"></a>✓<span class="w"> </span>Rebuilt<span class="w"> </span>tags:<span class="w"> </span><span class="m">287</span><span class="w"> </span>unique<span class="w"> </span>tags,<span class="w"> </span><span class="m">4</span>,891<span class="w"> </span>node-tag<span class="w"> </span>associations
 </span></code></pre></div>
 <hr />
 <h2 id="common-workflows">Common Workflows<a class="headerlink" href="#common-workflows" title="Permanent link">&para;</a></h2>
 <h3 id="first-time-setup">First-Time Setup<a class="headerlink" href="#first-time-setup" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a><span class="c1"># Install dependencies</span>
-</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>bundle<span class="w"> </span>install
-</span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>
-</span><span id="__span-46-4"><a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a><span class="c1"># Set database URL</span>
-</span><span id="__span-46-5"><a id="__codelineno-46-5" name="__codelineno-46-5" href="#__codelineno-46-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
-</span><span id="__span-46-6"><a id="__codelineno-46-6" name="__codelineno-46-6" href="#__codelineno-46-6"></a>
-</span><span id="__span-46-7"><a id="__codelineno-46-7" name="__codelineno-46-7" href="#__codelineno-46-7"></a><span class="c1"># Create and setup database</span>
-</span><span id="__span-46-8"><a id="__codelineno-46-8" name="__codelineno-46-8" href="#__codelineno-46-8"></a>rake<span class="w"> </span>htm:db:create
-</span><span id="__span-46-9"><a id="__codelineno-46-9" name="__codelineno-46-9" href="#__codelineno-46-9"></a>rake<span class="w"> </span>htm:db:setup
-</span><span id="__span-46-10"><a id="__codelineno-46-10" name="__codelineno-46-10" href="#__codelineno-46-10"></a>
-</span><span id="__span-46-11"><a id="__codelineno-46-11" name="__codelineno-46-11" href="#__codelineno-46-11"></a><span class="c1"># Verify setup</span>
-</span><span id="__span-46-12"><a id="__codelineno-46-12" name="__codelineno-46-12" href="#__codelineno-46-12"></a>rake<span class="w"> </span>htm:db:verify
-</span><span id="__span-46-13"><a id="__codelineno-46-13" name="__codelineno-46-13" href="#__codelineno-46-13"></a>rake<span class="w"> </span>htm:db:info
-</span><span id="__span-46-14"><a id="__codelineno-46-14" name="__codelineno-46-14" href="#__codelineno-46-14"></a>
-</span><span id="__span-46-15"><a id="__codelineno-46-15" name="__codelineno-46-15" href="#__codelineno-46-15"></a><span class="c1"># Optional: seed with sample data</span>
-</span><span id="__span-46-16"><a id="__codelineno-46-16" name="__codelineno-46-16" href="#__codelineno-46-16"></a>rake<span class="w"> </span>htm:db:seed
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="c1"># Install dependencies</span>
+</span><span id="__span-47-2"><a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>bundle<span class="w"> </span>install
+</span><span id="__span-47-3"><a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a>
+</span><span id="__span-47-4"><a id="__codelineno-47-4" name="__codelineno-47-4" href="#__codelineno-47-4"></a><span class="c1"># Set database URL</span>
+</span><span id="__span-47-5"><a id="__codelineno-47-5" name="__codelineno-47-5" href="#__codelineno-47-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+</span><span id="__span-47-6"><a id="__codelineno-47-6" name="__codelineno-47-6" href="#__codelineno-47-6"></a>
+</span><span id="__span-47-7"><a id="__codelineno-47-7" name="__codelineno-47-7" href="#__codelineno-47-7"></a><span class="c1"># Create and setup database</span>
+</span><span id="__span-47-8"><a id="__codelineno-47-8" name="__codelineno-47-8" href="#__codelineno-47-8"></a>rake<span class="w"> </span>htm:db:create
+</span><span id="__span-47-9"><a id="__codelineno-47-9" name="__codelineno-47-9" href="#__codelineno-47-9"></a>rake<span class="w"> </span>htm:db:setup
+</span><span id="__span-47-10"><a id="__codelineno-47-10" name="__codelineno-47-10" href="#__codelineno-47-10"></a>
+</span><span id="__span-47-11"><a id="__codelineno-47-11" name="__codelineno-47-11" href="#__codelineno-47-11"></a><span class="c1"># Verify setup</span>
+</span><span id="__span-47-12"><a id="__codelineno-47-12" name="__codelineno-47-12" href="#__codelineno-47-12"></a>rake<span class="w"> </span>htm:db:verify
+</span><span id="__span-47-13"><a id="__codelineno-47-13" name="__codelineno-47-13" href="#__codelineno-47-13"></a>rake<span class="w"> </span>htm:db:info
+</span><span id="__span-47-14"><a id="__codelineno-47-14" name="__codelineno-47-14" href="#__codelineno-47-14"></a>
+</span><span id="__span-47-15"><a id="__codelineno-47-15" name="__codelineno-47-15" href="#__codelineno-47-15"></a><span class="c1"># Optional: seed with sample data</span>
+</span><span id="__span-47-16"><a id="__codelineno-47-16" name="__codelineno-47-16" href="#__codelineno-47-16"></a>rake<span class="w"> </span>htm:db:seed
 </span></code></pre></div>
 <h3 id="daily-development">Daily Development<a class="headerlink" href="#daily-development" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a><span class="c1"># Check for pending migrations</span>
-</span><span id="__span-47-2"><a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>rake<span class="w"> </span>htm:db:status
-</span><span id="__span-47-3"><a id="__codelineno-47-3" name="__codelineno-47-3" href="#__codelineno-47-3"></a>
-</span><span id="__span-47-4"><a id="__codelineno-47-4" name="__codelineno-47-4" href="#__codelineno-47-4"></a><span class="c1"># Run migrations if needed</span>
-</span><span id="__span-47-5"><a id="__codelineno-47-5" name="__codelineno-47-5" href="#__codelineno-47-5"></a>rake<span class="w"> </span>htm:db:migrate
-</span><span id="__span-47-6"><a id="__codelineno-47-6" name="__codelineno-47-6" href="#__codelineno-47-6"></a>
-</span><span id="__span-47-7"><a id="__codelineno-47-7" name="__codelineno-47-7" href="#__codelineno-47-7"></a><span class="c1"># Run tests</span>
-</span><span id="__span-47-8"><a id="__codelineno-47-8" name="__codelineno-47-8" href="#__codelineno-47-8"></a>rake<span class="w"> </span><span class="nb">test</span>
-</span><span id="__span-47-9"><a id="__codelineno-47-9" name="__codelineno-47-9" href="#__codelineno-47-9"></a>
-</span><span id="__span-47-10"><a id="__codelineno-47-10" name="__codelineno-47-10" href="#__codelineno-47-10"></a><span class="c1"># Process any pending background jobs</span>
-</span><span id="__span-47-11"><a id="__codelineno-47-11" name="__codelineno-47-11" href="#__codelineno-47-11"></a>rake<span class="w"> </span>htm:jobs:process
-</span><span id="__span-47-12"><a id="__codelineno-47-12" name="__codelineno-47-12" href="#__codelineno-47-12"></a>
-</span><span id="__span-47-13"><a id="__codelineno-47-13" name="__codelineno-47-13" href="#__codelineno-47-13"></a><span class="c1"># Open database console for debugging</span>
-</span><span id="__span-47-14"><a id="__codelineno-47-14" name="__codelineno-47-14" href="#__codelineno-47-14"></a>rake<span class="w"> </span>htm:db:console
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a><span class="c1"># Check for pending migrations</span>
+</span><span id="__span-48-2"><a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>rake<span class="w"> </span>htm:db:status
+</span><span id="__span-48-3"><a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a>
+</span><span id="__span-48-4"><a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a><span class="c1"># Run migrations if needed</span>
+</span><span id="__span-48-5"><a id="__codelineno-48-5" name="__codelineno-48-5" href="#__codelineno-48-5"></a>rake<span class="w"> </span>htm:db:migrate
+</span><span id="__span-48-6"><a id="__codelineno-48-6" name="__codelineno-48-6" href="#__codelineno-48-6"></a>
+</span><span id="__span-48-7"><a id="__codelineno-48-7" name="__codelineno-48-7" href="#__codelineno-48-7"></a><span class="c1"># Run tests</span>
+</span><span id="__span-48-8"><a id="__codelineno-48-8" name="__codelineno-48-8" href="#__codelineno-48-8"></a>rake<span class="w"> </span><span class="nb">test</span>
+</span><span id="__span-48-9"><a id="__codelineno-48-9" name="__codelineno-48-9" href="#__codelineno-48-9"></a>
+</span><span id="__span-48-10"><a id="__codelineno-48-10" name="__codelineno-48-10" href="#__codelineno-48-10"></a><span class="c1"># Process any pending background jobs</span>
+</span><span id="__span-48-11"><a id="__codelineno-48-11" name="__codelineno-48-11" href="#__codelineno-48-11"></a>rake<span class="w"> </span>htm:jobs:process
+</span><span id="__span-48-12"><a id="__codelineno-48-12" name="__codelineno-48-12" href="#__codelineno-48-12"></a>
+</span><span id="__span-48-13"><a id="__codelineno-48-13" name="__codelineno-48-13" href="#__codelineno-48-13"></a><span class="c1"># Open database console for debugging</span>
+</span><span id="__span-48-14"><a id="__codelineno-48-14" name="__codelineno-48-14" href="#__codelineno-48-14"></a>rake<span class="w"> </span>htm:db:console
 </span></code></pre></div>
 <h3 id="documentation-updates">Documentation Updates<a class="headerlink" href="#documentation-updates" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a><span class="c1"># Generate all documentation</span>
-</span><span id="__span-48-2"><a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>rake<span class="w"> </span>htm:doc:all
-</span><span id="__span-48-3"><a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a>
-</span><span id="__span-48-4"><a id="__codelineno-48-4" name="__codelineno-48-4" href="#__codelineno-48-4"></a><span class="c1"># Or individually:</span>
-</span><span id="__span-48-5"><a id="__codelineno-48-5" name="__codelineno-48-5" href="#__codelineno-48-5"></a>rake<span class="w"> </span>htm:doc:db<span class="w">      </span><span class="c1"># Database docs</span>
-</span><span id="__span-48-6"><a id="__codelineno-48-6" name="__codelineno-48-6" href="#__codelineno-48-6"></a>rake<span class="w"> </span>htm:doc:yard<span class="w">    </span><span class="c1"># API docs</span>
-</span><span id="__span-48-7"><a id="__codelineno-48-7" name="__codelineno-48-7" href="#__codelineno-48-7"></a>
-</span><span id="__span-48-8"><a id="__codelineno-48-8" name="__codelineno-48-8" href="#__codelineno-48-8"></a><span class="c1"># Preview documentation locally</span>
-</span><span id="__span-48-9"><a id="__codelineno-48-9" name="__codelineno-48-9" href="#__codelineno-48-9"></a>rake<span class="w"> </span>htm:doc:serve
-</span><span id="__span-48-10"><a id="__codelineno-48-10" name="__codelineno-48-10" href="#__codelineno-48-10"></a>
-</span><span id="__span-48-11"><a id="__codelineno-48-11" name="__codelineno-48-11" href="#__codelineno-48-11"></a><span class="c1"># Deploy to GitHub Pages</span>
-</span><span id="__span-48-12"><a id="__codelineno-48-12" name="__codelineno-48-12" href="#__codelineno-48-12"></a>rake<span class="w"> </span>htm:doc:deploy
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a><span class="c1"># Generate all documentation</span>
+</span><span id="__span-49-2"><a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a>rake<span class="w"> </span>htm:doc:all
+</span><span id="__span-49-3"><a id="__codelineno-49-3" name="__codelineno-49-3" href="#__codelineno-49-3"></a>
+</span><span id="__span-49-4"><a id="__codelineno-49-4" name="__codelineno-49-4" href="#__codelineno-49-4"></a><span class="c1"># Or individually:</span>
+</span><span id="__span-49-5"><a id="__codelineno-49-5" name="__codelineno-49-5" href="#__codelineno-49-5"></a>rake<span class="w"> </span>htm:doc:db<span class="w">      </span><span class="c1"># Database docs</span>
+</span><span id="__span-49-6"><a id="__codelineno-49-6" name="__codelineno-49-6" href="#__codelineno-49-6"></a>rake<span class="w"> </span>htm:doc:yard<span class="w">    </span><span class="c1"># API docs</span>
+</span><span id="__span-49-7"><a id="__codelineno-49-7" name="__codelineno-49-7" href="#__codelineno-49-7"></a>
+</span><span id="__span-49-8"><a id="__codelineno-49-8" name="__codelineno-49-8" href="#__codelineno-49-8"></a><span class="c1"># Preview documentation locally</span>
+</span><span id="__span-49-9"><a id="__codelineno-49-9" name="__codelineno-49-9" href="#__codelineno-49-9"></a>rake<span class="w"> </span>htm:doc:serve
+</span><span id="__span-49-10"><a id="__codelineno-49-10" name="__codelineno-49-10" href="#__codelineno-49-10"></a>
+</span><span id="__span-49-11"><a id="__codelineno-49-11" name="__codelineno-49-11" href="#__codelineno-49-11"></a><span class="c1"># Deploy to GitHub Pages</span>
+</span><span id="__span-49-12"><a id="__codelineno-49-12" name="__codelineno-49-12" href="#__codelineno-49-12"></a>rake<span class="w"> </span>htm:doc:deploy
 </span></code></pre></div>
 <h3 id="loading-content">Loading Content<a class="headerlink" href="#loading-content" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a><span class="c1"># Load a single file</span>
-</span><span id="__span-49-2"><a id="__codelineno-49-2" name="__codelineno-49-2" href="#__codelineno-49-2"></a>rake<span class="w"> </span><span class="s1">&#39;htm:files:load[docs/guide.md]&#39;</span>
-</span><span id="__span-49-3"><a id="__codelineno-49-3" name="__codelineno-49-3" href="#__codelineno-49-3"></a>
-</span><span id="__span-49-4"><a id="__codelineno-49-4" name="__codelineno-49-4" href="#__codelineno-49-4"></a><span class="c1"># Load a directory</span>
-</span><span id="__span-49-5"><a id="__codelineno-49-5" name="__codelineno-49-5" href="#__codelineno-49-5"></a>rake<span class="w"> </span><span class="s1">&#39;htm:files:load_dir[content/]&#39;</span>
-</span><span id="__span-49-6"><a id="__codelineno-49-6" name="__codelineno-49-6" href="#__codelineno-49-6"></a>
-</span><span id="__span-49-7"><a id="__codelineno-49-7" name="__codelineno-49-7" href="#__codelineno-49-7"></a><span class="c1"># Check what&#39;s loaded</span>
-</span><span id="__span-49-8"><a id="__codelineno-49-8" name="__codelineno-49-8" href="#__codelineno-49-8"></a>rake<span class="w"> </span>htm:files:list
-</span><span id="__span-49-9"><a id="__codelineno-49-9" name="__codelineno-49-9" href="#__codelineno-49-9"></a>
-</span><span id="__span-49-10"><a id="__codelineno-49-10" name="__codelineno-49-10" href="#__codelineno-49-10"></a><span class="c1"># Sync changed files</span>
-</span><span id="__span-49-11"><a id="__codelineno-49-11" name="__codelineno-49-11" href="#__codelineno-49-11"></a>rake<span class="w"> </span>htm:files:sync
-</span><span id="__span-49-12"><a id="__codelineno-49-12" name="__codelineno-49-12" href="#__codelineno-49-12"></a>
-</span><span id="__span-49-13"><a id="__codelineno-49-13" name="__codelineno-49-13" href="#__codelineno-49-13"></a><span class="c1"># Process embeddings and tags</span>
-</span><span id="__span-49-14"><a id="__codelineno-49-14" name="__codelineno-49-14" href="#__codelineno-49-14"></a>rake<span class="w"> </span>htm:jobs:process
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a><span class="c1"># Load a single file</span>
+</span><span id="__span-50-2"><a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a>rake<span class="w"> </span><span class="s1">&#39;htm:files:load[docs/guide.md]&#39;</span>
+</span><span id="__span-50-3"><a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a>
+</span><span id="__span-50-4"><a id="__codelineno-50-4" name="__codelineno-50-4" href="#__codelineno-50-4"></a><span class="c1"># Load a directory</span>
+</span><span id="__span-50-5"><a id="__codelineno-50-5" name="__codelineno-50-5" href="#__codelineno-50-5"></a>rake<span class="w"> </span><span class="s1">&#39;htm:files:load_dir[content/]&#39;</span>
+</span><span id="__span-50-6"><a id="__codelineno-50-6" name="__codelineno-50-6" href="#__codelineno-50-6"></a>
+</span><span id="__span-50-7"><a id="__codelineno-50-7" name="__codelineno-50-7" href="#__codelineno-50-7"></a><span class="c1"># Check what&#39;s loaded</span>
+</span><span id="__span-50-8"><a id="__codelineno-50-8" name="__codelineno-50-8" href="#__codelineno-50-8"></a>rake<span class="w"> </span>htm:files:list
+</span><span id="__span-50-9"><a id="__codelineno-50-9" name="__codelineno-50-9" href="#__codelineno-50-9"></a>
+</span><span id="__span-50-10"><a id="__codelineno-50-10" name="__codelineno-50-10" href="#__codelineno-50-10"></a><span class="c1"># Sync changed files</span>
+</span><span id="__span-50-11"><a id="__codelineno-50-11" name="__codelineno-50-11" href="#__codelineno-50-11"></a>rake<span class="w"> </span>htm:files:sync
+</span><span id="__span-50-12"><a id="__codelineno-50-12" name="__codelineno-50-12" href="#__codelineno-50-12"></a>
+</span><span id="__span-50-13"><a id="__codelineno-50-13" name="__codelineno-50-13" href="#__codelineno-50-13"></a><span class="c1"># Process embeddings and tags</span>
+</span><span id="__span-50-14"><a id="__codelineno-50-14" name="__codelineno-50-14" href="#__codelineno-50-14"></a>rake<span class="w"> </span>htm:jobs:process
 </span></code></pre></div>
 <h3 id="tag-management_1">Tag Management<a class="headerlink" href="#tag-management_1" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a><span class="c1"># View tag hierarchy</span>
-</span><span id="__span-50-2"><a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a>rake<span class="w"> </span>htm:tags:tree
-</span><span id="__span-50-3"><a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a>
-</span><span id="__span-50-4"><a id="__codelineno-50-4" name="__codelineno-50-4" href="#__codelineno-50-4"></a><span class="c1"># Export for documentation</span>
-</span><span id="__span-50-5"><a id="__codelineno-50-5" name="__codelineno-50-5" href="#__codelineno-50-5"></a>rake<span class="w"> </span>htm:tags:export
-</span><span id="__span-50-6"><a id="__codelineno-50-6" name="__codelineno-50-6" href="#__codelineno-50-6"></a>
-</span><span id="__span-50-7"><a id="__codelineno-50-7" name="__codelineno-50-7" href="#__codelineno-50-7"></a><span class="c1"># Rebuild all tags (after changing LLM)</span>
-</span><span id="__span-50-8"><a id="__codelineno-50-8" name="__codelineno-50-8" href="#__codelineno-50-8"></a>rake<span class="w"> </span>htm:tags:rebuild
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a><span class="c1"># View tag hierarchy</span>
+</span><span id="__span-51-2"><a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>rake<span class="w"> </span>htm:tags:tree
+</span><span id="__span-51-3"><a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a>
+</span><span id="__span-51-4"><a id="__codelineno-51-4" name="__codelineno-51-4" href="#__codelineno-51-4"></a><span class="c1"># Export for documentation</span>
+</span><span id="__span-51-5"><a id="__codelineno-51-5" name="__codelineno-51-5" href="#__codelineno-51-5"></a>rake<span class="w"> </span>htm:tags:export
+</span><span id="__span-51-6"><a id="__codelineno-51-6" name="__codelineno-51-6" href="#__codelineno-51-6"></a>
+</span><span id="__span-51-7"><a id="__codelineno-51-7" name="__codelineno-51-7" href="#__codelineno-51-7"></a><span class="c1"># Rebuild all tags (after changing LLM)</span>
+</span><span id="__span-51-8"><a id="__codelineno-51-8" name="__codelineno-51-8" href="#__codelineno-51-8"></a>rake<span class="w"> </span>htm:tags:rebuild
 </span></code></pre></div>
 <h3 id="production-deployment">Production Deployment<a class="headerlink" href="#production-deployment" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a><span class="c1"># NEVER use reset or drop in production!</span>
-</span><span id="__span-51-2"><a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>
-</span><span id="__span-51-3"><a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a><span class="c1"># Run only migrations</span>
-</span><span id="__span-51-4"><a id="__codelineno-51-4" name="__codelineno-51-4" href="#__codelineno-51-4"></a>rake<span class="w"> </span>htm:db:migrate
-</span><span id="__span-51-5"><a id="__codelineno-51-5" name="__codelineno-51-5" href="#__codelineno-51-5"></a>
-</span><span id="__span-51-6"><a id="__codelineno-51-6" name="__codelineno-51-6" href="#__codelineno-51-6"></a><span class="c1"># Verify database state</span>
-</span><span id="__span-51-7"><a id="__codelineno-51-7" name="__codelineno-51-7" href="#__codelineno-51-7"></a>rake<span class="w"> </span>htm:db:verify
-</span><span id="__span-51-8"><a id="__codelineno-51-8" name="__codelineno-51-8" href="#__codelineno-51-8"></a>rake<span class="w"> </span>htm:db:status
-</span><span id="__span-51-9"><a id="__codelineno-51-9" name="__codelineno-51-9" href="#__codelineno-51-9"></a>
-</span><span id="__span-51-10"><a id="__codelineno-51-10" name="__codelineno-51-10" href="#__codelineno-51-10"></a><span class="c1"># Process any pending jobs</span>
-</span><span id="__span-51-11"><a id="__codelineno-51-11" name="__codelineno-51-11" href="#__codelineno-51-11"></a>rake<span class="w"> </span>htm:jobs:process
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a><span class="c1"># NEVER use reset or drop in production!</span>
+</span><span id="__span-52-2"><a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a>
+</span><span id="__span-52-3"><a id="__codelineno-52-3" name="__codelineno-52-3" href="#__codelineno-52-3"></a><span class="c1"># Run only migrations</span>
+</span><span id="__span-52-4"><a id="__codelineno-52-4" name="__codelineno-52-4" href="#__codelineno-52-4"></a>rake<span class="w"> </span>htm:db:migrate
+</span><span id="__span-52-5"><a id="__codelineno-52-5" name="__codelineno-52-5" href="#__codelineno-52-5"></a>
+</span><span id="__span-52-6"><a id="__codelineno-52-6" name="__codelineno-52-6" href="#__codelineno-52-6"></a><span class="c1"># Verify database state</span>
+</span><span id="__span-52-7"><a id="__codelineno-52-7" name="__codelineno-52-7" href="#__codelineno-52-7"></a>rake<span class="w"> </span>htm:db:verify
+</span><span id="__span-52-8"><a id="__codelineno-52-8" name="__codelineno-52-8" href="#__codelineno-52-8"></a>rake<span class="w"> </span>htm:db:status
+</span><span id="__span-52-9"><a id="__codelineno-52-9" name="__codelineno-52-9" href="#__codelineno-52-9"></a>
+</span><span id="__span-52-10"><a id="__codelineno-52-10" name="__codelineno-52-10" href="#__codelineno-52-10"></a><span class="c1"># Process any pending jobs</span>
+</span><span id="__span-52-11"><a id="__codelineno-52-11" name="__codelineno-52-11" href="#__codelineno-52-11"></a>rake<span class="w"> </span>htm:jobs:process
 </span></code></pre></div>
 <hr />
 <h2 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
@@ -7783,18 +7844,18 @@
 </tbody>
 </table>
 <p><strong>Example:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@localhost:5432/htm_development&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@localhost:5432/htm_development&quot;</span>
 </span></code></pre></div>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="database-configuration-not-found">"Database configuration not found"<a class="headerlink" href="#database-configuration-not-found" title="Permanent link">&para;</a></h3>
 <p>Set the <code>HTM_DATABASE__URL</code> environment variable:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-54-1"><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user@localhost:5432/htm_development&quot;</span>
 </span></code></pre></div>
 <h3 id="extension-not-found">"Extension not found"<a class="headerlink" href="#extension-not-found" title="Permanent link">&para;</a></h3>
 <p>Install required PostgreSQL extensions:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-54-1"><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a>psql<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS vector;&quot;</span>
-</span><span id="__span-54-2"><a id="__codelineno-54-2" name="__codelineno-54-2" href="#__codelineno-54-2"></a>psql<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pg_trgm;&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-55-1"><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a>psql<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS vector;&quot;</span>
+</span><span id="__span-55-2"><a id="__codelineno-55-2" name="__codelineno-55-2" href="#__codelineno-55-2"></a>psql<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pg_trgm;&quot;</span>
 </span></code></pre></div>
 <h3 id="tasks-not-running">Tasks not running<a class="headerlink" href="#tasks-not-running" title="Permanent link">&para;</a></h3>
 <ol>

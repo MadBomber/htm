@@ -5135,6 +5135,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rake-htmdbpurge_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rake htm:db:purge_all
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5641,6 +5652,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rake-htmdbpurge_all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        rake htm:db:purge_all
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -6053,52 +6075,78 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:db:reset
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># Runs drop (with confirmation) then setup</span>
 </span></code></pre></div>
+<h4 id="rake-htmdbpurge_all"><code>rake htm:db:purge_all</code><a class="headerlink" href="#rake-htmdbpurge_all" title="Permanent link">&para;</a></h4>
+<p>Permanently removes all soft-deleted records from all tables.</p>
+<p><strong>What it does:</strong>
+- Removes soft-deleted nodes, node_tags, and robot_nodes
+- Removes orphaned join table entries (pointing to non-existent nodes)
+- Removes orphaned propositions (where source_node_id no longer exists)
+- Removes orphaned robots (with no associated memory nodes)
+- Deletes in correct order for referential integrity</p>
+<p><strong>Safety:</strong> Prompts for confirmation before deletion</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>$<span class="w"> </span>rake<span class="w"> </span>htm:db:purge_all
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>HTM<span class="w"> </span>Purge<span class="w"> </span>All<span class="w"> </span>Soft-Deleted<span class="w"> </span><span class="nv">Records</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="o">============================================================</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>Records<span class="w"> </span>to<span class="w"> </span>permanently<span class="w"> </span>delete:
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>--------------------------------------------------------------
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>Soft-deleted<span class="w"> </span>nodes:<span class="w">              </span><span class="m">23</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>Soft-deleted<span class="w"> </span>node_tags:<span class="w">          </span><span class="m">45</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>Orphaned<span class="w"> </span>propositions:<span class="w">           </span><span class="m">5</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>Orphaned<span class="w"> </span>robots<span class="w"> </span><span class="o">(</span>no<span class="w"> </span>nodes<span class="o">)</span>:<span class="w">      </span><span class="m">2</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>--------------------------------------------------------------
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>Total<span class="w"> </span>records<span class="w"> </span>to<span class="w"> </span>delete:<span class="w">         </span><span class="m">75</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>Proceed<span class="w"> </span>with<span class="w"> </span>permanent<span class="w"> </span>deletion?<span class="w"> </span><span class="o">(</span>yes/no<span class="o">)</span>:<span class="w"> </span>yes
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>✓<span class="w"> </span>Purge<span class="w"> </span>complete!
+</span></code></pre></div>
 <hr />
 <h2 id="environment-variables">Environment Variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
 <p>All tasks require database configuration via environment variables. Use one of these methods:</p>
 <h3 id="method-1-direnv-recommended">Method 1: direnv (Recommended)<a class="headerlink" href="#method-1-direnv-recommended" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># One-time setup</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="nb">cd</span><span class="w"> </span>/path/to/htm
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>direnv<span class="w"> </span>allow
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1"># Variables are automatically loaded from .envrc</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>rake<span class="w"> </span>htm:db:info
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># One-time setup</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nb">cd</span><span class="w"> </span>/path/to/htm
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>direnv<span class="w"> </span>allow
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># Variables are automatically loaded from .envrc</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>rake<span class="w"> </span>htm:db:info
 </span></code></pre></div>
 <h3 id="method-2-manual-export">Method 2: Manual Export<a class="headerlink" href="#method-2-manual-export" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@host:port/dbname?sslmode=require&quot;</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>rake<span class="w"> </span>htm:db:info
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@host:port/dbname?sslmode=require&quot;</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>rake<span class="w"> </span>htm:db:info
 </span></code></pre></div>
 <h3 id="method-3-source-tiger-credentials">Method 3: Source Tiger Credentials<a class="headerlink" href="#method-3-source-tiger-credentials" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc__tiger<span class="w">    </span><span class="c1"># If using TimescaleDB Cloud</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>rake<span class="w"> </span>htm:db:info
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc__tiger<span class="w">    </span><span class="c1"># If using TimescaleDB Cloud</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>rake<span class="w"> </span>htm:db:info
 </span></code></pre></div>
 <hr />
 <h2 id="common-workflows">Common Workflows<a class="headerlink" href="#common-workflows" title="Permanent link">&para;</a></h2>
 <h3 id="initial-project-setup">Initial Project Setup<a class="headerlink" href="#initial-project-setup" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">cd</span><span class="w"> </span>/path/to/htm
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>direnv<span class="w"> </span>allow
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>bundle<span class="w"> </span>install
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>rake<span class="w"> </span>htm:db:setup
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>rake<span class="w"> </span>htm:db:seed<span class="w">          </span><span class="c1"># Optional: add sample data</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>rake<span class="w"> </span>htm:db:info<span class="w">          </span><span class="c1"># Verify setup</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">cd</span><span class="w"> </span>/path/to/htm
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>direnv<span class="w"> </span>allow
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>bundle<span class="w"> </span>install
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>rake<span class="w"> </span>htm:db:setup
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>rake<span class="w"> </span>htm:db:seed<span class="w">          </span><span class="c1"># Optional: add sample data</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>rake<span class="w"> </span>htm:db:info<span class="w">          </span><span class="c1"># Verify setup</span>
 </span></code></pre></div>
 <h3 id="after-pulling-new-code">After Pulling New Code<a class="headerlink" href="#after-pulling-new-code" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>git<span class="w"> </span>pull
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>rake<span class="w"> </span>htm:db:status<span class="w">        </span><span class="c1"># Check for new migrations</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>rake<span class="w"> </span>htm:db:migrate<span class="w">       </span><span class="c1"># Run pending migrations</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>git<span class="w"> </span>pull
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>rake<span class="w"> </span>htm:db:status<span class="w">        </span><span class="c1"># Check for new migrations</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>rake<span class="w"> </span>htm:db:migrate<span class="w">       </span><span class="c1"># Run pending migrations</span>
 </span></code></pre></div>
 <h3 id="development-reset">Development Reset<a class="headerlink" href="#development-reset" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>rake<span class="w"> </span>htm:db:reset<span class="w">         </span><span class="c1"># Drop and recreate (type &#39;yes&#39; to confirm)</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>rake<span class="w"> </span>htm:db:seed<span class="w">          </span><span class="c1"># Re-add sample data</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>rake<span class="w"> </span>htm:db:reset<span class="w">         </span><span class="c1"># Drop and recreate (type &#39;yes&#39; to confirm)</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>rake<span class="w"> </span>htm:db:seed<span class="w">          </span><span class="c1"># Re-add sample data</span>
 </span></code></pre></div>
 <h3 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>rake<span class="w"> </span>htm:db:info<span class="w">          </span><span class="c1"># Check database state</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>rake<span class="w"> </span>htm:db:status<span class="w">        </span><span class="c1"># Check migration status</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>rake<span class="w"> </span>htm:db:console<span class="w">       </span><span class="c1"># Open psql for SQL queries</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>rake<span class="w"> </span>htm:db:info<span class="w">          </span><span class="c1"># Check database state</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>rake<span class="w"> </span>htm:db:status<span class="w">        </span><span class="c1"># Check migration status</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>rake<span class="w"> </span>htm:db:console<span class="w">       </span><span class="c1"># Open psql for SQL queries</span>
 </span></code></pre></div>
 <h3 id="production-deployment">Production Deployment<a class="headerlink" href="#production-deployment" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># NEVER use reset or drop in production!</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>rake<span class="w"> </span>htm:db:migrate<span class="w">       </span><span class="c1"># Run new migrations only</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># NEVER use reset or drop in production!</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>rake<span class="w"> </span>htm:db:migrate<span class="w">       </span><span class="c1"># Run new migrations only</span>
 </span></code></pre></div>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
