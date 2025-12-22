@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`htm:db:purge_all` rake task** - Permanently remove all soft-deleted records from database
+  - Displays record counts by table before deletion
+  - Detects and removes orphaned join table entries (`node_tags`, `robot_nodes`)
+  - Detects and removes orphaned propositions (where `source_node_id` no longer exists)
+  - Detects and removes orphaned robots (with no associated memory nodes)
+  - Requires confirmation before proceeding
+  - Deletes in correct order for referential integrity
 - **`htm:jobs:process_propositions` rake task** - Incremental proposition extraction for unprocessed nodes
   - Uses `ruby-progressbar` with ETA display
   - Only processes nodes not yet extracted (tracks via `source_node_id` metadata)
@@ -15,10 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rake task passthrough in MCP CLI** - Run rake tasks via `htm_mcp rake <task>`
   - `htm_mcp rake htm:db:stats` - Run any HTM rake task
   - `htm_mcp rake -T` / `htm_mcp rake --tasks` - List available tasks
+  - **Pattern filtering** - `htm_mcp rake -T htm:jobs` filters to matching namespace (like standard rake)
 - **Meta-response filtering in PropositionService** - Filters LLM responses that ask for input
   - `META_RESPONSE_PATTERNS` constant with common patterns ("please provide", "I need the text", etc.)
   - `meta_response?` method for detecting invalid responses
   - Prevents storing "Please provide the text" as propositions
+- **Progress bars for job processing tasks** - Visual progress with ETA for long-running operations
+  - `htm:jobs:process_embeddings` - Shows progress when generating embeddings
+  - `htm:jobs:process_tags` - Shows progress when extracting tags
+  - Format: `Processing: |████████████████| 50/100 (50%) ETA: 00:01:30`
 
 ### Changed
 - **PropositionService validation now fully configurable** - Moved hardcoded constants to `defaults.yml`
@@ -31,6 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added context enrichment examples (e.g., "wiring" → "solar panel wiring for Oklahoma barndominium")
   - System prompt now explicitly prevents meta-responses
   - Increased specificity requirements for self-contained facts
+
+### Fixed
+- **Test database isolation** - Two-layer protection prevents tests from polluting development/production
+  - `Rakefile`: `set_test_env` task now ALWAYS overrides `HTM_DATABASE__URL` to test database
+  - Uses `#{service_name}_test` pattern (e.g., `htm_test`) based on `HTM_SERVICE__NAME` env var
+  - `test_helper.rb`: Safety check aborts with helpful message if database URL doesn't contain `_test`
+  - Prevents accidental test execution against non-test databases
 
 ## [0.0.20] - 2025-12-22
 ### Added

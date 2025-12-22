@@ -1,6 +1,6 @@
 # HTM Rake Tasks Reference
 
-Complete reference for all HTM rake tasks. HTM provides 44 rake tasks organized into five namespaces for managing the database, documentation, file loading, background jobs, and tag management.
+Complete reference for all HTM rake tasks. HTM provides 46+ rake tasks organized into five namespaces for managing the database, documentation, file loading, background jobs, and tag management.
 
 ## Quick Reference
 
@@ -337,6 +337,64 @@ $ rake htm:db:reset
 
 ---
 
+#### `rake htm:db:purge_all`
+
+Permanently removes all soft-deleted records from all tables, including orphaned join table entries, orphaned propositions, and orphaned robots.
+
+!!! danger "Warning"
+    This task permanently deletes data and cannot be undone!
+
+```bash
+$ rake htm:db:purge_all
+
+HTM Purge All Soft-Deleted Records
+============================================================
+
+Records to permanently delete:
+--------------------------------------------------------------
+Soft-deleted nodes:              23
+Soft-deleted node_tags:          45
+Soft-deleted robot_nodes:        12
+Orphaned node_tags:              3
+Orphaned robot_nodes:            1
+Orphaned propositions:           5
+Orphaned robots (no nodes):      2
+--------------------------------------------------------------
+Total records to delete:         91
+
+Proceed with permanent deletion? (yes/no): yes
+
+Deleting records...
+  Deleted 45 soft-deleted node_tags entries
+  Deleted 3 orphaned node_tags entries
+  Deleted 12 soft-deleted robot_nodes entries
+  Deleted 1 orphaned robot_nodes entries
+  Deleted 5 orphaned propositions
+  Deleted 23 soft-deleted nodes
+  Deleted 2 orphaned robots
+
+✓ Purge complete!
+```
+
+**What it removes:**
+
+- **Soft-deleted records**: Nodes, node_tags, and robot_nodes with `deleted_at` set
+- **Orphaned join entries**: node_tags and robot_nodes pointing to non-existent nodes
+- **Orphaned propositions**: Proposition nodes whose `source_node_id` no longer exists
+- **Orphaned robots**: Robots with no associated memory nodes
+
+**Deletion order** (for referential integrity):
+
+1. Soft-deleted node_tags
+2. Orphaned node_tags
+3. Soft-deleted robot_nodes
+4. Orphaned robot_nodes
+5. Orphaned propositions
+6. Soft-deleted nodes
+7. Orphaned robots
+
+---
+
 ## Documentation Tasks (`htm:doc:*`)
 
 Tasks for generating API documentation, database diagrams, and building the documentation site.
@@ -645,74 +703,61 @@ Sync Status:
 
 ## Job Tasks (`htm:jobs:*`)
 
-Tasks for managing HTM background jobs (embedding generation, tag extraction, proposition extraction).
+Tasks for managing HTM background jobs (embedding generation, tag extraction, proposition extraction). All processing tasks include progress bars with ETA display for visual feedback during long-running operations.
 
 ### Processing Jobs
 
-#### `rake htm:jobs:process`
+#### `rake htm:jobs:process_all`
 
-Processes all pending background jobs (embeddings, tags, propositions).
+Processes all pending background jobs in sequence: embeddings, then tags, then propositions.
 
 ```bash
-$ rake htm:jobs:process
-Processing pending jobs...
-  Embedding jobs: 5 pending
-  Tag jobs: 8 pending
-  Proposition jobs: 0 pending
-  Processing...
-✓ Processed 13 jobs (13 successful, 0 failed)
+$ rake htm:jobs:process_all
+# Runs process_embeddings, process_tags, process_propositions in sequence
 ```
 
 ---
 
 #### `rake htm:jobs:process_embeddings`
 
-Processes only pending embedding generation jobs.
+Processes nodes without embeddings, generating vector embeddings via the configured LLM provider. Shows a progress bar with ETA for visual feedback.
 
 ```bash
 $ rake htm:jobs:process_embeddings
-Processing embedding jobs...
-  5 pending jobs
-  Processing...
-    ✓ Node 1542 - embedding generated (768 dimensions)
-    ✓ Node 1543 - embedding generated (768 dimensions)
-    ...
-✓ Processed 5 embedding jobs
+Processing 50 nodes without embeddings...
+Embeddings: |████████████████████████████████| 50/50 (100%) Time: 00:01:45
+✓ Generated embeddings for 50 nodes
 ```
+
+**Progress bar format:** `Title: |████████████| count/total (percent%) ETA: mm:ss`
 
 ---
 
 #### `rake htm:jobs:process_tags`
 
-Processes only pending tag extraction jobs.
+Processes nodes without tags, extracting hierarchical tags via the configured LLM provider. Shows a progress bar with ETA for visual feedback.
 
 ```bash
 $ rake htm:jobs:process_tags
-Processing tag jobs...
-  8 pending jobs
-  Processing...
-    ✓ Node 1542 - extracted 3 tags
-    ✓ Node 1543 - extracted 2 tags
-    ...
-✓ Processed 8 tag jobs
+Processing 50 nodes without tags...
+Tags: |████████████████████████████████| 50/50 (100%) Time: 00:02:30
+✓ Extracted tags for 50 nodes
 ```
 
 ---
 
 #### `rake htm:jobs:process_propositions`
 
-Processes only pending proposition extraction jobs.
+Extracts atomic propositions from nodes that haven't been processed yet. Tracks processed nodes via `source_node_id` metadata on proposition nodes. Shows a progress bar with ETA.
 
 ```bash
 $ rake htm:jobs:process_propositions
-Processing proposition jobs...
-  3 pending jobs
-  Processing...
-    ✓ Node 1542 - extracted 5 propositions
-    ✓ Node 1543 - extracted 3 propositions
-    ...
-✓ Processed 3 proposition jobs, created 12 proposition nodes
+Processing 25 nodes for proposition extraction...
+Propositions: |████████████████████████████████| 25/25 (100%) Time: 00:03:15
+✓ Extracted propositions from 25 nodes, created 89 proposition nodes
 ```
+
+**Note:** Only nodes that don't already have propositions extracted will be processed. The task tracks this by checking for proposition nodes with matching `source_node_id` in metadata.
 
 ---
 

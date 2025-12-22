@@ -57,7 +57,7 @@ The server logs to STDERR to avoid corrupting the JSON-RPC protocol on STDOUT.
 
 ## CLI Commands
 
-The `htm_mcp` executable includes management commands for database setup and diagnostics:
+The `htm_mcp` executable includes management commands for database setup, diagnostics, and rake task execution:
 
 | Command | Description |
 |---------|-------------|
@@ -69,6 +69,9 @@ The `htm_mcp` executable includes management commands for database setup and dia
 | `htm_mcp stats` | Show memory statistics (nodes, tags, robots, database size) |
 | `htm_mcp version` | Show HTM version |
 | `htm_mcp help` | Show help with all environment variables |
+| `htm_mcp rake <task>` | Run any HTM rake task |
+| `htm_mcp rake -T` | List all available HTM rake tasks |
+| `htm_mcp rake -T <pattern>` | List HTM rake tasks matching pattern |
 
 ### First-Time Setup
 
@@ -100,6 +103,72 @@ Migration Status
 --------------------------------------------------------------------------------
   3 applied, 1 pending
 ```
+
+### Rake Task Passthrough
+
+The `htm_mcp rake` command allows you to run any HTM rake task directly through the MCP CLI. This is useful when working with HTM without a full Rails/Rake environment.
+
+**List all available tasks:**
+
+```bash
+$ htm_mcp rake -T
+# or
+$ htm_mcp rake --tasks
+
+HTM Rake Tasks
+================================================================================
+htm:db:console              # Open psql console to database
+htm:db:create               # Create the database if it doesn't exist
+htm:db:drop                 # Drop all HTM tables (WARNING: destructive!)
+htm:db:info                 # Show database information
+htm:db:migrate              # Run pending database migrations
+htm:db:purge_all            # Permanently delete all soft-deleted records
+...
+```
+
+**Filter tasks by pattern** (like standard `rake -T`):
+
+```bash
+$ htm_mcp rake -T htm:jobs
+
+HTM Rake Tasks
+================================================================================
+htm:jobs:process_all        # Process all pending jobs (embeddings, tags, propositions)
+htm:jobs:process_embeddings # Process pending embedding jobs
+htm:jobs:process_propositions # Process pending proposition extraction jobs
+htm:jobs:process_tags       # Process pending tag extraction jobs
+htm:jobs:stats              # Show job processing statistics
+
+$ htm_mcp rake -T db:rebuild
+
+HTM Rake Tasks
+================================================================================
+htm:db:rebuild:embeddings   # Clear and regenerate all embeddings
+htm:db:rebuild:propositions # Extract propositions from all non-proposition nodes
+```
+
+**Run specific tasks:**
+
+```bash
+# Database tasks
+$ htm_mcp rake htm:db:stats
+$ htm_mcp rake htm:db:verify
+$ htm_mcp rake htm:db:purge_all
+
+# Job processing tasks
+$ htm_mcp rake htm:jobs:process_all
+$ htm_mcp rake htm:jobs:process_embeddings
+
+# Tag tasks
+$ htm_mcp rake htm:tags:tree
+$ htm_mcp rake 'htm:tags:tree[database]'  # With argument
+
+# File tasks
+$ htm_mcp rake htm:files:list
+$ htm_mcp rake htm:files:sync
+```
+
+**Note:** Tasks requiring arguments use the standard rake syntax with brackets quoted for shell safety: `htm_mcp rake 'htm:files:load[path/to/file.md]'`
 
 ## Tools Reference
 

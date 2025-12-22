@@ -219,6 +219,37 @@ $ rake htm:db:reset
 # Runs drop (with confirmation) then setup
 ```
 
+#### `rake htm:db:purge_all`
+Permanently removes all soft-deleted records from all tables.
+
+**What it does:**
+- Removes soft-deleted nodes, node_tags, and robot_nodes
+- Removes orphaned join table entries (pointing to non-existent nodes)
+- Removes orphaned propositions (where source_node_id no longer exists)
+- Removes orphaned robots (with no associated memory nodes)
+- Deletes in correct order for referential integrity
+
+**Safety:** Prompts for confirmation before deletion
+
+```bash
+$ rake htm:db:purge_all
+
+HTM Purge All Soft-Deleted Records
+============================================================
+
+Records to permanently delete:
+--------------------------------------------------------------
+Soft-deleted nodes:              23
+Soft-deleted node_tags:          45
+Orphaned propositions:           5
+Orphaned robots (no nodes):      2
+--------------------------------------------------------------
+Total records to delete:         75
+
+Proceed with permanent deletion? (yes/no): yes
+✓ Purge complete!
+```
+
 ---
 
 ## Environment Variables
