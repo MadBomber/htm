@@ -21,6 +21,7 @@ class HTM
             verify    Verify database connection and extensions
             stats     Show memory statistics
             config    Output default configuration to STDOUT
+            rake      Run HTM rake tasks (use -T or --tasks to list)
             version   Show HTM version
             help      Show this help message
 
@@ -106,6 +107,15 @@ class HTM
 
             # Start MCP server (for Claude Desktop)
             htm_mcp
+
+            # List available rake tasks
+            htm_mcp rake -T
+            htm_mcp rake --tasks
+
+            # Run rake tasks
+            htm_mcp rake htm:db:stats
+            htm_mcp rake htm:tags:tree
+            htm_mcp rake 'htm:tags:tree[database]'
 
           CLAUDE DESKTOP CONFIGURATION:
             Add to ~/.config/claude/claude_desktop_config.json:
@@ -427,6 +437,8 @@ class HTM
           run_stats
         when 'config'
           output_default_config
+        when 'rake'
+          run_rake(args[1..] || [])
         when 'server', 'stdio', nil
           # Return false to indicate server should start
           # 'stdio' is accepted for compatibility with MCP clients that pass it as an argument
@@ -468,7 +480,75 @@ class HTM
       end
 
       def command?(arg)
-        %w[help version setup init verify stats config server stdio].include?(arg.downcase)
+        %w[help version setup init verify stats config server stdio rake].include?(arg.downcase)
+      end
+
+      def run_rake(args)
+        require 'rake'
+
+        # Handle --tasks / -T to list available tasks
+        if args.empty? || args.first == '--tasks' || args.first == '-T'
+          list_rake_tasks
+          return
+        end
+
+        task_name = args.shift
+
+        # Load HTM rake tasks
+        load_htm_rake_tasks
+
+        # Check if task exists
+        unless Rake::Task.task_defined?(task_name)
+          warn "Unknown rake task: #{task_name}"
+          warn "Run 'htm_mcp rake --tasks' to see available tasks."
+          exit 1
+        end
+
+        # Set remaining args as task arguments if any
+        # Rake tasks use ARGV for arguments in brackets like task[arg1,arg2]
+        begin
+          Rake::Task[task_name].invoke
+        rescue => e
+          warn "Rake task failed: #{e.message}"
+          warn e.backtrace.first(5).join("\n") if ENV['DEBUG']
+          exit 1
+        end
+      end
+
+      def load_htm_rake_tasks
+        # Clear any existing tasks to avoid conflicts
+        Rake::TaskManager.record_task_metadata = true
+        Rake.application = Rake::Application.new
+        Rake.application.init('htm_mcp')
+
+        # Load all HTM task files
+        tasks_dir = File.expand_path('../../tasks', __dir__)
+        Dir.glob(File.join(tasks_dir, '*.rake')).sort.each do |rake_file|
+          load rake_file
+        end
+      end
+
+      def list_rake_tasks
+        load_htm_rake_tasks
+
+        puts "Available HTM rake tasks:"
+        puts
+
+        # Collect tasks with descriptions, sorted by name
+        tasks = Rake.application.tasks
+          .select { |t| t.comment && t.name.start_with?('htm:') }
+          .sort_by(&:name)
+
+        # Find max task name length for alignment
+        max_len = tasks.map { |t| t.name.length }.max || 0
+
+        tasks.each do |task|
+          printf "  %-#{max_len}s  # %s\n", task.name, task.comment
+        end
+
+        puts
+        puts "Run with: htm_mcp rake <task_name>"
+        puts "Example:  htm_mcp rake htm:db:stats"
       end
     end
   end

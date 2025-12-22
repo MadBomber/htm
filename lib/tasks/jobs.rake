@@ -156,8 +156,112 @@ namespace :htm do
       HTM::ActiveRecordConfig.disconnect!
     end
 
-    desc "Process all pending jobs (embeddings and tags)"
-    task :process_all => [:process_embeddings, :process_tags] do
+    desc "Process pending proposition extraction for nodes without propositions"
+    task :process_propositions => :environment do
+      require 'htm'
+      require 'ruby-progressbar'
+
+      # Establish connection and configure HTM
+      HTM::ActiveRecordConfig.establish_connection!
+      HTM.configure  # Use default configuration
+
+      # Find non-proposition nodes that haven't been processed yet
+      # A node needs processing if:
+      # 1. It's not a proposition itself (is_proposition != true)
+      # 2. No proposition node references it as source_node_id
+      processed_source_ids = HTM::Models::Node
+        .where("metadata->>'is_proposition' = ?", 'true')
+        .where("metadata->>'source_node_id' IS NOT NULL")
+        .pluck(Arel.sql("metadata->>'source_node_id'"))
+        .map(&:to_i)
+        .uniq
+
+      pending_nodes = HTM::Models::Node
+        .non_propositions
+        .where.not(id: processed_source_ids)
+
+      total = pending_nodes.count
+
+      if total.zero?
+        puts "No pending proposition extraction jobs"
+        HTM::ActiveRecordConfig.disconnect!
+        exit 0
+      end
+
+      puts "Processing #{total} nodes for proposition extraction..."
+      puts "(Nodes already processed: #{processed_source_ids.size})\n"
+
+      # Get a robot for linking proposition nodes
+      robot = HTM::Models::Robot.first || HTM::Models::Robot.create!(name: 'proposition_extractor')
+
+      # Create progress bar with ETA
+      progressbar = ProgressBar.create(
+        total: total,
+        format: '%t: |%B| %c/%C (%p%%) %e',
+        title: 'Extracting',
+        output: $stdout,
+        smoothing: 0.5
+      )
+
+      nodes_processed = 0
+      propositions_created = 0
+      failed = 0
+
+      pending_nodes.find_each do |node|
+        begin
+          # Extract propositions using the service
+          propositions = HTM::PropositionService.extract(node.content)
+
+          if propositions.any?
+            propositions.each do |proposition_text|
+              token_count = HTM.count_tokens(proposition_text)
+
+              # Create proposition node
+              prop_node = HTM::Models::Node.create!(
+                content: proposition_text,
+                token_count: token_count,
+                metadata: { is_proposition: true, source_node_id: node.id }
+              )
+
+              # Link to robot
+              HTM::Models::RobotNode.find_or_create_by!(
+                robot_id: robot.id,
+                node_id: prop_node.id
+              )
+
+              # Generate embedding for proposition node
+              begin
+                result = HTM::EmbeddingService.generate(proposition_text)
+                prop_node.update!(embedding: result[:storage_embedding])
+              rescue StandardError => e
+                progressbar.log "  Warning: Embedding failed for proposition #{prop_node.id}: #{e.message}"
+              end
+
+              propositions_created += 1
+            end
+          end
+
+          nodes_processed += 1
+        rescue StandardError => e
+          failed += 1
+          progressbar.log "  Error on node #{node.id}: #{e.message}"
+        end
+
+        progressbar.increment
+      end
+
+      progressbar.finish
+
+      puts "\nCompleted:"
+      puts "  Nodes processed: #{nodes_processed}"
+      puts "  Propositions created: #{propositions_created}"
+      puts "  Failed: #{failed}"
+
+      HTM::ActiveRecordConfig.disconnect!
+    end
+
+    desc "Process all pending jobs (embeddings, tags, and propositions)"
+    task :process_all => [:process_embeddings, :process_tags, :process_propositions] do
       puts "\nAll pending jobs processed!"
     end
 

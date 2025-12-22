@@ -113,26 +113,53 @@ defaults:
     model: gemma3:latest
     timeout: 180
     enabled: true
+    min_length: 10
+    max_length: 1000
+    min_words: 5
 
     system_prompt: |
-      You are an atomic fact extraction system. Your goal is maximum decomposition.
-      Break every statement into its smallest possible factual units.
+      You are an atomic fact extraction system. Extract factual propositions from text.
       Output ONLY propositions, one per line, prefixed with a dash (-).
+      NEVER ask for clarification or more text - extract what you can from the given text.
+      If the text contains no extractable facts, output nothing.
 
     user_prompt_template: |
-      Extract all ATOMIC factual propositions from the following text.
+      Extract ATOMIC factual propositions from the following text.
 
-      An atomic proposition expresses exactly ONE relationship or fact.
+      An atomic proposition:
+      - Expresses exactly ONE fact or relationship
+      - Is understandable WITHOUT any additional context
+      - Uses FULL NAMES, never pronouns (he, she, it, they, this, that)
+      - Contains at least 5 words for sufficient context
 
-      Rules:
+      PRONOUN REPLACEMENT EXAMPLES:
+      BAD:  "It is important to know the enemy."
+      GOOD: "Knowing the enemy is important for spiritual warfare."
+
+      BAD:  "They support thousands of users."
+      GOOD: "The Every.to products support thousands of daily users."
+
+      BAD:  "This results in a calculation."
+      GOOD: "The age calculation depends on whether the birthday has occurred."
+
+      CONTEXT ENRICHMENT EXAMPLES:
+      BAD:  "Wiring costs $1,000."
+      GOOD: "Solar panel wiring costs $1,000 for the Oklahoma barndominium project."
+
+      BAD:  "The driveway is gravel."
+      GOOD: "Dewayne's barndominium driveway is gravel."
+
+      RULES:
       1. Split compound statements into separate atomic facts
       2. Each proposition = exactly one fact
-      3. Use full names, never pronouns
-      4. Make each proposition understandable in isolation
+      3. Replace ALL pronouns with the actual names/nouns they refer to
+      4. Include enough context to understand the fact in isolation
+      5. If unsure what a pronoun refers to, omit that proposition
 
       TEXT: %{text}
 
       Return ONLY atomic propositions, one per line. Use a dash (-) prefix for each.
+      If you cannot extract any facts, return nothing. Do NOT ask for more text.
 
   # ---------------------------------------------------------------------------
   # Chunking Configuration (for file loading)

@@ -210,13 +210,17 @@ class PropositionServiceTest < Minitest::Test
     refute HTM::PropositionService.valid_proposition?("123 456 789 000")
   end
 
-  # Test constants
-  def test_min_proposition_length_constant
-    assert_equal 10, HTM::PropositionService::MIN_PROPOSITION_LENGTH
+  # Test config-based length accessors
+  def test_min_length_from_config
+    assert_equal 10, HTM::PropositionService.min_length
   end
 
-  def test_max_proposition_length_constant
-    assert_equal 1000, HTM::PropositionService::MAX_PROPOSITION_LENGTH
+  def test_max_length_from_config
+    assert_equal 1000, HTM::PropositionService.max_length
+  end
+
+  def test_min_words_from_config
+    assert_equal 5, HTM::PropositionService.min_words
   end
 
   # Circuit breaker tests

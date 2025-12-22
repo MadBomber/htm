@@ -26,8 +26,20 @@ class HTM
   #   #     "The Apollo 11 mission occurred in 1969."]
   #
   class PropositionService
-    MIN_PROPOSITION_LENGTH = 10   # Minimum characters for a valid proposition
-    MAX_PROPOSITION_LENGTH = 1000 # Maximum characters for a valid proposition
+    # Patterns that indicate meta-responses (LLM asking for input instead of extracting)
+    META_RESPONSE_PATTERNS = [
+      /please provide/i,
+      /provide the text/i,
+      /provide me with/i,
+      /I need the text/i,
+      /I am ready/i,
+      /waiting for/i,
+      /send me the/i,
+      /what text would you/i,
+      /what would you like/i,
+      /cannot extract.*without/i,
+      /no text provided/i
+    ].freeze
 
     # Circuit breaker for proposition extraction API calls
     @circuit_breaker = nil
@@ -112,6 +124,45 @@ class HTM
       end
     end
 
+    # Get minimum character length from config
+    #
+    # @return [Integer] Minimum character count for valid propositions
+    #
+    def self.min_length
+      HTM.config.proposition.min_length || 10
+    rescue
+      10
+    end
+
+    # Get maximum character length from config
+    #
+    # @return [Integer] Maximum character count for valid propositions
+    #
+    def self.max_length
+      HTM.config.proposition.max_length || 1000
+    rescue
+      1000
+    end
+
+    # Get minimum words from config
+    #
+    # @return [Integer] Minimum word count for valid propositions
+    #
+    def self.min_words
+      HTM.config.proposition.min_words || 5
+    rescue
+      5
+    end
+
+    # Check if proposition is a meta-response (LLM asking for input)
+    #
+    # @param proposition [String] Proposition to check
+    # @return [Boolean] True if it's a meta-response
+    #
+    def self.meta_response?(proposition)
+      META_RESPONSE_PATTERNS.any? { |pattern| proposition.match?(pattern) }
+    end
+
     # Validate and filter propositions
     #
     # @param propositions [Array<String>] Parsed propositions
@@ -119,19 +170,35 @@ class HTM
     #
     def self.validate_and_filter_propositions(propositions)
       valid_propositions = []
+      min_char_length = min_length
+      max_char_length = max_length
+      min_word_count = min_words
 
       propositions.each do |proposition|
-        # Check minimum length
-        next if proposition.length < MIN_PROPOSITION_LENGTH
+        # Check minimum length (characters)
+        next if proposition.length < min_char_length
 
         # Check maximum length
-        if proposition.length > MAX_PROPOSITION_LENGTH
+        if proposition.length > max_char_length
           HTM.logger.warn "PropositionService: Proposition too long, skipping: #{proposition[0..50]}..."
           next
         end
 
         # Check for actual content (not just punctuation/whitespace)
         unless proposition.match?(/[a-zA-Z]{3,}/)
+          next
+        end
+
+        # Check minimum word count
+        word_count = proposition.split.size
+        if word_count < min_word_count
+          HTM.logger.debug "PropositionService: Proposition too short (#{word_count} words), skipping: #{proposition}"
+          next
+        end
+
+        # Filter out meta-responses (LLM asking for more input)
+        if meta_response?(proposition)
+          HTM.logger.warn "PropositionService: Filtered meta-response: #{proposition[0..50]}..."
           next
         end
 
@@ -149,9 +216,11 @@ class HTM
     #
     def self.valid_proposition?(proposition)
       return false unless proposition.is_a?(String)
-      return false if proposition.length < MIN_PROPOSITION_LENGTH
-      return false if proposition.length > MAX_PROPOSITION_LENGTH
+      return false if proposition.length < min_length
+      return false if proposition.length > max_length
       return false unless proposition.match?(/[a-zA-Z]{3,}/)
+      return false if proposition.split.size < min_words
+      return false if meta_response?(proposition)
 
       true
     end

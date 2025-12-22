@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    htm (0.0.20)
+    htm (0.0.21)
       activerecord
       anyway_config (>= 2.6)
       async (~> 2.0)
