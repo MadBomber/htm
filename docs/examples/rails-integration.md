@@ -169,5 +169,5 @@ No JavaScript build step required.
 ## See Also
 
 - [Getting Started Guide](../guides/getting-started.md)
-- [Multi-Robot Systems](../guides/multi-robot.md)
+- [Multi-Robot Systems](../robots/multi-robot.md)
 - [Search Strategies](../guides/search-strategies.md)

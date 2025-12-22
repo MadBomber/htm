@@ -370,7 +370,7 @@ Based on typical production workloads with 10,000 nodes in long-term memory (cli
 ## Related Documentation
 
 - [Architecture Index](index.md) - Architecture overview and component summary
-- [Two-Tier Memory System](two-tier-memory.md) - Working memory and long-term memory deep dive
-- [Hive Mind Architecture](hive-mind.md) - Multi-robot shared memory design
+- [Two-Tier Memory System](../robots/two-tier-memory.md) - Working memory and long-term memory deep dive
+- [Hive Mind Architecture](../robots/hive-mind.md) - Multi-robot shared memory design
 - [API Reference](../api/htm.md) - Complete API documentation
 - [Architecture Decision Records](adrs/index.md) - Decision history

@@ -608,7 +608,7 @@ htm = HTM.new(
 - [ULID Specification](https://github.com/ulid/spec)
 - [Robot Registry Pattern](https://martinfowler.com/eaaCatalog/registry.html)
 - [ADR-004: Hive Mind Architecture](004-hive-mind.md)
-- [Multi-Robot Guide](../../guides/multi-robot.md)
+- [Multi-Robot Guide](../../robots/multi-robot.md)
 
 ---
 

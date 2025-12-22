@@ -274,8 +274,8 @@ stateDiagram-v2
 Explore detailed architecture documentation:
 
 - **[Detailed Architecture](overview.md)** - Deep dive into system architecture, data flows, and performance characteristics
-- **[Two-Tier Memory System](two-tier-memory.md)** - Working memory and long-term memory design, eviction strategies, and context assembly
-- **[Hive Mind Architecture](hive-mind.md)** - Multi-robot shared memory, robot identification, and cross-robot knowledge sharing
+- **[Two-Tier Memory System](../robots/two-tier-memory.md)** - Working memory and long-term memory design, eviction strategies, and context assembly
+- **[Hive Mind Architecture](../robots/hive-mind.md)** - Multi-robot shared memory, robot identification, and cross-robot knowledge sharing
 
 ## Technology Stack
 

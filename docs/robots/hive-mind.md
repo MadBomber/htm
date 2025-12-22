@@ -6,61 +6,10 @@ HTM implements a "hive mind" architecture where multiple robots (AI agents) shar
 
 In the hive mind model, all robots access a single shared long-term memory database while maintaining independent working memory for process isolation. This design provides the best of both worlds: global knowledge sharing with local performance optimization.
 
-<svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
-  <!-- Title -->
-  <text x="450" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">Hive Mind: Shared Long-Term Memory</text>
-
-  <!-- Central Database -->
-  <ellipse cx="450" cy="300" rx="180" ry="120" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3"/>
-  <text x="450" y="280" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Long-Term Memory</text>
-  <text x="450" y="305" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL</text>
-  <text x="450" y="325" text-anchor="middle" fill="#B0B0B0" font-size="12">Shared Global Database</text>
-  <text x="450" y="345" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">All Robots Access Here</text>
-
-  <!-- Robot 1: Code Helper -->
-  <rect x="50" y="80" width="200" height="100" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
-  <text x="150" y="110" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 1: Code Helper</text>
-  <text x="150" y="135" text-anchor="middle" fill="#B0B0B0" font-size="11">ID: robot-abc123</text>
-  <text x="150" y="155" text-anchor="middle" fill="#B0B0B0" font-size="11">Own Working Memory</text>
-
-  <!-- Robot 2: Research Assistant -->
-  <rect x="650" y="80" width="200" height="100" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="2" rx="5"/>
-  <text x="750" y="110" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 2: Research Bot</text>
-  <text x="750" y="135" text-anchor="middle" fill="#B0B0B0" font-size="11">ID: robot-xyz789</text>
-  <text x="750" y="155" text-anchor="middle" fill="#B0B0B0" font-size="11">Own Working Memory</text>
-
-  <!-- Robot 3: Chat Companion -->
-  <rect x="50" y="450" width="200" height="100" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
-  <text x="150" y="480" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 3: Chat Bot</text>
-  <text x="150" y="505" text-anchor="middle" fill="#B0B0B0" font-size="11">ID: robot-def456</text>
-  <text x="150" y="525" text-anchor="middle" fill="#B0B0B0" font-size="11">Own Working Memory</text>
-
-  <!-- Robot 4: Design Assistant -->
-  <rect x="650" y="450" width="200" height="100" fill="rgba(244, 67, 54, 0.2)" stroke="#F44336" stroke-width="2" rx="5"/>
-  <text x="750" y="480" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 4: Designer</text>
-  <text x="750" y="505" text-anchor="middle" fill="#B0B0B0" font-size="11">ID: robot-ghi012</text>
-  <text x="750" y="525" text-anchor="middle" fill="#B0B0B0" font-size="11">Own Working Memory</text>
-
-  <!-- Connections to central database -->
-  <line x1="150" y1="180" x2="320" y2="240" stroke="#2196F3" stroke-width="3"/>
-  <line x1="750" y1="180" x2="580" y2="240" stroke="#4CAF50" stroke-width="3"/>
-  <line x1="150" y1="450" x2="320" y2="360" stroke="#FF9800" stroke-width="3"/>
-  <line x1="750" y1="450" x2="580" y2="360" stroke="#F44336" stroke-width="3"/>
-
-  <!-- Labels on connections -->
-  <text x="235" y="210" fill="#2196F3" font-size="10">read/write</text>
-  <text x="650" y="210" fill="#4CAF50" font-size="10">read/write</text>
-  <text x="235" y="410" fill="#FF9800" font-size="10">read/write</text>
-  <text x="650" y="410" fill="#F44336" font-size="10">read/write</text>
-
-  <!-- Key benefit -->
-  <rect x="300" y="520" width="300" height="60" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="2" rx="5"/>
-  <text x="450" y="545" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">Knowledge Sharing:</text>
-  <text x="450" y="565" text-anchor="middle" fill="#B0B0B0" font-size="11">All robots see all memories</text>
-</svg>
+![Hive Mind: Shared Long-Term Memory](../assets/images/hive-mind-shared-memory.svg)
 
 !!! info "Related ADR"
-    See [ADR-004: Multi-Robot Shared Memory (Hive Mind)](adrs/004-hive-mind.md) for the complete architectural decision record.
+    See [ADR-004: Multi-Robot Shared Memory (Hive Mind)](../architecture/adrs/004-hive-mind.md) for the complete architectural decision record.
 
 ## Why Hive Mind?
 
@@ -96,59 +45,7 @@ HTM uses a hybrid memory topology:
 - **Long-Term Memory**: Shared globally across all robots
 - **Working Memory**: Per-robot, process-local
 
-<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
-  <!-- Title -->
-  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Memory Topology: Shared LTM + Local WM</text>
-
-  <!-- Legend -->
-  <rect x="50" y="50" width="20" height="20" fill="rgba(156, 39, 176, 0.3)" stroke="#9C27B0"/>
-  <text x="80" y="65" fill="#B0B0B0" font-size="12">Shared (Global)</text>
-  <rect x="200" y="50" width="20" height="20" fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3"/>
-  <text x="230" y="65" fill="#B0B0B0" font-size="12">Per-Robot (Local)</text>
-
-  <!-- Robot 1 -->
-  <g transform="translate(0, 100)">
-    <text x="150" y="0" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 1 (Process 1)</text>
-    <rect x="50" y="20" width="200" height="80" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
-    <text x="150" y="50" text-anchor="middle" fill="#E0E0E0" font-size="12">Working Memory</text>
-    <text x="150" y="70" text-anchor="middle" fill="#B0B0B0" font-size="10">In-memory, token-limited</text>
-    <text x="150" y="85" text-anchor="middle" fill="#B0B0B0" font-size="10">Independent</text>
-  </g>
-
-  <!-- Robot 2 -->
-  <g transform="translate(300, 100)">
-    <text x="150" y="0" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 2 (Process 2)</text>
-    <rect x="50" y="20" width="200" height="80" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
-    <text x="150" y="50" text-anchor="middle" fill="#E0E0E0" font-size="12">Working Memory</text>
-    <text x="150" y="70" text-anchor="middle" fill="#B0B0B0" font-size="10">In-memory, token-limited</text>
-    <text x="150" y="85" text-anchor="middle" fill="#B0B0B0" font-size="10">Independent</text>
-  </g>
-
-  <!-- Shared Long-Term Memory -->
-  <rect x="150" y="280" width="500" height="150" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3" rx="5"/>
-  <text x="400" y="310" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Long-Term Memory (Shared)</text>
-  <text x="400" y="340" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL</text>
-  <text x="400" y="365" text-anchor="middle" fill="#B0B0B0" font-size="12">All robots read/write here</text>
-  <text x="400" y="390" text-anchor="middle" fill="#B0B0B0" font-size="12">Memories attributed with robot_id</text>
-  <text x="400" y="410" text-anchor="middle" fill="#4CAF50" font-size="12" font-weight="bold">Single Source of Truth</text>
-
-  <!-- Connections -->
-  <line x1="150" y1="200" x2="300" y2="280" stroke="#9C27B0" stroke-width="2" marker-end="url(#arrow-purple)"/>
-  <line x1="450" y1="200" x2="400" y2="280" stroke="#9C27B0" stroke-width="2" marker-end="url(#arrow-purple)"/>
-
-  <text x="225" y="240" fill="#9C27B0" font-size="10">read/write</text>
-  <text x="425" y="240" fill="#9C27B0" font-size="10">read/write</text>
-
-  <defs>
-    <marker id="arrow-purple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 10 3, 0 6" fill="#9C27B0"/>
-    </marker>
-  </defs>
-
-  <!-- Key Point -->
-  <rect x="100" y="460" width="600" height="30" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="1" rx="3"/>
-  <text x="400" y="480" text-anchor="middle" fill="#4CAF50" font-size="12">Each robot has fast local cache (WM) + access to global knowledge (LTM)</text>
-</svg>
+![Memory Topology: Shared LTM + Local WM](../assets/images/memory-topology.svg)
 
 ### Why This Design?
 
@@ -248,7 +145,7 @@ end
 ```
 
 !!! info "Related ADR"
-    See [ADR-008: Robot Identification System](adrs/008-robot-identification.md) for detailed design decisions.
+    See [ADR-008: Robot Identification System](../architecture/adrs/008-robot-identification.md) for detailed design decisions.
 
 ## Memory Attribution and Deduplication
 
@@ -727,9 +624,9 @@ end
 
 ## Related Documentation
 
-- [Architecture Index](index.md) - System overview and component summary
-- [Architecture Overview](overview.md) - Detailed architecture and data flows
+- [Architecture Index](../architecture/index.md) - System overview and component summary
+- [Architecture Overview](../architecture/overview.md) - Detailed architecture and data flows
 - [Two-Tier Memory System](two-tier-memory.md) - Working memory and long-term memory design
-- [ADR-004: Multi-Robot Shared Memory (Hive Mind)](adrs/004-hive-mind.md)
-- [ADR-008: Robot Identification System](adrs/008-robot-identification.md)
+- [ADR-004: Multi-Robot Shared Memory (Hive Mind)](../architecture/adrs/004-hive-mind.md)
+- [ADR-008: Robot Identification System](../architecture/adrs/008-robot-identification.md)
 - [API Reference](../api/htm.md) - Complete API documentation

@@ -32,7 +32,7 @@ Learn how to work with HTM's memory system effectively.
 
 Dive deeper into HTM's powerful capabilities.
 
-- [**Multi-Robot Usage**](multi-robot.md) - Building hive mind systems with multiple robots
+- [**Multi-Robot Usage**](../robots/multi-robot.md) - Building hive mind systems with multiple robots
 - [**Search Strategies**](search-strategies.md) - Vector, full-text, and hybrid search
 - [**Context Assembly**](context-assembly.md) - Creating optimized context for LLMs
 
@@ -62,7 +62,7 @@ We recommend the following progression:
    - [Search Strategies](search-strategies.md) - Optimize retrieval
 
 4. **Advanced Topics**: Multi-Robot Systems
-   - [Multi-Robot Usage](multi-robot.md) - Build collaborative systems
+   - [Multi-Robot Usage](../robots/multi-robot.md) - Build collaborative systems
 
 ## Quick Reference
 
@@ -73,7 +73,7 @@ We recommend the following progression:
 - **Search for memories**: See [Recalling Memories](recalling-memories.md#basic-recall)
 - **Create LLM context**: See [Context Assembly](context-assembly.md#basic-usage)
 - **Monitor memory usage**: See [Working Memory](working-memory.md#monitoring-utilization)
-- **Multi-robot setup**: See [Multi-Robot Usage](multi-robot.md#setting-up-multiple-robots)
+- **Multi-robot setup**: See [Multi-Robot Usage](../robots/multi-robot.md#setting-up-multiple-robots)
 - **Use with Claude/AIA**: See [MCP Server](mcp-server.md#client-configuration)
 
 ### Memory Types

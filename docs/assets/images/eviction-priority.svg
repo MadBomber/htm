@@ -1,0 +1,43 @@
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Eviction Priority (Lower → Higher retention)</text>
+
+  <!-- Priority bars -->
+  <rect x="50" y="80" width="150" height="50" fill="rgba(244, 67, 54, 0.6)" stroke="#F44336" stroke-width="2" rx="3"/>
+  <text x="125" y="110" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Tier 1: Evict First</text>
+
+  <rect x="220" y="80" width="150" height="50" fill="rgba(255, 152, 0, 0.6)" stroke="#FF9800" stroke-width="2" rx="3"/>
+  <text x="295" y="110" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Tier 2</text>
+
+  <rect x="390" y="80" width="150" height="50" fill="rgba(255, 193, 7, 0.6)" stroke="#FFC107" stroke-width="2" rx="3"/>
+  <text x="465" y="110" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Tier 3</text>
+
+  <rect x="560" y="80" width="150" height="50" fill="rgba(76, 175, 80, 0.6)" stroke="#4CAF50" stroke-width="2" rx="3"/>
+  <text x="635" y="110" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Tier 4: Keep Longest</text>
+
+  <!-- Details -->
+  <text x="125" y="160" text-anchor="middle" fill="#B0B0B0" font-size="11">Importance: 1.0</text>
+  <text x="125" y="180" text-anchor="middle" fill="#B0B0B0" font-size="11">Age: 5 days</text>
+  <text x="125" y="200" text-anchor="middle" fill="#F44336" font-size="10" font-weight="bold">Low value, stale</text>
+
+  <text x="295" y="160" text-anchor="middle" fill="#B0B0B0" font-size="11">Importance: 1.0</text>
+  <text x="295" y="180" text-anchor="middle" fill="#B0B0B0" font-size="11">Age: 1 hour</text>
+  <text x="295" y="200" text-anchor="middle" fill="#FF9800" font-size="10" font-weight="bold">Low value, recent</text>
+
+  <text x="465" y="160" text-anchor="middle" fill="#B0B0B0" font-size="11">Importance: 9.0</text>
+  <text x="465" y="180" text-anchor="middle" fill="#B0B0B0" font-size="11">Age: 5 days</text>
+  <text x="465" y="200" text-anchor="middle" fill="#FFC107" font-size="10" font-weight="bold">High value, older</text>
+
+  <text x="635" y="160" text-anchor="middle" fill="#B0B0B0" font-size="11">Importance: 9.0</text>
+  <text x="635" y="180" text-anchor="middle" fill="#B0B0B0" font-size="11">Age: 1 hour</text>
+  <text x="635" y="200" text-anchor="middle" fill="#4CAF50" font-size="10" font-weight="bold">High value, fresh</text>
+
+  <!-- Example scenario -->
+  <text x="50" y="250" fill="#E0E0E0" font-size="13" font-weight="bold">Example Eviction Scenario:</text>
+  <text x="50" y="280" fill="#B0B0B0" font-size="11">Working Memory: 127,500 / 128,000 tokens (99% full)</text>
+  <text x="50" y="300" fill="#B0B0B0" font-size="11">New memory to add: 5,000 tokens</text>
+  <text x="50" y="320" fill="#B0B0B0" font-size="11">Need to free: 4,500 tokens</text>
+
+  <text x="50" y="350" fill="#4CAF50" font-size="11">Eviction: Remove Tier 1 and Tier 2 nodes until 4,500+ tokens freed</text>
+  <text x="50" y="370" fill="#4CAF50" font-size="11">Result: Tier 3 and Tier 4 nodes preserved (high importance)</text>
+</svg>

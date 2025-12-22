@@ -170,14 +170,19 @@ nav:
       - MCP (htm_mcp):
           - Server (htm_mcp): guides/mcp-server.md
           - Example Usage: examples/mcp-client.md
-      - Features:
+      - Robots!:
+          - robots/index.md
+          - Why "Robots"?: robots/why-robots.md
+          - Hive Mind: robots/hive-mind.md
+          - Two-Tier Memory: robots/two-tier-memory.md
+          - Multi-Robot Systems: robots/multi-robot.md
+          - Robot Groups: robots/robot-groups.md
+      - Additional Features:
           - Configuration: guides/configuration.md
           - Hierarchical Tags: guides/tags.md
           - Propositions: guides/propositions.md
           - File Loading: guides/file-loading.md
           - Telemetry: guides/telemetry.md
-          - Multi-Robot Systems: guides/multi-robot.md
-          - Robot Groups (Advanced): guides/robot-groups.md
           - Search Strategies: guides/search-strategies.md
       - Examples:
           - examples/index.md
@@ -199,8 +204,6 @@ nav:
   - Architecture:
       - architecture/index.md
       - Overview: architecture/overview.md
-      - Two-Tier Memory: architecture/two-tier-memory.md
-      - Hive Mind: architecture/hive-mind.md
       - ADRs:
           - architecture/adrs/index.md
           - ADR-001 PostgreSQL & TimescaleDB: architecture/adrs/001-postgresql-timescaledb.md
@@ -233,7 +236,7 @@ nav:
           - api/yard-reference.md
           - HTM Module: api/yard/HTM.md
           - Core Classes:
-              - Configuration: api/yard/HTM/Configuration.md
+              - Configuration: api/yard/HTM/Config.md
               - Database: api/yard/HTM/Database.md
               - LongTermMemory: api/yard/HTM/LongTermMemory.md
               - WorkingMemory: api/yard/HTM/WorkingMemory.md

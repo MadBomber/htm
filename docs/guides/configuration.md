@@ -511,5 +511,5 @@ providers:
 
 - [defaults.yml Source](https://github.com/madbomber/htm/blob/main/lib/htm/config/defaults.yml) - Configuration schema and defaults
 - [LLM Configuration Example](../examples/llm-configuration.md)
-- [Configuration API Reference](../api/yard/HTM/Configuration.md)
+- [Configuration API Reference](../api/yard/HTM/Config.md)
 - [anyway_config Documentation](https://github.com/palkan/anyway_config)

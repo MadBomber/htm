@@ -205,6 +205,6 @@ group.shutdown
 
 ## See Also
 
-- [Multi-Robot Usage Guide](../guides/multi-robot.md)
-- [Hive Mind Architecture](../architecture/hive-mind.md)
+- [Multi-Robot Usage Guide](../robots/multi-robot.md)
+- [Hive Mind Architecture](../robots/hive-mind.md)
 - [Working Memory API](../api/working-memory.md)

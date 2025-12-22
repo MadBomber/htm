@@ -1,0 +1,41 @@
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Balanced Strategy: Importance Decay Over Time</text>
+
+  <!-- Axes -->
+  <line x1="100" y1="350" x2="700" y2="350" stroke="#808080" stroke-width="2"/>
+  <line x1="100" y1="350" x2="100" y2="80" stroke="#808080" stroke-width="2"/>
+
+  <!-- X-axis labels -->
+  <text x="100" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">0h</text>
+  <text x="250" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">1h</text>
+  <text x="400" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">3h</text>
+  <text x="550" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">6h</text>
+  <text x="700" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">24h</text>
+  <text x="400" y="395" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Time Since Added (hours)</text>
+
+  <!-- Y-axis labels -->
+  <text x="85" y="355" text-anchor="end" fill="#B0B0B0" font-size="11">0</text>
+  <text x="85" y="280" text-anchor="end" fill="#B0B0B0" font-size="11">3</text>
+  <text x="85" y="205" text-anchor="end" fill="#B0B0B0" font-size="11">6</text>
+  <text x="85" y="130" text-anchor="end" fill="#B0B0B0" font-size="11">9</text>
+  <text x="85" y="85" text-anchor="end" fill="#B0B0B0" font-size="11">10</text>
+  <text x="40" y="220" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold" transform="rotate(-90 40 220)">Effective Score</text>
+
+  <!-- Decay curves for different importance levels -->
+  <!-- Importance 10.0 -->
+  <path d="M 100 80 Q 250 105 400 155 T 700 320" stroke="#4CAF50" stroke-width="3" fill="none"/>
+  <text x="710" y="320" fill="#4CAF50" font-size="11" font-weight="bold">Imp: 10.0</text>
+
+  <!-- Importance 5.0 -->
+  <path d="M 100 205 Q 250 230 400 255 T 700 335" stroke="#2196F3" stroke-width="3" fill="none"/>
+  <text x="710" y="335" fill="#2196F3" font-size="11" font-weight="bold">Imp: 5.0</text>
+
+  <!-- Importance 1.0 -->
+  <path d="M 100 330 Q 250 340 400 345 T 700 348" stroke="#FF9800" stroke-width="3" fill="none"/>
+  <text x="710" y="348" fill="#FF9800" font-size="11" font-weight="bold">Imp: 1.0</text>
+
+  <!-- Key insight -->
+  <rect x="150" y="50" width="500" height="25" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="1" rx="3"/>
+  <text x="400" y="68" text-anchor="middle" fill="#4CAF50" font-size="12">High-importance memories retain value longer, but recency still matters</text>
+</svg>

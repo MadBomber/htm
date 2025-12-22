@@ -1,0 +1,52 @@
+<svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">Hive Mind: Shared Long-Term Memory</text>
+
+  <!-- Central Database -->
+  <ellipse cx="450" cy="300" rx="180" ry="120" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3"/>
+  <text x="450" y="280" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Long-Term Memory</text>
+  <text x="450" y="305" text-anchor="middle" fill="#B0B0B0" font-size="12">PostgreSQL</text>
+  <text x="450" y="325" text-anchor="middle" fill="#B0B0B0" font-size="12">Shared Global Database</text>
+  <text x="450" y="345" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">All Robots Access Here</text>
+
+  <!-- Robot 1: Code Helper -->
+  <rect x="50" y="80" width="200" height="100" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>
+  <text x="150" y="110" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 1: Code Helper</text>
+  <text x="150" y="135" text-anchor="middle" fill="#B0B0B0" font-size="11">ID: robot-abc123</text>
+  <text x="150" y="155" text-anchor="middle" fill="#B0B0B0" font-size="11">Own Working Memory</text>
+
+  <!-- Robot 2: Research Assistant -->
+  <rect x="650" y="80" width="200" height="100" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="2" rx="5"/>
+  <text x="750" y="110" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 2: Research Bot</text>
+  <text x="750" y="135" text-anchor="middle" fill="#B0B0B0" font-size="11">ID: robot-xyz789</text>
+  <text x="750" y="155" text-anchor="middle" fill="#B0B0B0" font-size="11">Own Working Memory</text>
+
+  <!-- Robot 3: Chat Companion -->
+  <rect x="50" y="450" width="200" height="100" fill="rgba(255, 152, 0, 0.2)" stroke="#FF9800" stroke-width="2" rx="5"/>
+  <text x="150" y="480" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 3: Chat Bot</text>
+  <text x="150" y="505" text-anchor="middle" fill="#B0B0B0" font-size="11">ID: robot-def456</text>
+  <text x="150" y="525" text-anchor="middle" fill="#B0B0B0" font-size="11">Own Working Memory</text>
+
+  <!-- Robot 4: Design Assistant -->
+  <rect x="650" y="450" width="200" height="100" fill="rgba(244, 67, 54, 0.2)" stroke="#F44336" stroke-width="2" rx="5"/>
+  <text x="750" y="480" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Robot 4: Designer</text>
+  <text x="750" y="505" text-anchor="middle" fill="#B0B0B0" font-size="11">ID: robot-ghi012</text>
+  <text x="750" y="525" text-anchor="middle" fill="#B0B0B0" font-size="11">Own Working Memory</text>
+
+  <!-- Connections to central database -->
+  <line x1="150" y1="180" x2="320" y2="240" stroke="#2196F3" stroke-width="3"/>
+  <line x1="750" y1="180" x2="580" y2="240" stroke="#4CAF50" stroke-width="3"/>
+  <line x1="150" y1="450" x2="320" y2="360" stroke="#FF9800" stroke-width="3"/>
+  <line x1="750" y1="450" x2="580" y2="360" stroke="#F44336" stroke-width="3"/>
+
+  <!-- Labels on connections -->
+  <text x="235" y="210" fill="#2196F3" font-size="10">read/write</text>
+  <text x="650" y="210" fill="#4CAF50" font-size="10">read/write</text>
+  <text x="235" y="410" fill="#FF9800" font-size="10">read/write</text>
+  <text x="650" y="410" fill="#F44336" font-size="10">read/write</text>
+
+  <!-- Key benefit -->
+  <rect x="300" y="520" width="300" height="60" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="2" rx="5"/>
+  <text x="450" y="545" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">Knowledge Sharing:</text>
+  <text x="450" y="565" text-anchor="middle" fill="#B0B0B0" font-size="11">All robots see all memories</text>
+</svg>

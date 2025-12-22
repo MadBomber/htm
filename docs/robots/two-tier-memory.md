@@ -6,64 +6,10 @@ HTM implements a sophisticated two-tier memory architecture that balances the co
 
 The two-tier architecture addresses a fundamental challenge in LLM-based applications: LLMs have limited context windows but need to maintain awareness across long conversations spanning days, weeks, or months.
 
-<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
-  <!-- Title -->
-  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">Two-Tier Memory Architecture</text>
-
-  <!-- Working Memory (Hot Tier) -->
-  <rect x="50" y="80" width="300" height="180" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="3" rx="5"/>
-  <text x="200" y="110" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Working Memory (Hot)</text>
-  <text x="80" y="140" fill="#B0B0B0" font-size="12">Capacity: Token-limited (128K)</text>
-  <text x="80" y="160" fill="#B0B0B0" font-size="12">Storage: In-memory Ruby Hash</text>
-  <text x="80" y="180" fill="#B0B0B0" font-size="12">Speed: O(1) lookups</text>
-  <text x="80" y="200" fill="#B0B0B0" font-size="12">Lifetime: Process lifetime</text>
-  <text x="80" y="220" fill="#B0B0B0" font-size="12">Eviction: Importance + Recency</text>
-  <text x="80" y="240" fill="#4CAF50" font-size="12" font-weight="bold">Fast, Token-Aware, Volatile</text>
-
-  <!-- Long-Term Memory (Cold Tier) -->
-  <rect x="450" y="80" width="300" height="180" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3" rx="5"/>
-  <text x="600" y="110" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Long-Term Memory (Cold)</text>
-  <text x="480" y="140" fill="#B0B0B0" font-size="12">Capacity: Unlimited</text>
-  <text x="480" y="160" fill="#B0B0B0" font-size="12">Storage: PostgreSQL + TimescaleDB</text>
-  <text x="480" y="180" fill="#B0B0B0" font-size="12">Speed: O(log n) with indexes</text>
-  <text x="480" y="200" fill="#B0B0B0" font-size="12">Lifetime: Permanent</text>
-  <text x="480" y="220" fill="#B0B0B0" font-size="12">Retrieval: RAG (semantic + temporal)</text>
-  <text x="480" y="240" fill="#4CAF50" font-size="12" font-weight="bold">Durable, Searchable, Persistent</text>
-
-  <!-- Data Flow: Add Memory -->
-  <path d="M 200 280 L 200 320 L 400 320 L 400 280" stroke="#4CAF50" stroke-width="3" fill="none" marker-end="url(#arrow-green)"/>
-  <text x="300" y="310" text-anchor="middle" fill="#4CAF50" font-size="12" font-weight="bold">Add Memory</text>
-  <text x="300" y="330" text-anchor="middle" fill="#B0B0B0" font-size="10">(Stored in both tiers)</text>
-
-  <!-- Data Flow: Eviction -->
-  <path d="M 350 360 L 600 360" stroke="#FF9800" stroke-width="3" marker-end="url(#arrow-orange)"/>
-  <text x="475" y="350" text-anchor="middle" fill="#FF9800" font-size="12" font-weight="bold">Eviction</text>
-  <text x="475" y="380" text-anchor="middle" fill="#B0B0B0" font-size="10">(Token limit → move to LTM only)</text>
-
-  <!-- Data Flow: Recall -->
-  <path d="M 600 400 L 200 400" stroke="#9C27B0" stroke-width="3" marker-end="url(#arrow-purple)"/>
-  <text x="400" y="390" text-anchor="middle" fill="#9C27B0" font-size="12" font-weight="bold">Recall</text>
-  <text x="400" y="420" text-anchor="middle" fill="#B0B0B0" font-size="10">(RAG search → load back to WM)</text>
-
-  <!-- Never Forget Note -->
-  <rect x="150" y="450" width="500" height="40" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="1" rx="3"/>
-  <text x="400" y="475" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">Never Forget: Evicted memories stay in LTM forever (explicit deletion only)</text>
-
-  <defs>
-    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
-    </marker>
-    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 10 3, 0 6" fill="#FF9800"/>
-    </marker>
-    <marker id="arrow-purple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 10 3, 0 6" fill="#9C27B0"/>
-    </marker>
-  </defs>
-</svg>
+![Two-Tier Memory Architecture](../assets/images/two-tier-memory-architecture.svg)
 
 !!! info "Related ADR"
-    See [ADR-002: Two-Tier Memory Architecture](adrs/002-two-tier-memory.md) for the complete architectural decision record.
+    See [ADR-002: Two-Tier Memory Architecture](../architecture/adrs/002-two-tier-memory.md) for the complete architectural decision record.
 
 ## Working Memory (Hot Tier)
 
@@ -209,55 +155,13 @@ Nodes are evicted in this order:
 3. **High importance, old** (e.g., importance: 9.0, age: 5 days)
 4. **High importance, recent** (e.g., importance: 9.0, age: 1 hour) ← **Kept longest**
 
-<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
-  <!-- Title -->
-  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Eviction Priority (Lower → Higher retention)</text>
-
-  <!-- Priority bars -->
-  <rect x="50" y="80" width="150" height="50" fill="rgba(244, 67, 54, 0.6)" stroke="#F44336" stroke-width="2" rx="3"/>
-  <text x="125" y="110" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Tier 1: Evict First</text>
-
-  <rect x="220" y="80" width="150" height="50" fill="rgba(255, 152, 0, 0.6)" stroke="#FF9800" stroke-width="2" rx="3"/>
-  <text x="295" y="110" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Tier 2</text>
-
-  <rect x="390" y="80" width="150" height="50" fill="rgba(255, 193, 7, 0.6)" stroke="#FFC107" stroke-width="2" rx="3"/>
-  <text x="465" y="110" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Tier 3</text>
-
-  <rect x="560" y="80" width="150" height="50" fill="rgba(76, 175, 80, 0.6)" stroke="#4CAF50" stroke-width="2" rx="3"/>
-  <text x="635" y="110" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Tier 4: Keep Longest</text>
-
-  <!-- Details -->
-  <text x="125" y="160" text-anchor="middle" fill="#B0B0B0" font-size="11">Importance: 1.0</text>
-  <text x="125" y="180" text-anchor="middle" fill="#B0B0B0" font-size="11">Age: 5 days</text>
-  <text x="125" y="200" text-anchor="middle" fill="#F44336" font-size="10" font-weight="bold">Low value, stale</text>
-
-  <text x="295" y="160" text-anchor="middle" fill="#B0B0B0" font-size="11">Importance: 1.0</text>
-  <text x="295" y="180" text-anchor="middle" fill="#B0B0B0" font-size="11">Age: 1 hour</text>
-  <text x="295" y="200" text-anchor="middle" fill="#FF9800" font-size="10" font-weight="bold">Low value, recent</text>
-
-  <text x="465" y="160" text-anchor="middle" fill="#B0B0B0" font-size="11">Importance: 9.0</text>
-  <text x="465" y="180" text-anchor="middle" fill="#B0B0B0" font-size="11">Age: 5 days</text>
-  <text x="465" y="200" text-anchor="middle" fill="#FFC107" font-size="10" font-weight="bold">High value, older</text>
-
-  <text x="635" y="160" text-anchor="middle" fill="#B0B0B0" font-size="11">Importance: 9.0</text>
-  <text x="635" y="180" text-anchor="middle" fill="#B0B0B0" font-size="11">Age: 1 hour</text>
-  <text x="635" y="200" text-anchor="middle" fill="#4CAF50" font-size="10" font-weight="bold">High value, fresh</text>
-
-  <!-- Example scenario -->
-  <text x="50" y="250" fill="#E0E0E0" font-size="13" font-weight="bold">Example Eviction Scenario:</text>
-  <text x="50" y="280" fill="#B0B0B0" font-size="11">Working Memory: 127,500 / 128,000 tokens (99% full)</text>
-  <text x="50" y="300" fill="#B0B0B0" font-size="11">New memory to add: 5,000 tokens</text>
-  <text x="50" y="320" fill="#B0B0B0" font-size="11">Need to free: 4,500 tokens</text>
-
-  <text x="50" y="350" fill="#4CAF50" font-size="11">Eviction: Remove Tier 1 and Tier 2 nodes until 4,500+ tokens freed</text>
-  <text x="50" y="370" fill="#4CAF50" font-size="11">Result: Tier 3 and Tier 4 nodes preserved (high importance)</text>
-</svg>
+![Eviction Priority](../assets/images/eviction-priority.svg)
 
 !!! warning "Importance Matters"
     **Assign meaningful importance scores!** Low-importance memories (1.0-3.0) will be evicted first. Use higher scores (7.0-10.0) for critical information like architectural decisions, user preferences, and long-term facts.
 
 !!! info "Related ADR"
-    See [ADR-007: Working Memory Eviction Strategy](adrs/007-eviction-strategy.md) for detailed rationale and alternatives considered.
+    See [ADR-007: Working Memory Eviction Strategy](../architecture/adrs/007-eviction-strategy.md) for detailed rationale and alternatives considered.
 
 ### Context Assembly Strategies
 
@@ -352,50 +256,10 @@ context = htm.create_context(strategy: :balanced)
 # Recent debugging context + important architectural decisions
 ```
 
-<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
-  <!-- Title -->
-  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Balanced Strategy: Importance Decay Over Time</text>
-
-  <!-- Axes -->
-  <line x1="100" y1="350" x2="700" y2="350" stroke="#808080" stroke-width="2"/>
-  <line x1="100" y1="350" x2="100" y2="80" stroke="#808080" stroke-width="2"/>
-
-  <!-- X-axis labels -->
-  <text x="100" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">0h</text>
-  <text x="250" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">1h</text>
-  <text x="400" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">3h</text>
-  <text x="550" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">6h</text>
-  <text x="700" y="375" text-anchor="middle" fill="#B0B0B0" font-size="11">24h</text>
-  <text x="400" y="395" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold">Time Since Added (hours)</text>
-
-  <!-- Y-axis labels -->
-  <text x="85" y="355" text-anchor="end" fill="#B0B0B0" font-size="11">0</text>
-  <text x="85" y="280" text-anchor="end" fill="#B0B0B0" font-size="11">3</text>
-  <text x="85" y="205" text-anchor="end" fill="#B0B0B0" font-size="11">6</text>
-  <text x="85" y="130" text-anchor="end" fill="#B0B0B0" font-size="11">9</text>
-  <text x="85" y="85" text-anchor="end" fill="#B0B0B0" font-size="11">10</text>
-  <text x="40" y="220" text-anchor="middle" fill="#E0E0E0" font-size="12" font-weight="bold" transform="rotate(-90 40 220)">Effective Score</text>
-
-  <!-- Decay curves for different importance levels -->
-  <!-- Importance 10.0 -->
-  <path d="M 100 80 Q 250 105 400 155 T 700 320" stroke="#4CAF50" stroke-width="3" fill="none"/>
-  <text x="710" y="320" fill="#4CAF50" font-size="11" font-weight="bold">Imp: 10.0</text>
-
-  <!-- Importance 5.0 -->
-  <path d="M 100 205 Q 250 230 400 255 T 700 335" stroke="#2196F3" stroke-width="3" fill="none"/>
-  <text x="710" y="335" fill="#2196F3" font-size="11" font-weight="bold">Imp: 5.0</text>
-
-  <!-- Importance 1.0 -->
-  <path d="M 100 330 Q 250 340 400 345 T 700 348" stroke="#FF9800" stroke-width="3" fill="none"/>
-  <text x="710" y="348" fill="#FF9800" font-size="11" font-weight="bold">Imp: 1.0</text>
-
-  <!-- Key insight -->
-  <rect x="150" y="50" width="500" height="25" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="1" rx="3"/>
-  <text x="400" y="68" text-anchor="middle" fill="#4CAF50" font-size="12">High-importance memories retain value longer, but recency still matters</text>
-</svg>
+![Balanced Strategy: Importance Decay Over Time](../assets/images/balanced-strategy-decay.svg)
 
 !!! info "Related ADR"
-    See [ADR-006: Context Assembly Strategies](adrs/006-context-assembly.md) for detailed strategy analysis.
+    See [ADR-006: Context Assembly Strategies](../architecture/adrs/006-context-assembly.md) for detailed strategy analysis.
 
 ### Performance Characteristics
 
@@ -474,7 +338,7 @@ CREATE INDEX idx_nodes_value_gin ON nodes
 - Retention policies for data lifecycle
 
 !!! info "Related ADR"
-    See [ADR-001: Use PostgreSQL with TimescaleDB for Storage](adrs/001-postgresql-timescaledb.md) for complete rationale.
+    See [ADR-001: Use PostgreSQL with TimescaleDB for Storage](../architecture/adrs/001-postgresql-timescaledb.md) for complete rationale.
 
 ### Long-Term Memory Operations
 
@@ -560,7 +424,7 @@ end
 ```
 
 !!! info "Related ADR"
-    See [ADR-005: RAG-Based Retrieval with Hybrid Search](adrs/005-rag-retrieval.md) for search strategy details.
+    See [ADR-005: RAG-Based Retrieval with Hybrid Search](../architecture/adrs/005-rag-retrieval.md) for search strategy details.
 
 ### RAG-Based Retrieval
 
@@ -831,9 +695,9 @@ LIMIT 20;
 
 ## Related Documentation
 
-- [Architecture Index](index.md) - System overview and component summary
-- [Architecture Overview](overview.md) - Detailed architecture and data flows
+- [Architecture Index](../architecture/index.md) - System overview and component summary
+- [Architecture Overview](../architecture/overview.md) - Detailed architecture and data flows
 - [Hive Mind Architecture](hive-mind.md) - Multi-robot shared memory
-- [ADR-002: Two-Tier Memory Architecture](adrs/002-two-tier-memory.md)
-- [ADR-006: Context Assembly Strategies](adrs/006-context-assembly.md)
-- [ADR-007: Working Memory Eviction Strategy](adrs/007-eviction-strategy.md)
+- [ADR-002: Two-Tier Memory Architecture](../architecture/adrs/002-two-tier-memory.md)
+- [ADR-006: Context Assembly Strategies](../architecture/adrs/006-context-assembly.md)
+- [ADR-007: Working Memory Eviction Strategy](../architecture/adrs/007-eviction-strategy.md)

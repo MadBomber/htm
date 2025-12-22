@@ -420,7 +420,7 @@ htm = HTM.new(
 - [Multi-Agent Systems](https://en.wikipedia.org/wiki/Multi-agent_system)
 - [ADR-002: Two-Tier Memory](002-two-tier-memory.md)
 - [ADR-008: Robot Identification](008-robot-identification.md)
-- [Multi-Robot Guide](../../guides/multi-robot.md)
+- [Multi-Robot Guide](../../robots/multi-robot.md)
 
 ---
 

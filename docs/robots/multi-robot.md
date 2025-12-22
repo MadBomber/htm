@@ -765,6 +765,6 @@ team.process_feature("oauth-integration")
 
 ## Next Steps
 
-- [**Context Assembly**](context-assembly.md) - Build context from multi-robot memories
-- [**Long-term Memory**](long-term-memory.md) - Understand the shared storage layer
-- [**Search Strategies**](search-strategies.md) - Find relevant memories across robots
+- [**Context Assembly**](../guides/context-assembly.md) - Build context from multi-robot memories
+- [**Long-term Memory**](../guides/long-term-memory.md) - Understand the shared storage layer
+- [**Search Strategies**](../guides/search-strategies.md) - Find relevant memories across robots

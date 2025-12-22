@@ -1067,4 +1067,4 @@ HTM uses RubyLLM which supports multiple providers. Defaults to Ollama for local
 - [Getting Started](getting-started.md) - HTM basics
 - [Adding Memories](adding-memories.md) - Learn about tags and metadata
 - [Recalling Memories](recalling-memories.md) - Search strategies
-- [Multi-Robot Systems](multi-robot.md) - Working with multiple robots
+- [Multi-Robot Systems](../robots/multi-robot.md) - Working with multiple robots

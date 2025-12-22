@@ -1,6 +1,6 @@
 # Robot Groups: Coordinated Multi-Robot Systems
 
-Robot Groups extend HTM's [Hive Mind architecture](../architecture/hive-mind.md) by adding real-time coordination, shared working memory, and automatic failover capabilities. While the Hive Mind enables knowledge sharing through a shared long-term memory database, Robot Groups take this further by synchronizing active working memory across multiple robots in real-time.
+Robot Groups extend HTM's [Hive Mind architecture](hive-mind.md) by adding real-time coordination, shared working memory, and automatic failover capabilities. While the Hive Mind enables knowledge sharing through a shared long-term memory database, Robot Groups take this further by synchronizing active working memory across multiple robots in real-time.
 
 ## Overview
 
@@ -598,8 +598,8 @@ Standalone worker process that:
 
 ## Related Documentation
 
-- [Hive Mind Architecture](../architecture/hive-mind.md) - Foundation for shared memory
+- [Hive Mind Architecture](hive-mind.md) - Foundation for shared memory
 - [Multi-Robot Usage](multi-robot.md) - Basic multi-robot patterns
-- [Working Memory](working-memory.md) - How working memory operates
+- [Working Memory](../guides/working-memory.md) - How working memory operates
 - [API Reference: RobotGroup](../api/yard/HTM/RobotGroup.md) - Complete API documentation
 - [API Reference: WorkingMemoryChannel](../api/yard/HTM/WorkingMemoryChannel.md) - Low-level pub/sub API
