@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.0.19] - 2025-12-21
+
+### Changed
+- **Reorganized "Robots!" documentation** - Consolidated 5 robot-related docs into `docs/robots/` subdirectory
+  - Created `docs/robots/index.md` as section overview with navigation table and architecture diagram
+  - Moved `docs/robots.md` → `docs/robots/why-robots.md`
+  - Moved `docs/guides/multi-robot.md` → `docs/robots/multi-robot.md`
+  - Moved `docs/guides/robot-groups.md` → `docs/robots/robot-groups.md`
+  - Moved `docs/architecture/two-tier-memory.md` → `docs/robots/two-tier-memory.md`
+  - Moved `docs/architecture/hive-mind.md` → `docs/robots/hive-mind.md`
+  - Updated `mkdocs.yml` navigation with logical information flow
+  - Fixed 30+ broken relative links across documentation files
+- **Extracted inline SVG graphics to standalone files** - Improved documentation maintainability
+  - From `hive-mind.md`: `hive-mind-shared-memory.svg`, `memory-topology.svg`
+  - From `two-tier-memory.md`: `two-tier-memory-architecture.svg`, `eviction-priority.svg`, `balanced-strategy-decay.svg`
+  - All SVGs now in `docs/assets/images/` and referenced via markdown image syntax
+
+### Fixed
+- **ConfigSection.md unrecognized link warning** - Wrapped method signatures in backticks to prevent MkDocs interpreting bracket parameters as links
+
 ## [0.0.18] - 2025-12-20
 ### Added
 - **Anyway::Config-based configuration system** - Replaced custom Configuration class with robust multi-source config management
@@ -689,7 +710,14 @@ HTM.config.embedding.model
 - Working memory size is user-configurable
 - See ADRs for detailed architectural decisions and rationale
 
-[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.12...HEAD
+[Unreleased]: https://github.com/madbomber/htm/compare/v0.0.19...HEAD
+[0.0.19]: https://github.com/madbomber/htm/compare/v0.0.18...v0.0.19
+[0.0.18]: https://github.com/madbomber/htm/compare/v0.0.17...v0.0.18
+[0.0.17]: https://github.com/madbomber/htm/compare/v0.0.15...v0.0.17
+[0.0.15]: https://github.com/madbomber/htm/compare/v0.0.14...v0.0.15
+[0.0.14]: https://github.com/madbomber/htm/compare/v0.0.13...v0.0.14
+[0.0.13]: https://github.com/madbomber/htm/compare/v0.0.11...v0.0.13
+[0.0.11]: https://github.com/madbomber/htm/compare/v0.0.10...v0.0.11
 [0.0.12]: https://github.com/madbomber/htm/compare/v0.0.10...v0.0.12
 [0.0.10]: https://github.com/madbomber/htm/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/madbomber/htm/compare/v0.0.8...v0.0.9
