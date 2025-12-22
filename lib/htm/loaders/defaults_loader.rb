@@ -79,6 +79,29 @@ class HTM
           raw = load_raw_yaml
           raw[:defaults] || {}
         end
+
+        # Returns valid environment names from the config file
+        #
+        # Valid environments are top-level keys in defaults.yml excluding 'defaults'.
+        # For example, if defaults.yml has keys: defaults, development, test, production
+        # this returns [:development, :test, :production]
+        #
+        # @return [Array<Symbol>] list of valid environment names
+        def valid_environments
+          raw = load_raw_yaml
+          raw.keys.reject { |k| k == :defaults }.sort
+        end
+
+        # Check if a given environment name is valid
+        #
+        # @param env [String, Symbol] environment name to check
+        # @return [Boolean] true if environment is valid
+        def valid_environment?(env)
+          return false if env.nil? || env.to_s.empty?
+          return false if env.to_s == 'defaults'
+
+          valid_environments.include?(env.to_sym)
+        end
       end
 
       def call(name:, **_options)

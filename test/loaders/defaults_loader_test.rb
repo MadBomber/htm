@@ -141,4 +141,48 @@ class DefaultsLoaderTest < Minitest::Test
     # Test environment should have htm_test database.name (but can be overridden by HTM_DATABASE__URL)
     # Note: db_name may be parsed from HTM_DATABASE__URL if set
   end
+
+  # Environment validation tests
+
+  def test_valid_environments_returns_top_level_keys_excluding_defaults
+    envs = HTM::Loaders::DefaultsLoader.valid_environments
+
+    assert_instance_of Array, envs
+    assert_includes envs, :development
+    assert_includes envs, :test
+    assert_includes envs, :production
+    refute_includes envs, :defaults
+  end
+
+  def test_valid_environments_are_sorted
+    envs = HTM::Loaders::DefaultsLoader.valid_environments
+
+    assert_equal envs.sort, envs
+  end
+
+  def test_valid_environment_with_valid_environments
+    assert HTM::Loaders::DefaultsLoader.valid_environment?(:development)
+    assert HTM::Loaders::DefaultsLoader.valid_environment?(:test)
+    assert HTM::Loaders::DefaultsLoader.valid_environment?(:production)
+    assert HTM::Loaders::DefaultsLoader.valid_environment?('development')
+    assert HTM::Loaders::DefaultsLoader.valid_environment?('test')
+    assert HTM::Loaders::DefaultsLoader.valid_environment?('production')
+  end
+
+  def test_valid_environment_with_defaults_is_invalid
+    refute HTM::Loaders::DefaultsLoader.valid_environment?(:defaults)
+    refute HTM::Loaders::DefaultsLoader.valid_environment?('defaults')
+  end
+
+  def test_valid_environment_with_unknown_environment
+    refute HTM::Loaders::DefaultsLoader.valid_environment?(:staging)
+    refute HTM::Loaders::DefaultsLoader.valid_environment?('staging')
+    refute HTM::Loaders::DefaultsLoader.valid_environment?(:staginr)
+    refute HTM::Loaders::DefaultsLoader.valid_environment?('unknown')
+  end
+
+  def test_valid_environment_with_nil_or_empty
+    refute HTM::Loaders::DefaultsLoader.valid_environment?(nil)
+    refute HTM::Loaders::DefaultsLoader.valid_environment?('')
+  end
 end

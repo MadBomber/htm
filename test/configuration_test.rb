@@ -282,4 +282,350 @@ class ConfigurationTest < Minitest::Test
   ensure
     saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
   end
+
+  # Environment validation tests
+
+  def test_class_valid_environments
+    envs = HTM::Config.valid_environments
+
+    assert_instance_of Array, envs
+    assert_includes envs, :development
+    assert_includes envs, :test
+    assert_includes envs, :production
+    refute_includes envs, :defaults
+  end
+
+  def test_class_valid_environment_with_valid_env
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'test'
+
+    assert HTM::Config.valid_environment?
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_class_valid_environment_with_invalid_env
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'staginr'
+
+    refute HTM::Config.valid_environment?
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_class_valid_environment_with_defaults_env
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'defaults'
+
+    refute HTM::Config.valid_environment?
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_class_validate_environment_raises_for_invalid_env
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'staginr'
+
+    error = assert_raises(HTM::ConfigurationError) do
+      HTM::Config.validate_environment!
+    end
+
+    assert_match(/Invalid environment 'staginr'/, error.message)
+    assert_match(/Valid environments are:/, error.message)
+    assert_match(/development/, error.message)
+    assert_match(/test/, error.message)
+    assert_match(/production/, error.message)
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_class_validate_environment_raises_for_defaults_env
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'defaults'
+
+    error = assert_raises(HTM::ConfigurationError) do
+      HTM::Config.validate_environment!
+    end
+
+    assert_match(/Invalid environment 'defaults'/, error.message)
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_class_validate_environment_succeeds_for_valid_env
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'test'
+
+    # Should not raise
+    assert HTM::Config.validate_environment!
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_instance_validate_database_raises_for_invalid_env
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'staginr'
+
+    config = HTM::Config.new
+
+    error = assert_raises(HTM::ConfigurationError) do
+      config.validate_database!
+    end
+
+    assert_match(/Invalid environment 'staginr'/, error.message)
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_instance_validate_database_raises_when_database_not_configured
+    saved_htm_env = ENV['HTM_ENV']
+    saved_dburl = ENV['HTM_DATABASE__URL']
+
+    ENV['HTM_ENV'] = 'test'
+    ENV.delete('HTM_DATABASE__URL')
+
+    config = HTM::Config.new
+    config.database.url = nil
+    config.database.name = nil
+
+    error = assert_raises(HTM::ConfigurationError) do
+      config.validate_database!
+    end
+
+    assert_match(/No database configured/, error.message)
+    assert_match(/environment 'test'/, error.message)
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_instance_validate_database_succeeds_when_properly_configured
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'test'
+
+    config = HTM::Config.new
+    config.database.name = 'test_db'
+
+    # Should not raise
+    assert config.validate_database!
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_instance_validate_environment
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'test'
+
+    config = HTM::Config.new
+
+    # Should not raise
+    assert config.validate_environment!
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_instance_validate_environment_raises_for_invalid
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'invalid_env'
+
+    config = HTM::Config.new
+
+    error = assert_raises(HTM::ConfigurationError) do
+      config.validate_environment!
+    end
+
+    assert_match(/Invalid environment 'invalid_env'/, error.message)
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  # ==========================================================================
+  # Database Naming Convention Tests
+  # ==========================================================================
+
+  def test_expected_database_name
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'test'
+
+    config = HTM::Config.new
+    # Default service.name is 'htm' from defaults.yml
+    assert_equal 'htm_test', config.expected_database_name
+
+    ENV['HTM_ENV'] = 'development'
+    config = HTM::Config.new
+    assert_equal 'htm_development', config.expected_database_name
+
+    ENV['HTM_ENV'] = 'production'
+    config = HTM::Config.new
+    assert_equal 'htm_production', config.expected_database_name
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_expected_database_name_with_custom_service
+    saved_htm_env = ENV['HTM_ENV']
+    ENV['HTM_ENV'] = 'production'
+
+    config = HTM::Config.new
+    config.service.name = 'payroll'
+
+    assert_equal 'payroll_production', config.expected_database_name
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+  end
+
+  def test_actual_database_name_from_url
+    saved_dburl = ENV['HTM_DATABASE__URL']
+
+    config = HTM::Config.new
+    config.database.url = 'postgresql://user@localhost:5432/myapp_test'
+
+    assert_equal 'myapp_test', config.actual_database_name
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_actual_database_name_from_config
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV.delete('HTM_DATABASE__URL')
+
+    config = HTM::Config.new
+    config.database.url = nil
+    config.database.name = 'myapp_development'
+
+    assert_equal 'myapp_development', config.actual_database_name
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_actual_database_name_url_takes_precedence
+    config = HTM::Config.new
+    config.database.url = 'postgresql://user@localhost:5432/from_url'
+    config.database.name = 'from_config'
+
+    assert_equal 'from_url', config.actual_database_name
+  end
+
+  def test_valid_database_name_when_matching
+    saved_htm_env = ENV['HTM_ENV']
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_ENV'] = 'test'
+
+    config = HTM::Config.new
+    config.database.url = 'postgresql://user@localhost:5432/htm_test'
+
+    assert config.valid_database_name?
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_valid_database_name_when_not_matching
+    saved_htm_env = ENV['HTM_ENV']
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_ENV'] = 'test'
+
+    config = HTM::Config.new
+    config.database.url = 'postgresql://user@localhost:5432/htm_production'
+
+    refute config.valid_database_name?
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_validate_database_name_succeeds_when_matching
+    saved_htm_env = ENV['HTM_ENV']
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_ENV'] = 'test'
+
+    config = HTM::Config.new
+    config.database.url = 'postgresql://user@localhost:5432/htm_test'
+
+    # Should not raise
+    assert config.validate_database_name!
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_validate_database_name_raises_when_environment_wrong
+    saved_htm_env = ENV['HTM_ENV']
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_ENV'] = 'test'
+
+    config = HTM::Config.new
+    config.database.url = 'postgresql://user@localhost:5432/htm_production'
+
+    error = assert_raises(HTM::ConfigurationError) do
+      config.validate_database_name!
+    end
+
+    assert_match(/does not match expected/, error.message)
+    assert_match(/htm_production/, error.message)
+    assert_match(/htm_test/, error.message)
+    assert_match(/Service name: htm/, error.message)
+    assert_match(/Environment:  test/, error.message)
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_validate_database_name_raises_when_service_wrong
+    saved_htm_env = ENV['HTM_ENV']
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_ENV'] = 'production'
+
+    config = HTM::Config.new
+    # Default service.name is 'htm'
+    config.database.url = 'postgresql://user@localhost:5432/payroll_production'
+
+    error = assert_raises(HTM::ConfigurationError) do
+      config.validate_database_name!
+    end
+
+    assert_match(/does not match expected/, error.message)
+    assert_match(/payroll_production/, error.message)
+    assert_match(/htm_production/, error.message)
+    assert_match(/Service name: htm/, error.message)
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_validate_database_name_raises_when_format_wrong
+    saved_htm_env = ENV['HTM_ENV']
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_ENV'] = 'test'
+
+    config = HTM::Config.new
+    config.database.url = 'postgresql://user@localhost:5432/random_database'
+
+    error = assert_raises(HTM::ConfigurationError) do
+      config.validate_database_name!
+    end
+
+    assert_match(/does not match expected/, error.message)
+    assert_match(/random_database/, error.message)
+    assert_match(/htm_test/, error.message)
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_validate_database_name_custom_service_and_env
+    saved_htm_env = ENV['HTM_ENV']
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_ENV'] = 'production'
+
+    config = HTM::Config.new
+    config.service.name = 'payroll'
+    config.database.url = 'postgresql://user@localhost:5432/payroll_production'
+
+    # Should not raise - custom service name with matching database
+    assert config.validate_database_name!
+  ensure
+    saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
 end

@@ -15,28 +15,74 @@ $LOAD_PATH.unshift(lib_path) unless $LOAD_PATH.include?(lib_path)
 
 namespace :htm do
   namespace :db do
-    desc "Set up HTM database schema and run migrations (set DUMP_SCHEMA=true to auto-dump schema after)"
-    task :setup do
+    desc "Validate HTM environment and database configuration"
+    task :validate do
       require 'htm'
+
+      # Validate environment
+      unless HTM::Config.valid_environment?
+        valid = HTM::Config.valid_environments.map(&:to_s).join(', ')
+        $stderr.puts "Error: Invalid environment '#{HTM.env}'."
+        $stderr.puts "Valid environments are: #{valid}"
+        $stderr.puts ""
+        $stderr.puts "Either:"
+        $stderr.puts "  - Set HTM_ENV to a valid environment"
+        $stderr.puts "  - Add a '#{HTM.env}:' section to your config file"
+        exit 1
+      end
+
+      # Validate database configuration
+      unless HTM.config.database_configured?
+        $stderr.puts "Error: No database configured for environment '#{HTM.env}'."
+        $stderr.puts ""
+        $stderr.puts "Either:"
+        $stderr.puts "  - Set HTM_DATABASE__URL=postgresql://..."
+        $stderr.puts "  - Set HTM_DATABASE__NAME=your_db_name"
+        $stderr.puts "  - Add database.name to the '#{HTM.env}:' section in your config"
+        exit 1
+      end
+
+      # Validate database naming convention: {service_name}_{environment}
+      config = HTM.config
+      expected = config.expected_database_name
+      actual = config.actual_database_name
+
+      unless actual == expected
+        $stderr.puts "Error: Database name does not follow naming convention!"
+        $stderr.puts ""
+        $stderr.puts "  Database names must be: {service_name}_{environment}"
+        $stderr.puts ""
+        $stderr.puts "  Service name: #{config.service_name}"
+        $stderr.puts "  Environment:  #{config.environment}"
+        $stderr.puts "  Expected:     #{expected}"
+        $stderr.puts "  Actual:       #{actual}"
+        $stderr.puts ""
+        $stderr.puts "Either:"
+        $stderr.puts "  - Set HTM_DATABASE__URL to point to '#{expected}'"
+        $stderr.puts "  - Set HTM_DATABASE__NAME=#{expected}"
+        $stderr.puts "  - Change HTM_ENV to match the database suffix"
+        exit 1
+      end
+    end
+
+    desc "Set up HTM database schema and run migrations (set DUMP_SCHEMA=true to auto-dump schema after)"
+    task setup: :validate do
       dump_schema = ENV['DUMP_SCHEMA'] == 'true'
       HTM::Database.setup(dump_schema: dump_schema)
     end
 
     desc "Run pending database migrations"
-    task :migrate do
-      require 'htm'
+    task migrate: :validate do
       HTM::Database.migrate
     end
 
     desc "Show migration status"
-    task :status do
-      require 'htm'
+    task status: :validate do
       HTM::Database.migration_status
     end
 
     desc "Drop all HTM tables (WARNING: destructive! Set CONFIRM=yes to skip prompt)"
-    task :drop do
-      require 'htm'
+    task drop: :validate do
       if ENV['CONFIRM'] == 'yes'
         HTM::Database.drop
       else
@@ -51,8 +97,7 @@ namespace :htm do
     end
 
     desc "Drop and recreate database (WARNING: destructive! Set CONFIRM=yes to skip prompt)"
-    task :reset do
-      require 'htm'
+    task reset: :validate do
       if ENV['CONFIRM'] == 'yes'
         HTM::Database.drop
         HTM::Database.setup(dump_schema: true)
@@ -69,9 +114,7 @@ namespace :htm do
     end
 
     desc "Verify database connection (respects HTM_ENV/RAILS_ENV)"
-    task :verify do
-      require 'htm'
-
+    task verify: :validate do
       config = HTM::ActiveRecordConfig.load_database_config
 
       puts "Verifying HTM database connection (#{HTM.env})..."
@@ -107,9 +150,7 @@ namespace :htm do
     end
 
     desc "Open PostgreSQL console (respects HTM_ENV/RAILS_ENV)"
-    task :console do
-      require 'htm'
-
+    task console: :validate do
       config = HTM::ActiveRecordConfig.load_database_config
 
       puts "Connecting to #{config[:database]} (#{HTM.env})..."
@@ -132,9 +173,7 @@ namespace :htm do
     end
 
     desc "Show record counts for all HTM tables"
-    task :stats do
-      require 'htm'
-
+    task stats: :validate do
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
 
@@ -415,9 +454,7 @@ namespace :htm do
     end
 
     desc "Create database if it doesn't exist (respects HTM_ENV/RAILS_ENV)"
-    task :create do
-      require 'htm'
-
+    task create: :validate do
       config = HTM::ActiveRecordConfig.load_database_config
       db_name = config[:database]
 

@@ -494,6 +494,154 @@ class HTM
     end
 
     # ==========================================================================
+    # Environment Validation
+    # ==========================================================================
+
+    # Returns list of valid environment names from bundled defaults
+    #
+    # @return [Array<Symbol>] valid environment names (e.g., [:development, :production, :test])
+    def self.valid_environments
+      HTM::Loaders::DefaultsLoader.valid_environments
+    end
+
+    # Check if current environment is valid (defined in config)
+    #
+    # @return [Boolean] true if environment has a config section
+    def self.valid_environment?
+      HTM::Loaders::DefaultsLoader.valid_environment?(env)
+    end
+
+    # Validate that the current environment is configured
+    #
+    # @raise [HTM::ConfigurationError] if environment is invalid
+    # @return [true] if environment is valid
+    def self.validate_environment!
+      current = env
+      return true if HTM::Loaders::DefaultsLoader.valid_environment?(current)
+
+      valid = valid_environments.map(&:to_s).join(', ')
+      raise HTM::ConfigurationError,
+        "Invalid environment '#{current}'. " \
+        "Valid environments are: #{valid}. " \
+        "Set HTM_ENV to a valid environment or add a '#{current}:' section to your config."
+    end
+
+    # Instance method delegates
+    def valid_environment?
+      self.class.valid_environment?
+    end
+
+    def validate_environment!
+      self.class.validate_environment!
+    end
+
+    # Validate that database is configured for the current environment
+    #
+    # @raise [HTM::ConfigurationError] if database is not configured
+    # @return [true] if database is configured
+    def validate_database!
+      validate_environment!
+
+      unless database_configured?
+        raise HTM::ConfigurationError,
+          "No database configured for environment '#{environment}'. " \
+          "Set HTM_DATABASE__URL or HTM_DATABASE__NAME, " \
+          "or add database.name to the '#{environment}:' section in your config."
+      end
+
+      true
+    end
+
+    # ==========================================================================
+    # Database Naming Convention
+    # ==========================================================================
+    #
+    # Database names MUST follow the convention: {service_name}_{environment}
+    #
+    # Examples:
+    #   - htm_development
+    #   - htm_test
+    #   - htm_production
+    #   - payroll_development
+    #   - payroll_test
+    #
+    # This ensures:
+    #   1. Database names are predictable and self-documenting
+    #   2. Environment mismatches are impossible (exact match required)
+    #   3. Service isolation (can't accidentally use another app's database)
+    #
+    # ==========================================================================
+
+    # Returns the expected database name based on service.name and environment
+    #
+    # @return [String] expected database name in format "{service_name}_{environment}"
+    #
+    # @example
+    #   config.service.name = "htm"
+    #   HTM_ENV = "test"
+    #   config.expected_database_name  # => "htm_test"
+    #
+    def expected_database_name
+      "#{service_name}_#{environment}"
+    end
+
+    # Extract the actual database name from URL or config
+    #
+    # @return [String, nil] the database name
+    def actual_database_name
+      url = database&.url
+      if url && !url.empty?
+        # Parse database name from URL: postgresql://user@host:port/dbname
+        uri = URI.parse(url) rescue nil
+        return uri&.path&.sub(%r{^/}, '')
+      end
+
+      database&.name
+    end
+
+    # Validate that the database name follows the naming convention
+    #
+    # Database names must be: {service_name}_{environment}
+    #
+    # @raise [HTM::ConfigurationError] if database name doesn't match expected
+    # @return [true] if database name is valid
+    #
+    # @example Valid configurations
+    #   HTM_ENV=test, service.name=htm, database=htm_test        # OK
+    #   HTM_ENV=production, service.name=payroll, database=payroll_production  # OK
+    #
+    # @example Invalid configurations (will raise)
+    #   HTM_ENV=test, service.name=htm, database=htm_production  # Wrong environment
+    #   HTM_ENV=test, service.name=htm, database=payroll_test    # Wrong service
+    #   HTM_ENV=test, service.name=htm, database=mydb            # Wrong format
+    #
+    def validate_database_name!
+      actual = actual_database_name
+      expected = expected_database_name
+
+      return true if actual == expected
+
+      raise HTM::ConfigurationError,
+        "Database name '#{actual}' does not match expected '#{expected}'.\n" \
+        "Database names must follow the convention: {service_name}_{environment}\n" \
+        "  Service name: #{service_name}\n" \
+        "  Environment:  #{environment}\n" \
+        "  Expected:     #{expected}\n" \
+        "  Actual:       #{actual}\n\n" \
+        "Either:\n" \
+        "  - Set HTM_DATABASE__URL to point to '#{expected}'\n" \
+        "  - Set HTM_DATABASE__NAME=#{expected}\n" \
+        "  - Change HTM_ENV to match the database suffix"
+    end
+
+    # Check if the database name matches the expected convention
+    #
+    # @return [Boolean] true if database name matches expected
+    def valid_database_name?
+      actual_database_name == expected_database_name
+    end
+
+    # ==========================================================================
     # XDG Config Path Helpers
     # ==========================================================================
 
