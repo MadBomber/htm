@@ -1,0 +1,55 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="background: transparent;">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" fill="#E0E0E0" font-size="18" font-weight="bold">Two-Tier Memory Architecture</text>
+
+  <!-- Working Memory (Hot Tier) -->
+  <rect x="50" y="80" width="300" height="180" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="3" rx="5"/>
+  <text x="200" y="110" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Working Memory (Hot)</text>
+  <text x="80" y="140" fill="#B0B0B0" font-size="12">Capacity: Token-limited (128K)</text>
+  <text x="80" y="160" fill="#B0B0B0" font-size="12">Storage: In-memory Ruby Hash</text>
+  <text x="80" y="180" fill="#B0B0B0" font-size="12">Speed: O(1) lookups</text>
+  <text x="80" y="200" fill="#B0B0B0" font-size="12">Lifetime: Process lifetime</text>
+  <text x="80" y="220" fill="#B0B0B0" font-size="12">Eviction: Importance + Recency</text>
+  <text x="80" y="240" fill="#4CAF50" font-size="12" font-weight="bold">Fast, Token-Aware, Volatile</text>
+
+  <!-- Long-Term Memory (Cold Tier) -->
+  <rect x="450" y="80" width="300" height="180" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3" rx="5"/>
+  <text x="600" y="110" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Long-Term Memory (Cold)</text>
+  <text x="480" y="140" fill="#B0B0B0" font-size="12">Capacity: Unlimited</text>
+  <text x="480" y="160" fill="#B0B0B0" font-size="12">Storage: PostgreSQL + TimescaleDB</text>
+  <text x="480" y="180" fill="#B0B0B0" font-size="12">Speed: O(log n) with indexes</text>
+  <text x="480" y="200" fill="#B0B0B0" font-size="12">Lifetime: Permanent</text>
+  <text x="480" y="220" fill="#B0B0B0" font-size="12">Retrieval: RAG (semantic + temporal)</text>
+  <text x="480" y="240" fill="#4CAF50" font-size="12" font-weight="bold">Durable, Searchable, Persistent</text>
+
+  <!-- Data Flow: Add Memory -->
+  <path d="M 200 280 L 200 320 L 400 320 L 400 280" stroke="#4CAF50" stroke-width="3" fill="none" marker-end="url(#arrow-green)"/>
+  <text x="300" y="310" text-anchor="middle" fill="#4CAF50" font-size="12" font-weight="bold">Add Memory</text>
+  <text x="300" y="330" text-anchor="middle" fill="#B0B0B0" font-size="10">(Stored in both tiers)</text>
+
+  <!-- Data Flow: Eviction -->
+  <path d="M 350 360 L 600 360" stroke="#FF9800" stroke-width="3" marker-end="url(#arrow-orange)"/>
+  <text x="475" y="350" text-anchor="middle" fill="#FF9800" font-size="12" font-weight="bold">Eviction</text>
+  <text x="475" y="380" text-anchor="middle" fill="#B0B0B0" font-size="10">(Token limit → move to LTM only)</text>
+
+  <!-- Data Flow: Recall -->
+  <path d="M 600 400 L 200 400" stroke="#9C27B0" stroke-width="3" marker-end="url(#arrow-purple)"/>
+  <text x="400" y="390" text-anchor="middle" fill="#9C27B0" font-size="12" font-weight="bold">Recall</text>
+  <text x="400" y="420" text-anchor="middle" fill="#B0B0B0" font-size="10">(RAG search → load back to WM)</text>
+
+  <!-- Never Forget Note -->
+  <rect x="150" y="450" width="500" height="40" fill="rgba(76, 175, 80, 0.1)" stroke="#4CAF50" stroke-width="1" rx="3"/>
+  <text x="400" y="475" text-anchor="middle" fill="#4CAF50" font-size="13" font-weight="bold">Never Forget: Evicted memories stay in LTM forever (explicit deletion only)</text>
+
+  <defs>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#4CAF50"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#FF9800"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#9C27B0"/>
+    </marker>
+  </defs>
+</svg>
