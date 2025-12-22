@@ -221,7 +221,7 @@ class HTM
       huggingface openrouter bedrock deepseek
     ].freeze
 
-    SUPPORTED_JOB_BACKENDS = %i[active_job sidekiq inline thread].freeze
+    SUPPORTED_JOB_BACKENDS = %i[active_job sidekiq inline thread fiber].freeze
     SUPPORTED_WEEK_STARTS = %i[sunday monday].freeze
 
     # Default embedding dimensions by provider
@@ -714,7 +714,7 @@ class HTM
       return :active_job if defined?(ActiveJob)
       return :sidekiq if defined?(Sidekiq)
 
-      :thread
+      :fiber
     end
 
     def build_default_logger

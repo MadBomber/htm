@@ -27,7 +27,7 @@ class ConfigurationTest < Minitest::Test
       assert_equal 'gemma3:latest', config.tag_model
       assert_equal 120, config.embedding_timeout
       assert_equal 180, config.tag_timeout
-      assert_equal 30, config.connection_timeout
+      assert_equal 60, config.connection_timeout
       assert_equal :sunday, config.week_start
     ensure
       # Restore env vars

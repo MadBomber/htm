@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.20] - 2025-12-22
+### Added
+- **Fiber-based job backend** - New `:fiber` backend for I/O-bound background jobs
+  - Uses `async` gem for cooperative concurrency
+  - Non-blocking execution ideal for LLM API calls
+  - `JobAdapter.enqueue_parallel(jobs)` for concurrent job execution
+  - Fiber backend runs jobs with `Async::Barrier` for parallel coordination
+- **RememberWorkflow using simple_flow** - Parallel processing pipeline for node enrichment
+  - Orchestrates save_node → (embedding, tags, propositions in parallel) → finalize
+  - Uses `SimpleFlow::Pipeline` with dependency-based step execution
+  - Configurable concurrency model (`:auto`, `:threads`, `:async`)
+  - Visualization support: `to_mermaid` and `execution_plan` methods
+
+### Changed
+- **async gem is now a required dependency** - Previously optional, now always available
+  - Enables fiber-based concurrency for all HTM installations
+  - `:fiber` is now the default job backend (was `:thread`)
+- **Default job backend changed from `:thread` to `:fiber`** - Better performance for I/O-bound LLM operations
+
+### Removed
+- **`JobAdapter.async_available?` method** - No longer needed since async is always available
+
+### Fixed
+- **`connection_timeout` default inconsistency** - Unified default to 60 seconds across all files
+  - `test/configuration_test.rb`, `docs/guides/configuration.md`, and `db/seeds.rb` now match `defaults.yml`
+
+### Dependencies
+- Added `async` (~> 2.0) as required runtime dependency
+- Added `simple_flow` for workflow orchestration
+
 ## [0.0.19] - 2025-12-21
 
 ### Changed

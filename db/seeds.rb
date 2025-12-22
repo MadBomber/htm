@@ -37,7 +37,7 @@ tag_provider = (ENV['HTM_TAG_PROVIDER'] || 'ollama').to_sym
 tag_model = ENV['HTM_TAG_MODEL'] || 'gemma3'
 embedding_timeout = (ENV['HTM_EMBEDDING_TIMEOUT'] || '120').to_i
 tag_timeout = (ENV['HTM_TAG_TIMEOUT'] || '180').to_i
-connection_timeout = (ENV['HTM_CONNECTION_TIMEOUT'] || '30').to_i
+connection_timeout = (ENV['HTM_CONNECTION_TIMEOUT'] || '60').to_i
 
 puts "Configuration:"
 puts "  Embedding Provider: #{embedding_provider}"

@@ -177,4 +177,124 @@ class JobAdapterTest < Minitest::Test
       sleep 0.1 # Give thread time to execute and fail
     end
   end
+
+  # Test fiber backend executes job
+  def test_fiber_backend_executes_job
+    HTM.configuration.job.backend = :fiber
+
+    executed = false
+    job_class = Class.new do
+      define_singleton_method(:perform) do |**params|
+        executed = true
+      end
+
+      define_singleton_method(:name) { "FiberTestJob" }
+    end
+
+    HTM::JobAdapter.enqueue(job_class, test_param: 'value')
+
+    # Fiber backend should execute the job
+    assert executed, "Job should execute in fiber mode"
+  end
+
+  # Test parallel execution with fiber backend
+  def test_enqueue_parallel_with_fiber_backend
+    HTM.configuration.job.backend = :fiber
+
+    results = []
+    mutex = Mutex.new
+
+    job_class_a = Class.new do
+      define_singleton_method(:perform) do |value:|
+        sleep 0.05 # Simulate I/O
+        mutex.synchronize { results << "a:#{value}" }
+      end
+      define_singleton_method(:name) { "JobA" }
+    end
+
+    job_class_b = Class.new do
+      define_singleton_method(:perform) do |value:|
+        sleep 0.05 # Simulate I/O
+        mutex.synchronize { results << "b:#{value}" }
+      end
+      define_singleton_method(:name) { "JobB" }
+    end
+
+    jobs = [
+      [job_class_a, { value: 1 }],
+      [job_class_b, { value: 2 }]
+    ]
+
+    HTM::JobAdapter.enqueue_parallel(jobs)
+
+    assert_equal 2, results.size
+    assert_includes results, "a:1"
+    assert_includes results, "b:2"
+  end
+
+  # Test parallel execution with inline backend falls back to sequential
+  def test_enqueue_parallel_with_inline_backend
+    HTM.configuration.job.backend = :inline
+
+    order = []
+
+    job_class_a = Class.new do
+      define_singleton_method(:perform) do |**params|
+        order << :a
+      end
+      define_singleton_method(:name) { "JobA" }
+    end
+
+    job_class_b = Class.new do
+      define_singleton_method(:perform) do |**params|
+        order << :b
+      end
+      define_singleton_method(:name) { "JobB" }
+    end
+
+    jobs = [
+      [job_class_a, {}],
+      [job_class_b, {}]
+    ]
+
+    HTM::JobAdapter.enqueue_parallel(jobs)
+
+    # Inline executes sequentially
+    assert_equal [:a, :b], order
+  end
+
+  # Test parallel execution with empty jobs array
+  def test_enqueue_parallel_with_empty_array
+    HTM.configuration.job.backend = :inline
+
+    # Should not raise
+    HTM::JobAdapter.enqueue_parallel([])
+  end
+
+  # Test error handling in fiber mode
+  def test_error_handling_in_fiber_mode
+    HTM.configuration.job.backend = :fiber
+
+    job_class = Class.new do
+      define_singleton_method(:perform) do |**params|
+        raise StandardError, "Test error in fiber"
+      end
+
+      define_singleton_method(:name) { "FiberErrorTestJob" }
+    end
+
+    # Should not raise (errors are logged)
+    assert_silent do
+      HTM::JobAdapter.enqueue(job_class, test_param: 'value')
+    end
+  end
+
+  # Test configuration validation includes fiber
+  def test_configuration_validates_fiber_backend
+    config = HTM::Config.new
+    config.job.backend = :fiber
+    # Should not raise - fiber is a valid backend
+    config.validate_settings!
+    assert_equal :fiber, config.job_backend
+  end
 end

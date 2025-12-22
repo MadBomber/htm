@@ -112,7 +112,7 @@ defaults:
     provider: ollama
     model: gemma3:latest
     timeout: 180
-    enabled: false
+    enabled: true
 
     system_prompt: |
       You are an atomic fact extraction system. Your goal is maximum decomposition.
@@ -167,14 +167,14 @@ defaults:
   # Access: HTM.config.job.backend
   # ---------------------------------------------------------------------------
   job:
-    backend: ~
+    backend: fiber
 
   # ---------------------------------------------------------------------------
   # General Settings
   # Access: HTM.config.week_start, HTM.config.connection_timeout, etc.
   # ---------------------------------------------------------------------------
   week_start: sunday
-  connection_timeout: 30
+  connection_timeout: 60
   telemetry_enabled: false
   log_level: info
 
@@ -197,7 +197,7 @@ defaults:
     azure:
       api_key: ~
       endpoint: ~
-      api_version: '2024-02-01'
+      api_version: "2024-02-01"
 
     ollama:
       url: http://localhost:11434

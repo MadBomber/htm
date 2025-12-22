@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'async'
+require 'async/barrier'
+
 class HTM
   # Job adapter for pluggable background job backends
   #
@@ -11,6 +14,7 @@ class HTM
   # - :sidekiq - Direct Sidekiq integration (recommended for Sinatra apps)
   # - :inline - Synchronous execution (recommended for CLI and tests)
   # - :thread - Background thread (legacy, for standalone apps)
+  # - :fiber - Fiber-based concurrency using async gem (recommended for I/O-bound jobs)
   #
   # @example Configure job backend
   #   HTM.configure do |config|
@@ -44,8 +48,10 @@ class HTM
           enqueue_inline(job_class, **params)
         when :thread
           enqueue_thread(job_class, **params)
+        when :fiber
+          enqueue_fiber(job_class, **params)
         else
-          raise HTM::Error, "Unknown job backend: #{backend}. Supported backends: :active_job, :sidekiq, :inline, :thread"
+          raise HTM::Error, "Unknown job backend: #{backend}. Supported backends: :active_job, :sidekiq, :inline, :thread, :fiber"
         end
       end
 
@@ -96,6 +102,74 @@ class HTM
         end
       rescue StandardError => e
         HTM.logger.error "Failed to start thread for #{job_class.name}: #{e.message}"
+      end
+
+      # Execute job using async gem (fiber-based concurrency)
+      # Non-blocking for I/O-bound operations like LLM API calls
+      def enqueue_fiber(job_class, **params)
+        Async do
+          begin
+            job_class.perform(**params)
+          rescue StandardError => e
+            HTM.logger.error "Fiber job #{job_class.name} failed: #{e.class.name} - #{e.message}"
+          end
+        end
+      rescue StandardError => e
+        HTM.logger.error "Failed to start fiber for #{job_class.name}: #{e.message}"
+      end
+
+      public
+
+      # Execute multiple jobs in parallel using fibers
+      # Best for I/O-bound jobs like LLM API calls
+      #
+      # @param jobs [Array<Array>] Array of [job_class, params] pairs
+      # @return [void]
+      #
+      # @example Run embedding and tags jobs in parallel
+      #   JobAdapter.enqueue_parallel([
+      #     [GenerateEmbeddingJob, { node_id: 123 }],
+      #     [GenerateTagsJob, { node_id: 123 }]
+      #   ])
+      #
+      def enqueue_parallel(jobs)
+        return if jobs.empty?
+
+        backend = HTM.configuration.job_backend
+
+        case backend
+        when :fiber
+          enqueue_parallel_fiber(jobs)
+        when :inline
+          # Run sequentially for inline backend
+          jobs.each { |job_class, params| enqueue_inline(job_class, **params) }
+        else
+          # For other backends, enqueue each job separately
+          jobs.each { |job_class, params| enqueue(job_class, **params) }
+        end
+      end
+
+      private
+
+      # Execute multiple jobs in parallel using async fibers
+      def enqueue_parallel_fiber(jobs)
+        Async do |task|
+          barrier = Async::Barrier.new
+
+          jobs.each do |job_class, params|
+            barrier.async do
+              begin
+                job_class.perform(**params)
+              rescue StandardError => e
+                HTM.logger.error "Parallel fiber job #{job_class.name} failed: #{e.class.name} - #{e.message}"
+              end
+            end
+          end
+
+          barrier.wait
+        end
+      rescue StandardError => e
+        HTM.logger.error "Failed to start parallel fibers: #{e.message}"
       end
 
       # Convert HTM job class to ActiveJob class
