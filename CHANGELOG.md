@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`htm:jobs:process_propositions` rake task** - Incremental proposition extraction for unprocessed nodes
+  - Uses `ruby-progressbar` with ETA display
+  - Only processes nodes not yet extracted (tracks via `source_node_id` metadata)
+  - Added to `htm:jobs:process_all` task chain
+- **Rake task passthrough in MCP CLI** - Run rake tasks via `htm_mcp rake <task>`
+  - `htm_mcp rake htm:db:stats` - Run any HTM rake task
+  - `htm_mcp rake -T` / `htm_mcp rake --tasks` - List available tasks
+- **Meta-response filtering in PropositionService** - Filters LLM responses that ask for input
+  - `META_RESPONSE_PATTERNS` constant with common patterns ("please provide", "I need the text", etc.)
+  - `meta_response?` method for detecting invalid responses
+  - Prevents storing "Please provide the text" as propositions
+
+### Changed
+- **PropositionService validation now fully configurable** - Moved hardcoded constants to `defaults.yml`
+  - `proposition.min_length` (default: 10) - Minimum characters for valid proposition
+  - `proposition.max_length` (default: 1000) - Maximum characters for valid proposition
+  - `proposition.min_words` (default: 5) - Minimum words for valid proposition
+  - Added `min_length`, `max_length`, `min_words` class methods that read from config
+- **Improved proposition extraction prompt** - Better quality propositions
+  - Added explicit BAD/GOOD examples for pronoun replacement
+  - Added context enrichment examples (e.g., "wiring" → "solar panel wiring for Oklahoma barndominium")
+  - System prompt now explicitly prevents meta-responses
+  - Increased specificity requirements for self-contained facts
+
 ## [0.0.20] - 2025-12-22
 ### Added
 - **Fiber-based job backend** - New `:fiber` backend for I/O-bound background jobs
