@@ -1,6 +1,31 @@
 # frozen_string_literal: true
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
+# Ensure test environment is set BEFORE loading HTM
+# This is critical because HTM::Config reads environment at load time
+ENV['HTM_ENV'] = 'test'
+
+# Safety check: Refuse to run tests against non-test databases
+# Database name must end with _test (e.g., htm_test, myapp_test)
+if ENV['HTM_DATABASE__URL'] && !ENV['HTM_DATABASE__URL'].include?('_test')
+  service_name = ENV['HTM_SERVICE__NAME'] || 'htm'
+  abort <<~ERROR
+    SAFETY CHECK FAILED: Tests must run against a test database!
+
+    HTM_DATABASE__URL is set to: #{ENV['HTM_DATABASE__URL']}
+
+    This does not appear to be a test database (must contain '_test').
+    Running tests against development or production databases can corrupt data.
+
+    To fix, either:
+      1. Run tests via: rake test (recommended)
+      2. Set: export HTM_DATABASE__URL="postgresql://#{ENV['USER']}@localhost:5432/#{service_name}_test"
+      3. Unset HTM_DATABASE__URL and let defaults.yml handle it
+
+  ERROR
+end
+
 require "htm"
 
 require "minitest/autorun"

@@ -21,7 +21,7 @@ class HTM
             verify    Verify database connection and extensions
             stats     Show memory statistics
             config    Output default configuration to STDOUT
-            rake      Run HTM rake tasks (use -T or --tasks to list)
+            rake      Run HTM rake tasks (use -T [pattern] to list)
             version   Show HTM version
             help      Show this help message
 
@@ -111,6 +111,10 @@ class HTM
             # List available rake tasks
             htm_mcp rake -T
             htm_mcp rake --tasks
+
+            # List tasks matching a pattern
+            htm_mcp rake -T htm:jobs
+            htm_mcp rake -T db
 
             # Run rake tasks
             htm_mcp rake htm:db:stats
@@ -486,9 +490,14 @@ class HTM
       def run_rake(args)
         require 'rake'
 
-        # Handle --tasks / -T to list available tasks
+        # Handle --tasks / -T to list available tasks (with optional pattern)
         if args.empty? || args.first == '--tasks' || args.first == '-T'
-          list_rake_tasks
+          # Check for optional pattern after -T/--tasks
+          pattern = nil
+          if args.first == '--tasks' || args.first == '-T'
+            pattern = args[1] # May be nil if no pattern provided
+          end
+          list_rake_tasks(pattern: pattern)
           return
         end
 
@@ -528,16 +537,34 @@ class HTM
         end
       end
 
-      def list_rake_tasks
+      def list_rake_tasks(pattern: nil)
         load_htm_rake_tasks
-
-        puts "Available HTM rake tasks:"
-        puts
 
         # Collect tasks with descriptions, sorted by name
         tasks = Rake.application.tasks
           .select { |t| t.comment && t.name.start_with?('htm:') }
           .sort_by(&:name)
+
+        # Filter by pattern if provided (matches task name)
+        if pattern
+          tasks = tasks.select { |t| t.name.include?(pattern) }
+        end
+
+        if tasks.empty?
+          if pattern
+            puts "No HTM rake tasks matching '#{pattern}'"
+          else
+            puts "No HTM rake tasks found"
+          end
+          return
+        end
+
+        if pattern
+          puts "HTM rake tasks matching '#{pattern}':"
+        else
+          puts "Available HTM rake tasks:"
+        end
+        puts
 
         # Find max task name length for alignment
         max_len = tasks.map { |t| t.name.length }.max || 0

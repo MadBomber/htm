@@ -536,6 +536,154 @@ namespace :htm do
       end
     end
 
+    desc "Permanently delete all soft-deleted records from all tables (WARNING: irreversible!)"
+    task :purge_all do
+      require 'htm'
+
+      # Ensure database connection
+      HTM::ActiveRecordConfig.establish_connection!
+
+      puts "\nHTM Purge All Soft-Deleted Records"
+      puts "=" * 60
+
+      # Count soft-deleted records in each table
+      deleted_nodes = HTM::Models::Node.deleted.count
+      deleted_node_tags = HTM::Models::NodeTag.deleted.count
+      deleted_robot_nodes = HTM::Models::RobotNode.deleted.count
+
+      # Find orphaned propositions (source_node_id no longer exists)
+      # Get all source_node_ids from propositions
+      proposition_source_ids = HTM::Models::Node
+        .where("metadata->>'is_proposition' = ?", 'true')
+        .where("metadata->>'source_node_id' IS NOT NULL")
+        .pluck(Arel.sql("(metadata->>'source_node_id')::integer"))
+        .uniq
+
+      # Find which source nodes no longer exist (not even soft-deleted)
+      existing_node_ids = HTM::Models::Node.unscoped
+        .where(id: proposition_source_ids)
+        .pluck(:id)
+
+      missing_source_ids = proposition_source_ids - existing_node_ids
+
+      orphaned_propositions = if missing_source_ids.any?
+        HTM::Models::Node
+          .where("metadata->>'is_proposition' = ?", 'true')
+          .where("(metadata->>'source_node_id')::integer IN (?)", missing_source_ids)
+          .count
+      else
+        0
+      end
+
+      # Find orphaned join table entries (pointing to non-existent nodes)
+      orphaned_node_tags = HTM::Models::NodeTag.unscoped
+        .joins("LEFT JOIN nodes ON nodes.id = node_tags.node_id")
+        .where("nodes.id IS NULL")
+        .count
+
+      orphaned_robot_nodes = HTM::Models::RobotNode.unscoped
+        .joins("LEFT JOIN nodes ON nodes.id = robot_nodes.node_id")
+        .where("nodes.id IS NULL")
+        .count
+
+      # Find orphaned robots (no active memory nodes)
+      orphaned_robots = HTM::Models::Robot
+        .left_joins(:robot_nodes)
+        .where(robot_nodes: { id: nil })
+        .count
+
+      # Display record counts by table
+      puts "\nSoft-deleted records by table:"
+      puts "  %-20s %8d" % ['nodes', deleted_nodes]
+      puts "  %-20s %8d" % ['node_tags', deleted_node_tags]
+      puts "  %-20s %8d" % ['robot_nodes', deleted_robot_nodes]
+
+      puts "\nOrphaned records:"
+      puts "  %-20s %8d  (source node no longer exists)" % ['propositions', orphaned_propositions]
+      puts "  %-20s %8d  (pointing to missing nodes)" % ['node_tags', orphaned_node_tags]
+      puts "  %-20s %8d  (pointing to missing nodes)" % ['robot_nodes', orphaned_robot_nodes]
+      puts "  %-20s %8d  (no associated memory nodes)" % ['robots', orphaned_robots]
+
+      total_to_delete = deleted_nodes + deleted_node_tags + deleted_robot_nodes +
+                        orphaned_propositions + orphaned_node_tags + orphaned_robot_nodes + orphaned_robots
+
+      puts "  " + "-" * 40
+      puts "  %-20s %8d" % ['Total', total_to_delete]
+
+      if total_to_delete == 0
+        puts "\nNo records to purge."
+        next
+      end
+
+      puts "\nWARNING: This permanently deletes records and cannot be undone!"
+      print "Type 'yes' to continue with hard delete: "
+      confirmation = $stdin.gets&.strip
+
+      unless confirmation == 'yes'
+        puts "Cancelled."
+        next
+      end
+
+      puts "\nPurging records..."
+
+      purged = {}
+
+      # Delete in correct order to maintain referential integrity:
+      # 1. Orphaned propositions first (creates orphaned join table entries)
+      # 2. Join tables (node_tags, robot_nodes)
+      # 3. Main tables last (nodes, robots)
+
+      # Step 1: Delete orphaned propositions (source_node_id no longer exists)
+      if missing_source_ids.any?
+        purged[:orphaned_propositions] = HTM::Models::Node
+          .where("metadata->>'is_proposition' = ?", 'true')
+          .where("(metadata->>'source_node_id')::integer IN (?)", missing_source_ids)
+          .delete_all
+      else
+        purged[:orphaned_propositions] = 0
+      end
+
+      # Step 2: Delete orphaned node_tags (pointing to non-existent nodes)
+      # This now includes entries from deleted propositions
+      purged[:orphaned_node_tags] = HTM::Models::NodeTag.unscoped
+        .joins("LEFT JOIN nodes ON nodes.id = node_tags.node_id")
+        .where("nodes.id IS NULL")
+        .delete_all
+
+      # Step 3: Delete soft-deleted node_tags
+      purged[:deleted_node_tags] = HTM::Models::NodeTag.deleted.delete_all
+
+      # Step 4: Delete orphaned robot_nodes (pointing to non-existent nodes)
+      # This now includes entries from deleted propositions
+      purged[:orphaned_robot_nodes] = HTM::Models::RobotNode.unscoped
+        .joins("LEFT JOIN nodes ON nodes.id = robot_nodes.node_id")
+        .where("nodes.id IS NULL")
+        .delete_all
+
+      # Step 5: Delete soft-deleted robot_nodes
+      purged[:deleted_robot_nodes] = HTM::Models::RobotNode.deleted.delete_all
+
+      # Step 6: Delete soft-deleted nodes
+      purged[:deleted_nodes] = HTM::Models::Node.deleted.delete_all
+
+      # Step 7: Delete orphaned robots (no associated memory nodes)
+      purged[:orphaned_robots] = HTM::Models::Robot
+        .left_joins(:robot_nodes)
+        .where(robot_nodes: { id: nil })
+        .delete_all
+
+      puts "\nPurge complete!"
+      puts "  Orphaned propositions purged: #{purged[:orphaned_propositions]}"
+      puts "  Orphaned node_tags purged:    #{purged[:orphaned_node_tags]}"
+      puts "  Deleted node_tags purged:     #{purged[:deleted_node_tags]}"
+      puts "  Orphaned robot_nodes purged:  #{purged[:orphaned_robot_nodes]}"
+      puts "  Deleted robot_nodes purged:   #{purged[:deleted_robot_nodes]}"
+      puts "  Deleted nodes purged:         #{purged[:deleted_nodes]}"
+      puts "  Orphaned robots purged:       #{purged[:orphaned_robots]}"
+      puts "  " + "-" * 40
+      puts "  Total records purged:         #{purged.values.sum}"
+    end
+
   end
 
   namespace :doc do

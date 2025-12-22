@@ -64,6 +64,7 @@ namespace :htm do
     desc "Process pending embedding jobs for nodes without embeddings"
     task :process_embeddings => :environment do
       require 'htm'
+      require 'ruby-progressbar'
 
       # Establish connection and configure HTM
       HTM::ActiveRecordConfig.establish_connection!
@@ -79,7 +80,16 @@ namespace :htm do
         exit 0
       end
 
-      puts "Processing #{total} pending embedding jobs..."
+      puts "Processing #{total} pending embedding jobs...\n"
+
+      # Create progress bar with ETA
+      progressbar = ProgressBar.create(
+        total: total,
+        format: '%t: |%B| %c/%C (%p%%) %e',
+        title: 'Embeddings',
+        output: $stdout,
+        smoothing: 0.5
+      )
 
       processed = 0
       failed = 0
@@ -90,14 +100,17 @@ namespace :htm do
           result = HTM::EmbeddingService.generate(node.content)
           node.update!(embedding: result[:storage_embedding])
           processed += 1
-          print "\rProcessed: #{processed}/#{total}"
         rescue StandardError => e
           failed += 1
-          HTM.logger.error "Failed to process node #{node.id}: #{e.message}"
+          progressbar.log "  Error on node #{node.id}: #{e.message}"
         end
+
+        progressbar.increment
       end
 
-      puts "\n\nCompleted:"
+      progressbar.finish
+
+      puts "\nCompleted:"
       puts "  Processed: #{processed}"
       puts "  Failed: #{failed}"
 
@@ -107,6 +120,7 @@ namespace :htm do
     desc "Process pending tag extraction jobs for nodes without tags"
     task :process_tags => :environment do
       require 'htm'
+      require 'ruby-progressbar'
 
       # Establish connection and configure HTM
       HTM::ActiveRecordConfig.establish_connection!
@@ -125,7 +139,16 @@ namespace :htm do
         exit 0
       end
 
-      puts "Processing #{total} pending tag extraction jobs..."
+      puts "Processing #{total} pending tag extraction jobs...\n"
+
+      # Create progress bar with ETA
+      progressbar = ProgressBar.create(
+        total: total,
+        format: '%t: |%B| %c/%C (%p%%) %e',
+        title: 'Tags',
+        output: $stdout,
+        smoothing: 0.5
+      )
 
       processed = 0
       failed = 0
@@ -142,14 +165,17 @@ namespace :htm do
           end
 
           processed += 1
-          print "\rProcessed: #{processed}/#{total}"
         rescue StandardError => e
           failed += 1
-          HTM.logger.error "Failed to process node #{node.id}: #{e.message}"
+          progressbar.log "  Error on node #{node.id}: #{e.message}"
         end
+
+        progressbar.increment
       end
 
-      puts "\n\nCompleted:"
+      progressbar.finish
+
+      puts "\nCompleted:"
       puts "  Processed: #{processed}"
       puts "  Failed: #{failed}"
 

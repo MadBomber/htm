@@ -20,11 +20,22 @@ Rake::Task[:test].enhance [:set_test_env]
 
 task :set_test_env do
   ENV['HTM_ENV'] = 'test'
-  # Set database URL if not already configured
-  # Uses current system user for local PostgreSQL connection
-  unless ENV['HTM_DATABASE__URL']
-    ENV['HTM_DATABASE__URL'] = "postgresql://#{ENV['USER']}@localhost:5432/htm_test"
+
+  # Build test database name from service name + environment
+  # Uses HTM_SERVICE__NAME env var if set, otherwise defaults to 'htm'
+  service_name = ENV['HTM_SERVICE__NAME'] || 'htm'
+  test_db_name = "#{service_name}_test"
+
+  # ALWAYS use the test database - never allow tests to run against other databases
+  # This prevents accidental pollution of development/production data
+  test_db_url = "postgresql://#{ENV['USER']}@localhost:5432/#{test_db_name}"
+
+  if ENV['HTM_DATABASE__URL'] && !ENV['HTM_DATABASE__URL'].include?('_test')
+    warn "WARNING: HTM_DATABASE__URL was set to '#{ENV['HTM_DATABASE__URL']}'"
+    warn "         Overriding to use test database: #{test_db_url}"
   end
+
+  ENV['HTM_DATABASE__URL'] = test_db_url
 end
 
 task default: :test
