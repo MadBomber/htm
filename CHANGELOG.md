@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`sslmode` database configuration support** - SSL mode now extracted from URL and included when building URL
+  - `parse_database_url` extracts `sslmode` from URL query string (e.g., `?sslmode=require`)
+  - `build_database_url` includes `sslmode` as query parameter when set
+  - `reconcile_from_url` syncs `sslmode` along with other database components
+  - Default `sslmode` is `prefer` (from `defaults.yml`)
 - **`htm:db:purge_all` rake task** - Permanently remove all soft-deleted records from database
   - Displays record counts by table before deletion
   - Detects and removes orphaned join table entries (`node_tags`, `robot_nodes`)
@@ -33,6 +38,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Format: `Processing: |████████████████| 50/100 (50%) ETA: 00:01:30`
 
 ### Changed
+- **Centralized HTM loading in rake tasks** - Single `require_relative` in `lib/htm/tasks.rb`
+  - HTM is now loaded once before any rake task files are loaded
+  - Removed ~25 redundant `require 'htm'` statements from individual rake tasks
+  - Ensures local development codebase is always used via `require_relative`
+  - Removed `$LOAD_PATH` manipulation that was previously needed for `require 'htm'`
+- **Removed `:validate` rake task dependency** - Config validation now automatic
+  - `HTM::Config.new` handles all validation at require time (environment, URL/component reconciliation, naming convention)
+  - Rake tasks no longer need explicit validation step
+- **Cleaned up Rakefile** - Removed unnecessary code
+  - Removed deprecated `db_setup` and `db_test` backward-compatibility tasks
+  - Removed redundant `task :test` block (`:set_test_env` prerequisite handles environment setup)
 - **PropositionService validation now fully configurable** - Moved hardcoded constants to `defaults.yml`
   - `proposition.min_length` (default: 10) - Minimum characters for valid proposition
   - `proposition.max_length` (default: 1000) - Maximum characters for valid proposition
