@@ -65,6 +65,9 @@
 #
 
 if defined?(Rake)
+  # Load HTM before loading rake tasks
+  require_relative '../htm'
+
   # Load the rake tasks
   load File.expand_path('../tasks/htm.rake', __dir__)
   load File.expand_path('../tasks/jobs.rake', __dir__)

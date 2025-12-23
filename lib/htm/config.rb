@@ -237,7 +237,7 @@ class HTM
       deepseek: 1536
     }.freeze
 
-    on_load :coerce_nested_types, :validate_config, :setup_defaults
+    on_load :coerce_nested_types, :reconcile_database_config, :validate_config, :setup_defaults
 
     # ==========================================================================
     # Callable Accessors (not loaded from config sources)
@@ -266,6 +266,42 @@ class HTM
       return url if url && !url.empty?
 
       build_database_url
+    end
+
+    # ==========================================================================
+    # Database Component Accessors
+    # ==========================================================================
+    #
+    # These methods provide convenient access to database components.
+    # Components are automatically reconciled at config load time:
+    #   - If database.url exists: components are extracted and populated
+    #   - If database.url is missing: it's built from components
+    #
+    # ==========================================================================
+
+    # @return [String, nil] the database host
+    def database_host
+      database.host
+    end
+
+    # @return [Integer, nil] the database port
+    def database_port
+      database.port
+    end
+
+    # @return [String, nil] the database name
+    def database_name
+      database.name
+    end
+
+    # @return [String, nil] the database user
+    def database_user
+      database.user
+    end
+
+    # @return [String, nil] the database password
+    def database_password
+      database.password
     end
 
     def database_config
@@ -642,6 +678,34 @@ class HTM
     end
 
     # ==========================================================================
+    # Database URL/Components Parsing
+    # ==========================================================================
+
+    # Parse database URL into component hash
+    #
+    # @return [Hash, nil] parsed components or nil if no URL
+    def parse_database_url
+      url = database&.url
+      return nil if url.nil? || url.empty?
+
+      uri = URI.parse(url) rescue nil
+      return nil unless uri
+
+      # Parse query string for sslmode
+      query_params = URI.decode_www_form(uri.query || '').to_h
+      sslmode = query_params['sslmode']
+
+      {
+        host: uri.host,
+        port: uri.port,
+        name: uri.path&.sub(%r{^/}, ''),
+        user: uri.user,
+        password: uri.password,
+        sslmode: sslmode
+      }.compact
+    end
+
+    # ==========================================================================
     # XDG Config Path Helpers
     # ==========================================================================
 
@@ -755,7 +819,14 @@ class HTM
         ''
       end
 
-      "postgresql://#{auth}#{database.host}:#{database.port}/#{database.name}"
+      url = "postgresql://#{auth}#{database.host}:#{database.port}/#{database.name}"
+
+      # Add sslmode as query parameter if set
+      if database.sslmode && !database.sslmode.empty?
+        url += "?sslmode=#{database.sslmode}"
+      end
+
+      url
     end
 
     # ==========================================================================
@@ -769,6 +840,97 @@ class HTM
           value = providers[provider]
           providers[provider] = ConfigSection.new(value) if value.is_a?(Hash)
         end
+      end
+
+      # Coerce database numeric fields to integers (env vars are always strings)
+      if database&.port && !database.port.is_a?(Integer)
+        database.port = database.port.to_i
+      end
+      if database&.pool_size && !database.pool_size.is_a?(Integer)
+        database.pool_size = database.pool_size.to_i
+      end
+      if database&.timeout && !database.timeout.is_a?(Integer)
+        database.timeout = database.timeout.to_i
+      end
+    end
+
+    # ==========================================================================
+    # Database Configuration Reconciliation
+    # ==========================================================================
+    #
+    # Ensures database.url and database.* components are synchronized:
+    #
+    # 1. If database.url exists:
+    #    - Extract all components from the URL
+    #    - For each component: if config has a different value → ERROR
+    #    - For each component: if config is missing → populate from URL
+    #
+    # 2. If database.url is missing but components exist:
+    #    - Verify minimum required components (at least database.name)
+    #    - Build and set database.url from components
+    #    - If insufficient components → ERROR
+    #
+    # This runs automatically at config load time via on_load callback.
+    #
+    # ==========================================================================
+
+    def reconcile_database_config
+      url = database&.url
+      has_url = url && !url.empty?
+
+      if has_url
+        reconcile_from_url
+      else
+        reconcile_from_components
+      end
+    end
+
+    def reconcile_from_url
+      url_components = parse_database_url
+      return unless url_components
+
+      # URL is the source of truth - populate all components from it
+      # This overwrites any values from config files (they're just defaults)
+      %i[host port name user password sslmode].each do |component|
+        url_value = url_components[component]
+        next if url_value.nil?
+
+        database.send("#{component}=", url_value)
+      end
+    end
+
+    def reconcile_from_components
+      # Check what components we have
+      name = database&.name
+      has_name = name && !name.empty?
+
+      # If no database config at all, that's fine - might not need database
+      # Just return without error; validate_database! will catch if needed later
+      return unless has_name || has_any_database_component?
+
+      # If name is missing, auto-generate from service.name and environment
+      # Format: {service_name}_{environment} (e.g., "htm_development")
+      unless has_name
+        database.name = expected_database_name
+      end
+
+      # Use defaults for host/port if not set
+      database.host = 'localhost' if database.host.nil? || database.host.empty?
+      database.port = 5432 if database.port.nil?
+
+      # Build and set the URL
+      database.url = build_database_url
+    end
+
+    def has_any_database_component?
+      %i[host port user password].any? do |comp|
+        val = database.send(comp)
+        next false if val.nil?
+        next false if val.respond_to?(:empty?) && val.empty?
+        # Skip defaults
+        next false if comp == :host && val == 'localhost'
+        next false if comp == :port && val == 5432
+        true
       end
     end
 

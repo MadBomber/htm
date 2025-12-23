@@ -8,81 +8,29 @@
 #   require 'htm/tasks'
 #
 
-# Add lib directory to load path for development
-# This allows the tasks to work both during gem development and when installed
-lib_path = File.expand_path('../../lib', __dir__)
-$LOAD_PATH.unshift(lib_path) unless $LOAD_PATH.include?(lib_path)
-
 namespace :htm do
   namespace :db do
-    desc "Validate HTM environment and database configuration"
-    task :validate do
-      require 'htm'
-
-      # Validate environment
-      unless HTM::Config.valid_environment?
-        valid = HTM::Config.valid_environments.map(&:to_s).join(', ')
-        $stderr.puts "Error: Invalid environment '#{HTM.env}'."
-        $stderr.puts "Valid environments are: #{valid}"
-        $stderr.puts ""
-        $stderr.puts "Either:"
-        $stderr.puts "  - Set HTM_ENV to a valid environment"
-        $stderr.puts "  - Add a '#{HTM.env}:' section to your config file"
-        exit 1
-      end
-
-      # Validate database configuration
-      unless HTM.config.database_configured?
-        $stderr.puts "Error: No database configured for environment '#{HTM.env}'."
-        $stderr.puts ""
-        $stderr.puts "Either:"
-        $stderr.puts "  - Set HTM_DATABASE__URL=postgresql://..."
-        $stderr.puts "  - Set HTM_DATABASE__NAME=your_db_name"
-        $stderr.puts "  - Add database.name to the '#{HTM.env}:' section in your config"
-        exit 1
-      end
-
-      # Validate database naming convention: {service_name}_{environment}
-      config = HTM.config
-      expected = config.expected_database_name
-      actual = config.actual_database_name
-
-      unless actual == expected
-        $stderr.puts "Error: Database name does not follow naming convention!"
-        $stderr.puts ""
-        $stderr.puts "  Database names must be: {service_name}_{environment}"
-        $stderr.puts ""
-        $stderr.puts "  Service name: #{config.service_name}"
-        $stderr.puts "  Environment:  #{config.environment}"
-        $stderr.puts "  Expected:     #{expected}"
-        $stderr.puts "  Actual:       #{actual}"
-        $stderr.puts ""
-        $stderr.puts "Either:"
-        $stderr.puts "  - Set HTM_DATABASE__URL to point to '#{expected}'"
-        $stderr.puts "  - Set HTM_DATABASE__NAME=#{expected}"
-        $stderr.puts "  - Change HTM_ENV to match the database suffix"
-        exit 1
-      end
-    end
+    # Note: Database configuration validation (environment, URL/component reconciliation,
+    # naming convention) happens automatically when HTM is required above.
 
     desc "Set up HTM database schema and run migrations (set DUMP_SCHEMA=true to auto-dump schema after)"
-    task setup: :validate do
+    task :setup do
       dump_schema = ENV['DUMP_SCHEMA'] == 'true'
       HTM::Database.setup(dump_schema: dump_schema)
     end
 
     desc "Run pending database migrations"
-    task migrate: :validate do
+    task :migrate do
       HTM::Database.migrate
     end
 
     desc "Show migration status"
-    task status: :validate do
+    task :status do
       HTM::Database.migration_status
     end
 
     desc "Drop all HTM tables (WARNING: destructive! Set CONFIRM=yes to skip prompt)"
-    task drop: :validate do
+    task :drop do
       if ENV['CONFIRM'] == 'yes'
         HTM::Database.drop
       else
@@ -97,7 +45,7 @@ namespace :htm do
     end
 
     desc "Drop and recreate database (WARNING: destructive! Set CONFIRM=yes to skip prompt)"
-    task reset: :validate do
+    task :reset do
       if ENV['CONFIRM'] == 'yes'
         HTM::Database.drop
         HTM::Database.setup(dump_schema: true)
@@ -114,7 +62,7 @@ namespace :htm do
     end
 
     desc "Verify database connection (respects HTM_ENV/RAILS_ENV)"
-    task verify: :validate do
+    task :verify do
       config = HTM::ActiveRecordConfig.load_database_config
 
       puts "Verifying HTM database connection (#{HTM.env})..."
@@ -150,7 +98,7 @@ namespace :htm do
     end
 
     desc "Open PostgreSQL console (respects HTM_ENV/RAILS_ENV)"
-    task console: :validate do
+    task :console do
       config = HTM::ActiveRecordConfig.load_database_config
 
       puts "Connecting to #{config[:database]} (#{HTM.env})..."
@@ -162,18 +110,16 @@ namespace :htm do
 
     desc "Seed database with sample data"
     task :seed do
-      require 'htm'
       HTM::Database.seed
     end
 
     desc "Show database info (size, tables, extensions)"
     task :info do
-      require 'htm'
       HTM::Database.info
     end
 
     desc "Show record counts for all HTM tables"
-    task stats: :validate do
+    task :stats do
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
 
@@ -250,7 +196,6 @@ namespace :htm do
     namespace :rebuild do
       desc "Rebuild embeddings for all nodes. Clears existing embeddings and regenerates via LLM."
       task :embeddings do
-        require 'htm'
         require 'ruby-progressbar'
 
         # Ensure database connection
@@ -326,7 +271,6 @@ namespace :htm do
 
       desc "Rebuild propositions for all non-proposition nodes. Extracts atomic facts and creates new nodes."
       task :propositions do
-        require 'htm'
         require 'ruby-progressbar'
 
         # Ensure database connection
@@ -442,19 +386,17 @@ namespace :htm do
     namespace :schema do
       desc "Dump current schema to db/schema.sql"
       task :dump do
-        require 'htm'
         HTM::Database.dump_schema
       end
 
       desc "Load schema from db/schema.sql"
       task :load do
-        require 'htm'
         HTM::Database.load_schema
       end
     end
 
     desc "Create database if it doesn't exist (respects HTM_ENV/RAILS_ENV)"
-    task create: :validate do
+    task :create do
       config = HTM::ActiveRecordConfig.load_database_config
       db_name = config[:database]
 
@@ -509,8 +451,6 @@ namespace :htm do
     namespace :tags do
       desc "Soft delete orphaned tags and stale node_tags entries"
       task :cleanup do
-        require 'htm'
-
         # Ensure database connection
         HTM::ActiveRecordConfig.establish_connection!
 
@@ -575,8 +515,6 @@ namespace :htm do
 
     desc "Permanently delete all soft-deleted records from all tables (WARNING: irreversible!)"
     task :purge_all do
-      require 'htm'
-
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
 
@@ -731,7 +669,6 @@ namespace :htm do
         puts "Install it with: brew install tbls"
         exit 1
       end
-      require 'htm'
       HTM::Database.generate_docs
     end
 

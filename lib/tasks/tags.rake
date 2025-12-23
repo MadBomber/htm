@@ -12,7 +12,6 @@ namespace :htm do
   namespace :tags do
     desc "Display tags as a hierarchical tree (text format). Optional prefix filter."
     task :tree, [:prefix] do |_t, args|
-      require 'htm'
 
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
@@ -34,7 +33,6 @@ namespace :htm do
 
     desc "Export tags as Mermaid flowchart to tags.md. Optional prefix filter."
     task :mermaid, [:prefix] do |_t, args|
-      require 'htm'
 
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
@@ -56,7 +54,6 @@ namespace :htm do
 
     desc "Export tags as SVG visualization to tags.svg. Optional prefix filter."
     task :svg, [:prefix] do |_t, args|
-      require 'htm'
 
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
@@ -79,7 +76,6 @@ namespace :htm do
 
     desc "Rebuild all tags from node content. Clears existing tags and regenerates using LLM."
     task :rebuild do
-      require 'htm'
 
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
@@ -157,7 +153,6 @@ namespace :htm do
 
     desc "Export tags in all formats (tags.txt, tags.md, tags.svg). Optional prefix filter."
     task :export, [:prefix] do |_t, args|
-      require 'htm'
 
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!

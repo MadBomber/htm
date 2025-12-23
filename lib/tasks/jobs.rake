@@ -4,7 +4,6 @@ namespace :htm do
   namespace :jobs do
     desc "Show statistics for nodes and async job processing"
     task :stats => :environment do
-      require 'htm'
 
       # Establish connection
       HTM::ActiveRecordConfig.establish_connection!
@@ -63,7 +62,6 @@ namespace :htm do
 
     desc "Process pending embedding jobs for nodes without embeddings"
     task :process_embeddings => :environment do
-      require 'htm'
       require 'ruby-progressbar'
 
       # Establish connection and configure HTM
@@ -119,7 +117,6 @@ namespace :htm do
 
     desc "Process pending tag extraction jobs for nodes without tags"
     task :process_tags => :environment do
-      require 'htm'
       require 'ruby-progressbar'
 
       # Establish connection and configure HTM
@@ -184,7 +181,6 @@ namespace :htm do
 
     desc "Process pending proposition extraction for nodes without propositions"
     task :process_propositions => :environment do
-      require 'htm'
       require 'ruby-progressbar'
 
       # Establish connection and configure HTM
@@ -293,7 +289,6 @@ namespace :htm do
 
     desc "Reprocess embeddings for all nodes (force regeneration)"
     task :reprocess_embeddings => :environment do
-      require 'htm'
 
       print "This will regenerate embeddings for ALL nodes. Are you sure? (yes/no): "
       confirmation = $stdin.gets.chomp
@@ -336,7 +331,6 @@ namespace :htm do
 
     desc "Show nodes that failed async processing"
     task :failed => :environment do
-      require 'htm'
 
       HTM::ActiveRecordConfig.establish_connection!
 
@@ -385,7 +379,6 @@ namespace :htm do
 
     desc "Clear all embeddings and tags (for testing/development)"
     task :clear_all => :environment do
-      require 'htm'
 
       print "This will clear ALL embeddings and tags. Are you sure? (yes/no): "
       confirmation = $stdin.gets.chomp

@@ -3,7 +3,6 @@
 namespace :db do
   desc "Run database migrations"
   task :migrate do
-    require_relative '../htm'
 
     HTM::Database.migrate
     puts "Database migrations completed successfully"
@@ -11,7 +10,6 @@ namespace :db do
 
   desc "Setup database schema (includes migrations)"
   task :setup do
-    require_relative '../htm'
 
     HTM::Database.setup
     puts "Database setup completed successfully"

@@ -12,7 +12,6 @@ namespace :htm do
   namespace :files do
     desc "Load a markdown file into long-term memory. Usage: rake htm:files:load[path/to/file.md]"
     task :load, [:path] do |_t, args|
-      require 'htm'
 
       path = args[:path]
       unless path
@@ -49,7 +48,6 @@ namespace :htm do
 
     desc "Load all markdown files from a directory. Usage: rake htm:files:load_dir[path/to/dir]"
     task :load_dir, [:path, :pattern] do |_t, args|
-      require 'htm'
 
       path = args[:path]
       unless path
@@ -104,7 +102,6 @@ namespace :htm do
 
     desc "List all loaded file sources"
     task :list do
-      require 'htm'
 
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
@@ -136,7 +133,6 @@ namespace :htm do
 
     desc "Show details for a loaded file. Usage: rake htm:files:info[path/to/file.md]"
     task :info, [:path] do |_t, args|
-      require 'htm'
 
       path = args[:path]
       unless path
@@ -192,7 +188,6 @@ namespace :htm do
 
     desc "Unload a file from memory. Usage: rake htm:files:unload[path/to/file.md]"
     task :unload, [:path] do |_t, args|
-      require 'htm'
 
       path = args[:path]
       unless path
@@ -216,7 +211,6 @@ namespace :htm do
 
     desc "Sync all loaded files (reload changed files)"
     task :sync do
-      require 'htm'
 
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!
@@ -263,7 +257,6 @@ namespace :htm do
 
     desc "Show file loading statistics"
     task :stats do
-      require 'htm'
 
       # Ensure database connection
       HTM::ActiveRecordConfig.establish_connection!

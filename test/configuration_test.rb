@@ -214,21 +214,30 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_url_from_components
-    # Temporarily clear database URL env var so component-based URL building works
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    # Test that URL is built from components at load time when no URL is set.
+    # Set component env vars BEFORE creating config (reconciliation happens at load).
+    saved_vars = {}
+    %w[HTM_DATABASE__URL HTM_DATABASE__HOST HTM_DATABASE__PORT HTM_DATABASE__NAME
+       HTM_DATABASE__USER HTM_DATABASE__PASSWORD HTM_DATABASE__SSLMODE].each do |var|
+      saved_vars[var] = ENV[var]
+    end
+
     ENV.delete('HTM_DATABASE__URL')
+    ENV['HTM_DATABASE__HOST'] = 'dbhost'
+    ENV['HTM_DATABASE__PORT'] = '5433'
+    ENV['HTM_DATABASE__NAME'] = 'mydb'
+    ENV['HTM_DATABASE__USER'] = 'myuser'
+    ENV['HTM_DATABASE__PASSWORD'] = 'mypass'
+    ENV['HTM_DATABASE__SSLMODE'] = 'require'
 
     config = HTM::Config.new
-    config.database.host = 'dbhost'
-    config.database.port = 5433
-    config.database.name = 'mydb'
-    config.database.user = 'myuser'
-    config.database.password = 'mypass'
 
-    expected_url = 'postgresql://myuser:mypass@dbhost:5433/mydb'
+    expected_url = 'postgresql://myuser:mypass@dbhost:5433/mydb?sslmode=require'
     assert_equal expected_url, config.database_url
   ensure
-    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+    saved_vars.each do |var, val|
+      val ? ENV[var] = val : ENV.delete(var)
+    end
   end
 
   def test_database_url_takes_precedence
@@ -241,36 +250,58 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_configured
-    # Temporarily clear database URL env var to test component-based configuration
+    # Test database_configured? reflects state after reconciliation.
+    # With a URL set, database is configured.
     saved_dburl = ENV['HTM_DATABASE__URL']
-    ENV.delete('HTM_DATABASE__URL')
+    ENV['HTM_DATABASE__URL'] = 'postgresql://user@localhost:5432/testdb'
 
     config = HTM::Config.new
-
-    # Clear environment-specific database.name to test unconfigured state
-    config.database.name = nil
-    refute config.database_configured?
-
-    # With database.name set
-    config.database.name = 'test_db'
     assert config.database_configured?
   ensure
     saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
   end
 
-  def test_database_config_hash
-    # Temporarily clear database URL env var so component-based config is used
-    saved_dburl = ENV['HTM_DATABASE__URL']
-    ENV.delete('HTM_DATABASE__URL')
+  def test_database_not_configured_when_empty
+    # Test that database_configured? returns false when no database config.
+    # Must clear ALL database-related env vars to get unconfigured state.
+    saved_vars = {}
+    %w[HTM_DATABASE__URL HTM_DATABASE__HOST HTM_DATABASE__PORT HTM_DATABASE__NAME
+       HTM_DATABASE__USER HTM_DATABASE__PASSWORD].each do |var|
+      saved_vars[var] = ENV[var]
+      ENV.delete(var)
+    end
 
     config = HTM::Config.new
-    config.database.host = 'localhost'
-    config.database.port = 5432
-    config.database.name = 'test_db'
-    config.database.user = 'test_user'
-    config.database.pool_size = 5
-    config.database.timeout = 3000
 
+    # After clearing env vars, defaults.yml still sets database.name per environment.
+    # With name set, reconciliation builds a URL, so database is configured.
+    # To truly test unconfigured state, we need to clear the name after load.
+    config.database.name = nil
+    config.database.url = nil
+    refute config.database_configured?
+  ensure
+    saved_vars.each do |var, val|
+      val ? ENV[var] = val : ENV.delete(var)
+    end
+  end
+
+  def test_database_config_hash
+    # Test that database_config hash reflects component values.
+    # Set component env vars BEFORE creating config (reconciliation happens at load).
+    saved_vars = {}
+    %w[HTM_DATABASE__URL HTM_DATABASE__HOST HTM_DATABASE__PORT HTM_DATABASE__NAME
+       HTM_DATABASE__USER HTM_DATABASE__PASSWORD HTM_DATABASE__POOL_SIZE].each do |var|
+      saved_vars[var] = ENV[var]
+    end
+
+    ENV.delete('HTM_DATABASE__URL')
+    ENV['HTM_DATABASE__HOST'] = 'localhost'
+    ENV['HTM_DATABASE__PORT'] = '5432'
+    ENV['HTM_DATABASE__NAME'] = 'test_db'
+    ENV['HTM_DATABASE__USER'] = 'test_user'
+    ENV['HTM_DATABASE__POOL_SIZE'] = '5'
+
+    config = HTM::Config.new
     db_config = config.database_config
 
     assert_equal 'postgresql', db_config[:adapter]
@@ -280,7 +311,9 @@ class ConfigurationTest < Minitest::Test
     assert_equal 'test_user', db_config[:username]
     assert_equal 5, db_config[:pool]
   ensure
-    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+    saved_vars.each do |var, val|
+      val ? ENV[var] = val : ENV.delete(var)
+    end
   end
 
   # Environment validation tests
@@ -626,6 +659,248 @@ class ConfigurationTest < Minitest::Test
     assert config.validate_database_name!
   ensure
     saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  # ==========================================================================
+  # Database URL/Components Consistency Tests
+  # ==========================================================================
+
+  def test_parse_database_url
+    config = HTM::Config.new
+    config.database.url = 'postgresql://myuser:mypass@dbhost:5433/mydb'
+
+    parsed = config.parse_database_url
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal 5433, parsed[:port]
+    assert_equal 'mydb', parsed[:name]
+    assert_equal 'myuser', parsed[:user]
+    assert_equal 'mypass', parsed[:password]
+  end
+
+  def test_parse_database_url_without_password
+    config = HTM::Config.new
+    config.database.url = 'postgresql://myuser@dbhost:5432/mydb'
+
+    parsed = config.parse_database_url
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal 'myuser', parsed[:user]
+    refute parsed.key?(:password)
+  end
+
+  def test_parse_database_url_returns_nil_when_no_url
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV.delete('HTM_DATABASE__URL')
+
+    config = HTM::Config.new
+    config.database.url = nil
+
+    assert_nil config.parse_database_url
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_parse_database_url_with_sslmode
+    config = HTM::Config.new
+    config.database.url = 'postgresql://myuser@dbhost:5432/mydb?sslmode=require'
+
+    parsed = config.parse_database_url
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal 5432, parsed[:port]
+    assert_equal 'mydb', parsed[:name]
+    assert_equal 'myuser', parsed[:user]
+    assert_equal 'require', parsed[:sslmode]
+  end
+
+  def test_build_database_url_includes_sslmode
+    saved_vars = {}
+    %w[HTM_DATABASE__URL HTM_DATABASE__HOST HTM_DATABASE__PORT HTM_DATABASE__NAME
+       HTM_DATABASE__USER HTM_DATABASE__SSLMODE].each do |var|
+      saved_vars[var] = ENV[var]
+    end
+
+    ENV.delete('HTM_DATABASE__URL')
+    ENV['HTM_DATABASE__HOST'] = 'dbhost'
+    ENV['HTM_DATABASE__PORT'] = '5432'
+    ENV['HTM_DATABASE__NAME'] = 'mydb'
+    ENV['HTM_DATABASE__USER'] = 'myuser'
+    ENV['HTM_DATABASE__SSLMODE'] = 'require'
+
+    config = HTM::Config.new
+
+    assert_equal 'postgresql://myuser@dbhost:5432/mydb?sslmode=require', config.database.url
+  ensure
+    saved_vars.each do |var, val|
+      val ? ENV[var] = val : ENV.delete(var)
+    end
+  end
+
+  def test_reconciliation_extracts_sslmode_from_url
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_DATABASE__URL'] = 'postgresql://testuser@testhost:5432/testdb?sslmode=verify-full'
+
+    config = HTM::Config.new
+
+    assert_equal 'verify-full', config.database.sslmode
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  # ==========================================================================
+  # Database Configuration Reconciliation
+  # ==========================================================================
+  #
+  # Reconciliation happens at config load time:
+  # - If URL exists: all components are populated from the URL
+  # - If no URL but components exist: URL is built from components
+  #
+
+  def test_reconciliation_populates_components_from_url_at_load_time
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_DATABASE__URL'] = 'postgresql://testuser:testpass@testhost:5433/testdb'
+
+    config = HTM::Config.new
+
+    # Components should be populated from URL at load time
+    assert_equal 'testhost', config.database.host
+    assert_equal 5433, config.database.port
+    assert_equal 'testdb', config.database.name
+    assert_equal 'testuser', config.database.user
+    assert_equal 'testpass', config.database.password
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_reconciliation_builds_url_from_components_when_no_url
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV.delete('HTM_DATABASE__URL')
+    saved_name = ENV['HTM_DATABASE__NAME']
+    saved_user = ENV['HTM_DATABASE__USER']
+
+    ENV['HTM_DATABASE__NAME'] = 'component_db'
+    ENV['HTM_DATABASE__USER'] = 'component_user'
+
+    config = HTM::Config.new
+
+    # URL should be built from components at load time (sslmode=prefer is the default)
+    assert_equal 'postgresql://component_user@localhost:5432/component_db?sslmode=prefer', config.database.url
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+    saved_name ? ENV['HTM_DATABASE__NAME'] = saved_name : ENV.delete('HTM_DATABASE__NAME')
+    saved_user ? ENV['HTM_DATABASE__USER'] = saved_user : ENV.delete('HTM_DATABASE__USER')
+  end
+
+  def test_reconciliation_uses_defaults_for_host_and_port_when_building_url
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV.delete('HTM_DATABASE__URL')
+    saved_name = ENV['HTM_DATABASE__NAME']
+
+    ENV['HTM_DATABASE__NAME'] = 'mydb'
+
+    config = HTM::Config.new
+
+    # Should use localhost:5432 defaults
+    assert_equal 'localhost', config.database.host
+    assert_equal 5432, config.database.port
+    assert_match(%r{localhost:5432/mydb}, config.database.url)
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+    saved_name ? ENV['HTM_DATABASE__NAME'] = saved_name : ENV.delete('HTM_DATABASE__NAME')
+  end
+
+  def test_reconciliation_auto_generates_database_name_from_service_and_environment
+    # When database.name is missing but other components exist,
+    # auto-generate name from service.name and environment
+    saved_vars = {}
+    %w[HTM_DATABASE__URL HTM_DATABASE__NAME HTM_DATABASE__USER HTM_ENV HTM_SERVICE__NAME].each do |var|
+      saved_vars[var] = ENV[var]
+    end
+
+    ENV.delete('HTM_DATABASE__URL')
+    ENV.delete('HTM_DATABASE__NAME')
+    ENV['HTM_DATABASE__USER'] = 'testuser'  # This triggers reconciliation
+    ENV['HTM_ENV'] = 'test'
+    ENV['HTM_SERVICE__NAME'] = 'myapp'
+
+    config = HTM::Config.new
+
+    # Name should be auto-generated as {service_name}_{environment}
+    assert_equal 'myapp_test', config.database.name
+    assert_match(%r{/myapp_test}, config.database.url)
+  ensure
+    saved_vars.each do |var, val|
+      val ? ENV[var] = val : ENV.delete(var)
+    end
+  end
+
+  # ==========================================================================
+  # Database Component Accessors
+  # ==========================================================================
+  #
+  # These are simple accessors that return the component values.
+  # Reconciliation has already happened at load time.
+  #
+
+  def test_database_host_returns_component_value
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_DATABASE__URL'] = 'postgresql://user@myhost:5432/mydb'
+
+    config = HTM::Config.new
+
+    assert_equal 'myhost', config.database_host
+    assert_equal config.database.host, config.database_host
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_database_port_returns_component_value
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_DATABASE__URL'] = 'postgresql://user@localhost:5433/mydb'
+
+    config = HTM::Config.new
+
+    assert_equal 5433, config.database_port
+    assert_equal config.database.port, config.database_port
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_database_name_returns_component_value
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_DATABASE__URL'] = 'postgresql://user@localhost:5432/extracted_db'
+
+    config = HTM::Config.new
+
+    assert_equal 'extracted_db', config.database_name
+    assert_equal config.database.name, config.database_name
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_database_user_returns_component_value
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_DATABASE__URL'] = 'postgresql://dbuser@localhost:5432/mydb'
+
+    config = HTM::Config.new
+
+    assert_equal 'dbuser', config.database_user
+    assert_equal config.database.user, config.database_user
+  ensure
+    saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_database_password_returns_component_value
+    saved_dburl = ENV['HTM_DATABASE__URL']
+    ENV['HTM_DATABASE__URL'] = 'postgresql://user:secret123@localhost:5432/mydb'
+
+    config = HTM::Config.new
+
+    assert_equal 'secret123', config.database_password
+    assert_equal config.database.password, config.database_password
+  ensure
     saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
   end
 end
