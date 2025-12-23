@@ -16,10 +16,13 @@
 #   { "cmd": "recall", "query": "...", "limit": 5 }
 #   { "cmd": "status" }
 #   { "cmd": "shutdown" }
+#
+# Note: This worker inherits HTM_ENV and HTM_DATABASE__URL from the parent
+# process (multi_process.rb) which uses examples_helper.rb.
 
 require 'logger'
 require 'json'
-require_relative '../../lib/htm'
+require_relative '../examples_helper'
 
 robot_name = ARGV[0]
 group_name = ARGV[1]

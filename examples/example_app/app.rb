@@ -2,27 +2,27 @@
 # Example HTM Application
 #
 # This demonstrates a simple application using the HTM gem with full RubyLLM integration.
+#
+# Prerequisites:
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: bundle install
+#
+# Run via:
+#   ruby examples/example_app/app.rb
 
-require_relative '../../lib/htm'
+require_relative '../examples_helper'
 require 'ruby_llm'
 require 'logger'
 
 class ExampleApp
   def self.run
     puts "\n=== HTM Full-Featured Example Application ==="
-    puts "\nChecking database connection..."
+    ExamplesHelper.print_environment
 
-    # Check if database is configured
-    config = HTM::Database.default_config
-    unless config
-      puts "\n⚠ Database not configured!"
-      puts "Set HTM_DATABASE__URL environment variable:"
-      puts "  export HTM_DATABASE__URL='postgresql://user:pass@host:port/dbname'"
-      puts "\nOr run: rake app:bootstrap"
-      return
-    end
+    # Verify database is available
+    ExamplesHelper.require_database!
 
-    puts "✓ Database configured: #{config[:dbname]} @ #{config[:host]}"
+    puts "Database configured: #{HTM.config.actual_database_name}"
 
     # Configure HTM with RubyLLM for embeddings and tag generation
     puts "\nConfiguring HTM with RubyLLM..."

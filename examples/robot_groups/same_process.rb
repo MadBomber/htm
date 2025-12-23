@@ -19,25 +19,22 @@
 #    synchronization of in-memory working memory across robots.
 #
 # Prerequisites:
-# 1. Set HTM_DATABASE__URL environment variable
-# 2. Initialize database schema: rake db_setup
-# 3. Install dependencies: bundle install
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: bundle install
+#
+# Run via:
+#   ruby examples/robot_groups/same_process.rb
 
-require_relative '../../lib/htm'
+require_relative '../examples_helper'
 require 'json'
 
 # =============================================================================
 # Demo Script
 # =============================================================================
 
-puts 'HTM Robot Group Demo - Shared Working Memory & Failover'
-puts '=' * 60
-
-unless ENV['HTM_DATABASE__URL']
-  puts 'ERROR: HTM_DATABASE__URL not set. Please set it:'
-  puts '  export HTM_DATABASE__URL="postgresql://postgres@localhost:5432/htm_development"'
-  exit 1
-end
+ExamplesHelper.section "HTM Robot Group Demo - Shared Working Memory & Failover"
+ExamplesHelper.print_environment
+ExamplesHelper.require_database!
 
 begin
   # Configure HTM

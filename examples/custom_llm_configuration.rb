@@ -5,11 +5,21 @@
 #
 # This example demonstrates how to configure HTM with custom LLM methods
 # for embedding generation and tag extraction, as well as using defaults.
+#
+# Prerequisites:
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: bundle install
+#
+# Run via:
+#   ruby examples/custom_llm_configuration.rb
 
-require_relative '../lib/htm'
+require_relative 'examples_helper'
 
-puts "HTM Custom LLM Configuration Example"
-puts "=" * 50
+ExamplesHelper.section "HTM Custom LLM Configuration Example"
+ExamplesHelper.print_environment
+
+# Verify database is available
+ExamplesHelper.require_database!
 
 # Example 1: Use Default Configuration (RubyLLM with Ollama)
 puts "\n1. Using Default Configuration (RubyLLM + Ollama)"

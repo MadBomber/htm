@@ -7,8 +7,9 @@
 # locally installed Prometheus and Grafana (via Homebrew).
 #
 # Prerequisites:
-#   brew install grafana prometheus
-#   gem install prometheus-client webrick
+#   1. Set up examples database: rake examples:setup
+#   2. brew install grafana prometheus
+#   3. gem install prometheus-client webrick
 #
 # Usage:
 #   cd examples/telemetry
@@ -101,11 +102,14 @@ class TelemetryDemo
   def load_htm
     puts "Loading HTM..."
 
-    # Use bundler for HTM and its dependencies
-    require 'bundler/setup'
-    require_relative '../../lib/htm'
+    # Use examples_helper which sets up examples environment and database
+    require_relative '../examples_helper'
 
     puts "  [OK] HTM #{HTM::VERSION}"
+    puts "  [OK] Environment: #{HTM.config.environment}"
+    puts "  [OK] Database: #{HTM.config.actual_database_name}"
+
+    ExamplesHelper.require_database!
     puts
   end
 

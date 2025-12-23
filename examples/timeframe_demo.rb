@@ -3,10 +3,17 @@
 
 # Timeframe Demo - Demonstrates the various ways to use timeframes with recall
 #
-# Run with:
-#   HTM_DATABASE__URL="postgresql://localhost/htm_development" ruby examples/timeframe_demo.rb
+# Prerequisites:
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: bundle install
+#
+# Run via:
+#   rake examples:basic  # runs basic_usage.rb
+#   ruby examples/timeframe_demo.rb
 
-require_relative "../lib/htm"
+require_relative 'examples_helper'
+
+ExamplesHelper.require_database!
 
 puts <<~HEADER
   ╔══════════════════════════════════════════════════════════════════╗

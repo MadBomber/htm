@@ -4,25 +4,21 @@
 # Basic usage example for HTM
 #
 # Prerequisites:
-# 1. Configure database via environment or config file:
-#    - HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
-#    - Or individual vars: HTM_DATABASE__HOST, HTM_DATABASE__NAME, etc.
-# 2. Initialize database schema: rake htm:db:setup
-# 3. Install dependencies: bundle install
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: bundle install
+#
+# Run via:
+#   rake examples:basic
+#   # or
+#   ruby examples/basic_usage.rb
 
-require_relative '../lib/htm'
+require_relative 'examples_helper'
 
-puts "HTM Basic Usage Example"
-puts "=" * 60
+ExamplesHelper.section "HTM Basic Usage Example"
+ExamplesHelper.print_environment
 
-# Check database configuration using the config system
-unless HTM.config.database_configured?
-  puts "ERROR: Database not configured. Set one of:"
-  puts "  export HTM_DATABASE__URL=\"postgresql://user@localhost:5432/htm_development\""
-  puts "  Or configure in ~/.config/htm/htm.yml"
-  puts "Run 'bin/htm_mcp help' for all configuration options."
-  exit 1
-end
+# Verify database is available
+ExamplesHelper.require_database!
 
 begin
   # Configure HTM globally (uses Ollama by default from defaults.yml)

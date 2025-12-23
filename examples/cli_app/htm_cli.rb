@@ -9,15 +9,18 @@
 # - Progress feedback
 # - Database persistence
 #
+# Prerequisites:
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: bundle install
+#
 # Usage:
-#   ruby htm_cli.rb
+#   ruby examples/cli_app/htm_cli.rb
 #
 # Environment:
-#   HTM_DATABASE__URL - PostgreSQL connection URL (required)
 #   OLLAMA_URL - Ollama server URL (default: http://localhost:11434)
 #
 
-require_relative '../../lib/htm'
+require_relative '../examples_helper'
 require 'io/console'
 require 'ruby_llm'
 
@@ -376,17 +379,7 @@ class HTMCli
 end
 
 # Check database configuration
-unless ENV['HTM_DATABASE__URL']
-  puts
-  puts "[✗] Error: HTM_DATABASE__URL environment variable not set"
-  puts
-  puts "Please set your database connection URL:"
-  puts "  export HTM_DATABASE__URL='postgresql://postgres@localhost:5432/htm_development'"
-  puts
-  puts "See SETUP.md for database setup instructions."
-  puts
-  exit 1
-end
+ExamplesHelper.require_database!
 
 # Check Ollama connection (optional but recommended)
 begin

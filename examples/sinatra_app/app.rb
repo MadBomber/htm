@@ -9,12 +9,15 @@
 # - RESTful API endpoints
 # - Thread-safe concurrent request handling
 #
+# Prerequisites:
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: cd examples/sinatra_app && bundle install
+#
 # Usage:
-#   bundle install
+#   cd examples/sinatra_app
 #   bundle exec ruby app.rb
 #
 # Environment:
-#   HTM_DATABASE__URL - PostgreSQL connection URL (required)
 #   REDIS_URL - Redis connection URL (for Sidekiq, default: redis://localhost:6379/0)
 #   OLLAMA_URL - Ollama server URL (default: http://localhost:11434)
 #
@@ -23,7 +26,7 @@ require 'sinatra'
 require 'sinatra/json'
 require 'sidekiq'
 require 'securerandom'
-require_relative '../../lib/htm'
+require_relative '../examples_helper'
 require_relative '../../lib/htm/integrations/sinatra'
 
 # Sidekiq configuration

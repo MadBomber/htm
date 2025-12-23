@@ -10,24 +10,21 @@
 # - Unloading files
 #
 # Prerequisites:
-# 1. Set HTM_DATABASE__URL environment variable (see SETUP.md)
-# 2. Initialize database schema: rake db_setup
-# 3. Install dependencies: bundle install
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: bundle install
+#
+# Run via:
+#   ruby examples/file_loader_usage.rb
 
-require_relative '../lib/htm'
+require_relative 'examples_helper'
 require 'tempfile'
 require 'fileutils'
 
-puts "HTM File Loader Example"
-puts "=" * 60
+ExamplesHelper.section "HTM File Loader Example"
+ExamplesHelper.print_environment
 
-# Check environment
-unless ENV['HTM_DATABASE__URL']
-  puts "ERROR: HTM_DATABASE__URL not set. Please set it:"
-  puts "  export HTM_DATABASE__URL=\"postgresql://postgres@localhost:5432/htm_development\""
-  puts "See SETUP.md for details."
-  exit 1
-end
+# Verify database is available
+ExamplesHelper.require_database!
 
 begin
   # Configure HTM globally (uses Ollama by default)

@@ -13,10 +13,13 @@
 # 4. Dynamic scaling by spawning new processes
 #
 # Prerequisites:
-# 1. Set HTM_DATABASE__URL environment variable
-# 2. Initialize database schema: rake db_setup
+# 1. Set up examples database: rake examples:setup
+# 2. Install dependencies: bundle install
+#
+# Run via:
+#   ruby examples/robot_groups/multi_process.rb
 
-require_relative '../../lib/htm'
+require_relative '../examples_helper'
 require 'json'
 require 'timeout'
 require 'open3'
@@ -119,11 +122,8 @@ def run_demo
 
   BANNER
 
-  unless ENV['HTM_DATABASE__URL']
-    puts 'ERROR: HTM_DATABASE__URL not set.'
-    puts '  export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"'
-    exit 1
-  end
+  ExamplesHelper.print_environment
+  ExamplesHelper.require_database!
 
   group_name = "demo-#{Time.now.to_i}"
   robots = []

@@ -2,20 +2,35 @@
 
 This directory contains example applications demonstrating various ways to use the HTM (Hierarchical Temporal Memory) gem.
 
-## Prerequisites
+## Quick Start
 
-All examples require:
+All examples use the `htm_examples` database, isolated from development and production data.
+
+```bash
+# One-time setup: create and configure examples database
+rake examples:setup
+
+# Run the basic example
+rake examples:basic
+
+# Run all standalone examples
+rake examples:all
+
+# Check examples database status
+rake examples:status
+```
+
+## Prerequisites
 
 1. **PostgreSQL Database** with pgvector extension:
    ```bash
-   export HTM_DATABASE__URL="postgresql://user@localhost:5432/htm_development"
+   # Create the examples database (done automatically by rake examples:setup)
+   createdb htm_examples
+   psql htm_examples -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
    ```
 
-   > **Note**: Database selection now respects `RAILS_ENV`. If `RAILS_ENV` is set,
-   > HTM extracts the base name from `HTM_DATABASE__URL` and appends the environment suffix.
-   > For example, with `HTM_DATABASE__URL=...htm_development` and `HTM_ENV=test`, HTM
-   > connects to `htm_test`. When `RAILS_ENV` is unset (typical for examples),
-   > behavior is unchanged.
+   > **Note**: All examples use `HTM_ENV=examples` which connects to `htm_examples` database.
+   > This isolation prevents examples from polluting development or production data.
 
 2. **Ollama** (recommended for local LLM):
    ```bash
@@ -27,6 +42,17 @@ All examples require:
    ```bash
    bundle install
    ```
+
+## Available Rake Tasks
+
+```bash
+rake examples:setup    # Set up examples database (create + setup schema)
+rake examples:reset    # Reset examples database (drop + create + setup)
+rake examples:basic    # Run basic_usage example
+rake examples:all      # Run all standalone examples
+rake examples:status   # Show examples database status
+rake example           # Alias for examples:basic
+```
 
 ---
 

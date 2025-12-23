@@ -8,9 +8,9 @@
 # using a local Ollama model.
 #
 # Prerequisites:
-# 1. Install gems: gem install ruby_llm-mcp
-# 2. Have Ollama running with gpt-oss model: ollama pull gpt-oss
-# 3. Set HTM_DATABASE__URL environment variable
+# 1. Set up examples database: rake examples:setup
+# 2. Install gems: gem install ruby_llm-mcp
+# 3. Have Ollama running with gpt-oss model: ollama pull gpt-oss
 # 4. The htm_mcp executable must be available (this client will launch it)
 #
 # Usage:
@@ -23,6 +23,7 @@
 # - List tags and statistics
 # - All through conversational AI with tool calling
 
+require_relative 'examples_helper'
 require 'ruby_llm'
 require 'ruby_llm/mcp'
 
@@ -57,11 +58,7 @@ class HTMMcpClient
   private
 
   def validate_environment
-    unless ENV['HTM_DATABASE__URL']
-      warn 'Error: HTM_DATABASE__URL not set.'
-      warn '  export HTM_DATABASE__URL="postgresql://postgres@localhost:5432/htm_development"'
-      exit 1
-    end
+    ExamplesHelper.require_database!
 
     unless File.exist?(MCP_SERVER_PATH)
       warn "Error: MCP server not found at #{MCP_SERVER_PATH}"
