@@ -4,78 +4,18 @@ require 'anyway_config'
 require 'logger'
 require 'yaml'
 
+# Define Config class first to establish superclass
 class HTM
-  # ConfigSection provides method access to nested configuration hashes
-  #
-  # @example
-  #   section = ConfigSection.new(host: 'localhost', port: 5432)
-  #   section.host  # => 'localhost'
-  #   section.port  # => 5432
-  #
-  class ConfigSection
-    def initialize(hash = {})
-      @data = {}
-      (hash || {}).each do |key, value|
-        @data[key.to_sym] = value.is_a?(Hash) ? ConfigSection.new(value) : value
-      end
-    end
-
-    def method_missing(method, *args, &block)
-      key = method.to_s
-      if key.end_with?('=')
-        @data[key.chomp('=').to_sym] = args.first
-      elsif @data.key?(method)
-        @data[method]
-      else
-        nil
-      end
-    end
-
-    def respond_to_missing?(method, include_private = false)
-      key = method.to_s.chomp('=').to_sym
-      @data.key?(key) || super
-    end
-
-    def to_h
-      @data.transform_values do |v|
-        v.is_a?(ConfigSection) ? v.to_h : v
-      end
-    end
-
-    def [](key)
-      @data[key.to_sym]
-    end
-
-    def []=(key, value)
-      @data[key.to_sym] = value
-    end
-
-    def merge(other)
-      other_hash = other.is_a?(ConfigSection) ? other.to_h : other
-      ConfigSection.new(deep_merge(to_h, other_hash || {}))
-    end
-
-    def keys
-      @data.keys
-    end
-
-    def each(&block)
-      @data.each(&block)
-    end
-
-    private
-
-    def deep_merge(base, overlay)
-      base.merge(overlay) do |_key, old_val, new_val|
-        if old_val.is_a?(Hash) && new_val.is_a?(Hash)
-          deep_merge(old_val, new_val)
-        else
-          new_val
-        end
-      end
-    end
+  class Config < Anyway::Config
   end
+end
 
+require_relative 'config/section'
+require_relative 'config/validator'
+require_relative 'config/database'
+require_relative 'config/builder'
+
+class HTM
   # HTM Configuration using Anyway Config
   #
   # Schema is defined in lib/htm/config/defaults.yml (single source of truth)
@@ -114,7 +54,11 @@ class HTM
   #     config.embedding.model = 'text-embedding-3-small'
   #   end
   #
-  class Config < Anyway::Config
+  class Config
+    include Validator
+    include Database
+    include Builder
+
     config_name :htm
     env_prefix :htm
 
@@ -216,14 +160,6 @@ class HTM
     # Validation
     # ==========================================================================
 
-    SUPPORTED_PROVIDERS = %i[
-      openai anthropic gemini azure ollama
-      huggingface openrouter bedrock deepseek
-    ].freeze
-
-    SUPPORTED_JOB_BACKENDS = %i[active_job sidekiq inline thread fiber].freeze
-    SUPPORTED_WEEK_STARTS = %i[sunday monday].freeze
-
     # Default embedding dimensions by provider
     DEFAULT_DIMENSIONS = {
       openai: 1536,
@@ -259,80 +195,6 @@ class HTM
     # ==========================================================================
     # Convenience Accessors (for common nested values)
     # ==========================================================================
-
-    # Database convenience methods
-    def database_url
-      url = database.url
-      return url if url && !url.empty?
-
-      build_database_url
-    end
-
-    # ==========================================================================
-    # Database Component Accessors
-    # ==========================================================================
-    #
-    # These methods provide convenient access to database components.
-    # Components are automatically reconciled at config load time:
-    #   - If database.url exists: components are extracted and populated
-    #   - If database.url is missing: it's built from components
-    #
-    # ==========================================================================
-
-    # @return [String, nil] the database host
-    def database_host
-      database.host
-    end
-
-    # @return [Integer, nil] the database port
-    def database_port
-      database.port
-    end
-
-    # @return [String, nil] the database name
-    def database_name
-      database.name
-    end
-
-    # @return [String, nil] the database user
-    def database_user
-      database.user
-    end
-
-    # @return [String, nil] the database password
-    def database_password
-      database.password
-    end
-
-    def database_config
-      url = database_url
-      return {} unless url
-
-      require 'uri'
-      uri = URI.parse(url)
-
-      # Coercion now merges env vars with SCHEMA defaults, so pool_size/timeout
-      # are always available even when only HTM_DATABASE__URL is set
-      {
-        adapter: 'postgresql',
-        host: uri.host,
-        port: uri.port || 5432,
-        database: uri.path&.sub(%r{^/}, ''),
-        username: uri.user,
-        password: uri.password,
-        pool: database.pool_size.to_i,
-        timeout: database.timeout.to_i,
-        sslmode: database.sslmode,
-        encoding: 'unicode',
-        prepared_statements: false,
-        advisory_locks: false
-      }.compact
-    end
-
-    def database_configured?
-      url = database_url
-      (url && !url.empty?) || (database.name && !database.name.empty?)
-    end
 
     # Embedding convenience accessors
     def embedding_provider
@@ -571,140 +433,6 @@ class HTM
       self.class.validate_environment!
     end
 
-    # Validate that database is configured for the current environment
-    #
-    # @raise [HTM::ConfigurationError] if database is not configured
-    # @return [true] if database is configured
-    def validate_database!
-      validate_environment!
-
-      unless database_configured?
-        raise HTM::ConfigurationError,
-          "No database configured for environment '#{environment}'. " \
-          "Set HTM_DATABASE__URL or HTM_DATABASE__NAME, " \
-          "or add database.name to the '#{environment}:' section in your config."
-      end
-
-      true
-    end
-
-    # ==========================================================================
-    # Database Naming Convention
-    # ==========================================================================
-    #
-    # Database names MUST follow the convention: {service_name}_{environment}
-    #
-    # Examples:
-    #   - htm_development
-    #   - htm_test
-    #   - htm_production
-    #   - payroll_development
-    #   - payroll_test
-    #
-    # This ensures:
-    #   1. Database names are predictable and self-documenting
-    #   2. Environment mismatches are impossible (exact match required)
-    #   3. Service isolation (can't accidentally use another app's database)
-    #
-    # ==========================================================================
-
-    # Returns the expected database name based on service.name and environment
-    #
-    # @return [String] expected database name in format "{service_name}_{environment}"
-    #
-    # @example
-    #   config.service.name = "htm"
-    #   HTM_ENV = "test"
-    #   config.expected_database_name  # => "htm_test"
-    #
-    def expected_database_name
-      "#{service_name}_#{environment}"
-    end
-
-    # Extract the actual database name from URL or config
-    #
-    # @return [String, nil] the database name
-    def actual_database_name
-      url = database&.url
-      if url && !url.empty?
-        # Parse database name from URL: postgresql://user@host:port/dbname
-        uri = URI.parse(url) rescue nil
-        return uri&.path&.sub(%r{^/}, '')
-      end
-
-      database&.name
-    end
-
-    # Validate that the database name follows the naming convention
-    #
-    # Database names must be: {service_name}_{environment}
-    #
-    # @raise [HTM::ConfigurationError] if database name doesn't match expected
-    # @return [true] if database name is valid
-    #
-    # @example Valid configurations
-    #   HTM_ENV=test, service.name=htm, database=htm_test        # OK
-    #   HTM_ENV=production, service.name=payroll, database=payroll_production  # OK
-    #
-    # @example Invalid configurations (will raise)
-    #   HTM_ENV=test, service.name=htm, database=htm_production  # Wrong environment
-    #   HTM_ENV=test, service.name=htm, database=payroll_test    # Wrong service
-    #   HTM_ENV=test, service.name=htm, database=mydb            # Wrong format
-    #
-    def validate_database_name!
-      actual = actual_database_name
-      expected = expected_database_name
-
-      return true if actual == expected
-
-      raise HTM::ConfigurationError,
-        "Database name '#{actual}' does not match expected '#{expected}'.\n" \
-        "Database names must follow the convention: {service_name}_{environment}\n" \
-        "  Service name: #{service_name}\n" \
-        "  Environment:  #{environment}\n" \
-        "  Expected:     #{expected}\n" \
-        "  Actual:       #{actual}\n\n" \
-        "Either:\n" \
-        "  - Set HTM_DATABASE__URL to point to '#{expected}'\n" \
-        "  - Set HTM_DATABASE__NAME=#{expected}\n" \
-        "  - Change HTM_ENV to match the database suffix"
-    end
-
-    # Check if the database name matches the expected convention
-    #
-    # @return [Boolean] true if database name matches expected
-    def valid_database_name?
-      actual_database_name == expected_database_name
-    end
-
-    # ==========================================================================
-    # Database URL/Components Parsing
-    # ==========================================================================
-
-    # Parse database URL into component hash
-    #
-    # @return [Hash, nil] parsed components or nil if no URL
-    def parse_database_url
-      url = database&.url
-      return nil if url.nil? || url.empty?
-
-      uri = URI.parse(url) rescue nil
-      return nil unless uri
-
-      # Parse query string for sslmode
-      query_params = URI.decode_www_form(uri.query || '').to_h
-      sslmode = query_params['sslmode']
-
-      {
-        host: uri.host,
-        port: uri.port,
-        name: uri.path&.sub(%r{^/}, ''),
-        user: uri.user,
-        password: uri.password,
-        sslmode: sslmode
-      }.compact
-    end
-
     # ==========================================================================
     # XDG Config Path Helpers
     # ==========================================================================
@@ -810,25 +538,6 @@ class HTM
 
     private
 
-    def build_database_url
-      return nil unless database.name && !database.name.empty?
-
-      auth = if database.user && !database.user.empty?
-        database.password && !database.password.empty? ? "#{database.user}:#{database.password}@" : "#{database.user}@"
-      else
-        ''
-      end
-
-      url = "postgresql://#{auth}#{database.host}:#{database.port}/#{database.name}"
-
-      # Add sslmode as query parameter if set
-      if database.sslmode && !database.sslmode.empty?
-        url += "?sslmode=#{database.sslmode}"
-      end
-
-      url
-    end
-
     # ==========================================================================
     # Type Coercion Callback
     # ==========================================================================
@@ -855,158 +564,6 @@ class HTM
     end
 
     # ==========================================================================
-    # Database Configuration Reconciliation
-    # ==========================================================================
-    #
-    # Ensures database.url and database.* components are synchronized:
-    #
-    # 1. If database.url exists:
-    #    - Extract all components from the URL
-    #    - For each component: if config has a different value → ERROR
-    #    - For each component: if config is missing → populate from URL
-    #
-    # 2. If database.url is missing but components exist:
-    #    - Verify minimum required components (at least database.name)
-    #    - Build and set database.url from components
-    #    - If insufficient components → ERROR
-    #
-    # This runs automatically at config load time via on_load callback.
-    #
-    # ==========================================================================
-
-    def reconcile_database_config
-      url = database&.url
-      has_url = url && !url.empty?
-
-      if has_url
-        reconcile_from_url
-      else
-        reconcile_from_components
-      end
-    end
-
-    def reconcile_from_url
-      url_components = parse_database_url
-      return unless url_components
-
-      # URL is the source of truth - populate all components from it
-      # This overwrites any values from config files (they're just defaults)
-      %i[host port name user password sslmode].each do |component|
-        url_value = url_components[component]
-        next if url_value.nil?
-
-        database.send("#{component}=", url_value)
-      end
-    end
-
-    def reconcile_from_components
-      # Check what components we have
-      name = database&.name
-      has_name = name && !name.empty?
-
-      # If no database config at all, that's fine - might not need database
-      # Just return without error; validate_database! will catch if needed later
-      return unless has_name || has_any_database_component?
-
-      # If name is missing, auto-generate from service.name and environment
-      # Format: {service_name}_{environment} (e.g., "htm_development")
-      unless has_name
-        database.name = expected_database_name
-      end
-
-      # Use defaults for host/port if not set
-      database.host = 'localhost' if database.host.nil? || database.host.empty?
-      database.port = 5432 if database.port.nil?
-
-      # Build and set the URL
-      database.url = build_database_url
-    end
-
-    def has_any_database_component?
-      %i[host port user password].any? do |comp|
-        val = database.send(comp)
-        next false if val.nil?
-        next false if val.respond_to?(:empty?) && val.empty?
-        # Skip defaults
-        next false if comp == :host && val == 'localhost'
-        next false if comp == :port && val == 5432
-        true
-      end
-    end
-
-    # ==========================================================================
-    # Validation Callbacks
-    # ==========================================================================
-
-    def validate_config
-      validate_providers
-      validate_job_backend
-      validate_week_start
-      validate_relevance_weights
-    end
-
-    def validate_providers
-      validate_provider(:embedding_provider, embedding_provider)
-      validate_provider(:tag_provider, tag_provider)
-      validate_provider(:proposition_provider, proposition_provider)
-    end
-
-    def validate_provider(name, value)
-      return if value.nil?
-
-      unless SUPPORTED_PROVIDERS.include?(value)
-        raise_validation_error("#{name} must be one of: #{SUPPORTED_PROVIDERS.join(', ')} (got #{value.inspect})")
-      end
-    end
-
-    def validate_job_backend
-      return unless job_backend
-
-      unless SUPPORTED_JOB_BACKENDS.include?(job_backend)
-        raise_validation_error("job.backend must be one of: #{SUPPORTED_JOB_BACKENDS.join(', ')} (got #{job_backend.inspect})")
-      end
-    end
-
-    def validate_week_start
-      unless SUPPORTED_WEEK_STARTS.include?(week_start)
-        raise_validation_error("week_start must be one of: #{SUPPORTED_WEEK_STARTS.join(', ')} (got #{week_start.inspect})")
-      end
-    end
-
-    def validate_relevance_weights
-      total = relevance_semantic_weight + relevance_tag_weight +
-              relevance_recency_weight + relevance_access_weight
-
-      unless (0.99..1.01).cover?(total)
-        raise_validation_error("relevance weights must sum to 1.0 (got #{total})")
-      end
-    end
-
-    def validate_callables
-      unless @embedding_generator.respond_to?(:call)
-        raise HTM::ValidationError, "embedding_generator must be callable"
-      end
-
-      unless @tag_extractor.respond_to?(:call)
-        raise HTM::ValidationError, "tag_extractor must be callable"
-      end
-
-      unless @proposition_extractor.respond_to?(:call)
-        raise HTM::ValidationError, "proposition_extractor must be callable"
-      end
-
-      unless @token_counter.respond_to?(:call)
-        raise HTM::ValidationError, "token_counter must be callable"
-      end
-    end
-
-    def validate_logger
-      unless @logger.respond_to?(:info) && @logger.respond_to?(:warn) && @logger.respond_to?(:error)
-        raise HTM::ValidationError, "logger must respond to :info, :warn, and :error"
-      end
-    end
-
-    # ==========================================================================
     # Setup Defaults Callback
     # ==========================================================================
 
@@ -1025,169 +582,6 @@ class HTM
       return :sidekiq if defined?(Sidekiq)
 
       :fiber
-    end
-
-    def build_default_logger
-      logger = Logger.new($stdout)
-      logger.level = log_level
-      logger.formatter = proc do |severity, datetime, _progname, msg|
-        "[#{datetime.strftime('%Y-%m-%d %H:%M:%S')}] #{severity} -- HTM: #{msg}\n"
-      end
-      logger
-    end
-
-    def build_default_token_counter
-      lambda do |text|
-        require 'tiktoken_ruby' unless defined?(Tiktoken)
-        encoder = Tiktoken.encoding_for_model("gpt-3.5-turbo")
-        encoder.encode(text).length
-      end
-    end
-
-    def build_default_embedding_generator
-      lambda do |text|
-        require 'ruby_llm' unless defined?(RubyLLM)
-
-        configure_ruby_llm(embedding_provider)
-        refresh_ollama_models! if embedding_provider == :ollama
-
-        model = embedding_provider == :ollama ? normalize_ollama_model(embedding_model) : embedding_model
-        response = RubyLLM.embed(text, model: model)
-        embedding = extract_embedding_from_response(response)
-
-        unless embedding.is_a?(Array) && embedding.all? { |v| v.is_a?(Numeric) }
-          raise HTM::EmbeddingError, "Invalid embedding response format from #{embedding_provider}"
-        end
-
-        embedding
-      end
-    end
-
-    def build_default_tag_extractor
-      lambda do |text, existing_ontology = []|
-        require 'ruby_llm' unless defined?(RubyLLM)
-
-        configure_ruby_llm(tag_provider)
-        refresh_ollama_models! if tag_provider == :ollama
-
-        model = tag_provider == :ollama ? normalize_ollama_model(tag_model) : tag_model
-
-        prompt = build_tag_extraction_prompt(text, existing_ontology)
-        system_prompt = build_tag_system_prompt
-
-        chat = RubyLLM.chat(model: model)
-        chat.with_instructions(system_prompt)
-        response = chat.ask(prompt)
-
-        parse_tag_response(extract_text_from_response(response))
-      end
-    end
-
-    def build_default_proposition_extractor
-      lambda do |text|
-        require 'ruby_llm' unless defined?(RubyLLM)
-
-        configure_ruby_llm(proposition_provider)
-        refresh_ollama_models! if proposition_provider == :ollama
-
-        model = proposition_provider == :ollama ? normalize_ollama_model(proposition_model) : proposition_model
-
-        prompt = build_proposition_extraction_prompt(text)
-        system_prompt = build_proposition_system_prompt
-
-        chat = RubyLLM.chat(model: model)
-        chat.with_instructions(system_prompt)
-        response = chat.ask(prompt)
-
-        parse_proposition_response(extract_text_from_response(response))
-      end
-    end
-
-    # ==========================================================================
-    # Response Extraction Helpers
-    # ==========================================================================
-
-    def extract_embedding_from_response(response)
-      return nil unless response
-
-      case response
-      when Array
-        response
-      when ->(r) { r.respond_to?(:vectors) }
-        vectors = response.vectors
-        vectors.is_a?(Array) && vectors.first.is_a?(Array) ? vectors.first : vectors
-      when ->(r) { r.respond_to?(:to_a) }
-        response.to_a
-      when ->(r) { r.respond_to?(:embedding) }
-        response.embedding
-      else
-        if response.respond_to?(:instance_variable_get)
-          vectors = response.instance_variable_get(:@vectors)
-          return vectors.first if vectors.is_a?(Array) && vectors.first.is_a?(Array)
-          return vectors if vectors.is_a?(Array)
-        end
-        raise HTM::EmbeddingError, "Cannot extract embedding from response: #{response.class}"
-      end
-    end
-
-    def extract_text_from_response(response)
-      return '' unless response
-
-      case response
-      when String then response
-      when ->(r) { r.respond_to?(:content) } then response.content.to_s
-      when ->(r) { r.respond_to?(:text) } then response.text.to_s
-      else response.to_s
-      end
-    end
-
-    def parse_tag_response(text)
-      tags = text.to_s.split("\n").map(&:strip).reject(&:empty?)
-      valid_tags = tags.select { |tag| tag =~ /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/ }
-      valid_tags.select { |tag| tag.count(':') < max_tag_depth }
-    end
-
-    def parse_proposition_response(text)
-      text.to_s
-        .split("\n")
-        .map(&:strip)
-        .map { |line| line.sub(/^[-*]\s*/, '') }
-        .map(&:strip)
-        .reject(&:empty?)
-    end
-
-    # ==========================================================================
-    # Prompt Builders
-    #
-    # These methods use configurable prompt templates from defaults.yml.
-    # Templates use %{placeholder} syntax for runtime interpolation.
-    # ==========================================================================
-
-    def build_tag_extraction_prompt(text, existing_ontology)
-      taxonomy_context = if existing_ontology.any?
-        sample_tags = existing_ontology.sample([existing_ontology.size, 20].min)
-        tag.taxonomy_context_existing % { sample_tags: sample_tags.join(', ') }
-      else
-        tag.taxonomy_context_empty
-      end
-
-      tag.user_prompt_template % {
-        text: text,
-        max_depth: max_tag_depth,
-        taxonomy_context: taxonomy_context
-      }
-    end
-
-    def build_tag_system_prompt
-      tag.system_prompt.to_s.strip
-    end
-
-    def build_proposition_extraction_prompt(text)
-      proposition.user_prompt_template % { text: text }
-    end
-
-    def build_proposition_system_prompt
-      proposition.system_prompt.to_s.strip
     end
   end
 end

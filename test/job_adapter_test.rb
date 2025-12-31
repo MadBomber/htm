@@ -284,8 +284,14 @@ class JobAdapterTest < Minitest::Test
     end
 
     # Should not raise (errors are logged)
-    assert_silent do
-      HTM::JobAdapter.enqueue(job_class, test_param: 'value')
+    # Suppress Ruby warnings during test (Ruby 4.0.0 emits IO::Buffer experimental warning)
+    old_verbose, $VERBOSE = $VERBOSE, nil
+    begin
+      assert_silent do
+        HTM::JobAdapter.enqueue(job_class, test_param: 'value')
+      end
+    ensure
+      $VERBOSE = old_verbose
     end
   end
 
