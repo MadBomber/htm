@@ -177,6 +177,57 @@ class TagServiceTest < Minitest::Test
     assert_equal ["database", "ruby"], result
   end
 
+  # Tests for singularization
+  def test_singularize_tag_levels_converts_plurals
+    result = HTM::TagService.singularize_tag_levels("users:frameworks:models")
+
+    assert_equal "user:framework:model", result
+  end
+
+  def test_singularize_tag_levels_preserves_singular
+    result = HTM::TagService.singularize_tag_levels("user:framework:model")
+
+    assert_equal "user:framework:model", result
+  end
+
+  def test_singularize_tag_levels_handles_single_level
+    assert_equal "database", HTM::TagService.singularize_tag_levels("databases")
+    assert_equal "user", HTM::TagService.singularize_tag_levels("users")
+  end
+
+  def test_singularize_tag_levels_mixed
+    result = HTM::TagService.singularize_tag_levels("api:endpoints:user")
+
+    assert_equal "api:endpoint:user", result
+  end
+
+  def test_singularize_tag_levels_preserves_proper_nouns
+    # Rails, MkDocs, etc. should NOT be singularized
+    assert_equal "programming:ruby:rails", HTM::TagService.singularize_tag_levels("programming:ruby:rails")
+    assert_equal "documentation:mkdocs", HTM::TagService.singularize_tag_levels("documentation:mkdocs")
+    assert_equal "devops:kubernetes", HTM::TagService.singularize_tag_levels("devops:kubernetes")
+  end
+
+  def test_singularize_tag_levels_preserves_ics_words
+    # Words ending in -ics are usually singular (analytics, robotics, etc.)
+    assert_equal "ai:robotics", HTM::TagService.singularize_tag_levels("ai:robotics")
+    assert_equal "data:analytics", HTM::TagService.singularize_tag_levels("data:analytics")
+    assert_equal "religion:ethics", HTM::TagService.singularize_tag_levels("religion:ethics")
+  end
+
+  def test_singularize_tag_levels_preserves_ous_words
+    # Words ending in -ous are adjectives, not plurals
+    assert_equal "victory:victorious", HTM::TagService.singularize_tag_levels("victory:victorious")
+    assert_equal "state:precious", HTM::TagService.singularize_tag_levels("state:precious")
+  end
+
+  def test_validate_and_filter_normalizes_plurals
+    result = HTM::TagService.validate_and_filter_tags(["users:preferences", "frameworks:components"])
+
+    # rails is a proper noun and should be preserved
+    assert_equal ["user:preference", "framework:component"], result
+  end
+
   # Tests for parse_hierarchy
   def test_parse_hierarchy_single_level
     result = HTM::TagService.parse_hierarchy("database")

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'errors'
+require 'active_support/core_ext/string/inflections'
 
 class HTM
   # Tag Service - Processes and validates hierarchical tags
@@ -113,6 +114,8 @@ class HTM
       valid_tags = []
 
       tags.each do |tag|
+        # Normalize: convert plural levels to singular
+        tag = singularize_tag_levels(tag)
         # Check format
         unless tag.match?(TAG_FORMAT)
           HTM.logger.warn "TagService: Invalid tag format, skipping: #{tag}"
@@ -190,6 +193,81 @@ class HTM
         levels: levels,
         depth: levels.size
       }
+    end
+
+    # Words that should NOT be singularized (proper nouns, technical terms, etc.)
+    SINGULARIZE_SKIP_LIST = %w[
+      rails kubernetes aws gcp azure s3 ios macos redis postgres
+      postgresql mysql jenkins travis github gitlab mkdocs devops
+      analytics statistics mathematics physics ethics dynamics
+      graphics linguistics economics robotics
+      pages windows
+    ].freeze
+
+    # Normalize tag levels to singular form
+    #
+    # Converts plural levels to singular using ActiveSupport's singularize.
+    # This ensures taxonomy consistency (e.g., "users" -> "user").
+    #
+    # Skips:
+    # - Proper nouns and technical terms (Rails, MkDocs, etc.)
+    # - Words ending in -ics (analytics, robotics, etc.)
+    # - Words that don't end in common plural patterns
+    #
+    # @param tag [String] Tag with potentially plural levels
+    # @return [String] Tag with all levels singularized
+    #
+    def self.singularize_tag_levels(tag)
+      levels = tag.split(':')
+      singularized = levels.map do |level|
+        singularize_level(level)
+      end
+      singularized.join(':')
+    rescue NoMethodError
+      # singularize not available (ActiveSupport not loaded)
+      tag
+    end
+
+    # Singularize a single tag level with safety checks
+    #
+    # @param level [String] Single tag level
+    # @return [String] Singularized level or original if skipped
+    #
+    def self.singularize_level(level)
+      # Skip if in the skip list
+      return level if SINGULARIZE_SKIP_LIST.include?(level.downcase)
+
+      # Skip words ending in -ics (usually singular: analytics, robotics, etc.)
+      return level if level.end_with?('ics')
+
+      # Skip words ending in -ous (adjectives: victorious, precious, etc.)
+      return level if level.end_with?('ous')
+
+      # Skip words ending in -ss (class, access, etc.)
+      return level if level.end_with?('ss')
+
+      # Skip single-letter or very short words
+      return level if level.length <= 2
+
+      # Only singularize if it looks like a regular plural
+      # (ends in s but not ss, ics, ous)
+      unless level.end_with?('s')
+        return level
+      end
+
+      singular = level.singularize
+
+      # Sanity check: if singularize made it weird, keep original
+      # (e.g., "pages" -> "page" is fine, but "bus" -> "bu" is not)
+      if singular.length < level.length - 2
+        return level
+      end
+
+      if singular != level
+        HTM.logger.debug "TagService: Normalized '#{level}' to '#{singular}'"
+      end
+
+      singular
     end
   end
 end

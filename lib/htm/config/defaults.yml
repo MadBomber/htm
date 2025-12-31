@@ -91,8 +91,9 @@ defaults:
       RULES:
       1. Each concept belongs to ONE path only
       2. Use lowercase, hyphens for multi-word terms
-      3. Return 2-5 tags that best classify this text
-      4. Match existing taxonomy paths when applicable
+      3. ALWAYS use SINGULAR forms, never plurals (user NOT users, framework NOT frameworks, model NOT models)
+      4. Return 2-5 tags that best classify this text
+      5. Match existing taxonomy paths when applicable
 
       TEXT: %{text}
 
