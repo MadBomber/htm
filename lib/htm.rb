@@ -589,11 +589,16 @@ class HTM
   end
 
   def enqueue_tags_job(node_id, manual_tags: [])
-    # Add manual tags immediately if provided
+    # Add manual tags immediately if provided (including all parent tags)
+    # For "database:postgresql:extensions", this creates and associates:
+    # - "database"
+    # - "database:postgresql"
+    # - "database:postgresql:extensions"
     if manual_tags.any?
       manual_tags.each do |tag_name|
-        tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
-        HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+        HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
+          HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+        end
       end
     end
 

@@ -47,15 +47,19 @@ class HTM
           tag_names = HTM::TagService.extract(node.content, existing_ontology: existing_ontology)
           return if tag_names.empty?
 
-          # Create or find tags and associate with node
+          # Create or find tags (including all parent tags) and associate with node
+          # For "database:postgresql:extensions", this creates and associates:
+          # - "database"
+          # - "database:postgresql"
+          # - "database:postgresql:extensions"
           tag_names.each do |tag_name|
-            tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
-
-            # Create association if it doesn't exist
-            HTM::Models::NodeTag.find_or_create_by!(
-              node_id: node.id,
-              tag_id: tag.id
-            )
+            HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
+              # Create association if it doesn't exist
+              HTM::Models::NodeTag.find_or_create_by!(
+                node_id: node.id,
+                tag_id: tag.id
+              )
+            end
           end
 
           # Record success metrics

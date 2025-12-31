@@ -88,6 +88,42 @@ class HTM
         find_or_create_by(name: name)
       end
 
+      # Expand a hierarchical tag name into all ancestor paths
+      #
+      # @param tag_name [String] Hierarchical tag (e.g., "a:b:c:d")
+      # @return [Array<String>] All paths from root to leaf
+      #
+      # @example
+      #   Tag.expand_hierarchy("database:postgresql:extensions")
+      #   # => ["database", "database:postgresql", "database:postgresql:extensions"]
+      #
+      # @example Single-level tag
+      #   Tag.expand_hierarchy("database")
+      #   # => ["database"]
+      #
+      def self.expand_hierarchy(tag_name)
+        return [] if tag_name.nil? || tag_name.empty?
+
+        levels = tag_name.split(':')
+        (1..levels.size).map { |i| levels[0, i].join(':') }
+      end
+
+      # Find or create a tag and all its ancestor tags
+      #
+      # @param name [String] Hierarchical tag name (e.g., "database:postgresql:extensions")
+      # @return [Array<Tag>] All created/found tags from root to leaf
+      #
+      # @example
+      #   tags = Tag.find_or_create_with_ancestors("database:postgresql:extensions")
+      #   tags.map(&:name)
+      #   # => ["database", "database:postgresql", "database:postgresql:extensions"]
+      #
+      def self.find_or_create_with_ancestors(name)
+        expand_hierarchy(name).map do |tag_name|
+          find_or_create_by(name: tag_name)
+        end
+      end
+
       # Returns a nested hash tree structure from the current scope
       #
       # @return [Hash] Nested hash representing the tag hierarchy

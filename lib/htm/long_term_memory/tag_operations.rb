@@ -36,20 +36,31 @@ class HTM
         attr_accessor :popular_tags_cache, :popular_tags_cache_expires_at, :popular_tags_mutex
       end
 
-      # Add a tag to a node
+      # Add a tag to a node (creates tag and all parent tags)
+      #
+      # When adding a hierarchical tag like "database:postgresql:extensions",
+      # this also creates and associates the parent tags "database" and
+      # "database:postgresql" with the node.
       #
       # @param node_id [Integer] Node database ID
       # @param tag [String] Tag name
       # @return [void]
       #
+      # @example
+      #   add_tag(node_id: 123, tag: "database:postgresql:extensions")
+      #   # Creates tags: "database", "database:postgresql", "database:postgresql:extensions"
+      #   # Associates all three with node 123
+      #
       def add_tag(node_id:, tag:)
-        tag_record = HTM::Models::Tag.find_or_create_by(name: tag)
-        HTM::Models::NodeTag.create(
-          node_id: node_id,
-          tag_id: tag_record.id
-        )
-      rescue ActiveRecord::RecordNotUnique
-        # Tag association already exists, ignore
+        # Create tag and all ancestor tags, then associate each with the node
+        HTM::Models::Tag.find_or_create_with_ancestors(tag).each do |tag_record|
+          HTM::Models::NodeTag.create(
+            node_id: node_id,
+            tag_id: tag_record.id
+          )
+        rescue ActiveRecord::RecordNotUnique
+          # Tag association already exists, ignore
+        end
       end
 
       # Retrieve nodes by ontological topic
@@ -214,7 +225,7 @@ class HTM
         query
           .order('usage_count DESC')
           .limit(safe_limit)
-          .map { |tag| { name: tag.name, usage_count: tag.usage_count } }
+          .map { |tag| { name: tag.name, usage_count: tag.read_attribute(:usage_count).to_i } }
       end
 
       # Fuzzy search for tags using trigram similarity

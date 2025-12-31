@@ -143,21 +143,29 @@ class HTM
         tags.pluck(:name)
       end
 
-      # Add tags to this node (creates tags if they don't exist)
+      # Add tags to this node (creates tags and all parent tags if they don't exist)
+      #
+      # When adding a hierarchical tag like "database:postgresql:extensions",
+      # this also creates and associates the parent tags "database" and
+      # "database:postgresql" with this node.
       #
       # @param tag_names [Array<String>, String] Tag name(s) to add
       # @return [void]
       #
-      # @example Add a single tag
-      #   node.add_tags("database:postgresql")
+      # @example Add a single tag (also creates parent tags)
+      #   node.add_tags("database:postgresql:extensions")
+      #   node.tags.pluck(:name)
+      #   # => ["database", "database:postgresql", "database:postgresql:extensions"]
       #
       # @example Add multiple tags
       #   node.add_tags(["database:postgresql", "ai:embeddings"])
       #
       def add_tags(tag_names)
         Array(tag_names).each do |tag_name|
-          tag = HTM::Models::Tag.find_or_create_by(name: tag_name)
-          node_tags.find_or_create_by(tag_id: tag.id)
+          # Create tag and all ancestor tags, then associate each with this node
+          HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
+            node_tags.find_or_create_by(tag_id: tag.id)
+          end
         end
       end
 
