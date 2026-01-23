@@ -518,6 +518,14 @@ class HTM
         else
           puts "⚠ Warning: pg_trgm extension not found"
         end
+
+        # Check pg_search (BM25 full-text search)
+        pg_search = conn.exec("SELECT extversion FROM pg_extension WHERE extname='pg_search'").first
+        if pg_search
+          puts "✓ pg_search version: #{pg_search['extversion']}"
+        else
+          puts "⚠ Warning: pg_search extension not found"
+        end
       end
 
       # Run ActiveRecord migrations from db/migrate/

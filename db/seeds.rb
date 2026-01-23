@@ -6,14 +6,14 @@
 # and creates memory nodes with embeddings and tags.
 #
 # Configuration is read from environment variables:
-#   HTM_EMBEDDING_PROVIDER - Embedding provider (default: ollama)
-#   HTM_EMBEDDING_MODEL - Embedding model (default: nomic-embed-text)
-#   HTM_EMBEDDING_DIMENSIONS - Embedding dimensions (default: 768)
-#   HTM_TAG_PROVIDER - Tag extraction provider (default: ollama)
-#   HTM_TAG_MODEL - Tag extraction model (default: gemma3)
-#   OLLAMA_URL - Ollama server URL (default: http://localhost:11434)
-#   HTM_EMBEDDING_TIMEOUT - Embedding generation timeout in seconds (default: 120)
-#   HTM_TAG_TIMEOUT - Tag generation timeout in seconds (default: 180)
+#   HTM_EMBEDDING__PROVIDER - Embedding provider (default: ollama)
+#   HTM_EMBEDDING__MODEL - Embedding model (default: nomic-embed-text)
+#   HTM_EMBEDDING__DIMENSIONS - Embedding dimensions (default: 768)
+#   HTM_TAG__PROVIDER - Tag extraction provider (default: ollama)
+#   HTM_TAG__MODEL - Tag extraction model (default: gemma3)
+#   HTM_PROVIDERS__OLLAMA__URL - Ollama server URL (default: http://localhost:11434)
+#   HTM_EMBEDDING__TIMEOUT - Embedding generation timeout in seconds (default: 120)
+#   HTM_TAG__TIMEOUT - Tag generation timeout in seconds (default: 180)
 #   HTM_CONNECTION_TIMEOUT - LLM connection timeout in seconds (default: 30)
 #   HTM_DATABASE__URL - Database connection URL
 #
@@ -30,13 +30,13 @@ puts "=" * 80
 puts
 
 # Configure HTM using environment variables or defaults
-embedding_provider = (ENV['HTM_EMBEDDING_PROVIDER'] || 'ollama').to_sym
-embedding_model = ENV['HTM_EMBEDDING_MODEL'] || 'nomic-embed-text'
-embedding_dimensions = (ENV['HTM_EMBEDDING_DIMENSIONS'] || '768').to_i
-tag_provider = (ENV['HTM_TAG_PROVIDER'] || 'ollama').to_sym
-tag_model = ENV['HTM_TAG_MODEL'] || 'gemma3'
-embedding_timeout = (ENV['HTM_EMBEDDING_TIMEOUT'] || '120').to_i
-tag_timeout = (ENV['HTM_TAG_TIMEOUT'] || '180').to_i
+embedding_provider = (ENV['HTM_EMBEDDING__PROVIDER'] || 'ollama').to_sym
+embedding_model = ENV['HTM_EMBEDDING__MODEL'] || 'nomic-embed-text'
+embedding_dimensions = (ENV['HTM_EMBEDDING__DIMENSIONS'] || '768').to_i
+tag_provider = (ENV['HTM_TAG__PROVIDER'] || 'ollama').to_sym
+tag_model = ENV['HTM_TAG__MODEL'] || 'gemma3'
+embedding_timeout = (ENV['HTM_EMBEDDING__TIMEOUT'] || '120').to_i
+tag_timeout = (ENV['HTM_TAG__TIMEOUT'] || '180').to_i
 connection_timeout = (ENV['HTM_CONNECTION_TIMEOUT'] || '60').to_i
 
 puts "Configuration:"
@@ -49,15 +49,15 @@ puts "  Timeouts: embedding=#{embedding_timeout}s, tag=#{tag_timeout}s, connecti
 puts
 
 HTM.configure do |c|
-  c.embedding_provider = embedding_provider
-  c.embedding_model = embedding_model
-  c.embedding_dimensions = embedding_dimensions
-  c.tag_provider = tag_provider
-  c.tag_model = tag_model
-  c.embedding_timeout = embedding_timeout
-  c.tag_timeout = tag_timeout
+  c.embedding.provider = embedding_provider
+  c.embedding.model = embedding_model
+  c.embedding.dimensions = embedding_dimensions
+  c.tag.provider = tag_provider
+  c.tag.model = tag_model
+  c.embedding.timeout = embedding_timeout
+  c.tag.timeout = tag_timeout
   c.connection_timeout = connection_timeout
-  c.ollama_url = ENV['OLLAMA_URL'] if ENV['OLLAMA_URL']
+  c.providers.ollama.url = ENV['HTM_PROVIDERS__OLLAMA__URL'] if ENV['HTM_PROVIDERS__OLLAMA__URL']
   c.reset_to_defaults  # Apply default implementations with configured settings
 end
 
@@ -72,32 +72,32 @@ puts "Creating sample conversation..."
 
 htm.remember(
   "What is TimescaleDB good for?",
-  source: "user"
+  metadata: { source: "user" }
 )
 
 htm.remember(
   "PostgreSQL with TimescaleDB provides efficient time-series data storage and querying capabilities.",
-  source: "assistant"
+  metadata: { source: "assistant" }
 )
 
 htm.remember(
   "How much training data do ML models need?",
-  source: "user"
+  metadata: { source: "user" }
 )
 
 htm.remember(
   "Machine learning models require large amounts of training data to achieve good performance.",
-  source: "assistant"
+  metadata: { source: "assistant" }
 )
 
 htm.remember(
   "Tell me about Ruby on Rails",
-  source: "user"
+  metadata: { source: "user" }
 )
 
 htm.remember(
   "Ruby on Rails is a web framework for building database-backed applications.",
-  source: "assistant"
+  metadata: { source: "assistant" }
 )
 
 puts "✓ Created 6 conversation messages (3 exchanges)"
@@ -135,7 +135,7 @@ if Dir.exist?(seed_data_dir)
           # Save previous section if we have one
           if current_section && current_paragraph.any?
             paragraph_text = current_paragraph.join(' ')
-            htm.remember(paragraph_text, source: filename)
+            htm.remember(paragraph_text, metadata: { source: filename })
             count += 1
             print "." if count % 10 == 0
           end
@@ -152,7 +152,7 @@ if Dir.exist?(seed_data_dir)
       # Don't forget the last section
       if current_section && current_paragraph.any?
         paragraph_text = current_paragraph.join(' ')
-        htm.remember(paragraph_text, source: filename)
+        htm.remember(paragraph_text, metadata: { source: filename })
         count += 1
       end
 

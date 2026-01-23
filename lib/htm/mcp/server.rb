@@ -70,8 +70,9 @@ class HTM
 
       def configure_htm!
         HTM.configure do |config|
-          config.job.backend = :inline  # Synchronous for MCP responses
-          config.logger = @silent_logger    # Silent logging for MCP
+          # Job backend now comes from config (defaults to :fiber)
+          # Use HTM_JOB__BACKEND=inline or config file to override
+          config.logger = @silent_logger  # Silent logging for MCP
         end
       end
 

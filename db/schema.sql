@@ -4,6 +4,22 @@
 -- Run 'rake htm:db:schema:dump' to regenerate
 
 --
+-- Name: paradedb; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA paradedb;
+
+--
+-- Name: pg_search; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_search WITH SCHEMA paradedb;
+
+--
+-- Name: EXTENSION pg_search; Type: COMMENT; Schema: -; Owner: -
+--
+
+--
 -- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
 --
 
@@ -793,4 +809,4 @@ ALTER TABLE ONLY public.robot_nodes
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 4WlUqnJzNHaNhcr67XLIIhAvRPidZODUPGkM34l27SvmC0zu6dIsQdJ8dtu589Z
+\unrestrict 1ItB7RQU4jC5IvOL40FU9j9sS6bzk9jcKeDUYSOd78ym0sA7pq0FXYSOEoWsPh7
