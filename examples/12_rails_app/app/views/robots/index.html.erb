@@ -80,9 +80,9 @@
           <div class="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between">
             <p class="text-sm text-gray-400"><%= robot.nodes.count %> memories</p>
             <div class="flex items-center gap-2">
-              <%= link_to 'View', robot_path(robot), class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
+              <%= link_to 'View', robot_path(robot.id), class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
               <% unless robot.name == current_robot_name %>
-                <%= button_to switch_robot_path(robot), method: :post, class: 'inline-flex items-center gap-1 text-sm text-green-400 hover:text-green-300 bg-transparent border-0 cursor-pointer', title: "Switch to #{robot.name} - new memories will be created under this robot" do %>
+                <%= button_to switch_robot_path(robot.id), method: :post, class: 'inline-flex items-center gap-1 text-sm text-green-400 hover:text-green-300 bg-transparent border-0 cursor-pointer', title: "Switch to #{robot.name} - new memories will be created under this robot" do %>
                   <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>

@@ -95,12 +95,12 @@ class MemoriesController < ApplicationController
   end
 
   def deleted
-    @memories = HTM::Models::Node.deleted.order(deleted_at: :desc)
+    @memories = HTM::Models::Node.deleted.order(Sequel.desc(:deleted_at))
   end
 
   private
 
   def set_memory
-    @memory = HTM::Models::Node.with_deleted[params[:id]]
+    @memory = HTM::Models::Node.with_deleted[params[:id].to_i]
   end
 end

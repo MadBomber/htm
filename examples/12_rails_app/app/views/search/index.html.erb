@@ -7,7 +7,7 @@
 
   <!-- Search Form -->
   <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
-    <%= form_with url: search_path, method: :get, class: 'space-y-4' do %>
+    <%= form_with url: search_path, method: :get, class: 'space-y-4', data: { turbo: false } do %>
       <div>
         <label for="query" class="block text-sm font-medium text-gray-300 mb-2">Search Query</label>
         <div class="flex gap-4">

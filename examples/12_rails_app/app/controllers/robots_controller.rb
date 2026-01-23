@@ -2,14 +2,14 @@
 
 class RobotsController < ApplicationController
   def index
-    @robots = HTM::Models::Robot.order(created_at: :desc)
+    @robots = HTM::Models::Robot.order(Sequel.desc(:created_at))
   end
 
   def show
     @robot = HTM::Models::Robot[params[:id]]
     # Default scope already excludes deleted nodes, so no .active needed
-    @memory_count = @robot.nodes.count
-    @recent_memories = @robot.nodes.order(created_at: :desc).limit(10)
+    @memory_count = @robot.nodes_dataset.count
+    @recent_memories = @robot.nodes_dataset.order(Sequel.desc(:created_at)).limit(10).all
   end
 
   def new
@@ -24,7 +24,7 @@ class RobotsController < ApplicationController
       return
     end
 
-    if HTM::Models::Robot.exists?(name: name)
+    if HTM::Models::Robot.where(name: name).any?
       flash[:alert] = 'A robot with that name already exists'
       redirect_to new_robot_path
       return
@@ -32,7 +32,7 @@ class RobotsController < ApplicationController
 
     robot = HTM::Models::Robot.create(name: name, metadata: {})
     flash[:notice] = "Robot '#{name}' created successfully"
-    redirect_to robot_path(robot)
+    redirect_to robot_path(robot.id)
   end
 
   def switch

@@ -88,7 +88,7 @@
             <% @tags.each do |tag| %>
               <tr class="hover:bg-gray-700/50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <%= link_to tag_path(tag), class: 'inline-flex items-center rounded-full bg-indigo-900/50 border border-indigo-500/30 px-3 py-1 text-sm text-indigo-300 hover:bg-indigo-800/50 transition-colors' do %>
+                  <%= link_to tag_path(tag.id), class: 'inline-flex items-center rounded-full bg-indigo-900/50 border border-indigo-500/30 px-3 py-1 text-sm text-indigo-300 hover:bg-indigo-800/50 transition-colors' do %>
                     <%= tag.name %>
                   <% end %>
                 </td>
@@ -103,7 +103,7 @@
                   <%= tag.node_count %>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <%= link_to 'View', tag_path(tag), class: 'text-indigo-400 hover:text-indigo-300' %>
+                  <%= link_to 'View', tag_path(tag.id), class: 'text-indigo-400 hover:text-indigo-300' %>
                   <span class="mx-2 text-gray-600">|</span>
                   <%= link_to 'Filter Memories', memories_path(tag: tag.name), class: 'text-indigo-400 hover:text-indigo-300' %>
                 </td>

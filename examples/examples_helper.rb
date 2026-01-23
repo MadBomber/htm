@@ -59,8 +59,9 @@ require "htm"
 # Configure HTM for examples environment
 # This keeps the 'examples' environment configuration out of the gem's bundled defaults
 HTM.configure do |config|
-  # Use inline job backend for synchronous execution (clearer output)
-  config.job.backend = :inline
+  # Use inline job backend for CLI examples (clearer console output)
+  # Rails/Sinatra apps should override this in their initializers to use :fiber or :active_job
+  config.job.backend = :inline unless defined?(Rails)
 
   # Set log level for examples
   config.log_level = :info

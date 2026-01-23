@@ -31,7 +31,7 @@
             Active
           </span>
         <% else %>
-          <%= button_to switch_robot_path(@robot), method: :post, class: 'inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors' do %>
+          <%= button_to switch_robot_path(@robot.id), method: :post, class: 'inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors' do %>
             Switch to this robot
           <% end %>
         <% end %>
@@ -45,11 +45,11 @@
         <p class="text-sm text-gray-400">Total Memories</p>
       </div>
       <div>
-        <p class="text-2xl font-bold text-white"><%= @robot.nodes.where.not(embedding: nil).count %></p>
+        <p class="text-2xl font-bold text-white"><%= @robot.nodes_dataset.exclude(embedding: nil).count %></p>
         <p class="text-sm text-gray-400">With Embeddings</p>
       </div>
       <div>
-        <p class="text-2xl font-bold text-white"><%= @robot.nodes.joins(:tags).distinct.count('tags.id') %></p>
+        <p class="text-2xl font-bold text-white"><%= @robot.nodes_dataset.join(:node_tags, node_id: Sequel[:nodes][:id]).distinct.select(:tag_id).count %></p>
         <p class="text-sm text-gray-400">Unique Tags</p>
       </div>
     </div>
@@ -61,7 +61,7 @@
     <% if @recent_memories.any? %>
       <div class="space-y-3">
         <% @recent_memories.each do |memory| %>
-          <%= link_to memory_path(memory), class: 'block rounded-md bg-gray-700/50 p-3 hover:bg-gray-700 transition-colors' do %>
+          <%= link_to memory_path(memory.id), class: 'block rounded-md bg-gray-700/50 p-3 hover:bg-gray-700 transition-colors' do %>
             <p class="text-sm text-gray-300 line-clamp-2"><%= memory.content %></p>
             <div class="mt-2 flex items-center gap-2 text-xs text-gray-500">
               <span><%= time_ago_in_words(memory.created_at) %> ago</span>

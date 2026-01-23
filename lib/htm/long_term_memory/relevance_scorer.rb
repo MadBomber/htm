@@ -166,7 +166,7 @@ class HTM
           FROM nodes
           WHERE #{conditions.join(' AND ')}
           ORDER BY created_at DESC
-          LIMIT $1
+          LIMIT ?
         SQL
 
         HTM.db.fetch(sql, limit).all.map { |r| r.transform_keys(&:to_s) }

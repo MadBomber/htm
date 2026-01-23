@@ -154,9 +154,9 @@ class HTM
           JOIN tags t2 ON nt2.tag_id = t2.id
           WHERE t1.name < t2.name
           GROUP BY t1.name, t2.name
-          HAVING COUNT(DISTINCT nt1.node_id) >= $1
+          HAVING COUNT(DISTINCT nt1.node_id) >= ?
           ORDER BY shared_nodes DESC
-          LIMIT $2
+          LIMIT ?
         SQL
 
         HTM.db.fetch(sql, safe_min, safe_limit).all.map { |r| r.transform_keys(&:to_s) }
@@ -258,14 +258,14 @@ class HTM
         safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
 
         sql = <<~SQL
-          SELECT name, similarity(name, $1) as similarity
+          SELECT name, similarity(name, ?) as similarity
           FROM tags
-          WHERE similarity(name, $1) >= $2
+          WHERE similarity(name, ?) >= ?
           ORDER BY similarity DESC, name
-          LIMIT $3
+          LIMIT ?
         SQL
 
-        HTM.db.fetch(sql, query, safe_similarity, safe_limit)
+        HTM.db.fetch(sql, query, query, safe_similarity, safe_limit)
           .all
           .map { |r| { name: r[:name], similarity: r[:similarity].to_f } }
       rescue Sequel::Error => e
@@ -371,18 +371,18 @@ class HTM
 
         conditions = []
         params = []
-        param_index = 1
 
         # Exact matches (highest priority)
+        # Use Sequel.lit with ? placeholders for proper parameter binding
         if exact_candidates.any?
-          placeholders = exact_candidates.map { |_| "$#{param_index}".tap { param_index += 1 } }.join(', ')
+          placeholders = exact_candidates.map { '?' }.join(', ')
           conditions << "(SELECT name, 1 as priority FROM tags WHERE name IN (#{placeholders}))"
           params.concat(exact_candidates)
         end
 
         # Prefix matches
         if prefix_candidates.any?
-          placeholders = prefix_candidates.map { |_| "$#{param_index}".tap { param_index += 1 } }.join(', ')
+          placeholders = prefix_candidates.map { '?' }.join(', ')
           conditions << "(SELECT name, 2 as priority FROM tags WHERE name IN (#{placeholders}))"
           params.concat(prefix_candidates)
         end
@@ -390,12 +390,7 @@ class HTM
         # Component matches
         if component_candidates.any?
           component_conditions = component_candidates.map do |_|
-            idx1 = param_index
-            idx2 = param_index + 1
-            idx3 = param_index + 2
-            idx4 = param_index + 3
-            param_index += 4
-            "(name = $#{idx1} OR name LIKE $#{idx2} OR name LIKE $#{idx3} OR name LIKE $#{idx4})"
+            "(name = ? OR name LIKE ? OR name LIKE ? OR name LIKE ?)"
           end
 
           component_params = component_candidates.flat_map do |component|
@@ -416,10 +411,7 @@ class HTM
         if fuzzy_fallback && component_candidates.any?
           safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
           trigram_conditions = component_candidates.map do |_|
-            idx1 = param_index
-            idx2 = param_index + 1
-            param_index += 2
-            "similarity(name, $#{idx1}) >= $#{idx2}"
+            "similarity(name, ?) >= ?"
           end
           trigram_params = component_candidates.flat_map { |c| [c, safe_similarity] }
 
@@ -430,7 +422,6 @@ class HTM
         return [] if conditions.empty?
 
         # Combine with UNION and order by priority
-        limit_param = "$#{param_index}"
         params << MAX_TAG_QUERY_LIMIT
 
         sql = <<~SQL
@@ -438,7 +429,7 @@ class HTM
             #{conditions.join(' UNION ')}
           ) AS matches
           ORDER BY name
-          LIMIT #{limit_param}
+          LIMIT ?
         SQL
 
         HTM.db.fetch(sql, *params).all.map { |r| r[:name] }

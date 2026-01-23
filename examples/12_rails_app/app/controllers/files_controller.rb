@@ -2,7 +2,7 @@
 
 class FilesController < ApplicationController
   def index
-    @file_sources = HTM::Models::FileSource.order(updated_at: :desc)
+    @file_sources = HTM::Models::FileSource.order(Sequel.desc(:updated_at))
   end
 
   def show

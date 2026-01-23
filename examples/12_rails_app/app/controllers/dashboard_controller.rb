@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'ostruct'
+
 class DashboardController < ApplicationController
   def index
     # Note: HTM::Models::Node has a default_scope that excludes deleted nodes
@@ -16,13 +18,14 @@ class DashboardController < ApplicationController
     @recent_memories = HTM::Models::Node.recent.limit(5)
 
     @top_tags = HTM.db[:tags]
-                .join(:nodes_tags, tag_id: :id)
-                .group(:id, :name, :created_at, :updated_at)
-                .order(Sequel.desc(Sequel.function(:count, Sequel[:nodes_tags][:node_id])))
+                .join(:node_tags, tag_id: Sequel[:tags][:id])
+                .group(Sequel[:tags][:id], Sequel[:tags][:name], Sequel[:tags][:created_at])
+                .order(Sequel.desc(Sequel.function(:count, Sequel[:node_tags][:node_id])))
                 .limit(10)
-                .select_append(Sequel.function(:count, Sequel[:nodes_tags][:node_id]).as(:node_count))
-                .map { |row| HTM::Models::Tag.new(row) }
+                .select(Sequel[:tags][:id], Sequel[:tags][:name], Sequel[:tags][:created_at])
+                .select_append(Sequel.function(:count, Sequel[:node_tags][:node_id]).as(:node_count))
+                .map { |row| OpenStruct.new(row) }
 
-    @robots = HTM::Models::Robot.order(created_at: :desc).limit(5)
+    @robots = HTM::Models::Robot.order(Sequel.desc(:created_at)).limit(5)
   end
 end

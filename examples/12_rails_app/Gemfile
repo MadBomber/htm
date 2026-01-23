@@ -12,6 +12,9 @@ gem 'htm', path: '../..'
 # PostgreSQL (required for HTM)
 gem 'pg', '~> 1.5'
 
+# Ruby 4.0+ bundled gems (no longer in stdlib)
+gem 'ostruct'
+
 # Frontend - using CDN for Tailwind and Hotwire (no build step)
 gem 'propshaft'                    # Asset pipeline for CSS/images
 # Pagination uses simple offset/limit (no Kaminari needed)

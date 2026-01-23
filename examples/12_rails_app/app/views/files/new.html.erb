@@ -65,6 +65,9 @@
     <!-- Upload Directory -->
     <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
       <h2 class="text-lg font-bold text-white mb-4">Upload Directory</h2>
+      <div class="mb-4 rounded-md bg-yellow-900/30 border border-yellow-500/30 p-3">
+        <p class="text-xs text-yellow-400"><strong>Note:</strong> Browser uploads limited to ~100 files due to OS restrictions. For larger directories, use <strong>Load Directory by Path</strong> below.</p>
+      </div>
 
       <%= form_with url: upload_directory_files_path, method: :post, multipart: true, class: 'space-y-4', id: 'upload-dir-form', data: { turbo: false } do %>
         <div>
@@ -146,8 +149,8 @@
     </div>
 
     <!-- Load Directory by Path -->
-    <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
-      <h2 class="text-lg font-bold text-white mb-4">Load Directory by Path</h2>
+    <div class="rounded-lg bg-indigo-900/30 border border-indigo-500/30 p-6">
+      <h2 class="text-lg font-bold text-white mb-4">Load Directory by Path <span class="text-xs font-normal text-indigo-400">(Recommended for large directories)</span></h2>
 
       <%= form_with url: load_directory_files_path, method: :post, class: 'space-y-4' do %>
         <div>

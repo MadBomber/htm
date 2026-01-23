@@ -20,7 +20,7 @@
         <div class="rounded-lg bg-gray-800 border border-red-900/50 p-5">
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
-              <%= link_to memory_path(memory), class: 'block group' do %>
+              <%= link_to memory_path(memory.id), class: 'block group' do %>
                 <p class="text-sm text-gray-400 group-hover:text-gray-300 transition-colors line-clamp-3">
                   <%= memory.content %>
                 </p>
@@ -33,13 +33,13 @@
             </div>
 
             <div class="flex-shrink-0 flex items-center gap-2">
-              <%= button_to restore_memory_path(memory), method: :post, class: 'inline-flex items-center gap-1 rounded-md bg-green-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-600 transition-colors' do %>
+              <%= button_to restore_memory_path(memory.id), method: :post, class: 'inline-flex items-center gap-1 rounded-md bg-green-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-600 transition-colors' do %>
                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Restore
               <% end %>
-              <%= button_to memory_path(memory, permanent: true), method: :delete, class: 'inline-flex items-center gap-1 rounded-md bg-red-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 transition-colors', data: { turbo_confirm: 'Permanently delete? This cannot be undone!' } do %>
+              <%= button_to memory_path(memory.id, permanent: true), method: :delete, class: 'inline-flex items-center gap-1 rounded-md bg-red-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 transition-colors', data: { turbo_confirm: 'Permanently delete? This cannot be undone!' } do %>
                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
