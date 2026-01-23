@@ -1,6 +1,6 @@
 # HTM Telemetry Demo Setup
 
-This guide walks you through setting up Prometheus and Grafana to visualize HTM metrics.
+This guide walks you through setting up Prometheus and Grafana to visualize HTM metrics.  Its intended as a guid for your own applications.  The demo.rb program in this directory takes care of all of the setup steps before it starts it HTM process to generate the telemetry.
 
 ## Prerequisites
 

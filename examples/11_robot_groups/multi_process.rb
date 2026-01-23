@@ -29,7 +29,7 @@ require 'open3'
 # =============================================================================
 
 class RobotProcess
-  WORKER_SCRIPT = File.expand_path('robot_worker.rb', __dir__)
+  WORKER_SCRIPT = File.expand_path('lib/robot_worker.rb', __dir__)
 
   attr_reader :name, :pid
 

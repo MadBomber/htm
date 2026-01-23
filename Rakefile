@@ -76,16 +76,16 @@ namespace :examples do
 
   desc "Run basic_usage example"
   task basic: :set_examples_env do
-    ruby "examples/basic_usage.rb"
+    ruby "examples/01_basic_usage.rb"
   end
 
   desc "Run all standalone examples"
   task :all => :set_examples_env do
     examples = %w[
-      examples/basic_usage.rb
-      examples/custom_llm_configuration.rb
-      examples/file_loader_usage.rb
-      examples/timeframe_demo.rb
+      examples/01_basic_usage.rb
+      examples/03_custom_llm_configuration.rb
+      examples/04_file_loader_usage.rb
+      examples/05_timeframe_demo.rb
     ]
     examples.each do |example|
       if File.exist?(example)
@@ -133,7 +133,7 @@ task :example => 'examples:basic'
 
 desc "Run timeframe demo"
 task :timeframe_demo do
-  ruby "examples/timeframe_demo.rb"
+  ruby "examples/05_timeframe_demo.rb"
 end
 
 desc "Show gem stats"

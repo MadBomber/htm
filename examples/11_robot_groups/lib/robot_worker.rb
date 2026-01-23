@@ -22,13 +22,24 @@
 
 require 'logger'
 require 'json'
-require_relative '../examples_helper'
+require_relative '../../examples_helper'
 
 robot_name = ARGV[0]
 group_name = ARGV[1]
 
 unless robot_name && group_name
-  $stderr.puts "Usage: ruby robot_worker.rb <robot_name> <group_name>"
+  $stderr.puts <<~NOTICE
+
+    Usage: ruby robot_worker.rb <robot_name> <group_name>
+
+    This robot can be run as a standalone process or as part of a group.
+    It is not an actual demo program.
+    Its just a part of the two scenarios being demonstrated:
+
+    Scenario 1: Multiple Robots in Separate Processes (multi_process.rb)
+    Scenario 2: All Robots Running Within the Same Process (same_process.rb)
+
+  NOTICE
   exit 1
 end
 

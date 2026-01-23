@@ -89,7 +89,7 @@ class HTMCli
 
     loop do
       print "\nhtm> "
-      input = gets&.chomp
+      input = $stdin.gets&.chomp
       break if input.nil? || input == 'exit'
 
       handle_command(input)

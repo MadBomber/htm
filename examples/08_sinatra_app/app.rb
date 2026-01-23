@@ -149,12 +149,10 @@ class HTMApp < Sinatra::Base
 
   # API: Get all tags as a tree structure
   get '/api/tags' do
-    tags = HTM::Models::Tag.all
-
     json(
       status: 'ok',
-      count: tags.count,
-      tree: tags.tree
+      count: HTM::Models::Tag.count,
+      tree: HTM::Models::Tag.tree_string
     )
   end
 
@@ -185,11 +183,11 @@ class HTMApp < Sinatra::Base
       token_count: memory['token_count']
     }
 
-    # Include hybrid search scoring if available
-    if memory['similarity']
+    # Include hybrid search scoring if available (RRF-based)
+    if memory['rrf_score']
       result[:similarity] = memory['similarity'].to_f.round(4)
-      result[:tag_boost] = memory['tag_boost'].to_f.round(4)
-      result[:combined_score] = memory['combined_score'].to_f.round(4)
+      result[:tag_depth_score] = memory['tag_depth_score'].to_f.round(4)
+      result[:rrf_score] = memory['rrf_score'].to_f.round(4)
     end
 
     result
@@ -295,7 +293,7 @@ __END__
 
   <div class="section">
     <h2>Recall Memories</h2>
-    <p><small>Hybrid search uses combined scoring: (similarity × 0.7) + (tag_boost × 0.3)</small></p>
+    <p><small>Hybrid search uses Reciprocal Rank Fusion (RRF) combining vector, fulltext, and tag results</small></p>
     <input type="text" id="recallTopic" placeholder="Enter topic to search...">
     <div class="filter-row">
       <select id="recallStrategy">
@@ -385,10 +383,10 @@ __END__
             // Format timeframe for display
             const timeframeDisplay = formatTimeframe(data.timeframe);
             const memoriesHtml = data.memories.map(m => {
-              // Build scoring info if available (hybrid search)
+              // Build scoring info if available (hybrid search with RRF)
               let scoreInfo = '';
-              if (m.combined_score !== undefined) {
-                scoreInfo = `<br><small class="scores">Score: ${m.combined_score.toFixed(3)} (similarity: ${m.similarity.toFixed(3)}, tag boost: ${m.tag_boost.toFixed(3)})</small>`;
+              if (m.rrf_score !== undefined) {
+                scoreInfo = `<br><small class="scores">RRF Score: ${m.rrf_score.toFixed(3)} (similarity: ${m.similarity.toFixed(3)}, tag depth: ${m.tag_depth_score.toFixed(3)})</small>`;
               }
               // Calculate age of memory
               const age = formatAge(m.created_at);
