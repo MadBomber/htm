@@ -79,6 +79,7 @@ class HTM
 
         # Combined tsvector + trigram search
         # tsvector matches get boosted score, trigram provides fuzzy fallback
+        # Note: Using ? placeholders for Sequel compatibility
         sql = <<~SQL
           WITH tsvector_matches AS (
             -- Primary: tsvector full-text search (stemmed word matching)
@@ -114,24 +115,23 @@ class HTM
           LIMIT ?
         SQL
 
-        result = ActiveRecord::Base.connection.select_all(
-          ActiveRecord::Base.sanitize_sql_array([
-            sql,
-            TSVECTOR_SCORE_BOOST,  # boost for tsvector
-            query,                  # ts_rank query
-            query,                  # tsvector match query
-            query,                  # trigram similarity query
-            query,                  # trigram match query
-            TRIGRAM_SIMILARITY_THRESHOLD,
-            limit
-          ])
-        )
+        result = HTM.db.fetch(
+          sql,
+          TSVECTOR_SCORE_BOOST,           # boost for tsvector
+          query,                           # query for ts_rank
+          query,                           # query for plainto_tsquery
+          query,                           # query for similarity (trigram)
+          query,                           # query for similarity condition
+          TRIGRAM_SIMILARITY_THRESHOLD,    # similarity threshold
+          limit                            # limit
+        ).all
 
         # Track access for retrieved nodes
-        node_ids = result.map { |r| r['id'] }
+        node_ids = result.map { |r| r[:id] }
         track_access(node_ids)
 
-        result.to_a
+        # Convert to hash with string keys for compatibility
+        result.map { |r| r.transform_keys(&:to_s) }
       end
     end
   end

@@ -139,7 +139,7 @@ class HTM
               if manual_tags.any?
                 manual_tags.each do |tag_name|
                   HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
-                    HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+                    HTM::Models::NodeTag.find_or_create(node_id: node_id, tag_id: tag.id)
                   end
                 end
               end
@@ -153,7 +153,7 @@ class HTM
             else
               # For existing nodes, only add manual tags
               if manual_tags.any?
-                node = HTM::Models::Node.find(node_id)
+                node = HTM::Models::Node[node_id]
                 node.add_tags(manual_tags)
               end
             end
@@ -197,7 +197,7 @@ class HTM
             htm.working_memory.add(node_id, result.value[:content], token_count: token_count, access_count: 0)
 
             # Mark as in working memory
-            robot_node.update!(working_memory: true)
+            robot_node.update(working_memory: true)
 
             # Update robot activity
             htm.long_term_memory.update_robot_activity(result.value[:robot_id])

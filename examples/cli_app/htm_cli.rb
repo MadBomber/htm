@@ -142,7 +142,7 @@ class HTMCli
     puts "[✓] Stored as node #{node_id} (#{duration}ms)"
 
     # Show what was generated (inline mode, so already complete)
-    node = HTM::Models::Node.includes(:tags).find(node_id)
+    node = HTM::Models::Node[node_id]
 
     if node.embedding
       puts "    Embedding: #{node.embedding_dimension} dimensions"
@@ -220,7 +220,7 @@ class HTMCli
       end
 
       # Show tags if any
-      node = HTM::Models::Node.includes(:tags).find(memory['id'])
+      node = HTM::Models::Node[memory['id']]
       if node.tags.any?
         puts "   Tags: #{node.tags.map(&:name).join(', ')}"
       else
@@ -262,10 +262,10 @@ class HTMCli
     puts
 
     # Get all tags with their nodes, optionally filtered by prefix
-    tags_query = HTM::Models::Tag.includes(:nodes).order(:name)
-    tags_query = tags_query.where("name LIKE ?", "#{filter}%") if filter && !filter.empty?
+    tags_query = HTM::Models::Tag.order(:name)
+    tags_query = tags_query.where(Sequel.like(:name, "#{filter}%")) if filter && !filter.empty?
 
-    tags = tags_query.to_a
+    tags = tags_query.eager(:nodes).all
 
     if tags.empty?
       if filter
@@ -311,8 +311,8 @@ class HTMCli
     puts
 
     total_nodes = HTM::Models::Node.count
-    nodes_with_embeddings = HTM::Models::Node.where.not(embedding: nil).count
-    nodes_with_tags = HTM::Models::Node.joins(:tags).distinct.count
+    nodes_with_embeddings = HTM::Models::Node.exclude(embedding: nil).count
+    nodes_with_tags = HTM::Models::NodeTag.distinct.select(:node_id).count
     total_tags = HTM::Models::Tag.count
     total_robots = HTM::Models::Robot.count
 

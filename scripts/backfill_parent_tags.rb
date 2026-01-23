@@ -162,7 +162,7 @@ class ParentTagBackfill
   end
 
   def process_tags
-    hierarchical_tags = HTM::Models::Tag.where("name LIKE '%:%'").order(:name)
+    hierarchical_tags = HTM::Models::Tag.where(Sequel.like(:name, "%:%")).order(:name)
     total_count = hierarchical_tags.count
 
     puts "Found #{total_count} hierarchical tags to process"
@@ -180,7 +180,7 @@ class ParentTagBackfill
       output: $stdout
     )
 
-    hierarchical_tags.find_each do |tag|
+    hierarchical_tags.paged_each do |tag|
       process_tag(tag)
       progressbar.increment
     end
@@ -202,7 +202,7 @@ class ParentTagBackfill
     parent_tags = find_or_create_parent_tags_batch(parent_names)
 
     # Get nodes associated with this tag
-    node_ids = HTM::Models::NodeTag.where(tag_id: tag.id).pluck(:node_id)
+    node_ids = HTM::Models::NodeTag.where(tag_id: tag.id).select_map(:node_id)
 
     if node_ids.any?
       log_verbose "  Nodes with this tag: #{node_ids.count}"
@@ -268,18 +268,18 @@ class ParentTagBackfill
     end
 
     begin
-      tag = HTM::Models::Tag.create!(name: name)
+      tag = HTM::Models::Tag.create(name: name)
       log_verbose "  Created tag: '#{name}' (id: #{tag.id})"
       @stats[:parent_tags_created] += 1
       tag
-    rescue ActiveRecord::RecordInvalid => e
+    rescue Sequel::ValidationFailed => e
       error_msg = "Failed to create tag '#{name}': #{e.message}"
       log_verbose "  ERROR: #{error_msg}"
       @stats[:errors] << error_msg
       nil
-    rescue ActiveRecord::RecordNotUnique
+    rescue Sequel::UniqueConstraintViolation
       # Race condition - tag was created by another process, fetch it
-      tag = HTM::Models::Tag.find_by(name: name)
+      tag = HTM::Models::Tag.first(name: name)
       log_verbose "  Tag '#{name}' created by concurrent process (id: #{tag&.id})"
       tag
     end
@@ -289,7 +289,7 @@ class ParentTagBackfill
     # Find which nodes are NOT already associated with this parent tag
     existing_node_ids = HTM::Models::NodeTag
       .where(tag_id: parent_tag.id, node_id: node_ids)
-      .pluck(:node_id)
+      .select_map(:node_id)
 
     missing_node_ids = node_ids - existing_node_ids
     return if missing_node_ids.empty?
@@ -306,22 +306,22 @@ class ParentTagBackfill
     end
 
     begin
-      # Use insert_all to batch insert (ignores duplicates)
-      result = HTM::Models::NodeTag.insert_all(records)
-      created_count = result.count
+      # Use multi_insert to batch insert (ignores duplicates)
+      HTM::Models::NodeTag.dataset.multi_insert(records)
+      created_count = records.size
       @stats[:node_tags_created] += created_count
       log_verbose "  Created #{created_count} node_tags for '#{parent_tag.name}'" if created_count > 0
-    rescue ActiveRecord::RecordInvalid => e
+    rescue Sequel::ValidationFailed => e
       # Fallback to individual inserts if batch fails
       created_count = 0
       missing_node_ids.each do |node_id|
         begin
-          HTM::Models::NodeTag.create!(node_id: node_id, tag_id: parent_tag.id)
+          HTM::Models::NodeTag.create(node_id: node_id, tag_id: parent_tag.id)
           created_count += 1
           @stats[:node_tags_created] += 1
-        rescue ActiveRecord::RecordNotUnique
+        rescue Sequel::UniqueConstraintViolation
           # Already exists, skip
-        rescue ActiveRecord::RecordInvalid => e
+        rescue Sequel::ValidationFailed => e
           error_msg = "Failed to create node_tag (node: #{node_id}, tag: #{parent_tag.id}): #{e.message}"
           log_verbose "  ERROR: #{error_msg}"
           @stats[:errors] << error_msg

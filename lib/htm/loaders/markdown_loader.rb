@@ -78,10 +78,12 @@ class HTM
         file_hash = Digest::SHA256.hexdigest(content)
 
         # Find or create source record
-        source = HTM::Models::FileSource.find_or_initialize_by(file_path: expanded_path)
+        source = HTM::Models::FileSource.first(file_path: expanded_path)
+        is_new = source.nil?
+        source ||= HTM::Models::FileSource.new(file_path: expanded_path)
 
         # Check if sync needed
-        unless force || source.new_record? || source.needs_sync?(stat.mtime)
+        unless force || is_new || source.needs_sync?(stat.mtime)
           return {
             file_path: expanded_path,
             chunks_created: 0,
@@ -104,18 +106,18 @@ class HTM
         end
 
         # Save source first (need ID for node association)
-        source.save! if source.new_record?
+        source.save if is_new
 
         # Sync chunks to database (chunks now include cursor positions)
         result = sync_chunks(source, chunks)
 
         # Update source record
-        source.update!(
+        source.update(
           file_hash: file_hash,
           mtime: stat.mtime,
           file_size: stat.size,
           frontmatter: frontmatter,
-          last_synced_at: Time.current
+          last_synced_at: Time.now
         )
 
         result.merge(
@@ -195,9 +197,9 @@ class HTM
         deleted = 0
 
         # Get existing nodes for this source (include soft-deleted for potential restore)
-        existing_nodes = source.persisted? ?
-          HTM::Models::Node.unscoped.where(source_id: source.id).to_a : []
-        existing_by_hash = existing_nodes.index_by(&:content_hash)
+        existing_nodes = source.id ?
+          HTM::Models::Node.with_deleted.where(source_id: source.id).all : []
+        existing_by_hash = existing_nodes.each_with_object({}) { |n, h| h[n.content_hash] = n }
 
         # Track which existing nodes we've matched
         matched_hashes = Set.new
@@ -217,7 +219,7 @@ class HTM
 
             changes = {}
             changes[:chunk_position] = position if node.chunk_position != position
-            changes[:deleted_at] = nil if node.deleted_at.present?
+            changes[:deleted_at] = nil if node.deleted_at
 
             # Update cursor in metadata if changed
             current_cursor = node.metadata&.dig('cursor')
@@ -227,7 +229,7 @@ class HTM
             end
 
             if changes.any?
-              node.update!(changes)
+              node.update(changes)
               updated += 1
             end
           else
@@ -240,7 +242,7 @@ class HTM
         # Soft-delete chunks that no longer exist in file
         existing_by_hash.each do |hash, node|
           next if matched_hashes.include?(hash)
-          next if node.deleted_at.present?  # Already deleted
+          next if node.deleted_at  # Already deleted
 
           node.soft_delete!
           deleted += 1
@@ -265,18 +267,18 @@ class HTM
         node_id = @htm.remember(content, metadata: chunk_metadata)
 
         # Update with source reference
-        node = HTM::Models::Node.find(node_id)
-        node.update!(source_id: source.id, chunk_position: position)
+        node = HTM::Models::Node[node_id]
+        node.update(source_id: source.id, chunk_position: position)
 
         node
-      rescue ActiveRecord::RecordNotUnique
+      rescue Sequel::UniqueConstraintViolation
         # Duplicate content exists (different source or no source)
         # Find and link to this source
         existing = HTM::Models::Node.find_by_content(content)
         if existing && existing.source_id.nil?
           # Merge cursor into existing metadata
           new_metadata = (existing.metadata || {}).merge('cursor' => cursor) if cursor
-          existing.update!(
+          existing.update(
             source_id: source.id,
             chunk_position: position,
             metadata: new_metadata || existing.metadata

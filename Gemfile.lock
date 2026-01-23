@@ -2,29 +2,24 @@ PATH
   remote: .
   specs:
     htm (0.0.21)
-      activerecord
+      activesupport
       anyway_config (>= 2.6)
       async (~> 2.0)
       baran
       chronic
       fast-mcp
       lru_redux
-      neighbor
       pg (>= 1.5.0)
       ruby-progressbar
       ruby_llm
+      sequel (>= 5.0)
+      sequel_pg
       simple_flow
       tiktoken_ruby
 
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (8.1.2)
-      activesupport (= 8.1.2)
-    activerecord (8.1.2)
-      activemodel (= 8.1.2)
-      activesupport (= 8.1.2)
-      timeout (>= 0.4.0)
     activesupport (8.1.2)
       base64
       bigdecimal
@@ -149,8 +144,6 @@ GEM
       minitest (>= 5.0)
       ruby-progressbar
     multipart-post (2.4.1)
-    neighbor (0.6.0)
-      activerecord (>= 7.1)
     net-http (0.9.1)
       uri (>= 0.11.1)
     pg (1.6.3-arm64-darwin)
@@ -186,6 +179,11 @@ GEM
       zeitwerk (~> 2)
     ruby_llm-schema (0.2.5)
     securerandom (0.4.1)
+    sequel (5.100.0)
+      bigdecimal
+    sequel_pg (1.18.2)
+      pg (>= 0.18.0, != 1.2.0)
+      sequel (>= 4.38.0)
     simple_flow (0.3.0)
     simplecov (0.22.0)
       docile (~> 1.1)
@@ -194,7 +192,6 @@ GEM
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
     tiktoken_ruby (0.0.15.1-arm64-darwin)
-    timeout (0.6.0)
     traces (0.18.2)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)

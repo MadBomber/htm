@@ -67,7 +67,7 @@ channel.on_change do |event, node_id, origin_robot_id|
 
   case event
   when :added
-    node = HTM::Models::Node.find_by(id: node_id)
+    node = HTM::Models::Node.first(id: node_id)
     if node
       htm.working_memory.add_from_sync(
         id: node.id,

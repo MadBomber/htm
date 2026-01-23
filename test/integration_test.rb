@@ -20,7 +20,11 @@ class IntegrationTest < Minitest::Test
 
     begin
       # Clean up test data
-      HTM::Models::Node.joins(:robots).where(robots: { name: @htm.robot_name }).destroy_all
+      robot = HTM::Models::Robot.first(name: @htm.robot_name)
+      if robot
+        node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
+        HTM::Models::Node.where(id: node_ids).delete if node_ids.any?
+      end
     rescue => e
       # Ignore errors during cleanup
     end
@@ -61,11 +65,11 @@ class IntegrationTest < Minitest::Test
     assert result
 
     # Node should still exist in database but be marked deleted
-    node = HTM::Models::Node.with_deleted.find(node_id)
+    node = HTM::Models::Node.with_deleted[node_id]
     refute_nil node.deleted_at, "Node should have deleted_at timestamp"
 
     # Node should NOT appear in default queries
-    assert_nil HTM::Models::Node.find_by(id: node_id), "Soft-deleted node should not appear in default queries"
+    assert_nil HTM::Models::Node.first(id: node_id), "Soft-deleted node should not appear in default queries"
   end
 
   def test_forget_permanent_delete_requires_confirmation
@@ -83,7 +87,7 @@ class IntegrationTest < Minitest::Test
     assert result
 
     # Node should be completely gone
-    assert_nil HTM::Models::Node.with_deleted.find_by(id: node_id), "Node should be permanently deleted"
+    assert_nil HTM::Models::Node.with_deleted.first(id: node_id), "Node should be permanently deleted"
   end
 
   def test_restore_soft_deleted_node
@@ -92,14 +96,14 @@ class IntegrationTest < Minitest::Test
     @htm.forget(node_id)
 
     # Node should be deleted
-    assert_nil HTM::Models::Node.find_by(id: node_id)
+    assert_nil HTM::Models::Node.first(id: node_id)
 
     # Restore it
     result = @htm.restore(node_id)
     assert result
 
     # Node should be back
-    node = HTM::Models::Node.find(node_id)
+    node = HTM::Models::Node[node_id]
     refute_nil node
     assert_nil node.deleted_at, "Restored node should have nil deleted_at"
   end
@@ -107,7 +111,7 @@ class IntegrationTest < Minitest::Test
   def test_purge_deleted_requires_confirmation
     # Should require confirmation
     error = assert_raises(ArgumentError) do
-      @htm.purge_deleted(older_than: 30.days.ago)
+      @htm.purge_deleted(older_than: Time.now - (30 * 24 * 60 * 60))  # 30 days ago
     end
     assert_match(/confirm/, error.message.downcase)
   end
@@ -119,7 +123,7 @@ class IntegrationTest < Minitest::Test
     node_id = @htm.remember("PostgreSQL supports vector search via pgvector extension")
 
     # Retrieve the node directly
-    node = HTM::Models::Node.find(node_id)
+    node = HTM::Models::Node[node_id]
 
     # Verify embedding is deserialized as Array, not String
     assert_instance_of Array, node.embedding, "Embedding should be deserialized as Array"
@@ -134,8 +138,9 @@ class IntegrationTest < Minitest::Test
     @htm.remember("Ruby is a dynamic programming language")
 
     # Get a sample node with embedding
-    sample = HTM::Models::Node.with_embeddings.joins(:robots)
-      .where(robots: { name: @htm.robot_name }).first
+    robot = HTM::Models::Robot.first(name: @htm.robot_name)
+    node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
+    sample = HTM::Models::Node.with_embeddings.where(id: node_ids).first
 
     refute_nil sample, "Should have at least one node with embedding"
     refute_nil sample.embedding, "Sample node should have an embedding"
@@ -164,8 +169,9 @@ class IntegrationTest < Minitest::Test
     @htm.remember("Ruby is a dynamic programming language")
 
     # Get a sample node
-    sample = HTM::Models::Node.with_embeddings.joins(:robots)
-      .where(robots: { name: @htm.robot_name }).first
+    robot = HTM::Models::Robot.first(name: @htm.robot_name)
+    node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
+    sample = HTM::Models::Node.with_embeddings.where(id: node_ids).first
 
     refute_nil sample, "Should have at least one node with embedding"
 
@@ -217,7 +223,7 @@ class IntegrationTest < Minitest::Test
     node_id = @htm.remember("Database migrations are important", tags: ["database:migrations"])
 
     # Verify tags were added
-    node = HTM::Models::Node.find(node_id)
+    node = HTM::Models::Node[node_id]
     assert node.tag_names.include?("database:migrations"), "Manual tag should be present"
 
     # Add more tags

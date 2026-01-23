@@ -32,10 +32,10 @@ class HTM
         content_hash = HTM::Models::Node.generate_content_hash(content)
 
         # Wrap in transaction to ensure data consistency
-        ActiveRecord::Base.transaction do
+        HTM.db.transaction do
           # Check for existing node with same content (including soft-deleted)
           # This avoids unique constraint violations on content_hash
-          existing_node = HTM::Models::Node.with_deleted.find_by(content_hash: content_hash)
+          existing_node = HTM::Models::Node.with_deleted.first(content_hash: content_hash)
 
           # If found but soft-deleted, restore it
           if existing_node&.deleted?
@@ -48,7 +48,7 @@ class HTM
             robot_node = link_robot_to_node(robot_id: robot_id, node: existing_node)
 
             # Update the node's updated_at timestamp
-            existing_node.touch
+            existing_node.update(updated_at: Time.now)
 
             {
               node_id: existing_node.id,
@@ -65,7 +65,7 @@ class HTM
             end
 
             # Create new node
-            node = HTM::Models::Node.create!(
+            node = HTM::Models::Node.create(
               content: content,
               content_hash: content_hash,
               token_count: token_count,
@@ -97,19 +97,19 @@ class HTM
       # @return [HTM::Models::RobotNode] The robot_node link record
       #
       def link_robot_to_node(robot_id:, node:, working_memory: false)
-        robot_node = HTM::Models::RobotNode.find_by(robot_id: robot_id, node_id: node.id)
+        robot_node = HTM::Models::RobotNode.first(robot_id: robot_id, node_id: node.id)
 
         if robot_node
           # Existing link - record that robot remembered this again
           robot_node.record_remember!
-          robot_node.update!(working_memory: working_memory) if working_memory
+          robot_node.update(working_memory: working_memory) if working_memory
         else
           # New link
-          robot_node = HTM::Models::RobotNode.create!(
+          robot_node = HTM::Models::RobotNode.create(
             robot_id: robot_id,
             node_id: node.id,
-            first_remembered_at: Time.current,
-            last_remembered_at: Time.current,
+            first_remembered_at: Time.now,
+            last_remembered_at: Time.now,
             remember_count: 1,
             working_memory: working_memory
           )
@@ -127,17 +127,17 @@ class HTM
       # @return [Hash, nil] Node data or nil
       #
       def retrieve(node_id)
-        node = HTM::Models::Node.find_by(id: node_id)
+        node = HTM::Models::Node.first(id: node_id)
         return nil unless node
 
-        # Track access in a single UPDATE query (instead of separate increment! and touch)
-        node.update_columns(
-          access_count: node.access_count + 1,
-          last_accessed: Time.current
+        # Track access in a single UPDATE query (instead of separate operations)
+        node.this.update(
+          access_count: Sequel[:access_count] + 1,
+          last_accessed: Time.now
         )
 
         # Reload to get updated values
-        node.reload.attributes
+        node.refresh.to_hash
       end
 
       # Update last_accessed timestamp
@@ -146,8 +146,8 @@ class HTM
       # @return [void]
       #
       def update_last_accessed(node_id)
-        node = HTM::Models::Node.find_by(id: node_id)
-        node&.update(last_accessed: Time.current)
+        node = HTM::Models::Node.first(id: node_id)
+        node&.update(last_accessed: Time.now)
       end
 
       # Delete a node
@@ -156,8 +156,8 @@ class HTM
       # @return [void]
       #
       def delete(node_id)
-        node = HTM::Models::Node.find_by(id: node_id)
-        node&.destroy
+        node = HTM::Models::Node.first(id: node_id)
+        node&.delete
 
         # Selectively invalidate search-related cache entries only
         @cache&.invalidate_methods!(:search, :fulltext, :hybrid)
@@ -169,7 +169,7 @@ class HTM
       # @return [Boolean] True if node exists
       #
       def exists?(node_id)
-        HTM::Models::Node.exists?(node_id)
+        HTM::Models::Node.where(id: node_id).count > 0
       end
 
       # Mark nodes as evicted from working memory
@@ -186,7 +186,7 @@ class HTM
 
         HTM::Models::RobotNode
           .where(robot_id: robot_id, node_id: node_ids)
-          .update_all(working_memory: false)
+          .update(working_memory: false)
       end
 
       # Track access for multiple nodes (bulk operation)
@@ -200,8 +200,9 @@ class HTM
         return if node_ids.empty?
 
         # Atomic batch update
-        HTM::Models::Node.where(id: node_ids).update_all(
-          "access_count = access_count + 1, last_accessed = NOW()"
+        HTM::Models::Node.where(id: node_ids).update(
+          access_count: Sequel[:access_count] + 1,
+          last_accessed: Sequel.lit('NOW()')
         )
       end
     end

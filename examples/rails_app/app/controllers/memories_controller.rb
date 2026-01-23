@@ -5,15 +5,19 @@ class MemoriesController < ApplicationController
 
   def index
     # Default scope excludes deleted nodes, so no .active needed
-    @memories = HTM::Models::Node.includes(:tags)
-                                 .order(created_at: :desc)
+    @memories = HTM::Models::Node.eager(:tags)
+                                 .order(Sequel.desc(:created_at))
 
     if params[:tag].present?
-      @memories = @memories.joins(:tags).where(tags: { name: params[:tag] })
+      tag_node_ids = HTM::Models::NodeTag
+        .join(:tags, id: :tag_id)
+        .where(Sequel[:tags][:name] => params[:tag])
+        .select_map(:node_id)
+      @memories = @memories.where(id: tag_node_ids) if tag_node_ids.any?
     end
 
     if params[:search].present?
-      @memories = @memories.where('content ILIKE ?', "%#{params[:search]}%")
+      @memories = @memories.where(Sequel.ilike(:content, "%#{params[:search]}%"))
     end
 
     # Simple pagination without Kaminari
@@ -67,7 +71,7 @@ class MemoriesController < ApplicationController
       return
     end
 
-    @memory.update!(content: content)
+    @memory.update(content: content)
     flash[:notice] = 'Memory updated successfully'
     redirect_to memory_path(@memory)
   end
@@ -97,6 +101,6 @@ class MemoriesController < ApplicationController
   private
 
   def set_memory
-    @memory = HTM::Models::Node.with_deleted.find(params[:id])
+    @memory = HTM::Models::Node.with_deleted[params[:id]]
   end
 end

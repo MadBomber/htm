@@ -9,71 +9,153 @@ class HTM
     # Nodes are globally unique by content (via content_hash) and can be
     # linked to multiple robots through the robot_nodes join table.
     #
-    # Nearest Neighbor Search (via neighbor gem):
-    #   # Find 5 nearest neighbors by cosine distance
-    #   neighbors = Node.nearest_neighbors(:embedding, query_vector, distance: "cosine").limit(5)
-    #
-    #   # Get distance to query for each result
-    #   neighbors.each do |node|
-    #     puts "Node #{node.id}: distance = #{node.neighbor_distance}"
-    #   end
-    #
-    # Distance metrics: "cosine", "euclidean", "inner_product", "taxicab"
-    #
-    class Node < ActiveRecord::Base
-      self.table_name = 'nodes'
-
-      # Associations - Many-to-many with robots via robot_nodes
-      has_many :robot_nodes, class_name: 'HTM::Models::RobotNode', dependent: :destroy
-      has_many :robots, through: :robot_nodes, class_name: 'HTM::Models::Robot'
-      has_many :node_tags, class_name: 'HTM::Models::NodeTag', dependent: :destroy
-      has_many :tags, through: :node_tags, class_name: 'HTM::Models::Tag'
+    class Node < Sequel::Model(:nodes)
+      # Associations
+      one_to_many :robot_nodes, class: 'HTM::Models::RobotNode', key: :node_id
+      many_to_many :robots, class: 'HTM::Models::Robot',
+                   join_table: :robot_nodes, left_key: :node_id, right_key: :robot_id
+      one_to_many :node_tags, class: 'HTM::Models::NodeTag', key: :node_id
+      many_to_many :tags, class: 'HTM::Models::Tag',
+                   join_table: :node_tags, left_key: :node_id, right_key: :tag_id
 
       # Optional source file association (for nodes loaded from files)
-      belongs_to :file_source, class_name: 'HTM::Models::FileSource',
-                 foreign_key: :source_id, optional: true
+      many_to_one :file_source, class: 'HTM::Models::FileSource', key: :source_id
 
-      # Neighbor - vector similarity search
-      has_neighbors :embedding
+      # Plugins
+      plugin :validation_helpers
+      plugin :timestamps, update_on_create: true
+
+      # Override embedding getter to return Array instead of String
+      # pgvector stores as string format "[0.1,0.2,...]" and we need Array<Float>
+      def embedding
+        raw = super
+        return nil if raw.nil?
+        return raw if raw.is_a?(Array)
+
+        # Parse string format: "[0.1,0.2,0.3]"
+        if raw.is_a?(String)
+          raw.gsub(/[\[\]]/, '').split(',').map(&:to_f)
+        else
+          raw.to_a
+        end
+      end
 
       # Validations
-      validates :content, presence: true
-      validates :content_hash, presence: true, uniqueness: true
+      def validate
+        super
+        validates_presence [:content, :content_hash]
+        validates_unique :content_hash
+      end
 
-      # Callbacks
-      before_validation :set_content_hash, if: -> { content_hash.blank? && content.present? }
-      before_create :set_defaults
-      before_save :update_timestamps
+      # Dataset methods (scopes)
+      dataset_module do
+        def active
+          where(deleted_at: nil)
+        end
 
-      # Scopes
-      # Soft delete - by default, only show non-deleted nodes
-      default_scope { where(deleted_at: nil) }
+        def by_robot(robot_id)
+          join(:robot_nodes, node_id: :id).where(robot_nodes__robot_id: robot_id)
+        end
 
-      scope :by_robot, ->(robot_id) { joins(:robot_nodes).where(robot_nodes: { robot_id: robot_id }) }
-      scope :recent, -> { order(created_at: :desc) }
-      scope :in_timeframe, ->(start_time, end_time) { where(created_at: start_time..end_time) }
-      scope :with_embeddings, -> { where.not(embedding: nil) }
-      scope :from_source, ->(source_id) { where(source_id: source_id).order(:chunk_position) }
+        def recent
+          order(Sequel.desc(:created_at))
+        end
 
-      # Proposition scopes
-      scope :propositions, -> { where("metadata->>'is_proposition' = 'true'") }
-      scope :non_propositions, -> { where("metadata IS NULL OR metadata->>'is_proposition' IS NULL OR metadata->>'is_proposition' != 'true'") }
+        def in_timeframe(start_time, end_time)
+          where(created_at: start_time..end_time)
+        end
 
-      # Soft delete scopes
-      scope :deleted, -> { unscoped.where.not(deleted_at: nil) }
-      scope :with_deleted, -> { unscoped }
-      scope :deleted_before, ->(time) { deleted.where('deleted_at < ?', time) }
+        def with_embeddings
+          exclude(embedding: nil)
+        end
+
+        def from_source(source_id)
+          where(source_id: source_id).order(:chunk_position)
+        end
+
+        # Proposition scopes
+        def propositions
+          where(Sequel.lit("metadata->>'is_proposition' = 'true'"))
+        end
+
+        def non_propositions
+          where(Sequel.lit("metadata IS NULL OR metadata->>'is_proposition' IS NULL OR metadata->>'is_proposition' != 'true'"))
+        end
+
+        # Soft delete scopes
+        def deleted
+          exclude(deleted_at: nil)
+        end
+
+        def with_deleted
+          unfiltered
+        end
+
+        def deleted_before(time)
+          deleted.where { deleted_at < time }
+        end
+
+        # Find nearest neighbors by vector similarity
+        #
+        # @param column [Symbol] Column containing the embedding (typically :embedding)
+        # @param query_embedding [Array<Numeric>] Query vector to find neighbors for
+        # @param distance [String] Distance metric ("cosine", "euclidean", "inner_product")
+        # @return [Sequel::Dataset] Dataset ordered by distance with neighbor_distance column
+        #
+        def nearest_neighbors(column, query_embedding, distance: "cosine")
+          return where(Sequel.lit('1=0')) unless query_embedding.is_a?(Array) && query_embedding.any?
+
+          # Convert embedding to vector string format
+          vector_str = "[#{query_embedding.map(&:to_f).join(',')}]"
+
+          # Select distance operator based on metric
+          operator = case distance.to_s
+                     when "cosine" then "<=>"
+                     when "euclidean", "l2" then "<->"
+                     when "inner_product" then "<#>"
+                     else "<=>"
+                     end
+
+          # Return dataset with distance calculation
+          select_all(:nodes)
+            .select_append(Sequel.lit("(#{column} #{operator} ?::vector) AS neighbor_distance", vector_str))
+            .exclude(column => nil)
+            .order(Sequel.lit("#{column} #{operator} ?::vector", vector_str))
+        end
+      end
+
+      # Apply default scope for active records
+      set_dataset(dataset.where(Sequel[:nodes][:deleted_at] => nil))
+
+      # Hooks
+      def before_validation
+        if content_hash.nil? && content
+          self.content_hash = self.class.generate_content_hash(content)
+        end
+        super
+      end
+
+      def before_create
+        self.created_at ||= Time.now
+        self.updated_at ||= Time.now
+        self.last_accessed ||= Time.now
+        super
+      end
+
+      def before_save
+        self.updated_at = Time.now if changed_columns.any?
+        super
+      end
 
       # Class methods
 
       # Permanently delete all soft-deleted nodes older than the specified time
       #
-      # @param older_than [Time, ActiveSupport::Duration] Delete nodes soft-deleted before this time
-      #   Can be a Time object or a duration like 30.days.ago
+      # @param older_than [Time] Delete nodes soft-deleted before this time
       # @return [Integer] Number of nodes permanently deleted
       #
       def self.purge_deleted(older_than:)
-        deleted_before(older_than).destroy_all.count
+        dataset.unfiltered.where { deleted_at < older_than }.delete
       end
 
       # Find a node by content hash, or return nil
@@ -83,7 +165,7 @@ class HTM
       #
       def self.find_by_content(content)
         hash = generate_content_hash(content)
-        find_by(content_hash: hash)
+        first(content_hash: hash)
       end
 
       # Generate SHA-256 hash for content
@@ -98,73 +180,104 @@ class HTM
       # Instance methods
 
       # Find nearest neighbors to this node's embedding
+      #
       # @param limit [Integer] number of neighbors to return (default: 10)
-      # @param distance [String] distance metric: "cosine", "euclidean", "inner_product", "taxicab" (default: "cosine")
-      # @return [ActiveRecord::Relation] ordered by distance (closest first)
+      # @param distance [String] distance metric (default: "cosine")
+      # @return [Array<Node>] ordered by distance (closest first)
+      #
       def nearest_neighbors(limit: 10, distance: "cosine")
-        return self.class.none unless embedding.present?
+        return [] unless embedding
 
-        self.class.with_embeddings
-          .where.not(id: id)  # Exclude self
-          .nearest_neighbors(:embedding, embedding, distance: distance)
-          .limit(limit)
+        # Use raw SQL for vector similarity search
+        db = self.class.db
+
+        # Handle embedding - might be String or Array depending on Sequel pg extension
+        emb = embedding_array
+        return [] if emb.nil? || emb.empty?
+
+        vector_str = "[#{emb.join(',')}]"
+
+        sql = <<-SQL
+          SELECT nodes.*, (embedding <=> '#{vector_str}'::vector) AS neighbor_distance
+          FROM nodes
+          WHERE embedding IS NOT NULL
+            AND deleted_at IS NULL
+            AND id != #{id}
+          ORDER BY embedding <=> '#{vector_str}'::vector
+          LIMIT #{limit}
+        SQL
+
+        # Use call() to create instances from raw hashes without mass assignment restrictions
+        db.fetch(sql).all.map do |row|
+          node = self.class.call(row)
+          # Store neighbor_distance as an instance variable
+          node.instance_variable_set(:@neighbor_distance, row[:neighbor_distance])
+          node
+        end
+      end
+
+      # Accessor for neighbor_distance from nearest_neighbors query
+      # Works with both:
+      # - Instance method (stores in @neighbor_distance)
+      # - Dataset method (stores in values hash from SELECT)
+      def neighbor_distance
+        @neighbor_distance || values[:neighbor_distance]
+      end
+
+      # Get embedding as an Array (handles both String and Array storage)
+      # Note: The `embedding` getter already returns Array, this is an alias for compatibility
+      #
+      # @return [Array<Float>, nil] The embedding vector as an array
+      #
+      def embedding_array
+        embedding
       end
 
       # Calculate cosine similarity to another embedding or node
+      #
       # @param other [Array, Node] query embedding vector or another Node
       # @return [Float] similarity score (0.0 to 1.0, higher is more similar)
+      #
       def similarity_to(other)
-        query_embedding = other.is_a?(Node) ? other.embedding : other
-        return nil unless embedding.present? && query_embedding.present?
+        query_embedding = other.is_a?(Node) ? other.embedding_array : other
+        return nil unless embedding_array && query_embedding
 
-        # Validate embedding is an array of finite numeric values
+        # Handle query_embedding that might be a String
+        if query_embedding.is_a?(String)
+          query_embedding = query_embedding.gsub(/[\[\]]/, '').split(',').map(&:to_f)
+        end
+
         unless query_embedding.is_a?(Array) && query_embedding.all? { |v| v.is_a?(Numeric) && v.finite? }
           return nil
         end
 
-        # Calculate cosine similarity: 1 - (embedding <=> query_embedding)
-        # Safely format the array as a PostgreSQL vector literal
-        vector_str = "[#{query_embedding.map { |v| v.to_f }.join(',')}]"
-        conn = self.class.connection
-        quoted_vector = conn.quote(vector_str)
-        quoted_id = conn.quote(id)
+        vector_str = "[#{query_embedding.map(&:to_f).join(',')}]"
 
-        result = conn.select_value(
-          "SELECT 1 - (embedding <=> #{quoted_vector}::vector) FROM nodes WHERE id = #{quoted_id}"
-        )
-        result&.to_f
+        result = self.class.db.fetch(
+          "SELECT 1 - (embedding <=> ?::vector) AS similarity FROM nodes WHERE id = ?",
+          vector_str, id
+        ).first
+
+        result&.[](:similarity)&.to_f
       end
 
       # Get all tag names associated with this node
       #
-      # @return [Array<String>] Array of hierarchical tag names (e.g., ["database:postgresql", "ai:llm"])
+      # @return [Array<String>] Array of hierarchical tag names
       #
       def tag_names
-        tags.pluck(:name)
+        tags_dataset.select_map(:name)
       end
 
       # Add tags to this node (creates tags and all parent tags if they don't exist)
       #
-      # When adding a hierarchical tag like "database:postgresql:extensions",
-      # this also creates and associates the parent tags "database" and
-      # "database:postgresql" with this node.
-      #
       # @param tag_names [Array<String>, String] Tag name(s) to add
       # @return [void]
       #
-      # @example Add a single tag (also creates parent tags)
-      #   node.add_tags("database:postgresql:extensions")
-      #   node.tags.pluck(:name)
-      #   # => ["database", "database:postgresql", "database:postgresql:extensions"]
-      #
-      # @example Add multiple tags
-      #   node.add_tags(["database:postgresql", "ai:embeddings"])
-      #
       def add_tags(tag_names)
         Array(tag_names).each do |tag_name|
-          # Create tag and all ancestor tags, then associate each with this node
           HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
-            node_tags.find_or_create_by(tag_id: tag.id)
+            HTM::Models::NodeTag.find_or_create(node_id: id, tag_id: tag.id)
           end
         end
       end
@@ -175,45 +288,47 @@ class HTM
       # @return [void]
       #
       def remove_tag(tag_name)
-        tag = HTM::Models::Tag.find_by(name: tag_name)
+        tag = HTM::Models::Tag.first(name: tag_name)
         return unless tag
 
-        node_tags.where(tag_id: tag.id).destroy_all
+        node_tags_dataset.where(tag_id: tag.id).delete
       end
 
       # Soft delete - mark node as deleted without removing from database
-      # Also cascades soft delete to associated robot_nodes and node_tags
       #
       # @return [Boolean] true if soft deleted successfully
       #
       def soft_delete!
-        transaction do
-          now = Time.current
-          update!(deleted_at: now)
+        db.transaction do
+          now = Time.now
+          update(deleted_at: now)
 
           # Cascade soft delete to associated robot_nodes
-          robot_nodes.update_all(deleted_at: now)
+          HTM::Models::RobotNode.where(node_id: id).update(deleted_at: now)
 
           # Cascade soft delete to associated node_tags
-          node_tags.update_all(deleted_at: now)
+          HTM::Models::NodeTag.where(node_id: id).update(deleted_at: now)
         end
         true
       end
 
       # Restore a soft-deleted node
-      # Also cascades restoration to associated robot_nodes and node_tags
       #
       # @return [Boolean] true if restored successfully
       #
       def restore!
-        transaction do
-          update!(deleted_at: nil)
+        db.transaction do
+          # Use unfiltered dataset to bypass the default scope that excludes deleted records
+          self.class.dataset.unfiltered.where(id: id).update(deleted_at: nil)
 
           # Cascade restoration to associated robot_nodes
-          HTM::Models::RobotNode.unscoped.where(node_id: id).update_all(deleted_at: nil)
+          HTM::Models::RobotNode.dataset.unfiltered.where(node_id: id).update(deleted_at: nil)
 
           # Cascade restoration to associated node_tags
-          HTM::Models::NodeTag.unscoped.where(node_id: id).update_all(deleted_at: nil)
+          HTM::Models::NodeTag.dataset.unfiltered.where(node_id: id).update(deleted_at: nil)
+
+          # Refresh this instance to reflect the change
+          self.deleted_at = nil
         end
         true
       end
@@ -223,7 +338,7 @@ class HTM
       # @return [Boolean] true if deleted_at is set
       #
       def deleted?
-        deleted_at.present?
+        !deleted_at.nil?
       end
 
       # Check if node is a proposition (extracted atomic fact)
@@ -234,21 +349,14 @@ class HTM
         metadata&.dig('is_proposition') == true
       end
 
-      private
-
-      def set_content_hash
-        self.content_hash = self.class.generate_content_hash(content)
+      # Convert to hash (for compatibility with existing code)
+      #
+      # @return [Hash] Hash representation of the node
+      #
+      def to_hash
+        values.transform_keys(&:to_s)
       end
-
-      def set_defaults
-        self.created_at ||= Time.current
-        self.updated_at ||= Time.current
-        self.last_accessed ||= Time.current
-      end
-
-      def update_timestamps
-        self.updated_at = Time.current if changed?
-      end
+      alias_method :attributes, :to_hash
     end
   end
 end

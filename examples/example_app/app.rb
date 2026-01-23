@@ -95,7 +95,7 @@ class ExampleApp
     # Check what was generated
     puts "\n--- Generated Tags ---"
     [node_1, node_2, node_3].each do |node_id|
-      node = HTM::Models::Node.includes(:tags).find(node_id)
+      node = HTM::Models::Node[node_id]
       if node.tags.any?
         puts "Node #{node_id}:"
         node.tags.each { |tag| puts "  - #{tag.name}" }
@@ -107,7 +107,7 @@ class ExampleApp
     # Check embeddings
     puts "\n--- Embedding Status ---"
     [node_1, node_2, node_3].each do |node_id|
-      node = HTM::Models::Node.find(node_id)
+      node = HTM::Models::Node[node_id]
       if node.embedding
         dimensions = node.embedding.is_a?(Array) ? node.embedding.size : node.embedding_dimension
         status = "✓ Generated (#{dimensions} dimensions)"

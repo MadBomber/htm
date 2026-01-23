@@ -149,18 +149,18 @@ class HTM
 
         where_clause = "WHERE #{conditions.join(' AND ')}"
 
+        # Note: Using Sequel.lit for the vector comparison since it needs special handling
+        embedding_literal = HTM.db.literal(embedding_str)
         sql = <<~SQL
           SELECT id, content, access_count, created_at, token_count,
-                 1 - (embedding <=> ?::vector) as similarity
+                 1 - (embedding <=> #{embedding_literal}::vector) as similarity
           FROM nodes
           #{where_clause}
-          ORDER BY embedding <=> ?::vector
+          ORDER BY embedding <=> #{embedding_literal}::vector
           LIMIT ?
         SQL
 
-        ActiveRecord::Base.connection.select_all(
-          ActiveRecord::Base.sanitize_sql_array([sql, embedding_str, embedding_str, limit])
-        ).to_a
+        HTM.db.fetch(sql, limit).all.map { |r| r.transform_keys(&:to_s) }
       end
 
       # Fetch candidates using full-text search
@@ -181,21 +181,23 @@ class HTM
         additional_sql = additional_conditions.any? ? "AND #{additional_conditions.join(' AND ')}" : ""
 
         # Combined tsvector + trigram search (same as fulltext_search.rb)
+        # Escape the query for safe interpolation in trigram comparisons
+        query_literal = HTM.db.literal(query)
         sql = <<~SQL
           WITH tsvector_matches AS (
             SELECT id, content, access_count, created_at, token_count,
-                   (1.0 + ts_rank(to_tsvector('english', content), plainto_tsquery('english', ?))) as text_rank
+                   (1.0 + ts_rank(to_tsvector('english', content), plainto_tsquery('english', #{query_literal}))) as text_rank
             FROM nodes
             WHERE deleted_at IS NULL
-            AND to_tsvector('english', content) @@ plainto_tsquery('english', ?)
+            AND to_tsvector('english', content) @@ plainto_tsquery('english', #{query_literal})
             #{additional_sql}
           ),
           trigram_matches AS (
             SELECT id, content, access_count, created_at, token_count,
-                   similarity(content, ?) as text_rank
+                   similarity(content, #{query_literal}) as text_rank
             FROM nodes
             WHERE deleted_at IS NULL
-            AND similarity(content, ?) >= 0.1
+            AND similarity(content, #{query_literal}) >= 0.1
             AND id NOT IN (SELECT id FROM tsvector_matches)
             #{additional_sql}
           ),
@@ -210,9 +212,7 @@ class HTM
           LIMIT ?
         SQL
 
-        ActiveRecord::Base.connection.select_all(
-          ActiveRecord::Base.sanitize_sql_array([sql, query, query, query, query, limit])
-        ).to_a
+        HTM.db.fetch(sql, limit).all.map { |r| r.transform_keys(&:to_s) }
       end
 
       # Fetch candidates using tag-based search with hierarchical scoring
@@ -258,7 +258,8 @@ class HTM
         additional_sql = additional_conditions.any? ? "AND #{additional_conditions.join(' AND ')}" : ""
 
         # Find nodes with matching tags
-        tag_placeholders = search_tags.map { '?' }.join(', ')
+        # Use Sequel's literal to safely quote tag names
+        tag_literals = search_tags.map { |tag| HTM.db.literal(tag) }.join(', ')
 
         sql = <<~SQL
           SELECT DISTINCT n.id, n.content, n.access_count, n.created_at, n.token_count,
@@ -267,22 +268,20 @@ class HTM
           JOIN node_tags nt ON nt.node_id = n.id
           JOIN tags t ON t.id = nt.tag_id
           WHERE n.deleted_at IS NULL
-          AND t.name IN (#{tag_placeholders})
+          AND t.name IN (#{tag_literals})
           #{additional_sql}
           GROUP BY n.id, n.content, n.access_count, n.created_at, n.token_count
           LIMIT ?
         SQL
 
-        results = ActiveRecord::Base.connection.select_all(
-          ActiveRecord::Base.sanitize_sql_array([sql, *search_tags, limit])
-        ).to_a
+        results = HTM.db.fetch(sql, limit).all
 
         # Calculate depth scores for each result
         results.map do |result|
-          matched_tags = parse_pg_array(result['matched_tags'])
+          matched_tags = parse_pg_array(result[:matched_tags])
           depth_score = calculate_tag_depth_score(matched_tags, tag_depth_map)
 
-          result.merge('tag_depth_score' => depth_score, 'matched_tags' => matched_tags)
+          result.transform_keys(&:to_s).merge('tag_depth_score' => depth_score, 'matched_tags' => matched_tags)
         end.sort_by { |r| -r['tag_depth_score'] }
       end
 
@@ -358,18 +357,21 @@ class HTM
 
       # Parse PostgreSQL array string to Ruby array
       #
-      # @param pg_array [String, Array] PostgreSQL array or Ruby array
+      # @param pg_array [String, Array, Sequel::Postgres::PGArray] PostgreSQL array or Ruby array
       # @return [Array<String>] Parsed array
       #
       def parse_pg_array(pg_array)
+        # Handle Sequel::Postgres::PGArray (wraps Ruby Array)
+        return pg_array.to_a if pg_array.respond_to?(:to_a) && !pg_array.is_a?(String)
         return pg_array if pg_array.is_a?(Array)
-        return [] if pg_array.nil? || pg_array.empty?
+        return [] if pg_array.nil? || (pg_array.respond_to?(:empty?) && pg_array.empty?)
 
-        # Handle PostgreSQL array format: {val1,val2,val3}
-        if pg_array.start_with?('{') && pg_array.end_with?('}')
-          pg_array[1..-2].split(',').map { |s| s.gsub(/^"|"$/, '') }
+        # Handle raw PostgreSQL array format: {val1,val2,val3}
+        pg_str = pg_array.to_s
+        if pg_str.start_with?('{') && pg_str.end_with?('}')
+          pg_str[1..-2].split(',').map { |s| s.gsub(/^"|"$/, '') }
         else
-          [pg_array]
+          [pg_str]
         end
       end
 

@@ -27,17 +27,17 @@ class HybridSearchRRFTest < Minitest::Test
     return unless database_available?
 
     # Delete old test nodes first (to avoid FK violations)
-    HTM::Models::Node.where("content LIKE ?", "%[RRF_TEST]%").find_each do |node|
-      HTM::Models::NodeTag.where(node_id: node.id).delete_all
-      HTM::Models::RobotNode.where(node_id: node.id).delete_all
+    HTM::Models::Node.where(Sequel.like(:content, "%[RRF_TEST]%")).each do |node|
+      HTM::Models::NodeTag.where(node_id: node.id).delete
+      HTM::Models::RobotNode.where(node_id: node.id).delete
     end
-    HTM::Models::Node.where("content LIKE ?", "%[RRF_TEST]%").delete_all
+    HTM::Models::Node.where(Sequel.like(:content, "%[RRF_TEST]%")).delete
 
     # Then delete old test robots
-    HTM::Models::Robot.where("name LIKE ?", "hybrid_rrf_test_%").find_each do |robot|
-      HTM::Models::RobotNode.where(robot_id: robot.id).delete_all
+    HTM::Models::Robot.where(Sequel.like(:name, "hybrid_rrf_test_%")).each do |robot|
+      HTM::Models::RobotNode.where(robot_id: robot.id).delete
     end
-    HTM::Models::Robot.where("name LIKE ?", "hybrid_rrf_test_%").delete_all
+    HTM::Models::Robot.where(Sequel.like(:name, "hybrid_rrf_test_%")).delete
   rescue StandardError
     # Ignore cleanup errors
   end
@@ -48,16 +48,16 @@ class HybridSearchRRFTest < Minitest::Test
     return unless @robot_name
 
     # Delete nodes created in this test
-    HTM::Models::Node.where("content LIKE ?", "%[RRF_TEST]%").find_each do |node|
-      HTM::Models::NodeTag.where(node_id: node.id).delete_all
-      HTM::Models::RobotNode.where(node_id: node.id).delete_all
+    HTM::Models::Node.where(Sequel.like(:content, "%[RRF_TEST]%")).each do |node|
+      HTM::Models::NodeTag.where(node_id: node.id).delete
+      HTM::Models::RobotNode.where(node_id: node.id).delete
     end
-    HTM::Models::Node.where("content LIKE ?", "%[RRF_TEST]%").delete_all
+    HTM::Models::Node.where(Sequel.like(:content, "%[RRF_TEST]%")).delete
 
     # Delete the robot created for this test
-    robot = HTM::Models::Robot.find_by(name: @robot_name)
+    robot = HTM::Models::Robot.first(name: @robot_name)
     if robot
-      HTM::Models::RobotNode.where(robot_id: robot.id).delete_all
+      HTM::Models::RobotNode.where(robot_id: robot.id).delete
       robot.delete
     end
   rescue StandardError
@@ -428,7 +428,7 @@ class HybridSearchRRFTest < Minitest::Test
 
     # Wait for background jobs to complete (inline mode)
     # Then return the node model
-    HTM::Models::Node.find(node_id)
+    HTM::Models::Node[node_id]
   end
 
   # Create a node with a specific tag (for tag search)
@@ -437,9 +437,9 @@ class HybridSearchRRFTest < Minitest::Test
     node_id = @htm.remember(content)
 
     # Add tag directly to the node
-    tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
-    HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+    tag = HTM::Models::Tag.find_or_create(name: tag_name)
+    HTM::Models::NodeTag.find_or_create(node_id: node_id, tag_id: tag.id)
 
-    HTM::Models::Node.find(node_id)
+    HTM::Models::Node[node_id]
   end
 end

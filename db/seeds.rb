@@ -187,7 +187,7 @@ puts
 puts "Checking completion status..."
 
 # Check completion status
-nodes_with_embeddings = HTM::Models::Node.where.not(embedding: nil).count
+nodes_with_embeddings = HTM::Models::Node.exclude(embedding: nil).count
 puts "  - Nodes with embeddings: #{nodes_with_embeddings}/#{total_records}"
 
 total_tags = HTM::Models::NodeTag.count
@@ -203,6 +203,6 @@ if nodes_with_embeddings == total_records && total_tags > 0
 else
   puts "⚠ Some background jobs may still be running."
   puts "  Run this query to check progress:"
-  puts "  HTM::Models::Node.where.not(embedding: nil).count"
+  puts "  HTM::Models::Node.exclude(embedding: nil).count"
   puts "=" * 80
 end

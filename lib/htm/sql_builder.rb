@@ -105,29 +105,28 @@ class HTM
 
         prefix = table_alias ? "#{table_alias}." : ""
         full_column = "#{prefix}#{column}"
-        conn = ActiveRecord::Base.connection
 
         case timeframe
         when Range
-          begin_quoted = conn.quote(timeframe.begin.iso8601)
-          end_quoted = conn.quote(timeframe.end.iso8601)
+          begin_quoted = HTM.db.literal(timeframe.begin.iso8601)
+          end_quoted = HTM.db.literal(timeframe.end.iso8601)
           "(#{full_column} BETWEEN #{begin_quoted} AND #{end_quoted})"
         when Array
           conditions = timeframe.map do |range|
-            begin_quoted = conn.quote(range.begin.iso8601)
-            end_quoted = conn.quote(range.end.iso8601)
+            begin_quoted = HTM.db.literal(range.begin.iso8601)
+            end_quoted = HTM.db.literal(range.end.iso8601)
             "(#{full_column} BETWEEN #{begin_quoted} AND #{end_quoted})"
           end
           "(#{conditions.join(' OR ')})"
         end
       end
 
-      # Apply timeframe filter to ActiveRecord scope
+      # Apply timeframe filter to Sequel dataset
       #
-      # @param scope [ActiveRecord::Relation] Base scope
+      # @param scope [Sequel::Dataset] Base dataset
       # @param timeframe [nil, Range, Array<Range>] Time range(s)
       # @param column [Symbol] Column name (default: :created_at)
-      # @return [ActiveRecord::Relation] Scoped query
+      # @return [Sequel::Dataset] Filtered dataset
       #
       def apply_timeframe(scope, timeframe, column: :created_at)
         return scope if timeframe.nil?
@@ -136,8 +135,8 @@ class HTM
         when Range
           scope.where(column => timeframe)
         when Array
-          conditions = timeframe.map { |range| scope.where(column => range) }
-          conditions.reduce { |result, condition| result.or(condition) }
+          conditions = timeframe.map { |range| Sequel.expr(column => range) }
+          scope.where(Sequel.|(*conditions))
         else
           scope
         end
@@ -155,23 +154,22 @@ class HTM
 
         prefix = table_alias ? "#{table_alias}." : ""
         full_column = "#{prefix}#{column}"
-        conn = ActiveRecord::Base.connection
 
-        quoted_metadata = conn.quote(metadata.to_json)
+        quoted_metadata = HTM.db.literal(metadata.to_json)
         "(#{full_column} @> #{quoted_metadata}::jsonb)"
       end
 
-      # Apply metadata filter to ActiveRecord scope
+      # Apply metadata filter to Sequel dataset
       #
-      # @param scope [ActiveRecord::Relation] Base scope
+      # @param scope [Sequel::Dataset] Base dataset
       # @param metadata [Hash] Metadata to filter by
       # @param column [String] Column name (default: "metadata")
-      # @return [ActiveRecord::Relation] Scoped query
+      # @return [Sequel::Dataset] Filtered dataset
       #
       def apply_metadata(scope, metadata, column: "metadata")
         return scope if metadata.nil? || metadata.empty?
 
-        scope.where("#{column} @> ?::jsonb", metadata.to_json)
+        scope.where(Sequel.lit("#{column} @> ?::jsonb", metadata.to_json))
       end
     end
   end

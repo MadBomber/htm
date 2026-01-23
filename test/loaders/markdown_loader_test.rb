@@ -16,8 +16,8 @@ class MarkdownLoaderTest < Minitest::Test
     @temp_dir = Dir.mktmpdir('htm_loader_test')
 
     # Clean up any existing test file sources
-    HTM::Models::FileSource.where("file_path LIKE ?", "%#{@temp_dir}%").each do |fs|
-      fs.nodes.update_all(source_id: nil)
+    HTM::Models::FileSource.where(Sequel.like(:file_path, "%#{@temp_dir}%")).each do |fs|
+      fs.nodes_dataset.update(source_id: nil)
       fs.destroy
     end
   end
@@ -27,8 +27,8 @@ class MarkdownLoaderTest < Minitest::Test
 
     # Clean up test file sources and associated nodes
     if @temp_dir && Dir.exist?(@temp_dir)
-      HTM::Models::FileSource.where("file_path LIKE ?", "%#{@temp_dir}%").each do |fs|
-        fs.nodes.update_all(source_id: nil)
+      HTM::Models::FileSource.where(Sequel.like(:file_path, "%#{@temp_dir}%")).each do |fs|
+        fs.nodes_dataset.update(source_id: nil)
         fs.destroy
       end
       FileUtils.rm_rf(@temp_dir)
@@ -52,7 +52,7 @@ class MarkdownLoaderTest < Minitest::Test
     assert result[:file_source_id]
     refute result[:skipped]
 
-    source = HTM::Models::FileSource.find(result[:file_source_id])
+    source = HTM::Models::FileSource[result[:file_source_id]]
     assert_equal File.expand_path(path), source.file_path
   end
 
@@ -90,7 +90,7 @@ class MarkdownLoaderTest < Minitest::Test
     path = create_test_file('frontmatter.md', content)
 
     result = @htm.load_file(path, force: true)
-    source = HTM::Models::FileSource.find(result[:file_source_id])
+    source = HTM::Models::FileSource[result[:file_source_id]]
 
     assert_equal 'My Document', source.frontmatter['title']
     assert_equal 'Test Author', source.frontmatter['author']
@@ -110,7 +110,7 @@ class MarkdownLoaderTest < Minitest::Test
     path = create_test_file('fm_chunk.md', content)
 
     result = @htm.load_file(path, force: true)
-    source = HTM::Models::FileSource.find(result[:file_source_id])
+    source = HTM::Models::FileSource[result[:file_source_id]]
     first_chunk = source.chunks.first
 
     assert_includes first_chunk.content, 'title: Test Doc'
@@ -149,7 +149,7 @@ class MarkdownLoaderTest < Minitest::Test
     path = create_test_file('metadata.md', "Initial content.")
 
     result = @htm.load_file(path, force: true)
-    source = HTM::Models::FileSource.find(result[:file_source_id])
+    source = HTM::Models::FileSource[result[:file_source_id]]
 
     assert source.mtime
     assert source.file_size
@@ -238,26 +238,26 @@ class MarkdownLoaderTest < Minitest::Test
     path = create_test_file('unload.md', "Content to unload.")
 
     @htm.load_file(path, force: true)
-    assert HTM::Models::FileSource.find_by(file_path: File.expand_path(path))
+    assert HTM::Models::FileSource.first(file_path: File.expand_path(path))
 
     result = @htm.unload_file(path)
 
     assert result
-    refute HTM::Models::FileSource.find_by(file_path: File.expand_path(path))
+    refute HTM::Models::FileSource.first(file_path: File.expand_path(path))
   end
 
   def test_unload_file_soft_deletes_chunks
     path = create_test_file('unload_soft.md', "Content here.")
 
     result = @htm.load_file(path, force: true)
-    source = HTM::Models::FileSource.find(result[:file_source_id])
-    node_ids = source.chunks.pluck(:id)
+    source = HTM::Models::FileSource[result[:file_source_id]]
+    node_ids = source.chunks_dataset.select_map(:id)
 
     @htm.unload_file(path)
 
     # Nodes should be soft-deleted
     node_ids.each do |id|
-      node = HTM::Models::Node.unscoped.find(id)
+      node = HTM::Models::Node.with_deleted[id]
       assert node.deleted_at, "Node #{id} should be soft-deleted"
     end
   end

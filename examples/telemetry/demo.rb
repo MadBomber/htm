@@ -310,21 +310,21 @@ class TelemetryDemo
 
     begin
       # Find the robot
-      robot = HTM::Models::Robot.find_by(name: ROBOT_NAME)
+      robot = HTM::Models::Robot.first(name: ROBOT_NAME)
 
       if robot
         # Find all nodes associated with this robot
-        node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).pluck(:node_id)
+        node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
 
         if node_ids.any?
           # Hard delete the nodes
-          deleted_count = HTM::Models::Node.where(id: node_ids).delete_all
+          deleted_count = HTM::Models::Node.where(id: node_ids).delete
 
           # Clean up robot_nodes join table
-          HTM::Models::RobotNode.where(robot_id: robot.id).delete_all
+          HTM::Models::RobotNode.where(robot_id: robot.id).delete
 
           # Clean up any orphaned node_tags
-          HTM::Models::NodeTag.where(node_id: node_ids).delete_all
+          HTM::Models::NodeTag.where(node_id: node_ids).delete
 
           puts "  [OK] Deleted #{deleted_count} previous demo nodes"
         else

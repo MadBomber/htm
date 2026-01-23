@@ -37,9 +37,9 @@ class HTM
       end
 
       def verify_database_connection!
-        HTM::ActiveRecordConfig.establish_connection!
+        HTM::SequelConfig.establish_connection!
         # Quick connectivity test
-        ActiveRecord::Base.connection.execute("SELECT 1")
+        HTM.db.execute("SELECT 1")
       rescue => e
         warn "Error: Cannot connect to database."
         warn e.message

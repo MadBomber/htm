@@ -1,12 +1,18 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'fileutils'
+require 'tmpdir'
 
 class DefaultsLoaderTest < Minitest::Test
   def setup
     @original_htm_env = ENV['HTM_ENV']
     @original_rails_env = ENV['RAILS_ENV']
     @original_rack_env = ENV['RACK_ENV']
+    @original_xdg_config_home = ENV['XDG_CONFIG_HOME']
+    @temp_dir = Dir.mktmpdir('htm_defaults_test')
+    # Isolate from user's XDG config to test bundled defaults in isolation
+    ENV['XDG_CONFIG_HOME'] = @temp_dir
   end
 
   def teardown
@@ -14,6 +20,8 @@ class DefaultsLoaderTest < Minitest::Test
     @original_htm_env ? ENV['HTM_ENV'] = @original_htm_env : ENV.delete('HTM_ENV')
     @original_rails_env ? ENV['RAILS_ENV'] = @original_rails_env : ENV.delete('RAILS_ENV')
     @original_rack_env ? ENV['RACK_ENV'] = @original_rack_env : ENV.delete('RACK_ENV')
+    @original_xdg_config_home ? ENV['XDG_CONFIG_HOME'] = @original_xdg_config_home : ENV.delete('XDG_CONFIG_HOME')
+    FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
   end
 
   def test_defaults_path_exists

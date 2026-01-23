@@ -182,7 +182,7 @@ class PluralTagNormalizer
       output: $stdout
     )
 
-    all_tags.find_each do |tag|
+    all_tags.paged_each do |tag|
       process_tag(tag)
       progressbar.increment
     end
@@ -203,7 +203,7 @@ class PluralTagNormalizer
     log_verbose "Found plural tag: '#{tag.name}' -> '#{singular_name}'"
 
     # Check if singular version already exists
-    existing_singular = HTM::Models::Tag.find_by(name: singular_name)
+    existing_singular = HTM::Models::Tag.first(name: singular_name)
 
     if existing_singular
       # Merge: reassign node_tags from plural to singular, then delete plural
@@ -223,7 +223,7 @@ class PluralTagNormalizer
     log_verbose "  Merging '#{plural_tag.name}' into '#{singular_tag.name}'"
 
     # Get node IDs associated with plural tag
-    plural_node_ids = HTM::Models::NodeTag.where(tag_id: plural_tag.id).pluck(:node_id)
+    plural_node_ids = HTM::Models::NodeTag.where(tag_id: plural_tag.id).select_map(:node_id)
 
     if plural_node_ids.empty?
       log_verbose "    No nodes to reassign"
@@ -231,7 +231,7 @@ class PluralTagNormalizer
       # Find which nodes already have the singular tag
       existing_node_ids = HTM::Models::NodeTag
         .where(tag_id: singular_tag.id, node_id: plural_node_ids)
-        .pluck(:node_id)
+        .select_map(:node_id)
 
       new_node_ids = plural_node_ids - existing_node_ids
 
@@ -243,27 +243,27 @@ class PluralTagNormalizer
         @stats[:tags_merged] += 1
       else
         begin
-          ActiveRecord::Base.transaction do
+          HTM.db.transaction do
             # Reassign new nodes to singular tag
             if new_node_ids.any?
               HTM::Models::NodeTag.where(tag_id: plural_tag.id, node_id: new_node_ids)
-                .update_all(tag_id: singular_tag.id)
+                .update(tag_id: singular_tag.id)
               log_verbose "    Reassigned #{new_node_ids.count} nodes to '#{singular_tag.name}'"
               @stats[:node_tags_reassigned] += new_node_ids.count
             end
 
             # Delete duplicate node_tags (nodes that had both tags)
             if existing_node_ids.any?
-              HTM::Models::NodeTag.where(tag_id: plural_tag.id, node_id: existing_node_ids).delete_all
+              HTM::Models::NodeTag.where(tag_id: plural_tag.id, node_id: existing_node_ids).delete
               log_verbose "    Deleted #{existing_node_ids.count} duplicate node_tags"
             end
 
             # Delete the plural tag
-            plural_tag.destroy!
+            plural_tag.destroy
             log_verbose "    Deleted plural tag '#{plural_tag.name}'"
             @stats[:tags_merged] += 1
           end
-        rescue ActiveRecord::ActiveRecordError => e
+        rescue Sequel::Error => e
           error_msg = "Failed to merge '#{plural_tag.name}' into '#{singular_tag.name}': #{e.message}"
           log_verbose "    ERROR: #{error_msg}"
           @stats[:errors] << error_msg
@@ -278,10 +278,10 @@ class PluralTagNormalizer
       @stats[:tags_renamed] += 1
     else
       begin
-        tag.update!(name: new_name)
+        tag.update(name: new_name)
         log_verbose "  Renamed '#{tag.name}' to '#{new_name}'"
         @stats[:tags_renamed] += 1
-      rescue ActiveRecord::ActiveRecordError => e
+      rescue Sequel::Error => e
         error_msg = "Failed to rename '#{tag.name}' to '#{new_name}': #{e.message}"
         log_verbose "  ERROR: #{error_msg}"
         @stats[:errors] << error_msg

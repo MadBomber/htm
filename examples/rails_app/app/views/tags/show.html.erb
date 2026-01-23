@@ -32,7 +32,7 @@
               </svg>
             <% end %>
             <% prefix = parts[0..i].join(':') %>
-            <% matching_tag = HTM::Models::Tag.find_by(name: prefix) %>
+            <% matching_tag = HTM::Models::Tag.first(name: prefix) %>
             <% if matching_tag %>
               <%= link_to part, tag_path(matching_tag), class: "#{i == parts.length - 1 ? 'text-indigo-400' : 'text-gray-400 hover:text-white'}" %>
             <% else %>

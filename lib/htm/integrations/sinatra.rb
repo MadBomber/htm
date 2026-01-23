@@ -100,6 +100,7 @@ class HTM
     # Rack middleware for HTM connection management
     #
     # Ensures database connections are properly managed across requests.
+    # With Sequel's fiber-safe connection pooling, this is largely automatic.
     #
     # @example Use in Sinatra app
     #   class MyApp < Sinatra::Base
@@ -107,70 +108,38 @@ class HTM
     #   end
     #
     class Middleware
-      # Class-level storage for connection configuration (shared across threads)
-      @@db_config = nil
-      @@config_mutex = Mutex.new
-
       def initialize(app, options = {})
         @app = app
         @options = options
       end
 
       def call(env)
-        # Ensure connection is available in this thread
-        ensure_thread_connection!
+        # Ensure connection is available
+        ensure_connection!
 
         # Process request
         status, headers, body = @app.call(env)
 
         # Return response
         [status, headers, body]
-      ensure
-        # Return connections to pool after request completes
-        if defined?(ActiveRecord::Base) && ActiveRecord::Base.respond_to?(:connection_handler)
-          ActiveRecord::Base.connection_handler.clear_active_connections!
-        end
       end
 
       # Store the connection config at startup (called from register_htm)
       def self.store_config!
-        @@config_mutex.synchronize do
-          return if @@db_config
-
-          @@db_config = HTM::ActiveRecordConfig.load_database_config
-        end
+        # With Sequel, connection is established globally via HTM::SequelConfig
+        # No additional per-request config storage needed
       end
 
       private
 
-      def ensure_thread_connection!
-        # Check if connection pool exists and has an active connection
-        pool_exists = begin
-          ActiveRecord::Base.connection_pool
-          true
-        rescue ActiveRecord::ConnectionNotDefined
-          false
-        end
-
-        if pool_exists
-          return if ActiveRecord::Base.connection_pool.active_connection?
-        end
-
-        # Re-establish connection using stored config
-        if @@db_config
-          ActiveRecord::Base.establish_connection(@@db_config)
-        else
-          raise "HTM database config not stored - call register_htm at app startup"
-        end
-      rescue ActiveRecord::ConnectionNotDefined, ActiveRecord::ConnectionNotEstablished
-        # Pool doesn't exist, establish connection
-        if @@db_config
-          ActiveRecord::Base.establish_connection(@@db_config)
-        else
-          raise "HTM database config not stored - call register_htm at app startup"
+      def ensure_connection!
+        # Sequel handles connection pooling automatically
+        # Just verify the connection is available
+        unless HTM.db
+          HTM::SequelConfig.establish_connection!
         end
       rescue StandardError => e
-        HTM.logger.error "Failed to ensure thread connection: #{e.class} - #{e.message}"
+        HTM.logger.error "Failed to ensure connection: #{e.class} - #{e.message}"
         raise
       end
     end
@@ -212,10 +181,10 @@ module ::Sinatra
         end
       end
 
-      # Store database config for thread-safe access and establish initial connection
+      # Establish initial connection (Sequel handles pooling automatically)
       begin
         HTM::Sinatra::Middleware.store_config!
-        HTM::ActiveRecordConfig.establish_connection!
+        HTM::SequelConfig.establish_connection!
         HTM.logger.info "HTM database connection established"
       rescue StandardError => e
         HTM.logger.error "Failed to establish HTM database connection: #{e.message}"

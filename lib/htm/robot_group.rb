@@ -180,7 +180,7 @@ class HTM
       # Clear working memory flags for this robot
       HTM::Models::RobotNode
         .where(robot_id: htm.robot_id, working_memory: true)
-        .update_all(working_memory: false)
+        .update(working_memory: false)
     end
 
     # Promotes a passive robot to active status.
@@ -368,7 +368,7 @@ class HTM
     # Queries the database for the union of all members' working memory,
     # returning nodes sorted by creation date (newest first).
     #
-    # @return [ActiveRecord::Relation<HTM::Models::Node>] Collection of nodes
+    # @return [Sequel::Dataset] Collection of nodes
     #
     # @example
     #   nodes = group.working_memory_contents
@@ -378,9 +378,9 @@ class HTM
       node_ids = HTM::Models::RobotNode
                  .where(robot_id: member_ids, working_memory: true)
                  .distinct
-                 .pluck(:node_id)
+                 .select_map(:node_id)
 
-      HTM::Models::Node.where(id: node_ids).order(created_at: :desc)
+      HTM::Models::Node.where(id: node_ids).order(Sequel.desc(:created_at))
     end
 
     # Clears shared working memory for all group members.
@@ -397,7 +397,7 @@ class HTM
     def clear_working_memory
       count = HTM::Models::RobotNode
               .where(robot_id: member_ids, working_memory: true)
-              .update_all(working_memory: false)
+              .update(working_memory: false)
 
       # Clear in-memory working memory for primary robot
       primary = @active_robots.values.first || @passive_robots.values.first
@@ -435,21 +435,25 @@ class HTM
       # Get all node_ids currently in any member's working memory
       shared_node_ids = HTM::Models::RobotNode
                         .where(robot_id: member_ids, working_memory: true)
-                        .where.not(robot_id: htm.robot_id)
+                        .exclude(robot_id: htm.robot_id)
                         .distinct
-                        .pluck(:node_id)
+                        .select_map(:node_id)
 
       synced = 0
       shared_node_ids.each do |node_id|
         # Create or update robot_node with working_memory=true
-        robot_node = HTM::Models::RobotNode.find_or_initialize_by(
+        robot_node = HTM::Models::RobotNode.first(
           robot_id: htm.robot_id,
           node_id: node_id
         )
-        next if robot_node.working_memory?
+        robot_node ||= HTM::Models::RobotNode.new(
+          robot_id: htm.robot_id,
+          node_id: node_id
+        )
+        next if robot_node.working_memory
 
         robot_node.working_memory = true
-        robot_node.save!
+        robot_node.save
         synced += 1
       end
 
@@ -501,7 +505,7 @@ class HTM
       working_memories = member_ids.map do |robot_id|
         HTM::Models::RobotNode
           .where(robot_id: robot_id, working_memory: true)
-          .pluck(:node_id)
+          .select_map(:node_id)
           .sort
       end
 
@@ -543,16 +547,20 @@ class HTM
       # Get source's working memory nodes
       source_node_ids = HTM::Models::RobotNode
                         .where(robot_id: from_htm.robot_id, working_memory: true)
-                        .pluck(:node_id)
+                        .select_map(:node_id)
 
       transferred = 0
       source_node_ids.each do |node_id|
-        robot_node = HTM::Models::RobotNode.find_or_initialize_by(
+        robot_node = HTM::Models::RobotNode.first(
+          robot_id: to_htm.robot_id,
+          node_id: node_id
+        )
+        robot_node ||= HTM::Models::RobotNode.new(
           robot_id: to_htm.robot_id,
           node_id: node_id
         )
         robot_node.working_memory = true
-        robot_node.save!
+        robot_node.save
         transferred += 1
       end
 
@@ -560,7 +568,7 @@ class HTM
       if clear_source
         HTM::Models::RobotNode
           .where(robot_id: from_htm.robot_id, working_memory: true)
-          .update_all(working_memory: false)
+          .update(working_memory: false)
       end
 
       transferred
@@ -674,7 +682,7 @@ class HTM
     end
 
     def sync_node_to_in_memory_caches(node_id, origin_robot_id)
-      node = HTM::Models::Node.find_by(id: node_id)
+      node = HTM::Models::Node.first(id: node_id)
       return unless node
 
       all_robots.each do |_name, htm|
@@ -709,12 +717,16 @@ class HTM
       member_ids.each do |robot_id|
         next if robot_id == exclude
 
-        robot_node = HTM::Models::RobotNode.find_or_initialize_by(
+        robot_node = HTM::Models::RobotNode.first(
+          robot_id: robot_id,
+          node_id: node_id
+        )
+        robot_node ||= HTM::Models::RobotNode.new(
           robot_id: robot_id,
           node_id: node_id
         )
         robot_node.working_memory = true
-        robot_node.save!
+        robot_node.save
       end
     end
   end

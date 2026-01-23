@@ -94,15 +94,14 @@ class HTM
           LIMIT ?
         SQL
 
-        result = ActiveRecord::Base.connection.select_all(
-          ActiveRecord::Base.sanitize_sql_array([sql, embedding_str, embedding_str, limit])
-        )
+        result = HTM.db.fetch(sql, embedding_str, embedding_str, limit).all
 
         # Track access for retrieved nodes
-        node_ids = result.map { |r| r['id'] }
+        node_ids = result.map { |r| r[:id] }
         track_access(node_ids)
 
-        result.to_a
+        # Convert to hash with string keys for compatibility
+        result.map { |r| r.transform_keys(&:to_s) }
       end
     end
   end

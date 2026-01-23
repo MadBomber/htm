@@ -51,7 +51,7 @@ class HTM
       mime_type "text/plain"
 
       def content
-        HTM::Models::Tag.all.tree_string
+        HTM::Models::Tag.tree_string
       end
     end
 
@@ -62,9 +62,10 @@ class HTM
       mime_type     "application/json"
 
       def content
-        recent = HTM::Models::Node.includes(:tags)
-                                  .order(created_at: :desc)
+        recent = HTM::Models::Node.eager(:tags)
+                                  .order(Sequel.desc(:created_at))
                                   .limit(20)
+                                  .all
                                   .map do |node|
           {
             id:         node.id,

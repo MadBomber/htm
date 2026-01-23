@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require 'fileutils'
+require 'tmpdir'
 
 class ConfigurationTest < Minitest::Test
   def setup
@@ -13,9 +15,12 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_default_values
-    # Temporarily clear HTM env vars to test actual defaults from defaults.yml
+    # Temporarily clear HTM env vars and isolate from user XDG config
     saved_env = ENV.to_h.select { |k, _| k.start_with?('HTM_') }
     saved_env.each_key { |k| ENV.delete(k) }
+    saved_xdg = ENV['XDG_CONFIG_HOME']
+    temp_dir = Dir.mktmpdir('htm_config_test')
+    ENV['XDG_CONFIG_HOME'] = temp_dir
 
     begin
       config = HTM::Config.new
@@ -32,6 +37,8 @@ class ConfigurationTest < Minitest::Test
     ensure
       # Restore env vars
       saved_env.each { |k, v| ENV[k] = v }
+      saved_xdg ? ENV['XDG_CONFIG_HOME'] = saved_xdg : ENV.delete('XDG_CONFIG_HOME')
+      FileUtils.rm_rf(temp_dir) if temp_dir && Dir.exist?(temp_dir)
     end
   end
 

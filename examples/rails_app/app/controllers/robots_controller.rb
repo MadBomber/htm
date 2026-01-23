@@ -6,7 +6,7 @@ class RobotsController < ApplicationController
   end
 
   def show
-    @robot = HTM::Models::Robot.find(params[:id])
+    @robot = HTM::Models::Robot[params[:id]]
     # Default scope already excludes deleted nodes, so no .active needed
     @memory_count = @robot.nodes.count
     @recent_memories = @robot.nodes.order(created_at: :desc).limit(10)
@@ -30,13 +30,13 @@ class RobotsController < ApplicationController
       return
     end
 
-    robot = HTM::Models::Robot.create!(name: name, metadata: {})
+    robot = HTM::Models::Robot.create(name: name, metadata: {})
     flash[:notice] = "Robot '#{name}' created successfully"
     redirect_to robot_path(robot)
   end
 
   def switch
-    robot = HTM::Models::Robot.find(params[:id])
+    robot = HTM::Models::Robot[params[:id]]
     self.current_robot_name = robot.name
     flash[:notice] = "Switched to robot '#{robot.name}'"
     redirect_to root_path

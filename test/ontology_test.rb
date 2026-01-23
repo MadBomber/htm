@@ -20,7 +20,11 @@ class OntologyTest < Minitest::Test
 
     # Clean up test data
     begin
-      HTM::Models::Node.joins(:robots).where(robots: { name: @htm.robot_name }).destroy_all
+      robot = HTM::Models::Robot.first(name: @htm.robot_name)
+      if robot
+        node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
+        HTM::Models::Node.where(id: node_ids).delete if node_ids.any?
+      end
     rescue => e
       # Ignore errors during cleanup
     end
@@ -204,27 +208,27 @@ class OntologyTest < Minitest::Test
   # Helper method to get topics for a node
   def get_node_topics(node_id)
     HTM::Models::NodeTag
-      .joins(:tag)
+      .join(:tags, id: :tag_id)
       .where(node_id: node_id)
-      .pluck('tags.name')
+      .select_map(Sequel[:tags][:name])
       .sort
   end
 
   # Helper method to delete a node by ID
   def delete_node(node_id)
-    HTM::Models::Node.find(node_id).destroy
+    HTM::Models::Node[node_id].destroy
   end
 
   # Helper method to delete all tags for a node
   def delete_node_tags(node_id)
-    HTM::Models::NodeTag.where(node_id: node_id).destroy_all
+    HTM::Models::NodeTag.where(node_id: node_id).delete
   end
 
   # Helper method to add tags to a node
   def add_node_tags(node_id, tags)
     tags.each do |tag_name|
-      tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
-      HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+      tag = HTM::Models::Tag.find_or_create(name: tag_name)
+      HTM::Models::NodeTag.find_or_create(node_id: node_id, tag_id: tag.id)
     end
   end
 end

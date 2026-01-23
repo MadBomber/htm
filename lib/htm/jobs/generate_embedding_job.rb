@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../errors'
-require_relative '../models/node'
 require_relative '../embedding_service'
 
 class HTM
@@ -23,7 +22,7 @@ class HTM
       # @param node_id [Integer] ID of the node to process
       #
       def self.perform(node_id:)
-        node = HTM::Models::Node.find_by(id: node_id)
+        node = HTM::Models::Node.first(id: node_id)
 
         unless node
           HTM.logger.warn "GenerateEmbeddingJob: Node #{node_id} not found"
@@ -31,7 +30,7 @@ class HTM
         end
 
         # Skip if already has embedding
-        return if node.embedding.present?
+        return if node.embedding
 
         provider = HTM.configuration.embedding_provider.to_s
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -41,7 +40,7 @@ class HTM
           result = HTM::EmbeddingService.generate(node.content)
 
           # Update node with processed embedding
-          node.update!(embedding: result[:storage_embedding])
+          node.update(embedding: result[:storage_embedding])
 
           # Record success metrics
           elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round

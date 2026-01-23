@@ -115,8 +115,8 @@ class HTMApp < Sinatra::Base
   # API: Get memory statistics
   get '/api/stats' do
     total_nodes = HTM::Models::Node.count
-    nodes_with_embeddings = HTM::Models::Node.where.not(embedding: nil).count
-    nodes_with_tags = HTM::Models::Node.joins(:tags).distinct.count
+    nodes_with_embeddings = HTM::Models::Node.exclude(embedding: nil).count
+    nodes_with_tags = HTM::Models::NodeTag.distinct.select(:node_id).count
     total_tags = HTM::Models::Tag.count
 
     robot_nodes = HTM::Models::RobotNode.where(robot_id: htm.robot_id).count
@@ -142,7 +142,7 @@ class HTMApp < Sinatra::Base
     json(
       status: 'ok',
       job_backend: HTM.configuration.job_backend,
-      database: HTM::ActiveRecordConfig.connected?,
+      database: HTM::SequelConfig.connected?,
       timestamp: Time.now.iso8601
     )
   end

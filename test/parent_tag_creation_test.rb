@@ -81,7 +81,7 @@ class ParentTagCreationTest < Minitest::Test
   def test_find_or_create_with_ancestors_creates_all_levels
     # Ensure no tags exist
     tag_names = ["ai", "ai:llm", "ai:llm:embeddings"]
-    tag_names.each { |name| HTM::Models::Tag.where(name: name).destroy_all }
+    tag_names.each { |name| HTM::Models::Tag.where(name: name).delete }
 
     tags = HTM::Models::Tag.find_or_create_with_ancestors("ai:llm:embeddings")
 
@@ -96,7 +96,7 @@ class ParentTagCreationTest < Minitest::Test
 
   def test_find_or_create_with_ancestors_reuses_existing_tags
     # Create parent tag first
-    existing = HTM::Models::Tag.create!(name: "web")
+    existing = HTM::Models::Tag.create(name: "web")
 
     tags = HTM::Models::Tag.find_or_create_with_ancestors("web:frontend:react")
 
@@ -121,7 +121,7 @@ class ParentTagCreationTest < Minitest::Test
 
     node.add_tags("devops:kubernetes:pods")
 
-    tag_names = node.tags.pluck(:name).sort
+    tag_names = node.tag_names.sort
 
     assert_includes tag_names, "devops"
     assert_includes tag_names, "devops:kubernetes"
@@ -134,7 +134,7 @@ class ParentTagCreationTest < Minitest::Test
 
     node.add_tags(["api:rest:json", "database:sql"])
 
-    tag_names = node.tags.pluck(:name).sort
+    tag_names = node.tag_names.sort
 
     # api:rest:json should create: api, api:rest, api:rest:json
     assert_includes tag_names, "api"
@@ -153,7 +153,7 @@ class ParentTagCreationTest < Minitest::Test
 
     node.add_tags(["database:postgresql", "database:mysql"])
 
-    tag_names = node.tags.pluck(:name).sort
+    tag_names = node.tag_names.sort
 
     # "database" should only appear once
     assert_equal 1, tag_names.count("database")
@@ -165,7 +165,7 @@ class ParentTagCreationTest < Minitest::Test
 
     node.add_tags("testing")
 
-    tag_names = node.tags.pluck(:name)
+    tag_names = node.tag_names
 
     assert_equal ["testing"], tag_names
   end
@@ -180,10 +180,10 @@ class ParentTagCreationTest < Minitest::Test
 
     ltm.add_tag(node_id: node.id, tag: "cloud:aws:lambda")
 
-    tag_names = HTM::Models::Tag
-      .joins(:node_tags)
-      .where(node_tags: { node_id: node.id })
-      .pluck(:name)
+    tag_names = HTM::Models::NodeTag
+      .join(:tags, id: :tag_id)
+      .where(node_id: node.id)
+      .select_map(Sequel[:tags][:name])
       .sort
 
     assert_includes tag_names, "cloud"
@@ -200,10 +200,10 @@ class ParentTagCreationTest < Minitest::Test
     ltm.add_tag(node_id: node.id, tag: "testing:unit")
     ltm.add_tag(node_id: node.id, tag: "testing:unit")
 
-    tag_names = HTM::Models::Tag
-      .joins(:node_tags)
-      .where(node_tags: { node_id: node.id })
-      .pluck(:name)
+    tag_names = HTM::Models::NodeTag
+      .join(:tags, id: :tag_id)
+      .where(node_id: node.id)
+      .select_map(Sequel[:tags][:name])
       .sort
 
     # Should not have duplicates
@@ -220,8 +220,8 @@ class ParentTagCreationTest < Minitest::Test
       tags: ["database:postgresql:extensions"]
     )
 
-    node = HTM::Models::Node.find(node_id)
-    tag_names = node.tags.pluck(:name).sort
+    node = HTM::Models::Node[node_id]
+    tag_names = node.tag_names.sort
 
     # Should include all parent tags
     assert_includes tag_names, "database"
@@ -276,14 +276,14 @@ class ParentTagCreationTest < Minitest::Test
     # Make content unique by appending timestamp and random number
     unique_content = "#{content} [test:#{Time.now.to_f}:#{rand(100000)}]"
     token_count = HTM.count_tokens(unique_content)
-    node = HTM::Models::Node.create!(
+    node = HTM::Models::Node.create(
       content: unique_content,
       token_count: token_count,
       content_hash: Digest::SHA256.hexdigest(unique_content)
     )
 
     # Associate with robot
-    HTM::Models::RobotNode.create!(
+    HTM::Models::RobotNode.create(
       robot_id: @htm.robot_id,
       node_id: node.id
     )
@@ -296,9 +296,9 @@ class ParentTagCreationTest < Minitest::Test
     test_prefixes = %w[ai api cloud database devops security testing web]
     test_prefixes.each do |prefix|
       # Only delete orphaned tags (not associated with any nodes)
-      HTM::Models::Tag.where("name LIKE ?", "#{prefix}%").orphaned.destroy_all
+      HTM::Models::Tag.where(Sequel.like(:name, "#{prefix}%")).orphaned.delete
     end
-  rescue ActiveRecord::ActiveRecordError
+  rescue Sequel::Error
     # Ignore cleanup errors
   end
 
@@ -309,29 +309,29 @@ class ParentTagCreationTest < Minitest::Test
     robot_id = @htm.robot_id
 
     # Get all node IDs for this robot
-    node_ids = HTM::Models::RobotNode.where(robot_id: robot_id).pluck(:node_id)
+    node_ids = HTM::Models::RobotNode.where(robot_id: robot_id).select_map(:node_id)
 
     if node_ids.any?
       # Delete node_tags for these nodes
-      HTM::Models::NodeTag.where(node_id: node_ids).delete_all
+      HTM::Models::NodeTag.where(node_id: node_ids).delete
 
       # Delete robot_nodes
-      HTM::Models::RobotNode.where(robot_id: robot_id).delete_all
+      HTM::Models::RobotNode.where(robot_id: robot_id).delete
 
       # Delete nodes
-      HTM::Models::Node.where(id: node_ids).delete_all
+      HTM::Models::Node.where(id: node_ids).delete
     end
 
     # Clean up test tags we created
     test_prefixes = %w[ai api cloud database devops security testing web]
     test_prefixes.each do |prefix|
       # Use orphaned scope to only delete tags not used by other tests
-      HTM::Models::Tag.where("name LIKE ?", "#{prefix}%").orphaned.destroy_all
+      HTM::Models::Tag.where(Sequel.like(:name, "#{prefix}%")).orphaned.delete
     end
 
     # Delete the test robot
-    HTM::Models::Robot.where(id: robot_id).delete_all
-  rescue ActiveRecord::ActiveRecordError
+    HTM::Models::Robot.where(id: robot_id).delete
+  rescue Sequel::Error
     # Ignore cleanup errors
   end
 end

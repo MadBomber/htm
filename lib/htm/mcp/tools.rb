@@ -45,7 +45,7 @@ class HTM
         Session.logger&.info "SetRobotTool called: name=#{name.inspect}"
 
         htm   = Session.set_robot(name)
-        robot = HTM::Models::Robot.find(htm.robot_id)
+        robot = HTM::Models::Robot[htm.robot_id]
 
         {
           success:    true,
@@ -68,7 +68,7 @@ class HTM
         Session.logger&.info "GetRobotTool called"
 
         htm   = Session.htm_instance
-        robot = HTM::Models::Robot.find(htm.robot_id)
+        robot = HTM::Models::Robot[htm.robot_id]
 
         {
           success:        true,
@@ -89,26 +89,27 @@ class HTM
 
       def call
         htm = Session.htm_instance
-        robot = HTM::Models::Robot.find(htm.robot_id)
+        robot = HTM::Models::Robot[htm.robot_id]
         Session.logger&.info "GetWorkingMemoryTool called for robot=#{htm.robot_name}"
 
         # Get all nodes in working memory with their metadata
-        # Filter out any robot_nodes where the node has been deleted (node uses default_scope)
-        working_memory_nodes = robot.robot_nodes
+        # Filter out any robot_nodes where the node has been deleted
+        working_memory_nodes = robot.robot_nodes_dataset
                                     .in_working_memory
-                                    .joins(:node)  # Inner join excludes deleted nodes
-                                    .includes(node: :tags)
-                                    .order(last_remembered_at: :desc)
+                                    .eager(node: :tags)
+                                    .order(Sequel.desc(:last_remembered_at))
+                                    .all
                                     .filter_map do |rn|
-          next unless rn.node  # Extra safety check
+          node = rn.node
+          next unless node  # Exclude if node is nil (was deleted)
 
           {
-            id: rn.node.id,
-            content:            rn.node.content,
-            tags:               rn.node.tags.map(&:name),
+            id:                 node.id,
+            content:            node.content,
+            tags:               node.tags.map(&:name),
             remember_count:     rn.remember_count,
             last_remembered_at: rn.last_remembered_at&.iso8601,
-            created_at:         rn.node.created_at.iso8601
+            created_at:         node.created_at.iso8601
           }
         end
 
@@ -142,7 +143,7 @@ class HTM
 
         htm = Session.htm_instance
         node_id = htm.remember(content, tags: tags, metadata: metadata)
-        node = HTM::Models::Node.includes(:tags).find(node_id)
+        node = HTM::Models::Node.eager(:tags).first!(id: node_id)
 
         Session.logger&.info "Memory stored: node_id=#{node_id}, robot=#{htm.robot_name}, tags=#{node.tags.map(&:name)}"
 
@@ -187,7 +188,8 @@ class HTM
         memories = htm.recall(query, **recall_opts)
 
         results = memories.map do |memory|
-          node = HTM::Models::Node.includes(:tags).find(memory['id'])
+          node = HTM::Models::Node.eager(:tags).first(id: memory['id'])
+          next unless node
           {
             id:         memory['id'],
             content:    memory['content'],
@@ -195,7 +197,7 @@ class HTM
             created_at: memory['created_at'],
             score:      memory['combined_score'] || memory['similarity']
           }
-        end
+        end.compact
 
         Session.logger&.info "Recall complete: found #{results.length} memories"
 
@@ -212,13 +214,17 @@ class HTM
       private
 
       def parse_timeframe(timeframe)
+        now = Time.now
         case timeframe.downcase
         when 'today'
-          Time.now.beginning_of_day..Time.now
+          # Beginning of today
+          Time.new(now.year, now.month, now.day)..now
         when 'this week'
-          1.week.ago..Time.now
+          # 7 days ago
+          (now - 7 * 24 * 60 * 60)..now
         when 'this month'
-          1.month.ago..Time.now
+          # 30 days ago
+          (now - 30 * 24 * 60 * 60)..now
         else
           # Try to parse as ISO8601 range (start..end)
           if timeframe.include?('..')
@@ -226,7 +232,7 @@ class HTM
             Time.parse(parts[0])..Time.parse(parts[1])
           else
             # Single date - from that date to now
-            Time.parse(timeframe)..Time.now
+            Time.parse(timeframe)..now
           end
         end
       rescue ArgumentError
@@ -256,7 +262,7 @@ class HTM
           robot_name: htm.robot_name,
           message:    "Memory soft-deleted. Use restore to recover."
         }.to_json
-      rescue HTM::NotFoundError, ActiveRecord::RecordNotFound
+      rescue HTM::NotFoundError, Sequel::NoMatchingRow
         Session.logger&.warn "ForgetTool failed: node #{node_id} not found"
         {
           success: false,
@@ -287,7 +293,7 @@ class HTM
           robot_name: htm.robot_name,
           message:    "Memory restored successfully"
         }.to_json
-      rescue HTM::NotFoundError, ActiveRecord::RecordNotFound
+      rescue HTM::NotFoundError, Sequel::NoMatchingRow
         Session.logger&.warn "RestoreTool failed: node #{node_id} not found"
         {
           success: false,
@@ -308,7 +314,7 @@ class HTM
         Session.logger&.info "ListTagsTool called: prefix=#{prefix.inspect}"
 
         tags_query = HTM::Models::Tag.order(:name)
-        tags_query = tags_query.where("name LIKE ?", "#{prefix}%") if prefix
+        tags_query = tags_query.where(Sequel.like(:name, "#{prefix}%")) if prefix
 
         tags = tags_query.map do |tag|
           {
@@ -348,7 +354,7 @@ class HTM
 
         # Enrich with node counts
         tags = results.map do |result|
-          tag = HTM::Models::Tag.find_by(name: result[:name])
+          tag = HTM::Models::Tag.first(name: result[:name])
           {
             name: result[:name],
             similarity: result[:similarity].round(3),
@@ -396,7 +402,7 @@ class HTM
 
         # Enrich with tags
         results = nodes.map do |node_attrs|
-          node = HTM::Models::Node.includes(:tags).find_by(id: node_attrs['id'])
+          node = HTM::Models::Node.eager(:tags).first(id: node_attrs['id'])
           next unless node
 
           {
@@ -429,14 +435,17 @@ class HTM
 
       def call
         htm = Session.htm_instance
-        robot = HTM::Models::Robot.find(htm.robot_id)
+        robot = HTM::Models::Robot[htm.robot_id]
         Session.logger&.info "StatsTool called for robot=#{htm.robot_name}"
 
-        # Note: Node uses default_scope to exclude deleted, so .count returns active nodes
+        # Note: Node uses set_dataset to exclude deleted, so .count returns active nodes
         total_nodes           = HTM::Models::Node.count
         deleted_nodes         = HTM::Models::Node.deleted.count
         nodes_with_embeddings = HTM::Models::Node.with_embeddings.count
-        nodes_with_tags       = HTM::Models::Node.joins(:tags).distinct.count
+        nodes_with_tags       = HTM::Models::Node
+                                  .join(:node_tags, node_id: :id)
+                                  .distinct
+                                  .count
         total_tags            = HTM::Models::Tag.count
         total_robots          = HTM::Models::Robot.count
 

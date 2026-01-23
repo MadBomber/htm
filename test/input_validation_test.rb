@@ -17,7 +17,11 @@ class InputValidationTest < Minitest::Test
 
     # Clean up test data - delete all nodes created by this test robot
     begin
-      HTM::Models::Node.joins(:robots).where(robots: { name: @htm.robot_name }).destroy_all
+      robot = HTM::Models::Robot.first(name: @htm.robot_name)
+      if robot
+        node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
+        HTM::Models::Node.where(id: node_ids).delete if node_ids.any?
+      end
     rescue => e
       # Ignore errors during cleanup
     end

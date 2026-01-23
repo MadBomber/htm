@@ -54,11 +54,11 @@ class HTM
       def add_tag(node_id:, tag:)
         # Create tag and all ancestor tags, then associate each with the node
         HTM::Models::Tag.find_or_create_with_ancestors(tag).each do |tag_record|
-          HTM::Models::NodeTag.create(
+          HTM::Models::NodeTag.find_or_create(
             node_id: node_id,
             tag_id: tag_record.id
           )
-        rescue ActiveRecord::RecordNotUnique
+        rescue Sequel::UniqueConstraintViolation
           # Tag association already exists, ignore
         end
       end
@@ -81,34 +81,48 @@ class HTM
         # Enforce limit to prevent DoS
         safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
 
+        # Build base query with joins
+        # Use subquery with DISTINCT ON to get unique nodes by id
         if exact
-          nodes = HTM::Models::Node
-            .joins(:tags)
-            .where(tags: { name: topic_path })
+          node_ids = HTM::Models::Node
+            .select(Sequel[:nodes][:id])
+            .join(:node_tags, node_id: :id)
+            .join(:tags, id: Sequel[:node_tags][:tag_id])
+            .where(Sequel[:tags][:name] => topic_path)
             .distinct
-            .order(created_at: :desc)
-            .limit(safe_limit)
+            .select_map(Sequel[:nodes][:id])
         elsif fuzzy
           # Trigram similarity search - tolerates typos and partial matches
           safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
-          nodes = HTM::Models::Node
-            .joins(:tags)
-            .where("similarity(tags.name, ?) >= ?", topic_path, safe_similarity)
+          node_ids = HTM::Models::Node
+            .select(Sequel[:nodes][:id])
+            .join(:node_tags, node_id: :id)
+            .join(:tags, id: Sequel[:node_tags][:tag_id])
+            .where(Sequel.lit("similarity(tags.name, ?) >= ?", topic_path, safe_similarity))
             .distinct
-            .order(created_at: :desc)
-            .limit(safe_limit)
+            .select_map(Sequel[:nodes][:id])
         else
           # Sanitize LIKE pattern to prevent wildcard injection
           safe_pattern = HTM::SqlBuilder.sanitize_like_pattern(topic_path)
-          nodes = HTM::Models::Node
-            .joins(:tags)
-            .where("tags.name LIKE ?", "#{safe_pattern}%")
+          node_ids = HTM::Models::Node
+            .select(Sequel[:nodes][:id])
+            .join(:node_tags, node_id: :id)
+            .join(:tags, id: Sequel[:node_tags][:tag_id])
+            .where(Sequel.like(Sequel[:tags][:name], "#{safe_pattern}%"))
             .distinct
-            .order(created_at: :desc)
-            .limit(safe_limit)
+            .select_map(Sequel[:nodes][:id])
         end
 
-        nodes.map(&:attributes)
+        # Return empty array if no node_ids found
+        return [] if node_ids.empty?
+
+        # Fetch full node records for the matching ids
+        HTM::Models::Node
+          .where(id: node_ids)
+          .order(Sequel.desc(:created_at))
+          .limit(safe_limit)
+          .all
+          .map(&:to_hash)
       end
 
       # Get ontology structure view
@@ -116,10 +130,9 @@ class HTM
       # @return [Array<Hash>] Ontology structure
       #
       def ontology_structure
-        result = ActiveRecord::Base.connection.select_all(
+        HTM.db.fetch(
           "SELECT * FROM ontology_structure WHERE root_topic IS NOT NULL ORDER BY root_topic, level1_topic, level2_topic"
-        )
-        result.to_a
+        ).all.map { |r| r.transform_keys(&:to_s) }
       end
 
       # Get topic relationships (co-occurrence)
@@ -133,7 +146,6 @@ class HTM
         safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
         safe_min = [min_shared_nodes.to_i, 1].max
 
-        # Use parameterized query to prevent SQL injection
         sql = <<~SQL
           SELECT t1.name AS topic1, t2.name AS topic2, COUNT(DISTINCT nt1.node_id) AS shared_nodes
           FROM tags t1
@@ -147,12 +159,7 @@ class HTM
           LIMIT $2
         SQL
 
-        result = ActiveRecord::Base.connection.exec_query(
-          sql,
-          'topic_relationships',
-          [[nil, safe_min], [nil, safe_limit]]
-        )
-        result.to_a
+        HTM.db.fetch(sql, safe_min, safe_limit).all.map { |r| r.transform_keys(&:to_s) }
       end
 
       # Get topics for a specific node
@@ -162,10 +169,10 @@ class HTM
       #
       def node_topics(node_id)
         HTM::Models::Tag
-          .joins(:node_tags)
-          .where(node_tags: { node_id: node_id })
+          .join(:node_tags, tag_id: :id)
+          .where(Sequel[:node_tags][:node_id] => node_id)
           .order(:name)
-          .pluck(:name)
+          .select_map(:name)
       end
 
       # Get tags for a specific node
@@ -175,10 +182,10 @@ class HTM
       #
       def get_node_tags(node_id)
         HTM::Models::Tag
-          .joins(:node_tags)
-          .where(node_tags: { node_id: node_id })
-          .pluck(:name)
-      rescue ActiveRecord::ActiveRecordError => e
+          .join(:node_tags, tag_id: :id)
+          .where(Sequel[:node_tags][:node_id] => node_id)
+          .select_map(:name)
+      rescue Sequel::Error => e
         HTM.logger.error("Failed to retrieve tags for node #{node_id}: #{e.message}")
         []
       end
@@ -193,13 +200,13 @@ class HTM
 
         # Single query to get all tags for all nodes
         results = HTM::Models::NodeTag
-          .joins(:tag)
+          .join(:tags, id: :tag_id)
           .where(node_id: node_ids)
-          .pluck(:node_id, 'tags.name')
+          .select_map([:node_id, Sequel[:tags][:name]])
 
         # Group by node_id
         results.group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
-      rescue ActiveRecord::ActiveRecordError => e
+      rescue Sequel::Error => e
         HTM.logger.error("Failed to batch load tags: #{e.message}")
         {}
       end
@@ -215,17 +222,21 @@ class HTM
         safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
 
         query = HTM::Models::Tag
-          .joins(:node_tags)
-          .joins('INNER JOIN nodes ON nodes.id = node_tags.node_id')
-          .group('tags.id', 'tags.name')
-          .select('tags.name, COUNT(node_tags.id) as usage_count')
+          .join(:node_tags, tag_id: :id)
+          .join(:nodes, id: Sequel[:node_tags][:node_id])
+          .group(Sequel[:tags][:id], Sequel[:tags][:name])
+          .select(Sequel[:tags][:name], Sequel.function(:count, Sequel[:node_tags][:id]).as(:usage_count))
 
-        query = query.where('nodes.created_at >= ? AND nodes.created_at <= ?', timeframe.begin, timeframe.end) if timeframe
+        if timeframe
+          query = query.where(Sequel[:nodes][:created_at] >= timeframe.begin)
+            .where(Sequel[:nodes][:created_at] <= timeframe.end)
+        end
 
         query
-          .order('usage_count DESC')
+          .order(Sequel.desc(:usage_count))
           .limit(safe_limit)
-          .map { |tag| { name: tag.name, usage_count: tag.read_attribute(:usage_count).to_i } }
+          .all
+          .map { |tag| { name: tag[:name], usage_count: tag[:usage_count].to_i } }
       end
 
       # Fuzzy search for tags using trigram similarity
@@ -247,19 +258,17 @@ class HTM
         safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
 
         sql = <<~SQL
-          SELECT name, similarity(name, ?) as similarity
+          SELECT name, similarity(name, $1) as similarity
           FROM tags
-          WHERE similarity(name, ?) >= ?
+          WHERE similarity(name, $1) >= $2
           ORDER BY similarity DESC, name
-          LIMIT ?
+          LIMIT $3
         SQL
 
-        result = ActiveRecord::Base.connection.select_all(
-          ActiveRecord::Base.sanitize_sql_array([sql, query, query, safe_similarity, safe_limit])
-        )
-
-        result.map { |r| { name: r['name'], similarity: r['similarity'].to_f } }
-      rescue ActiveRecord::ActiveRecordError => e
+        HTM.db.fetch(sql, query, safe_similarity, safe_limit)
+          .all
+          .map { |r| { name: r[:name], similarity: r[:similarity].to_f } }
+      rescue Sequel::Error => e
         HTM.logger.error("Failed to search tags: #{e.message}")
         []
       end
@@ -362,35 +371,35 @@ class HTM
 
         conditions = []
         params = []
+        param_index = 1
 
         # Exact matches (highest priority)
         if exact_candidates.any?
-          placeholders = exact_candidates.map { '?' }.join(', ')
+          placeholders = exact_candidates.map { |_| "$#{param_index}".tap { param_index += 1 } }.join(', ')
           conditions << "(SELECT name, 1 as priority FROM tags WHERE name IN (#{placeholders}))"
           params.concat(exact_candidates)
         end
 
         # Prefix matches
         if prefix_candidates.any?
-          placeholders = prefix_candidates.map { '?' }.join(', ')
+          placeholders = prefix_candidates.map { |_| "$#{param_index}".tap { param_index += 1 } }.join(', ')
           conditions << "(SELECT name, 2 as priority FROM tags WHERE name IN (#{placeholders}))"
           params.concat(prefix_candidates)
         end
 
         # Component matches
-        # Pre-sanitize components once to avoid duplicate processing
         if component_candidates.any?
-          # Pre-compute sanitized components for efficiency
-          sanitized_components = component_candidates.map do |component|
-            [component, HTM::SqlBuilder.sanitize_like_pattern(component)]
+          component_conditions = component_candidates.map do |_|
+            idx1 = param_index
+            idx2 = param_index + 1
+            idx3 = param_index + 2
+            idx4 = param_index + 3
+            param_index += 4
+            "(name = $#{idx1} OR name LIKE $#{idx2} OR name LIKE $#{idx3} OR name LIKE $#{idx4})"
           end
 
-          component_conditions = sanitized_components.map do |_component, _safe|
-            # Match: exact, starts with, ends with, or middle
-            "(name = ? OR name LIKE ? OR name LIKE ? OR name LIKE ?)"
-          end
-
-          component_params = sanitized_components.flat_map do |component, safe_component|
+          component_params = component_candidates.flat_map do |component|
+            safe_component = HTM::SqlBuilder.sanitize_like_pattern(component)
             [
               component,                 # exact match
               "#{safe_component}:%",     # starts with
@@ -404,10 +413,14 @@ class HTM
         end
 
         # Trigram fuzzy matches (lowest priority - fallback for typos)
-        # Uses pg_trgm similarity to find tags even with spelling errors
         if fuzzy_fallback && component_candidates.any?
           safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
-          trigram_conditions = component_candidates.map { "similarity(name, ?) >= ?" }
+          trigram_conditions = component_candidates.map do |_|
+            idx1 = param_index
+            idx2 = param_index + 1
+            param_index += 2
+            "similarity(name, $#{idx1}) >= $#{idx2}"
+          end
           trigram_params = component_candidates.flat_map { |c| [c, safe_similarity] }
 
           conditions << "(SELECT name, 4 as priority FROM tags WHERE #{trigram_conditions.join(' OR ')})"
@@ -417,20 +430,19 @@ class HTM
         return [] if conditions.empty?
 
         # Combine with UNION and order by priority
+        limit_param = "$#{param_index}"
+        params << MAX_TAG_QUERY_LIMIT
+
         sql = <<~SQL
           SELECT DISTINCT name FROM (
             #{conditions.join(' UNION ')}
           ) AS matches
           ORDER BY name
-          LIMIT ?
+          LIMIT #{limit_param}
         SQL
-        params << MAX_TAG_QUERY_LIMIT
 
-        result = ActiveRecord::Base.connection.select_all(
-          ActiveRecord::Base.sanitize_sql_array([sql, *params])
-        )
-        result.map { |r| r['name'] }
-      rescue ActiveRecord::ActiveRecordError => e
+        HTM.db.fetch(sql, *params).all.map { |r| r[:name] }
+      rescue Sequel::Error => e
         HTM.logger.error("Failed to find matching tags: #{e.message}")
         []
       end

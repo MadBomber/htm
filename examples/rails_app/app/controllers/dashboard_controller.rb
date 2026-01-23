@@ -15,12 +15,13 @@ class DashboardController < ApplicationController
 
     @recent_memories = HTM::Models::Node.recent.limit(5)
 
-    @top_tags = HTM::Models::Tag
-                .joins(:nodes)
-                .group('tags.id')
-                .order('COUNT(nodes.id) DESC')
+    @top_tags = HTM.db[:tags]
+                .join(:nodes_tags, tag_id: :id)
+                .group(:id, :name, :created_at, :updated_at)
+                .order(Sequel.desc(Sequel.function(:count, Sequel[:nodes_tags][:node_id])))
                 .limit(10)
-                .select('tags.*, COUNT(nodes.id) as node_count')
+                .select_append(Sequel.function(:count, Sequel[:nodes_tags][:node_id]).as(:node_count))
+                .map { |row| HTM::Models::Tag.new(row) }
 
     @robots = HTM::Models::Robot.order(created_at: :desc).limit(5)
   end

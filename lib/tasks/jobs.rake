@@ -6,7 +6,7 @@ namespace :htm do
     task :stats => :environment do
 
       # Establish connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       puts "HTM Async Job Statistics"
       puts "=" * 60
@@ -16,7 +16,7 @@ namespace :htm do
       puts "Total nodes: #{total_nodes}"
 
       # Nodes with embeddings
-      with_embeddings = HTM::Models::Node.where.not(embedding: nil).count
+      with_embeddings = HTM::Models::Node.exclude(embedding: nil).count
       puts "Nodes with embeddings: #{with_embeddings} (#{percentage(with_embeddings, total_nodes)}%)"
 
       # Nodes without embeddings (pending embedding jobs)
@@ -25,7 +25,7 @@ namespace :htm do
 
       # Nodes with tags
       nodes_with_tags = HTM::Models::Node
-        .joins(:node_tags)
+        .join(:node_tags, node_id: :id)
         .distinct
         .count
       puts "Nodes with tags: #{nodes_with_tags} (#{percentage(nodes_with_tags, total_nodes)}%)"
@@ -42,7 +42,7 @@ namespace :htm do
       if total_tags > 0
         puts "\nTag hierarchy breakdown:"
         depth_counts = Hash.new(0)
-        HTM::Models::Tag.pluck(:name).each do |name|
+        HTM::Models::Tag.select_map(:name).each do |name|
           depth = name.count(':')
           depth_counts[depth] += 1
         end
@@ -57,7 +57,7 @@ namespace :htm do
         puts "\nAverage tags per node: #{avg_tags.round(2)}"
       end
 
-      HTM::ActiveRecordConfig.disconnect!
+      HTM::SequelConfig.disconnect!
     end
 
     desc "Process pending embedding jobs for nodes without embeddings"
@@ -65,7 +65,7 @@ namespace :htm do
       require 'ruby-progressbar'
 
       # Establish connection and configure HTM
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
       HTM.configure  # Use default configuration
 
       # Find nodes without embeddings
@@ -74,7 +74,7 @@ namespace :htm do
 
       if total.zero?
         puts "No pending embedding jobs"
-        HTM::ActiveRecordConfig.disconnect!
+        HTM::SequelConfig.disconnect!
         exit 0
       end
 
@@ -92,11 +92,11 @@ namespace :htm do
       processed = 0
       failed = 0
 
-      pending_nodes.find_each do |node|
+      pending_nodes.paged_each do |node|
         begin
           # Use the service class directly (same as job)
           result = HTM::EmbeddingService.generate(node.content)
-          node.update!(embedding: result[:storage_embedding])
+          node.update(embedding: result[:storage_embedding])
           processed += 1
         rescue StandardError => e
           failed += 1
@@ -112,7 +112,7 @@ namespace :htm do
       puts "  Processed: #{processed}"
       puts "  Failed: #{failed}"
 
-      HTM::ActiveRecordConfig.disconnect!
+      HTM::SequelConfig.disconnect!
     end
 
     desc "Process pending tag extraction jobs for nodes without tags"
@@ -120,19 +120,20 @@ namespace :htm do
       require 'ruby-progressbar'
 
       # Establish connection and configure HTM
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
       HTM.configure  # Use default configuration
 
-      # Find nodes without any tags
+      # Find nodes without any tags (using NOT EXISTS subquery)
       nodes_without_tags = HTM::Models::Node
-        .left_joins(:node_tags)
-        .where(node_tags: { id: nil })
+        .where(Sequel.~(Sequel.exists(
+          HTM::Models::NodeTag.where(Sequel[:node_tags][:node_id] => Sequel[:nodes][:id]).select(1)
+        )))
 
       total = nodes_without_tags.count
 
       if total.zero?
         puts "No pending tag extraction jobs"
-        HTM::ActiveRecordConfig.disconnect!
+        HTM::SequelConfig.disconnect!
         exit 0
       end
 
@@ -150,15 +151,15 @@ namespace :htm do
       processed = 0
       failed = 0
 
-      nodes_without_tags.find_each do |node|
+      nodes_without_tags.paged_each do |node|
         begin
           # Use the service class directly (same as job)
-          existing_ontology = HTM::Models::Tag.order(created_at: :desc).limit(100).pluck(:name)
+          existing_ontology = HTM::Models::Tag.order(Sequel.desc(:created_at)).limit(100).select_map(:name)
           tag_names = HTM::TagService.extract(node.content, existing_ontology: existing_ontology)
 
           tag_names.each do |tag_name|
-            tag = HTM::Models::Tag.find_or_create_by!(name: tag_name)
-            HTM::Models::NodeTag.find_or_create_by!(node_id: node.id, tag_id: tag.id)
+            tag = HTM::Models::Tag.find_or_create_by_name(tag_name)
+            HTM::Models::NodeTag.find_or_create(node_id: node.id, tag_id: tag.id)
           end
 
           processed += 1
@@ -176,7 +177,7 @@ namespace :htm do
       puts "  Processed: #{processed}"
       puts "  Failed: #{failed}"
 
-      HTM::ActiveRecordConfig.disconnect!
+      HTM::SequelConfig.disconnect!
     end
 
     desc "Process pending proposition extraction for nodes without propositions"
@@ -184,7 +185,7 @@ namespace :htm do
       require 'ruby-progressbar'
 
       # Establish connection and configure HTM
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
       HTM.configure  # Use default configuration
 
       # Find non-proposition nodes that haven't been processed yet
@@ -192,21 +193,21 @@ namespace :htm do
       # 1. It's not a proposition itself (is_proposition != true)
       # 2. No proposition node references it as source_node_id
       processed_source_ids = HTM::Models::Node
-        .where("metadata->>'is_proposition' = ?", 'true')
-        .where("metadata->>'source_node_id' IS NOT NULL")
-        .pluck(Arel.sql("metadata->>'source_node_id'"))
+        .where(Sequel.lit("metadata->>'is_proposition' = ?", 'true'))
+        .exclude(Sequel.lit("metadata->>'source_node_id' IS NULL"))
+        .select_map(Sequel.lit("metadata->>'source_node_id'"))
         .map(&:to_i)
         .uniq
 
       pending_nodes = HTM::Models::Node
         .non_propositions
-        .where.not(id: processed_source_ids)
+        .exclude(id: processed_source_ids)
 
       total = pending_nodes.count
 
       if total.zero?
         puts "No pending proposition extraction jobs"
-        HTM::ActiveRecordConfig.disconnect!
+        HTM::SequelConfig.disconnect!
         exit 0
       end
 
@@ -214,7 +215,7 @@ namespace :htm do
       puts "(Nodes already processed: #{processed_source_ids.size})\n"
 
       # Get a robot for linking proposition nodes
-      robot = HTM::Models::Robot.first || HTM::Models::Robot.create!(name: 'proposition_extractor')
+      robot = HTM::Models::Robot.first || HTM::Models::Robot.create(name: 'proposition_extractor')
 
       # Create progress bar with ETA
       progressbar = ProgressBar.create(
@@ -229,7 +230,7 @@ namespace :htm do
       propositions_created = 0
       failed = 0
 
-      pending_nodes.find_each do |node|
+      pending_nodes.paged_each do |node|
         begin
           # Extract propositions using the service
           propositions = HTM::PropositionService.extract(node.content)
@@ -239,14 +240,14 @@ namespace :htm do
               token_count = HTM.count_tokens(proposition_text)
 
               # Create proposition node
-              prop_node = HTM::Models::Node.create!(
+              prop_node = HTM::Models::Node.create(
                 content: proposition_text,
                 token_count: token_count,
                 metadata: { is_proposition: true, source_node_id: node.id }
               )
 
               # Link to robot
-              HTM::Models::RobotNode.find_or_create_by!(
+              HTM::Models::RobotNode.find_or_create(
                 robot_id: robot.id,
                 node_id: prop_node.id
               )
@@ -254,7 +255,7 @@ namespace :htm do
               # Generate embedding for proposition node
               begin
                 result = HTM::EmbeddingService.generate(proposition_text)
-                prop_node.update!(embedding: result[:storage_embedding])
+                prop_node.update(embedding: result[:storage_embedding])
               rescue StandardError => e
                 progressbar.log "  Warning: Embedding failed for proposition #{prop_node.id}: #{e.message}"
               end
@@ -279,7 +280,7 @@ namespace :htm do
       puts "  Propositions created: #{propositions_created}"
       puts "  Failed: #{failed}"
 
-      HTM::ActiveRecordConfig.disconnect!
+      HTM::SequelConfig.disconnect!
     end
 
     desc "Process all pending jobs (embeddings, tags, and propositions)"
@@ -299,7 +300,7 @@ namespace :htm do
       end
 
       # Establish connection and configure HTM
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
       HTM.configure  # Use default configuration
 
       total = HTM::Models::Node.count
@@ -309,11 +310,11 @@ namespace :htm do
       processed = 0
       failed = 0
 
-      HTM::Models::Node.find_each do |node|
+      HTM::Models::Node.paged_each do |node|
         begin
           # Use the service class directly to regenerate
           result = HTM::EmbeddingService.generate(node.content)
-          node.update!(embedding: result[:storage_embedding])
+          node.update(embedding: result[:storage_embedding])
           processed += 1
           print "\rProcessed: #{processed}/#{total}"
         rescue StandardError => e
@@ -326,13 +327,13 @@ namespace :htm do
       puts "  Processed: #{processed}"
       puts "  Failed: #{failed}"
 
-      HTM::ActiveRecordConfig.disconnect!
+      HTM::SequelConfig.disconnect!
     end
 
     desc "Show nodes that failed async processing"
     task :failed => :environment do
 
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       puts "Nodes with Processing Issues"
       puts "=" * 60
@@ -340,9 +341,9 @@ namespace :htm do
       # Old nodes without embeddings (created more than 1 hour ago)
       old_without_embeddings = HTM::Models::Node
         .where(embedding: nil)
-        .where('created_at < ?', 1.hour.ago)
+        .where(Sequel.lit('created_at < ?', Time.now - 3600))
 
-      if old_without_embeddings.any?
+      if old_without_embeddings.count > 0
         puts "\nNodes without embeddings (>1 hour old):"
         old_without_embeddings.limit(10).each do |node|
           puts "  Node #{node.id}: created #{time_ago(node.created_at)}"
@@ -355,13 +356,14 @@ namespace :htm do
         puts "\n✓ No old nodes without embeddings"
       end
 
-      # Old nodes without tags
+      # Old nodes without tags (using NOT EXISTS subquery)
       old_without_tags = HTM::Models::Node
-        .left_joins(:node_tags)
-        .where(node_tags: { id: nil })
-        .where('nodes.created_at < ?', 1.hour.ago)
+        .where(Sequel.~(Sequel.exists(
+          HTM::Models::NodeTag.where(Sequel[:node_tags][:node_id] => Sequel[:nodes][:id]).select(1)
+        )))
+        .where(Sequel.lit('created_at < ?', Time.now - 3600))
 
-      if old_without_tags.any?
+      if old_without_tags.count > 0
         puts "\nNodes without tags (>1 hour old):"
         old_without_tags.limit(10).each do |node|
           puts "  Node #{node.id}: created #{time_ago(node.created_at)}"
@@ -374,7 +376,7 @@ namespace :htm do
         puts "\n✓ No old nodes without tags"
       end
 
-      HTM::ActiveRecordConfig.disconnect!
+      HTM::SequelConfig.disconnect!
     end
 
     desc "Clear all embeddings and tags (for testing/development)"
@@ -388,18 +390,18 @@ namespace :htm do
         exit 0
       end
 
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       puts "Clearing embeddings..."
-      HTM::Models::Node.update_all(embedding: nil)
+      HTM::Models::Node.update(embedding: nil)
 
       puts "Clearing tags..."
-      HTM::Models::NodeTag.delete_all
-      HTM::Models::Tag.delete_all
+      HTM::Models::NodeTag.dataset.delete
+      HTM::Models::Tag.dataset.delete
 
       puts "Done! All embeddings and tags cleared."
 
-      HTM::ActiveRecordConfig.disconnect!
+      HTM::SequelConfig.disconnect!
     end
 
     # Helper methods

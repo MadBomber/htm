@@ -99,7 +99,7 @@ begin
   puts "   Skipped: #{result[:skipped]}"
 
   # Access the file source to show frontmatter
-  source = HTM::Models::FileSource.find(result[:file_source_id])
+  source = HTM::Models::FileSource[result[:file_source_id]]
   puts "   Frontmatter title: #{source.title}"
   puts "   Frontmatter author: #{source.author}"
   puts "   Frontmatter tags: #{source.frontmatter_tags.join(', ')}"

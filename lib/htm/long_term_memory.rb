@@ -17,7 +17,7 @@ require_relative 'long_term_memory/fulltext_search'
 require_relative 'long_term_memory/hybrid_search'
 
 class HTM
-  # Long-term Memory - PostgreSQL/TimescaleDB-backed permanent storage
+  # Long-term Memory - PostgreSQL-backed permanent storage
   #
   # LongTermMemory provides durable storage for all memory nodes with:
   # - Vector similarity search (RAG)
@@ -25,7 +25,7 @@ class HTM
   # - Time-range queries
   # - Relationship graphs
   # - Tag system
-  # - ActiveRecord ORM for data access
+  # - Sequel ORM for data access
   # - Query result caching for efficiency
   #
   # This class uses standalone utility classes and modules:
@@ -72,7 +72,7 @@ class HTM
     # Initialize long-term memory storage
     #
     # @param config [Hash] Database configuration (host, port, dbname, user, password)
-    # @param pool_size [Integer, nil] Connection pool size (uses ActiveRecord default if nil)
+    # @param pool_size [Integer, nil] Connection pool size (uses Sequel default if nil)
     # @param query_timeout [Integer] Query timeout in milliseconds (default: 30000)
     # @param cache_size [Integer] Number of query results to cache (default: 1000, use 0 to disable)
     # @param cache_ttl [Integer] Cache time-to-live in seconds (default: 300)
@@ -90,8 +90,8 @@ class HTM
       @config = config
       @query_timeout = query_timeout  # in milliseconds
 
-      # Set statement timeout for ActiveRecord queries
-      ActiveRecord::Base.connection.execute("SET statement_timeout = #{@query_timeout}")
+      # Set statement timeout for Sequel queries
+      HTM.db.run("SET statement_timeout = #{@query_timeout}")
 
       # Initialize query result cache (disable with cache_size: 0)
       @cache = HTM::QueryCache.new(size: cache_size, ttl: cache_ttl)
@@ -104,13 +104,13 @@ class HTM
     def stats
       base_stats = {
         total_nodes: HTM::Models::Node.count,
-        nodes_by_robot: HTM::Models::RobotNode.group(:robot_id).count,
+        nodes_by_robot: HTM::Models::RobotNode.group_and_count(:robot_id).as_hash(:robot_id, :count),
         total_tags: HTM::Models::Tag.count,
-        oldest_memory: HTM::Models::Node.minimum(:created_at),
-        newest_memory: HTM::Models::Node.maximum(:created_at),
+        oldest_memory: HTM::Models::Node.min(:created_at),
+        newest_memory: HTM::Models::Node.max(:created_at),
         active_robots: HTM::Models::Robot.count,
-        robot_activity: HTM::Models::Robot.select(:id, :name, :last_active).map(&:attributes),
-        database_size: ActiveRecord::Base.connection.select_value("SELECT pg_database_size(current_database())").to_i
+        robot_activity: HTM::Models::Robot.select(:id, :name, :last_active).all.map(&:values),
+        database_size: HTM.db.get(Sequel.function(:pg_database_size, Sequel.function(:current_database))).to_i
       }
 
       # Include cache statistics if cache is enabled
@@ -121,9 +121,9 @@ class HTM
       base_stats
     end
 
-    # Shutdown - no-op with ActiveRecord (connection pool managed by ActiveRecord)
+    # Shutdown - no-op with Sequel (connection pool managed by Sequel)
     def shutdown
-      # ActiveRecord handles connection pool shutdown
+      # Sequel handles connection pool shutdown
       # This method kept for API compatibility
     end
 
@@ -137,7 +137,7 @@ class HTM
 
     # For backwards compatibility with tests/code that expect pool_size
     def pool_size
-      ActiveRecord::Base.connection_pool.size
+      HTM.db.pool.size
     end
   end
 end

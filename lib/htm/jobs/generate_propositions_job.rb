@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../errors'
-require_relative '../models/node'
 require_relative '../proposition_service'
 
 class HTM
@@ -25,7 +24,7 @@ class HTM
       # @param robot_id [Integer] ID of the robot that owns this node
       #
       def self.perform(node_id:, robot_id:)
-        node = HTM::Models::Node.find_by(id: node_id)
+        node = HTM::Models::Node.first(id: node_id)
 
         unless node
           HTM.logger.warn "GeneratePropositionsJob: Node #{node_id} not found"
@@ -49,14 +48,14 @@ class HTM
             token_count = HTM.count_tokens(proposition_text)
 
             # Create proposition node with is_proposition marker
-            proposition_node = HTM::Models::Node.create!(
+            proposition_node = HTM::Models::Node.create(
               content: proposition_text,
               token_count: token_count,
               metadata: { is_proposition: true, source_node_id: node_id }
             )
 
             # Link to robot via RobotNode
-            HTM::Models::RobotNode.find_or_create_by!(
+            HTM::Models::RobotNode.find_or_create(
               robot_id: robot_id,
               node_id: proposition_node.id
             )
@@ -79,7 +78,7 @@ class HTM
           # Log proposition-specific errors
           HTM.logger.error "GeneratePropositionsJob: Proposition extraction failed for node #{node_id}: #{e.message}"
 
-        rescue ActiveRecord::RecordInvalid => e
+        rescue Sequel::ValidationFailed => e
           # Log validation errors
           HTM.logger.error "GeneratePropositionsJob: Database validation failed for node #{node_id}: #{e.message}"
 

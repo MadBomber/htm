@@ -26,7 +26,7 @@ namespace :htm do
       end
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       htm = HTM.new(robot_name: "FileLoader")
       force = ENV['FORCE'] == 'true'
@@ -63,7 +63,7 @@ namespace :htm do
       end
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       htm = HTM.new(robot_name: "FileLoader")
       pattern = args[:pattern] || '**/*.md'
@@ -104,7 +104,7 @@ namespace :htm do
     task :list do
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       sources = HTM::Models::FileSource.order(:file_path)
       count = sources.count
@@ -142,11 +142,11 @@ namespace :htm do
       end
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       # Try to find by exact path or expanded path
-      source = HTM::Models::FileSource.find_by(file_path: path) ||
-               HTM::Models::FileSource.find_by(file_path: File.expand_path(path))
+      source = HTM::Models::FileSource.first(file_path: path) ||
+               HTM::Models::FileSource.first(file_path: File.expand_path(path))
 
       unless source
         puts "Error: File not loaded: #{path}"
@@ -197,7 +197,7 @@ namespace :htm do
       end
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       htm = HTM.new(robot_name: "FileLoader")
       result = htm.unload_file(path)
@@ -213,7 +213,7 @@ namespace :htm do
     task :sync do
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       htm = HTM.new(robot_name: "FileLoader")
       sources = HTM::Models::FileSource.all
@@ -259,15 +259,15 @@ namespace :htm do
     task :stats do
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       total_sources = HTM::Models::FileSource.count
-      total_chunks = HTM::Models::Node.where.not(source_id: nil).count
+      total_chunks = HTM::Models::Node.exclude(source_id: nil).count
 
       # Count files needing sync (checking actual file mtime)
       needs_sync = 0
       missing = 0
-      HTM::Models::FileSource.find_each do |source|
+      HTM::Models::FileSource.paged_each do |source|
         if File.exist?(source.file_path)
           current_mtime = File.mtime(source.file_path)
           needs_sync += 1 if source.needs_sync?(current_mtime)

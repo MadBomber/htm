@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative 'test_helper'
+require 'fileutils'
+require 'tmpdir'
 
 class JobAdapterTest < Minitest::Test
   def setup
@@ -96,12 +98,16 @@ class JobAdapterTest < Minitest::Test
     saved_htm_env = ENV['HTM_ENV']
     saved_rails_env = ENV['RAILS_ENV']
     saved_rack_env = ENV['RACK_ENV']
+    saved_xdg_config = ENV['XDG_CONFIG_HOME']
+    temp_dir = Dir.mktmpdir('htm_job_test')
 
     # Clear HTM_ENV to test RACK_ENV detection
     # (HTM_ENV takes priority: HTM_ENV > RAILS_ENV > RACK_ENV)
     ENV.delete('HTM_ENV')
     ENV.delete('RAILS_ENV')
     ENV['RACK_ENV'] = 'test'
+    # Isolate from user's XDG config to test bundled defaults
+    ENV['XDG_CONFIG_HOME'] = temp_dir
 
     config = HTM::Config.new
     assert_equal :inline, config.job_backend
@@ -110,6 +116,8 @@ class JobAdapterTest < Minitest::Test
     saved_htm_env ? ENV['HTM_ENV'] = saved_htm_env : ENV.delete('HTM_ENV')
     saved_rails_env ? ENV['RAILS_ENV'] = saved_rails_env : ENV.delete('RAILS_ENV')
     saved_rack_env ? ENV['RACK_ENV'] = saved_rack_env : ENV.delete('RACK_ENV')
+    saved_xdg_config ? ENV['XDG_CONFIG_HOME'] = saved_xdg_config : ENV.delete('XDG_CONFIG_HOME')
+    FileUtils.rm_rf(temp_dir) if temp_dir && Dir.exist?(temp_dir)
   end
 
   # Test auto-detection with environment variable

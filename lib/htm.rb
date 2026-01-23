@@ -4,7 +4,7 @@ require_relative "htm/version"
 require_relative "htm/errors"
 require_relative "htm/config"
 require_relative "htm/circuit_breaker"
-require_relative "htm/active_record_config"
+require_relative "htm/sequel_config"
 require_relative "htm/database"
 require_relative "htm/long_term_memory"
 require_relative "htm/working_memory"
@@ -86,8 +86,8 @@ class HTM
     db_cache_size: 1000,
     db_cache_ttl: 300
   )
-    # Establish ActiveRecord connection if not already connected
-    HTM::ActiveRecordConfig.establish_connection! unless HTM::ActiveRecordConfig.connected?
+    # Establish Sequel connection if not already connected
+    HTM::SequelConfig.establish_connection! unless HTM::SequelConfig.db
 
     @robot_name = robot_name || "robot_#{SecureRandom.uuid[0..7]}"
 
@@ -179,7 +179,7 @@ class HTM
 
       # For existing nodes, only add manual tags if provided
       if tags.any?
-        node = HTM::Models::Node.find(node_id)
+        node = HTM::Models::Node[node_id]
         node.add_tags(tags)
         HTM.logger.info "Added #{tags.length} manual tags to existing node #{node_id}"
       end
@@ -194,7 +194,7 @@ class HTM
     @working_memory.add(node_id, content, token_count: token_count, access_count: 0)
 
     # Mark node as in working memory in the robot_nodes join table
-    result[:robot_node].update!(working_memory: true)
+    result[:robot_node].update(working_memory: true)
 
     update_robot_activity
     node_id
@@ -339,7 +339,7 @@ class HTM
     end
 
     # Verify node exists (including soft-deleted for restore scenarios)
-    node = HTM::Models::Node.with_deleted.find_by(id: node_id)
+    node = HTM::Models::Node.with_deleted.first(id: node_id)
     raise HTM::NotFoundError, "Node not found: #{node_id}" unless node
 
     if soft
@@ -388,8 +388,8 @@ class HTM
     end
 
     # Find all nodes containing the substring (case-insensitive)
-    matching_nodes = HTM::Models::Node.where("content ILIKE ?", "%#{content_substring}%")
-    node_ids = matching_nodes.pluck(:id)
+    matching_nodes = HTM::Models::Node.where(Sequel.ilike(:content, "%#{content_substring}%"))
+    node_ids = matching_nodes.select_map(:id)
 
     if node_ids.empty?
       HTM.logger.info "No nodes found containing: #{content_substring}"
@@ -419,7 +419,7 @@ class HTM
     raise ArgumentError, "Node ID cannot be nil" if node_id.nil?
 
     # Find including soft-deleted nodes
-    node = HTM::Models::Node.with_deleted.find_by(id: node_id)
+    node = HTM::Models::Node.with_deleted.first(id: node_id)
     raise HTM::NotFoundError, "Node not found: #{node_id}" unless node
 
     unless node.deleted?
@@ -472,7 +472,7 @@ class HTM
     # Update database: mark all as evicted from working memory
     count = HTM::Models::RobotNode
       .where(robot_id: @robot_id, working_memory: true)
-      .update_all(working_memory: false)
+      .update(working_memory: false)
 
     HTM.logger.info "Cleared #{count} nodes from working memory"
     count
@@ -536,17 +536,17 @@ class HTM
   # Get all nodes loaded from a specific file
   #
   # @param file_path [String] Path to the source file
-  # @return [ActiveRecord::Relation] Nodes from this file, ordered by chunk_position
+  # @return [Array<HTM::Models::Node>] Nodes from this file, ordered by chunk_position
   #
   # @example
   #   nodes = htm.nodes_from_file('/path/to/doc.md')
   #   nodes.each { |node| puts node.content }
   #
   def nodes_from_file(file_path)
-    source = HTM::Models::FileSource.find_by(file_path: File.expand_path(file_path))
-    return HTM::Models::Node.none unless source
+    source = HTM::Models::FileSource.first(file_path: File.expand_path(file_path))
+    return [] unless source
 
-    HTM::Models::Node.from_source(source.id)
+    HTM::Models::Node.from_source(source.id).all
   end
 
   # Unload a file (soft-delete all its chunks and remove source record)
@@ -559,12 +559,12 @@ class HTM
   #   puts "Unloaded #{count} chunks"
   #
   def unload_file(file_path)
-    source = HTM::Models::FileSource.find_by(file_path: File.expand_path(file_path))
+    source = HTM::Models::FileSource.first(file_path: File.expand_path(file_path))
     return 0 unless source
 
     count = source.soft_delete_chunks!
     @long_term_memory.clear_cache!
-    source.destroy
+    source.delete
 
     update_robot_activity
     count
@@ -597,7 +597,7 @@ class HTM
     if manual_tags.any?
       manual_tags.each do |tag_name|
         HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
-          HTM::Models::NodeTag.find_or_create_by!(node_id: node_id, tag_id: tag.id)
+          HTM::Models::NodeTag.find_or_create(node_id: node_id, tag_id: tag.id)
         end
       end
     end
@@ -642,9 +642,8 @@ class HTM
     )
 
     # Mark node as in working memory in the robot_nodes join table
-    HTM::Models::RobotNode
-      .find_by(robot_id: @robot_id, node_id: node_id)
-      &.update!(working_memory: true)
+    robot_node = HTM::Models::RobotNode.first(robot_id: @robot_id, node_id: node_id)
+    robot_node&.update(working_memory: true)
   end
 
   # Validation helper methods

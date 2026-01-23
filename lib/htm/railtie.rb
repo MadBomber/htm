@@ -57,8 +57,8 @@ class HTM
     config.after_initialize do
       if Rails.env.development?
         begin
-          HTM::ActiveRecordConfig.establish_connection! unless HTM::ActiveRecordConfig.connected?
-          HTM::ActiveRecordConfig.verify_extensions!
+          HTM::SequelConfig.establish_connection! unless HTM::SequelConfig.db
+          HTM::SequelConfig.verify_extensions!
           HTM.logger.info "HTM database connection verified"
         rescue StandardError => e
           HTM.logger.warn "HTM database connection check failed: #{e.message}"

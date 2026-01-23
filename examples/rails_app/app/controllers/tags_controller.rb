@@ -11,20 +11,23 @@ class TagsController < ApplicationController
     when 'mermaid'
       @tree_mermaid = HTM::Models::Tag.all.tree_mermaid
     else
-      @tags = HTM::Models::Tag
-              .left_joins(:nodes)
-              .group('tags.id')
-              .select('tags.*, COUNT(nodes.id) as node_count')
-              .order(:name)
+      # Build tag list with node counts using Sequel
+      tags_with_counts = HTM.db[:tags]
+        .left_join(:nodes_tags, tag_id: :id)
+        .group(:id, :name, :created_at, :updated_at)
+        .select_append(Sequel.function(:count, Sequel[:nodes_tags][:node_id]).as(:node_count))
+        .order(:name)
 
       if params[:prefix].present?
-        @tags = @tags.where('tags.name LIKE ?', "#{params[:prefix]}%")
+        tags_with_counts = tags_with_counts.where(Sequel.like(:name, "#{params[:prefix]}%"))
       end
+
+      @tags = tags_with_counts.map { |row| OpenStruct.new(row) }
     end
   end
 
   def show
-    @tag = HTM::Models::Tag.find(params[:id])
-    @memories = @tag.nodes.active.includes(:tags).order(created_at: :desc)
+    @tag = HTM::Models::Tag[params[:id]]
+    @memories = @tag.nodes_dataset.active.eager(:tags).order(Sequel.desc(:created_at)).all
   end
 end

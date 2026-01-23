@@ -15,8 +15,8 @@ class HTM
       # @return [Integer] Robot ID
       #
       def register_robot(robot_name)
-        robot = HTM::Models::Robot.find_or_create_by(name: robot_name)
-        robot.update(last_active: Time.current)
+        robot = HTM::Models::Robot.find_or_create(name: robot_name)
+        robot.update(last_active: Time.now)
         robot.id
       end
 
@@ -26,8 +26,8 @@ class HTM
       # @return [void]
       #
       def update_robot_activity(robot_id)
-        robot = HTM::Models::Robot.find_by(id: robot_id)
-        robot&.update(last_active: Time.current)
+        robot = HTM::Models::Robot.first(id: robot_id)
+        robot&.update(last_active: Time.now)
       end
     end
   end

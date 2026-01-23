@@ -232,7 +232,7 @@ def database_available?
 
   begin
     # Check if connection is already established and working
-    if HTM::ActiveRecordConfig.connected?
+    if HTM::SequelConfig.connected?
       @database_available = true
       return true
     end
@@ -246,8 +246,8 @@ def database_available?
     end
 
     # Establish connection using HTM's config
-    HTM::ActiveRecordConfig.establish_connection!
-    @database_available = HTM::ActiveRecordConfig.connected?
+    HTM::SequelConfig.establish_connection!
+    @database_available = HTM::SequelConfig.connected?
   rescue => e
     @database_available = false
   end

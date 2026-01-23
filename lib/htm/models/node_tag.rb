@@ -3,39 +3,65 @@
 class HTM
   module Models
     # NodeTag model - join table for many-to-many relationship between nodes and tags
-    class NodeTag < ActiveRecord::Base
-      self.table_name = 'node_tags'
-
+    class NodeTag < Sequel::Model(:node_tags)
       # Associations
-      belongs_to :node, class_name: 'HTM::Models::Node'
-      belongs_to :tag, class_name: 'HTM::Models::Tag'
+      many_to_one :node, class: 'HTM::Models::Node', key: :node_id
+      many_to_one :tag, class: 'HTM::Models::Tag', key: :tag_id
+
+      # Plugins
+      plugin :validation_helpers
+      plugin :timestamps, update_on_create: true
 
       # Validations
-      validates :node_id, presence: true
-      validates :tag_id, presence: true
-      validates :tag_id, uniqueness: { scope: :node_id, message: "already associated with this node" }
+      def validate
+        super
+        validates_presence [:node_id, :tag_id]
+        validates_unique [:node_id, :tag_id], message: "already associated with this node"
+      end
 
-      # Callbacks
-      before_create :set_created_at
+      # Dataset methods (scopes)
+      dataset_module do
+        def active
+          where(deleted_at: nil)
+        end
 
-      # Scopes
-      # Soft delete - by default, only show non-deleted entries
-      default_scope { where(deleted_at: nil) }
+        def for_node(node_id)
+          where(node_id: node_id)
+        end
 
-      scope :for_node, ->(node_id) { where(node_id: node_id) }
-      scope :for_tag, ->(tag_id) { where(tag_id: tag_id) }
-      scope :recent, -> { order(created_at: :desc) }
+        def for_tag(tag_id)
+          where(tag_id: tag_id)
+        end
 
-      # Soft delete scopes
-      scope :deleted, -> { unscoped.where.not(deleted_at: nil) }
-      scope :with_deleted, -> { unscoped }
+        def recent
+          order(Sequel.desc(:created_at))
+        end
+
+        def deleted
+          exclude(deleted_at: nil)
+        end
+
+        def with_deleted
+          unfiltered
+        end
+      end
+
+      # Apply default scope for active records
+      set_dataset(dataset.where(Sequel[:node_tags][:deleted_at] => nil))
+
+      # Hooks
+      def before_create
+        self.created_at ||= Time.now
+        super
+      end
 
       # Soft delete - mark as deleted without removing from database
       #
       # @return [Boolean] true if soft deleted successfully
       #
       def soft_delete!
-        update!(deleted_at: Time.current)
+        update(deleted_at: Time.now)
+        true
       end
 
       # Restore a soft-deleted entry
@@ -43,7 +69,8 @@ class HTM
       # @return [Boolean] true if restored successfully
       #
       def restore!
-        update!(deleted_at: nil)
+        update(deleted_at: nil)
+        true
       end
 
       # Check if entry is soft-deleted
@@ -51,13 +78,7 @@ class HTM
       # @return [Boolean] true if deleted_at is set
       #
       def deleted?
-        deleted_at.present?
-      end
-
-      private
-
-      def set_created_at
-        self.created_at ||= Time.current
+        !deleted_at.nil?
       end
     end
   end

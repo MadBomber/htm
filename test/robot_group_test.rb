@@ -261,7 +261,7 @@ class RobotGroupTest < Minitest::Test
     node_id = @group.remember("Test memory content")
 
     assert node_id.is_a?(Integer)
-    node = HTM::Models::Node.find(node_id)
+    node = HTM::Models::Node[node_id]
     assert_equal "Test memory content", node.content
   end
 
@@ -296,7 +296,7 @@ class RobotGroupTest < Minitest::Test
     # Check that robot_nodes exist for all members
     member_ids = @group.member_ids
     member_ids.each do |robot_id|
-      robot_node = HTM::Models::RobotNode.find_by(
+      robot_node = HTM::Models::RobotNode.first(
         robot_id: robot_id,
         node_id: node_id
       )
@@ -333,7 +333,7 @@ class RobotGroupTest < Minitest::Test
 
     contents = @group.working_memory_contents
 
-    assert contents.is_a?(ActiveRecord::Relation)
+    assert contents.is_a?(Sequel::Dataset)
     assert_equal 2, contents.count
   end
 
@@ -537,7 +537,13 @@ class RobotGroupTest < Minitest::Test
     return unless database_available?
 
     # Clean up test robots and nodes
-    HTM::Models::Robot.where("name LIKE 'agent-%' OR name LIKE 'standby-%' OR name LIKE 'new-%' OR name LIKE 'primary%' OR name LIKE 'only-%'").destroy_all
+    HTM::Models::Robot.where(
+      Sequel.like(:name, "agent-%") |
+      Sequel.like(:name, "standby-%") |
+      Sequel.like(:name, "new-%") |
+      Sequel.like(:name, "primary%") |
+      Sequel.like(:name, "only-%")
+    ).delete
   rescue => e
     # Ignore cleanup errors
   end

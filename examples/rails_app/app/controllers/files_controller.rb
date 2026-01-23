@@ -6,7 +6,7 @@ class FilesController < ApplicationController
   end
 
   def show
-    @file_source = HTM::Models::FileSource.find(params[:id])
+    @file_source = HTM::Models::FileSource[params[:id]]
     @chunks = @file_source.chunks.order(:id)
   end
 
@@ -127,7 +127,7 @@ class FilesController < ApplicationController
   end
 
   def sync
-    @file_source = HTM::Models::FileSource.find(params[:id])
+    @file_source = HTM::Models::FileSource[params[:id]]
 
     begin
       result = htm.load_file(@file_source.file_path, force: true)
@@ -140,7 +140,7 @@ class FilesController < ApplicationController
   end
 
   def destroy
-    @file_source = HTM::Models::FileSource.find(params[:id])
+    @file_source = HTM::Models::FileSource[params[:id]]
 
     begin
       htm.unload_file(@file_source.file_path)
@@ -156,7 +156,7 @@ class FilesController < ApplicationController
     synced = 0
     errors = 0
 
-    HTM::Models::FileSource.find_each do |source|
+    HTM::Models::FileSource.paged_each do |source|
       if source.needs_sync?
         begin
           htm.load_file(source.file_path, force: true)

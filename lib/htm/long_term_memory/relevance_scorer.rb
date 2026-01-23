@@ -114,7 +114,7 @@ class HTM
           # Full-text search (returns hashes directly)
           search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 2, metadata: metadata)
         else
-          # Time-range only - use raw SQL to avoid ActiveRecord object instantiation
+          # Time-range only - use raw SQL to avoid ORM object instantiation
           # This is more efficient than .map(&:attributes) which creates intermediate objects
           fetch_candidates_by_timeframe(timeframe: timeframe, metadata: metadata, limit: limit * 2)
         end
@@ -146,7 +146,7 @@ class HTM
           .take(limit)
       end
 
-      # Fetch candidates by timeframe using raw SQL (avoids ActiveRecord overhead)
+      # Fetch candidates by timeframe using raw SQL (avoids ORM overhead)
       #
       # @param timeframe [nil, Range, Array<Range>] Time range(s) to search
       # @param metadata [Hash] Filter by metadata fields
@@ -166,13 +166,10 @@ class HTM
           FROM nodes
           WHERE #{conditions.join(' AND ')}
           ORDER BY created_at DESC
-          LIMIT ?
+          LIMIT $1
         SQL
 
-        result = ActiveRecord::Base.connection.select_all(
-          ActiveRecord::Base.sanitize_sql_array([sql, limit])
-        )
-        result.to_a
+        HTM.db.fetch(sql, limit).all.map { |r| r.transform_keys(&:to_s) }
       end
 
       # Search nodes by tags
@@ -188,30 +185,36 @@ class HTM
 
         # Build base query with specific columns to avoid loading unnecessary data
         query = HTM::Models::Node
-          .select('nodes.id, nodes.content, nodes.access_count, nodes.created_at, nodes.token_count')
-          .joins(:tags)
-          .where(tags: { name: tags })
+          .select(
+            Sequel[:nodes][:id],
+            Sequel[:nodes][:content],
+            Sequel[:nodes][:access_count],
+            Sequel[:nodes][:created_at],
+            Sequel[:nodes][:token_count]
+          )
+          .join(:node_tags, node_id: :id)
+          .join(:tags, id: Sequel[:node_tags][:tag_id])
+          .where(Sequel[:tags][:name] => tags)
           .distinct
 
         # Apply timeframe filter if provided
-        query = query.where(created_at: timeframe) if timeframe
+        query = query.where(Sequel[:nodes][:created_at] => timeframe) if timeframe
 
         if match_all
           # Match ALL tags (intersection)
           query = query
-            .group('nodes.id')
-            .having('COUNT(DISTINCT tags.name) = ?', tags.size)
+            .group(Sequel[:nodes][:id])
+            .having { Sequel.function(:count, Sequel[:tags][:name].distinct) =~ tags.size }
         end
 
-        # Convert to hashes efficiently using pluck-style approach
-        # This avoids instantiating full ActiveRecord objects
-        nodes = query.limit(limit).map do |node|
+        # Fetch and convert to hashes with string keys
+        nodes = query.limit(limit).all.map do |row|
           {
-            'id' => node.id,
-            'content' => node.content,
-            'access_count' => node.access_count,
-            'created_at' => node.created_at,
-            'token_count' => node.token_count
+            'id' => row[:id],
+            'content' => row[:content],
+            'access_count' => row[:access_count],
+            'created_at' => row[:created_at],
+            'token_count' => row[:token_count]
           }
         end
 

@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
 require_relative '../errors'
-require_relative '../models/node'
-require_relative '../models/tag'
-require_relative '../models/node_tag'
 require_relative '../tag_service'
 
 class HTM
@@ -26,7 +23,7 @@ class HTM
       # @param node_id [Integer] ID of the node to process
       #
       def self.perform(node_id:)
-        node = HTM::Models::Node.find_by(id: node_id)
+        node = HTM::Models::Node.first(id: node_id)
 
         unless node
           HTM.logger.warn "GenerateTagsJob: Node #{node_id} not found"
@@ -39,9 +36,9 @@ class HTM
         begin
           # Get existing ontology for context (sample of recent tags)
           existing_ontology = HTM::Models::Tag
-            .order(created_at: :desc)
+            .order(Sequel.desc(:created_at))
             .limit(100)
-            .pluck(:name)
+            .select_map(:name)
 
           # Extract and validate tags using TagService
           tag_names = HTM::TagService.extract(node.content, existing_ontology: existing_ontology)
@@ -55,7 +52,7 @@ class HTM
           tag_names.each do |tag_name|
             HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
               # Create association if it doesn't exist
-              HTM::Models::NodeTag.find_or_create_by!(
+              HTM::Models::NodeTag.find_or_create(
                 node_id: node.id,
                 tag_id: tag.id
               )
@@ -83,7 +80,7 @@ class HTM
           # Log tag-specific errors
           HTM.logger.error "GenerateTagsJob: Tag generation failed for node #{node_id}: #{e.message}"
 
-        rescue ActiveRecord::RecordInvalid => e
+        rescue Sequel::ValidationFailed => e
           # Record failure metrics
           elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
           HTM::Telemetry.tag_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'error' })

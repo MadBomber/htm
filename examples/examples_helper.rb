@@ -78,8 +78,8 @@ module ExamplesHelper
     return false unless HTM.config.database_configured?
 
     begin
-      HTM::ActiveRecordConfig.establish_connection!
-      HTM::ActiveRecordConfig.connected?
+      HTM::SequelConfig.establish_connection!
+      HTM::SequelConfig.connected?
     rescue => e
       false
     end

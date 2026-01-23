@@ -37,8 +37,8 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "pg", ">= 1.5.0"
-  spec.add_dependency "neighbor"
-  spec.add_dependency "activerecord"
+  spec.add_dependency "sequel", ">= 5.0"
+  spec.add_dependency "sequel_pg"
   spec.add_dependency "tiktoken_ruby"
   spec.add_dependency "ruby_llm"
   spec.add_dependency "lru_redux"
@@ -49,6 +49,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "anyway_config", ">= 2.6"
   spec.add_dependency "simple_flow"
   spec.add_dependency "async", "~> 2.0"
+  spec.add_dependency "activesupport"  # For inflections (singularize/pluralize)
 
   # Optional runtime dependencies for different job backends
   # - ActiveJob (bundled with Rails)

@@ -28,24 +28,24 @@ class HTM
       class << self
         # Returns all XDG config paths to check, in order of priority (lowest first)
         #
+        # Per XDG spec: If $XDG_CONFIG_HOME is set, use it; otherwise use ~/.config
+        #
         # @return [Array<String>] list of potential config file paths
         def config_paths
           paths = []
 
-          # macOS Application Support (lowest priority for XDG loader)
-          if macos?
+          # macOS Application Support (lowest priority, only when XDG_CONFIG_HOME is not set)
+          if macos? && (!ENV['XDG_CONFIG_HOME'] || ENV['XDG_CONFIG_HOME'].empty?)
             macos_path = File.expand_path('~/Library/Application Support/htm')
             paths << macos_path if Dir.exist?(File.dirname(macos_path))
           end
 
-          # XDG default: ~/.config/htm
-          xdg_default = File.expand_path('~/.config/htm')
-          paths << xdg_default
-
-          # XDG_CONFIG_HOME override (highest priority for XDG loader)
+          # XDG_CONFIG_HOME takes precedence over default
           if ENV['XDG_CONFIG_HOME'] && !ENV['XDG_CONFIG_HOME'].empty?
-            xdg_home = File.join(ENV['XDG_CONFIG_HOME'], 'htm')
-            paths << xdg_home unless xdg_home == xdg_default
+            paths << File.join(ENV['XDG_CONFIG_HOME'], 'htm')
+          else
+            # XDG default: ~/.config/htm (only when XDG_CONFIG_HOME is not set)
+            paths << File.expand_path('~/.config/htm')
           end
 
           paths

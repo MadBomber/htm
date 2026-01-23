@@ -1,15 +1,17 @@
 # frozen_string_literal: true
 
-class EnableExtensions < ActiveRecord::Migration[7.1]
+require_relative '../../lib/htm/migration'
+
+class EnableExtensions < HTM::Migration
   def up
-    enable_extension 'vector'
-    enable_extension 'pg_trgm'
-    enable_extension 'pg_search'
+    run "CREATE EXTENSION IF NOT EXISTS vector"
+    run "CREATE EXTENSION IF NOT EXISTS pg_trgm"
+    run "CREATE EXTENSION IF NOT EXISTS pg_search"
   end
 
   def down
-    disable_extension 'pg_search'
-    disable_extension 'pg_trgm'
-    disable_extension 'vector'
+    run "DROP EXTENSION IF EXISTS pg_search"
+    run "DROP EXTENSION IF EXISTS pg_trgm"
+    run "DROP EXTENSION IF EXISTS vector"
   end
 end

@@ -206,7 +206,7 @@ namespace :htm do
         # Skip error classes and internal classes
         next if class_name.end_with?("Error")
         next if class_name.include?("Railtie")
-        next if class_name.include?("ActiveRecordConfig")
+        next if class_name.include?("SequelConfig")
 
         # Get description
         simple_name = basename
@@ -228,7 +228,7 @@ namespace :htm do
             basename = File.basename(file, ".html")
             next if basename.end_with?("Error")
             next if basename == "Railtie"
-            next if basename == "ActiveRecordConfig"
+            next if basename == "SequelConfig"
 
             desc = descriptions[basename] || "#{basename} class"
             classes << ["HTM::#{basename}", desc, "yard/HTM/#{basename}.html"]

@@ -58,7 +58,7 @@ class HTM
           query_timings: query_timing_stats,
           service_timings: service_timing_stats,
           memory_usage: memory_stats,
-          collected_at: Time.current
+          collected_at: Time.now
         }
       end
 
@@ -74,38 +74,42 @@ class HTM
       #   - :wait_timeout - Connection wait timeout (ms)
       #
       def connection_pool_stats
-        return { status: :unavailable, message: "ActiveRecord not connected" } unless connected?
+        return { status: :unavailable, message: "Database not connected" } unless connected?
 
-        pool = ActiveRecord::Base.connection_pool
+        pool = HTM.db.pool
 
-        size = pool.size
-        connections = pool.connections.size
-        in_use = pool.connections.count(&:in_use?)
-        available = connections - in_use
+        # Sequel's TimedQueueConnectionPool API:
+        # - max_size: maximum pool size
+        # - size: number of connections currently in pool (pre-allocated up to max_size)
+        # - num_waiting: threads waiting for connections
+        #
+        # Unlike ActiveRecord, Sequel pre-allocates connections. The key health indicator
+        # is num_waiting - if threads are waiting, the pool is under stress.
+        max_size = pool.max_size
+        current_size = pool.size
+        waiting = pool.num_waiting
 
-        # Calculate utilization based on connections in use vs pool size
-        utilization = size > 0 ? in_use.to_f / size : 0.0
-
-        # Determine health status
-        status = case
-        when available == 0 && in_use >= size
-          :exhausted
-        when utilization >= POOL_CRITICAL_THRESHOLD
-          :critical
-        when utilization >= POOL_WARNING_THRESHOLD
-          :warning
+        # For Sequel's TimedQueueConnectionPool:
+        # - Pool is healthy if no threads are waiting
+        # - Pool is critical only if threads are waiting for connections
+        # - size == max_size is normal (pre-allocated pool), not a problem
+        status = if waiting > 0
+          waiting > max_size / 2 ? :exhausted : :critical
         else
           :healthy
         end
 
+        # Utilization based on waiting threads (pool stress indicator)
+        utilization = waiting > 0 ? ((waiting.to_f / max_size) * 100).round(2) : 0.0
+
         stats = {
-          size: size,
-          connections: connections,
-          in_use: in_use,
-          available: available,
-          utilization: (utilization * 100).round(2),
-          status: status,
-          wait_timeout: pool.checkout_timeout * 1000 # Convert to ms
+          size: max_size,
+          connections: current_size,
+          in_use: 0,  # Sequel doesn't expose checked-out count; use waiting as stress indicator
+          available: max_size,  # All connections are available when not waiting
+          waiting: waiting,
+          utilization: utilization,
+          status: status
         }
 
         # Log warnings if pool is stressed
@@ -170,7 +174,7 @@ class HTM
           @query_timings << {
             duration_ms: duration_ms,
             query_type: query_type,
-            recorded_at: Time.current
+            recorded_at: Time.now
           }
 
           # Keep only recent samples
@@ -186,7 +190,7 @@ class HTM
         @metrics_mutex.synchronize do
           @embedding_timings << {
             duration_ms: duration_ms,
-            recorded_at: Time.current
+            recorded_at: Time.now
           }
           @embedding_timings.shift if @embedding_timings.size > @max_timing_samples
         end
@@ -200,7 +204,7 @@ class HTM
         @metrics_mutex.synchronize do
           @tag_extraction_timings << {
             duration_ms: duration_ms,
-            recorded_at: Time.current
+            recorded_at: Time.now
           }
           @tag_extraction_timings.shift if @tag_extraction_timings.size > @max_timing_samples
         end
@@ -287,7 +291,7 @@ class HTM
           healthy: issues.empty?,
           checks: checks,
           issues: issues,
-          checked_at: Time.current
+          checked_at: Time.now
         }
       end
 
@@ -313,22 +317,22 @@ class HTM
 
       private
 
-      # Check if ActiveRecord is connected
+      # Check if Sequel database is connected
       def connected?
-        return false unless defined?(ActiveRecord::Base)
-        ActiveRecord::Base.connected? && ActiveRecord::Base.connection.active?
+        return false unless defined?(HTM) && HTM.respond_to?(:db)
+        db = HTM.db
+        return false unless db
+        db.test_connection
       rescue StandardError
         false
       end
 
       # Check if a PostgreSQL extension is installed
       def extension_installed?(name)
-        result = ActiveRecord::Base.connection.select_value(
-          ActiveRecord::Base.sanitize_sql_array(
-            ["SELECT COUNT(*) FROM pg_extension WHERE extname = ?", name]
-          )
-        )
-        result.to_i > 0
+        result = HTM.db.fetch(
+          "SELECT COUNT(*) AS cnt FROM pg_extension WHERE extname = ?", name
+        ).first
+        result[:cnt].to_i > 0
       end
 
       # Calculate timing statistics from samples

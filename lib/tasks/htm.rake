@@ -63,7 +63,7 @@ namespace :htm do
 
     desc "Verify database connection (respects HTM_ENV/RAILS_ENV)"
     task :verify do
-      config = HTM::ActiveRecordConfig.load_database_config
+      config = HTM::SequelConfig.load_database_config
 
       puts "Verifying HTM database connection (#{HTM.env})..."
       puts "  Host: #{config[:host]}"
@@ -99,7 +99,7 @@ namespace :htm do
 
     desc "Open PostgreSQL console (respects HTM_ENV/RAILS_ENV)"
     task :console do
-      config = HTM::ActiveRecordConfig.load_database_config
+      config = HTM::SequelConfig.load_database_config
 
       puts "Connecting to #{config[:database]} (#{HTM.env})..."
       exec "psql", "-h", config[:host],
@@ -121,7 +121,7 @@ namespace :htm do
     desc "Show record counts for all HTM tables"
     task :stats do
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       puts "\nHTM Database Statistics"
       puts "=" * 50
@@ -133,7 +133,7 @@ namespace :htm do
           # Node uses default_scope for active nodes, so m.count is active count
           active = m.count
           deleted = m.deleted.count
-          with_embedding = m.where.not(embedding: nil).count
+          with_embedding = m.exclude(embedding: nil).count
           "  (active: #{active}, deleted: #{deleted}, with embeddings: #{with_embedding})"
         }},
         { name: 'tags', model: HTM::Models::Tag },
@@ -160,11 +160,12 @@ namespace :htm do
 
       # Nodes per robot (via robot_nodes join table)
       robot_counts = HTM::Models::RobotNode
-        .joins(:node)
-        .where(nodes: { deleted_at: nil })
-        .group(:robot_id)
-        .count
-        .transform_keys { |id| HTM::Models::Robot.find(id).name rescue "Unknown (#{id})" }
+        .join(:nodes, id: :node_id)
+        .where(Sequel[:nodes][:deleted_at] => nil)
+        .group_and_count(:robot_id)
+        .all
+        .to_h { |row| [row[:robot_id], row[:count]] }
+        .transform_keys { |id| HTM::Models::Robot[id]&.name || "Unknown (#{id})" }
         .sort_by { |_, count| -count }
         .first(5)
 
@@ -176,12 +177,13 @@ namespace :htm do
       end
 
       # Tag distribution
-      top_root_tags = HTM::Models::Tag
-        .select("split_part(name, ':', 1) as root, count(*) as cnt")
-        .group("split_part(name, ':', 1)")
-        .order("cnt DESC")
+      top_root_tags = HTM.db[:tags]
+        .select(Sequel.lit("split_part(name, ':', 1) as root"), Sequel.function(:count, Sequel.lit('*')).as(:cnt))
+        .group(Sequel.lit("split_part(name, ':', 1)"))
+        .order(Sequel.desc(:cnt))
         .limit(5)
-        .map { |t| [t.root, t.cnt] }
+        .all
+        .map { |t| [t[:root], t[:cnt]] }
 
       if top_root_tags.any?
         puts "  Top root tag categories:"
@@ -199,11 +201,11 @@ namespace :htm do
         require 'ruby-progressbar'
 
         # Ensure database connection
-        HTM::ActiveRecordConfig.establish_connection!
+        HTM::SequelConfig.establish_connection!
 
         # Node uses default_scope for active (non-deleted) nodes
         node_count = HTM::Models::Node.count
-        with_embeddings = HTM::Models::Node.where.not(embedding: nil).count
+        with_embeddings = HTM::Models::Node.exclude(embedding: nil).count
         without_embeddings = node_count - with_embeddings
 
         puts "\nHTM Embeddings Rebuild"
@@ -223,7 +225,7 @@ namespace :htm do
         end
 
         puts "\nClearing existing embeddings..."
-        cleared = HTM::Models::Node.where.not(embedding: nil).update_all(embedding: nil)
+        cleared = HTM::Models::Node.exclude(embedding: nil).update(embedding: nil)
         puts "  Cleared #{cleared} embeddings"
 
         puts "\nGenerating embeddings for #{node_count} nodes..."
@@ -242,12 +244,12 @@ namespace :htm do
         errors = 0
         success = 0
 
-        HTM::Models::Node.find_each do |node|
+        HTM::Models::Node.paged_each do |node|
           begin
             # Generate embedding directly (not via job since we cleared them)
             result = HTM::EmbeddingService.generate(node.content)
 
-            node.update!(embedding: result[:storage_embedding])
+            node.update(embedding: result[:storage_embedding])
             success += 1
           rescue StandardError => e
             errors += 1
@@ -260,7 +262,7 @@ namespace :htm do
         progressbar.finish
 
         # Final stats
-        final_with_embeddings = HTM::Models::Node.where.not(embedding: nil).count
+        final_with_embeddings = HTM::Models::Node.exclude(embedding: nil).count
 
         puts "\nRebuild complete!"
         puts "  Nodes processed: #{node_count}"
@@ -274,7 +276,7 @@ namespace :htm do
         require 'ruby-progressbar'
 
         # Ensure database connection
-        HTM::ActiveRecordConfig.establish_connection!
+        HTM::SequelConfig.establish_connection!
 
         # Find all non-proposition nodes (nodes that haven't been extracted from)
         source_nodes = HTM::Models::Node.non_propositions
@@ -302,7 +304,7 @@ namespace :htm do
         # Delete existing proposition nodes
         if existing_propositions > 0
           puts "\nDeleting #{existing_propositions} existing proposition nodes..."
-          deleted = HTM::Models::Node.propositions.delete_all
+          deleted = HTM::Models::Node.propositions.delete
           puts "  Deleted #{deleted} proposition nodes"
         end
 
@@ -311,7 +313,7 @@ namespace :htm do
 
         # Get a robot ID for linking proposition nodes
         # Use the first robot or create a system robot
-        robot = HTM::Models::Robot.first || HTM::Models::Robot.create!(name: 'proposition_rebuilder')
+        robot = HTM::Models::Robot.first || HTM::Models::Robot.create(name: 'proposition_rebuilder')
 
         # Create progress bar with ETA
         progressbar = ProgressBar.create(
@@ -327,7 +329,7 @@ namespace :htm do
         nodes_processed = 0
         propositions_created = 0
 
-        source_nodes.find_each do |node|
+        source_nodes.paged_each do |node|
           begin
             # Extract propositions
             propositions = HTM::PropositionService.extract(node.content)
@@ -337,14 +339,14 @@ namespace :htm do
                 token_count = HTM.count_tokens(proposition_text)
 
                 # Create proposition node
-                prop_node = HTM::Models::Node.create!(
+                prop_node = HTM::Models::Node.create(
                   content: proposition_text,
                   token_count: token_count,
                   metadata: { is_proposition: true, source_node_id: node.id }
                 )
 
                 # Link to robot
-                HTM::Models::RobotNode.find_or_create_by!(
+                HTM::Models::RobotNode.find_or_create(
                   robot_id: robot.id,
                   node_id: prop_node.id
                 )
@@ -352,7 +354,7 @@ namespace :htm do
                 # Generate embedding for proposition node
                 begin
                   result = HTM::EmbeddingService.generate(proposition_text)
-                  prop_node.update!(embedding: result[:storage_embedding])
+                  prop_node.update(embedding: result[:storage_embedding])
                 rescue StandardError => e
                   progressbar.log "  Warning: Embedding failed for proposition: #{e.message}"
                 end
@@ -397,7 +399,7 @@ namespace :htm do
 
     desc "Create database if it doesn't exist (respects HTM_ENV/RAILS_ENV)"
     task :create do
-      config = HTM::ActiveRecordConfig.load_database_config
+      config = HTM::SequelConfig.load_database_config
       db_name = config[:database]
 
       puts "Creating database: #{db_name} (#{HTM.env})"
@@ -452,15 +454,15 @@ namespace :htm do
       desc "Soft delete orphaned tags and stale node_tags entries"
       task :cleanup do
         # Ensure database connection
-        HTM::ActiveRecordConfig.establish_connection!
+        HTM::SequelConfig.establish_connection!
 
         puts "\nHTM Tag Cleanup"
         puts "=" * 50
 
         # Step 1: Find active node_tags pointing to soft-deleted or missing nodes
         stale_node_tags = HTM::Models::NodeTag
-          .joins("LEFT JOIN nodes ON nodes.id = node_tags.node_id")
-          .where("nodes.id IS NULL OR nodes.deleted_at IS NOT NULL")
+          .left_join(:nodes, id: :node_id)
+          .where(Sequel.lit("nodes.id IS NULL OR nodes.deleted_at IS NOT NULL"))
 
         stale_count = stale_node_tags.count
 
@@ -481,7 +483,7 @@ namespace :htm do
 
         if orphan_count > 0
           puts "\nOrphaned tags:"
-          orphaned_tags.limit(20).pluck(:name).each do |name|
+          orphaned_tags.limit(20).select_map(:name).each do |name|
             puts "  - #{name}"
           end
           puts "  ... and #{orphan_count - 20} more" if orphan_count > 20
@@ -495,17 +497,17 @@ namespace :htm do
           next
         end
 
-        now = Time.current
+        now = Time.now
 
         # Soft delete stale node_tags first
         if stale_count > 0
-          soft_deleted_node_tags = stale_node_tags.update_all(deleted_at: now)
+          soft_deleted_node_tags = stale_node_tags.update(deleted_at: now)
           puts "\nSoft deleted #{soft_deleted_node_tags} stale node_tags entries."
         end
 
         # Then soft delete orphaned tags
         if orphan_count > 0
-          soft_deleted_tags = orphaned_tags.update_all(deleted_at: now)
+          soft_deleted_tags = orphaned_tags.update(deleted_at: now)
           puts "Soft deleted #{soft_deleted_tags} orphaned tags."
         end
 
@@ -516,7 +518,7 @@ namespace :htm do
     desc "Permanently delete all soft-deleted records from all tables (WARNING: irreversible!)"
     task :purge_all do
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       puts "\nHTM Purge All Soft-Deleted Records"
       puts "=" * 60
@@ -529,42 +531,43 @@ namespace :htm do
       # Find orphaned propositions (source_node_id no longer exists)
       # Get all source_node_ids from propositions
       proposition_source_ids = HTM::Models::Node
-        .where("metadata->>'is_proposition' = ?", 'true')
-        .where("metadata->>'source_node_id' IS NOT NULL")
-        .pluck(Arel.sql("(metadata->>'source_node_id')::integer"))
+        .where(Sequel.lit("metadata->>'is_proposition' = ?", 'true'))
+        .exclude(Sequel.lit("metadata->>'source_node_id' IS NULL"))
+        .select_map(Sequel.lit("(metadata->>'source_node_id')::integer"))
         .uniq
 
       # Find which source nodes no longer exist (not even soft-deleted)
-      existing_node_ids = HTM::Models::Node.unscoped
+      existing_node_ids = HTM::Models::Node.with_deleted
         .where(id: proposition_source_ids)
-        .pluck(:id)
+        .select_map(:id)
 
       missing_source_ids = proposition_source_ids - existing_node_ids
 
       orphaned_propositions = if missing_source_ids.any?
         HTM::Models::Node
-          .where("metadata->>'is_proposition' = ?", 'true')
-          .where("(metadata->>'source_node_id')::integer IN (?)", missing_source_ids)
+          .where(Sequel.lit("metadata->>'is_proposition' = ?", 'true'))
+          .where(Sequel.lit("(metadata->>'source_node_id')::integer") => missing_source_ids)
           .count
       else
         0
       end
 
       # Find orphaned join table entries (pointing to non-existent nodes)
-      orphaned_node_tags = HTM::Models::NodeTag.unscoped
-        .joins("LEFT JOIN nodes ON nodes.id = node_tags.node_id")
-        .where("nodes.id IS NULL")
+      orphaned_node_tags = HTM::Models::NodeTag.with_deleted
+        .left_join(:nodes, id: :node_id)
+        .where(Sequel[:nodes][:id] => nil)
         .count
 
-      orphaned_robot_nodes = HTM::Models::RobotNode.unscoped
-        .joins("LEFT JOIN nodes ON nodes.id = robot_nodes.node_id")
-        .where("nodes.id IS NULL")
+      orphaned_robot_nodes = HTM::Models::RobotNode.with_deleted
+        .left_join(:nodes, id: :node_id)
+        .where(Sequel[:nodes][:id] => nil)
         .count
 
       # Find orphaned robots (no active memory nodes)
       orphaned_robots = HTM::Models::Robot
-        .left_joins(:robot_nodes)
-        .where(robot_nodes: { id: nil })
+        .where(Sequel.~(Sequel.exists(
+          HTM::Models::RobotNode.where(Sequel[:robot_nodes][:robot_id] => Sequel[:robots][:id]).select(1)
+        )))
         .count
 
       # Display record counts by table
@@ -611,41 +614,44 @@ namespace :htm do
       # Step 1: Delete orphaned propositions (source_node_id no longer exists)
       if missing_source_ids.any?
         purged[:orphaned_propositions] = HTM::Models::Node
-          .where("metadata->>'is_proposition' = ?", 'true')
-          .where("(metadata->>'source_node_id')::integer IN (?)", missing_source_ids)
-          .delete_all
+          .where(Sequel.lit("metadata->>'is_proposition' = ?", 'true'))
+          .where(Sequel.lit("(metadata->>'source_node_id')::integer") => missing_source_ids)
+          .delete
       else
         purged[:orphaned_propositions] = 0
       end
 
       # Step 2: Delete orphaned node_tags (pointing to non-existent nodes)
       # This now includes entries from deleted propositions
-      purged[:orphaned_node_tags] = HTM::Models::NodeTag.unscoped
-        .joins("LEFT JOIN nodes ON nodes.id = node_tags.node_id")
-        .where("nodes.id IS NULL")
-        .delete_all
+      orphaned_nt_ids = HTM::Models::NodeTag.with_deleted
+        .left_join(:nodes, id: :node_id)
+        .where(Sequel[:nodes][:id] => nil)
+        .select_map(Sequel[:node_tags][:id])
+      purged[:orphaned_node_tags] = HTM::Models::NodeTag.with_deleted.where(id: orphaned_nt_ids).delete
 
       # Step 3: Delete soft-deleted node_tags
-      purged[:deleted_node_tags] = HTM::Models::NodeTag.deleted.delete_all
+      purged[:deleted_node_tags] = HTM::Models::NodeTag.deleted.delete
 
       # Step 4: Delete orphaned robot_nodes (pointing to non-existent nodes)
       # This now includes entries from deleted propositions
-      purged[:orphaned_robot_nodes] = HTM::Models::RobotNode.unscoped
-        .joins("LEFT JOIN nodes ON nodes.id = robot_nodes.node_id")
-        .where("nodes.id IS NULL")
-        .delete_all
+      orphaned_rn_ids = HTM::Models::RobotNode.with_deleted
+        .left_join(:nodes, id: :node_id)
+        .where(Sequel[:nodes][:id] => nil)
+        .select_map(Sequel[:robot_nodes][:id])
+      purged[:orphaned_robot_nodes] = HTM::Models::RobotNode.with_deleted.where(id: orphaned_rn_ids).delete
 
       # Step 5: Delete soft-deleted robot_nodes
-      purged[:deleted_robot_nodes] = HTM::Models::RobotNode.deleted.delete_all
+      purged[:deleted_robot_nodes] = HTM::Models::RobotNode.deleted.delete
 
       # Step 6: Delete soft-deleted nodes
-      purged[:deleted_nodes] = HTM::Models::Node.deleted.delete_all
+      purged[:deleted_nodes] = HTM::Models::Node.deleted.delete
 
       # Step 7: Delete orphaned robots (no associated memory nodes)
       purged[:orphaned_robots] = HTM::Models::Robot
-        .left_joins(:robot_nodes)
-        .where(robot_nodes: { id: nil })
-        .delete_all
+        .where(Sequel.~(Sequel.exists(
+          HTM::Models::RobotNode.where(Sequel[:robot_nodes][:robot_id] => Sequel[:robots][:id]).select(1)
+        )))
+        .delete
 
       puts "\nPurge complete!"
       puts "  Orphaned propositions purged: #{purged[:orphaned_propositions]}"

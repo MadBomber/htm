@@ -199,7 +199,7 @@ class MCPServerTest < Minitest::Test
     assert_instance_of Integer, result["node_id"]
 
     # Verify metadata was stored
-    node = HTM::Models::Node.find(result["node_id"])
+    node = HTM::Models::Node[result["node_id"]]
     assert_equal "high", node.metadata["priority"]
   end
 
@@ -285,7 +285,7 @@ class MCPServerTest < Minitest::Test
     assert result["message"].include?("soft-deleted")
 
     # Verify soft delete
-    node = HTM::Models::Node.with_deleted.find(node_id)
+    node = HTM::Models::Node.with_deleted[node_id]
     refute_nil node.deleted_at
   end
 
@@ -313,7 +313,7 @@ class MCPServerTest < Minitest::Test
     htm.forget(node_id)
 
     # Verify deleted
-    assert_nil HTM::Models::Node.find_by(id: node_id)
+    assert_nil HTM::Models::Node.first(id: node_id)
 
     tool = HTM::MCP::RestoreTool.new
     result = JSON.parse(tool.call(node_id: node_id))
@@ -323,7 +323,7 @@ class MCPServerTest < Minitest::Test
     assert result["message"].include?("restored")
 
     # Verify restored
-    node = HTM::Models::Node.find(node_id)
+    node = HTM::Models::Node[node_id]
     assert_nil node.deleted_at
   end
 
@@ -986,16 +986,16 @@ class MCPServerTest < Minitest::Test
 
   def cleanup_test_data
     # Clean up test robots (those with test_ prefix)
-    HTM::Models::Robot.where("name LIKE ?", "test_%").find_each do |robot|
-      robot.robot_nodes.destroy_all
+    HTM::Models::Robot.where(Sequel.like(:name, "test_%")).each do |robot|
+      HTM::Models::RobotNode.where(robot_id: robot.id).delete
     end
 
     # Clean up other test patterns
     %w[mcp_default remember_test recall_test forget_test restore_test
        list_tags_test search_tags_test topic_test stats_test
        res_stats_test res_tags_test res_recent_test wm_test].each do |prefix|
-      HTM::Models::Robot.where("name LIKE ?", "#{prefix}%").find_each do |robot|
-        robot.robot_nodes.destroy_all
+      HTM::Models::Robot.where(Sequel.like(:name, "#{prefix}%")).each do |robot|
+        HTM::Models::RobotNode.where(robot_id: robot.id).delete
       end
     end
   rescue => e

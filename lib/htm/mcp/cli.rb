@@ -257,13 +257,13 @@ class HTM
           }
         end.sort_by { |m| m[:version] }
 
-        # Ensure ActiveRecord connection for migration check
-        HTM::ActiveRecordConfig.establish_connection!
+        # Ensure Sequel connection for migration check
+        HTM::SequelConfig.establish_connection!
 
         # Get applied migrations from database
         applied_versions = begin
-          ActiveRecord::Base.connection.select_values('SELECT version FROM schema_migrations ORDER BY version')
-        rescue ActiveRecord::StatementInvalid
+          HTM.db[:schema_migrations].select_order_map(:version)
+        rescue Sequel::DatabaseError
           []
         end
 
@@ -393,7 +393,7 @@ class HTM
         check_database_config!
 
         begin
-          HTM::ActiveRecordConfig.establish_connection!
+          HTM::SequelConfig.establish_connection!
 
           total_nodes     = HTM::Models::Node.count
           deleted_nodes   = HTM::Models::Node.deleted.count
@@ -403,9 +403,9 @@ class HTM
           total_files     = HTM::Models::FileSource.count
 
           # Get database size
-          db_size = ActiveRecord::Base.connection.execute(
+          db_size = HTM.db.fetch(
             "SELECT pg_size_pretty(pg_database_size(current_database())) AS size"
-          ).first['size']
+          ).first[:size]
 
           puts "Nodes:   #{total_nodes} active, #{deleted_nodes} deleted, #{with_embeddings} with embeddings"
           puts "Tags:    #{total_tags}"

@@ -14,7 +14,7 @@ namespace :htm do
     task :tree, [:prefix] do |_t, args|
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       tags = args[:prefix] ? HTM::Models::Tag.with_prefix(args[:prefix]) : HTM::Models::Tag.all
       count = tags.count
@@ -35,7 +35,7 @@ namespace :htm do
     task :mermaid, [:prefix] do |_t, args|
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       tags = args[:prefix] ? HTM::Models::Tag.with_prefix(args[:prefix]) : HTM::Models::Tag.all
       count = tags.count
@@ -56,7 +56,7 @@ namespace :htm do
     task :svg, [:prefix] do |_t, args|
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       tags = args[:prefix] ? HTM::Models::Tag.with_prefix(args[:prefix]) : HTM::Models::Tag.all
       count = tags.count
@@ -78,7 +78,7 @@ namespace :htm do
     task :rebuild do
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       # Node uses default_scope for active (non-deleted) nodes
       node_count = HTM::Models::Node.count
@@ -103,11 +103,11 @@ namespace :htm do
       puts "\nClearing existing tags..."
 
       # Clear join table first (foreign key constraint)
-      deleted_associations = HTM::Models::NodeTag.delete_all
+      deleted_associations = HTM::Models::NodeTag.dataset.delete
       puts "  Deleted #{deleted_associations} node-tag associations"
 
       # Clear tags table
-      deleted_tags = HTM::Models::Tag.delete_all
+      deleted_tags = HTM::Models::Tag.dataset.delete
       puts "  Deleted #{deleted_tags} tags"
 
       puts "\nRegenerating tags for #{node_count} nodes..."
@@ -127,7 +127,7 @@ namespace :htm do
       # Process each active node (default_scope excludes deleted)
       errors = 0
 
-      HTM::Models::Node.find_each do |node|
+      HTM::Models::Node.paged_each do |node|
         begin
           HTM::Jobs::GenerateTagsJob.perform(node_id: node.id)
         rescue StandardError => e
@@ -155,7 +155,7 @@ namespace :htm do
     task :export, [:prefix] do |_t, args|
 
       # Ensure database connection
-      HTM::ActiveRecordConfig.establish_connection!
+      HTM::SequelConfig.establish_connection!
 
       tags = args[:prefix] ? HTM::Models::Tag.with_prefix(args[:prefix]) : HTM::Models::Tag.all
       count = tags.count

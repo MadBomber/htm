@@ -8,23 +8,39 @@ class HTM
     # When a robot is deleted, only the robot_nodes links are removed; shared
     # nodes remain in the database for other robots.
     #
-    class Robot < ActiveRecord::Base
-      self.table_name = 'robots'
-
+    class Robot < Sequel::Model(:robots)
       # Associations - Many-to-many with nodes via robot_nodes
       # dependent: :destroy removes links only, NOT the shared nodes
-      has_many :robot_nodes, class_name: 'HTM::Models::RobotNode', dependent: :destroy
-      has_many :nodes, through: :robot_nodes, class_name: 'HTM::Models::Node'
+      one_to_many :robot_nodes, class: 'HTM::Models::RobotNode', key: :robot_id
+      many_to_many :nodes, class: 'HTM::Models::Node',
+                   join_table: :robot_nodes, left_key: :robot_id, right_key: :node_id
+
+      # Plugins
+      plugin :validation_helpers
+      plugin :timestamps, update_on_create: true
 
       # Validations
-      validates :name, presence: true
+      def validate
+        super
+        validates_presence :name
+      end
 
-      # Callbacks
-      before_create :set_created_at
+      # Dataset methods (scopes)
+      dataset_module do
+        def recent
+          order(Sequel.desc(:created_at))
+        end
 
-      # Scopes
-      scope :recent, -> { order(created_at: :desc) }
-      scope :by_name, ->(name) { where(name: name) }
+        def by_name(name)
+          where(name: name)
+        end
+      end
+
+      # Hooks
+      def before_create
+        self.created_at ||= Time.now
+        super
+      end
 
       # Class methods
 
@@ -34,7 +50,7 @@ class HTM
       # @return [Robot] The found or created robot
       #
       def self.find_or_create_by_name(robot_name)
-        find_or_create_by(name: robot_name)
+        find_or_create(name: robot_name)
       end
 
       # Instance methods
@@ -44,16 +60,16 @@ class HTM
       # @return [Integer] Number of nodes
       #
       def node_count
-        nodes.count
+        nodes_dataset.count
       end
 
       # Get the most recent nodes for this robot
       #
       # @param limit [Integer] Maximum number of nodes to return (default: 10)
-      # @return [ActiveRecord::Relation] Recent nodes ordered by created_at desc
+      # @return [Array<Node>] Recent nodes ordered by created_at desc
       #
       def recent_nodes(limit = 10)
-        nodes.recent.limit(limit)
+        nodes_dataset.order(Sequel.desc(:created_at)).limit(limit).all
       end
 
       # Get nodes with their remember metadata for this robot
@@ -62,10 +78,11 @@ class HTM
       # @return [Array<Hash>] Nodes with remember_count, first/last_remembered_at
       #
       def nodes_with_metadata(limit = 10)
-        robot_nodes
-          .includes(:node)
-          .order(last_remembered_at: :desc)
+        robot_nodes_dataset
+          .eager(:node)
+          .order(Sequel.desc(:last_remembered_at))
           .limit(limit)
+          .all
           .map do |rn|
             {
               node: rn.node,
@@ -85,16 +102,10 @@ class HTM
       #
       def memory_summary
         {
-          total_nodes: nodes.count,
-          in_working_memory: robot_nodes.in_working_memory.count,
-          with_embeddings: nodes.with_embeddings.count
+          total_nodes: nodes_dataset.count,
+          in_working_memory: robot_nodes_dataset.where(working_memory: true).count,
+          with_embeddings: nodes_dataset.exclude(embedding: nil).count
         }
-      end
-
-      private
-
-      def set_created_at
-        self.created_at ||= Time.current
       end
     end
   end
