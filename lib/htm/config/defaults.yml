@@ -273,3 +273,14 @@ production:
     sslmode: require
   log_level: :warn
   telemetry_enabled: true
+
+# =============================================================================
+# Examples Environment Overrides (for running example scripts)
+# =============================================================================
+examples:
+  database:
+    name: htm_examples
+  job:
+    backend: :inline
+  log_level: :info
+  telemetry_enabled: false

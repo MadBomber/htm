@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    htm (0.0.30)
+    htm (0.0.31)
       activesupport
       async (~> 2.0)
       baran
