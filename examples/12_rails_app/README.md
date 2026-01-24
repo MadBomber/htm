@@ -13,10 +13,11 @@ A full-stack Rails application demonstrating HTM integration with a compelling U
 
 ## Tech Stack
 
-- Rails 7.1 with Hotwire (Turbo + Stimulus)
-- Tailwind CSS for dark-themed UI
+- Rails 7.1 with Hotwire (Turbo via CDN)
+- Tailwind CSS via CDN (no build step required)
 - PostgreSQL with pgvector
 - HTM gem for semantic memory management
+- Propshaft for asset pipeline
 
 ## Setup
 
@@ -24,22 +25,24 @@ A full-stack Rails application demonstrating HTM integration with a compelling U
 # From this directory
 bundle install
 
-# Ensure HTM database is set up
+# Create the Rails app database (required for Rails to boot)
+createdb htm_rails_example_dev
+
+# Ensure HTM database is set up (separate from Rails database)
 export HTM_DATABASE__URL="postgresql://localhost/htm_development"
 
-# Install Tailwind CSS
-rails tailwindcss:install
-
-# Set up importmap
-rails importmap:install
-rails turbo:install
-rails stimulus:install
+# Verify HTM database has required extensions
+psql htm_development -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 ```
+
+**Note:** This app uses two databases:
+- `htm_rails_example_dev` - Rails application database (minimal, required for Rails)
+- `htm_development` - HTM memory database (configured via `HTM_DATABASE__URL`)
 
 ## Running
 
 ```bash
-# Start the Rails server with Tailwind CSS watching
+# Start the Rails server
 ./bin/dev
 
 # Or start manually
@@ -71,7 +74,7 @@ The app features a dark theme with:
    - `htm.recall()` - Search memories (Search page)
    - `htm.forget()` / `htm.restore()` - Soft delete/restore
    - `htm.load_file()` - Load markdown files (Files page)
-   - Tag hierarchy visualization via `HTM::Models::Tag.all.tree_svg`
+   - Tag hierarchy visualization via `HTM::Models::Tag.tree_svg`
 
 ## Pages
 
@@ -89,10 +92,18 @@ The app features a dark theme with:
 ## Development
 
 The app uses:
-- `propshaft` for asset pipeline
-- `importmap-rails` for JavaScript
-- `tailwindcss-rails` for styling
-- `kaminari` for pagination
-- `turbo-rails` for SPA-like navigation
+- `propshaft` for asset pipeline (CSS/images only)
+- Tailwind CSS via CDN (no build step)
+- Hotwire (Turbo) via CDN (no build step)
+- Manual offset/limit pagination (no Kaminari)
 
-No JavaScript build step required.
+No JavaScript build step required. All frontend dependencies are loaded via CDN.
+
+## Maintenance
+
+**Uploaded Files:** Files uploaded via the web UI are stored in `tmp/uploads/`. These files are kept to support the "Sync" feature which re-reads files from disk. To clean up old uploads:
+
+```bash
+# Remove all uploaded files (will break sync for uploaded files)
+rm -rf tmp/uploads/*
+```

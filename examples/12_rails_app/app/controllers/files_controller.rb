@@ -7,6 +7,11 @@ class FilesController < ApplicationController
 
   def show
     @file_source = HTM::Models::FileSource[params[:id]]
+    unless @file_source
+      flash[:alert] = 'File source not found'
+      redirect_to files_path
+      return
+    end
     @chunks = @file_source.chunks.order(:id)
   end
 
@@ -128,6 +133,11 @@ class FilesController < ApplicationController
 
   def sync
     @file_source = HTM::Models::FileSource[params[:id]]
+    unless @file_source
+      flash[:alert] = 'File source not found'
+      redirect_to files_path
+      return
+    end
 
     begin
       result = htm.load_file(@file_source.file_path, force: true)
@@ -141,6 +151,11 @@ class FilesController < ApplicationController
 
   def destroy
     @file_source = HTM::Models::FileSource[params[:id]]
+    unless @file_source
+      flash[:alert] = 'File source not found'
+      redirect_to files_path
+      return
+    end
 
     begin
       htm.unload_file(@file_source.file_path)

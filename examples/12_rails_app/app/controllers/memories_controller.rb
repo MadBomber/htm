@@ -17,7 +17,8 @@ class MemoriesController < ApplicationController
     end
 
     if params[:search].present?
-      @memories = @memories.where(Sequel.ilike(:content, "%#{params[:search]}%"))
+      search_pattern = "%#{Sequel.like_escape(params[:search])}%"
+      @memories = @memories.where(Sequel.ilike(:content, search_pattern))
     end
 
     # Simple pagination without Kaminari
@@ -102,5 +103,9 @@ class MemoriesController < ApplicationController
 
   def set_memory
     @memory = HTM::Models::Node.with_deleted[params[:id].to_i]
+    return if @memory
+
+    flash[:alert] = 'Memory not found'
+    redirect_to memories_path
   end
 end

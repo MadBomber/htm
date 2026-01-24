@@ -20,9 +20,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resource :search, only: [:index], controller: 'search' do
-    get '/', action: :index
-  end
+  get '/search', to: 'search#index', as: :search
 
   resources :files, only: [:index, :show, :new, :create, :destroy] do
     collection do

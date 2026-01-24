@@ -31,6 +31,11 @@ class TagsController < ApplicationController
 
   def show
     @tag = HTM::Models::Tag[params[:id]]
+    unless @tag
+      flash[:alert] = 'Tag not found'
+      redirect_to tags_path
+      return
+    end
     @memories = @tag.nodes_dataset.active.eager(:tags).order(Sequel.desc(:created_at)).all
   end
 end
