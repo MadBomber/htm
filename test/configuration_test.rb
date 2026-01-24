@@ -22,6 +22,13 @@ class ConfigurationTest < Minitest::Test
     temp_dir = Dir.mktmpdir('htm_config_test')
     ENV['XDG_CONFIG_HOME'] = temp_dir
 
+    # Create an empty config file to shadow user's ~/.config/htm/htm.yml
+    # myway_config checks both XDG_CONFIG_HOME and ~/.config, with XDG_CONFIG_HOME
+    # taking priority when a file exists there
+    config_dir = File.join(temp_dir, 'htm')
+    FileUtils.mkdir_p(config_dir)
+    File.write(File.join(config_dir, 'htm.yml'), "# Empty config to test bundled defaults\n")
+
     begin
       config = HTM::Config.new
 
@@ -406,10 +413,9 @@ class ConfigurationTest < Minitest::Test
     saved_htm_env = ENV['HTM_ENV']
     ENV['HTM_ENV'] = 'staginr'
 
-    config = HTM::Config.new
-
+    # myway_config validates environment during initialization
     error = assert_raises(HTM::ConfigurationError) do
-      config.validate_database!
+      HTM::Config.new
     end
 
     assert_match(/Invalid environment 'staginr'/, error.message)
@@ -468,10 +474,9 @@ class ConfigurationTest < Minitest::Test
     saved_htm_env = ENV['HTM_ENV']
     ENV['HTM_ENV'] = 'invalid_env'
 
-    config = HTM::Config.new
-
+    # myway_config validates environment during initialization
     error = assert_raises(HTM::ConfigurationError) do
-      config.validate_environment!
+      HTM::Config.new
     end
 
     assert_match(/Invalid environment 'invalid_env'/, error.message)

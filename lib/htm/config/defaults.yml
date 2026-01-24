@@ -49,7 +49,7 @@ defaults:
   # Access: HTM.config.embedding.provider, HTM.config.embedding.model, etc.
   # ---------------------------------------------------------------------------
   embedding:
-    provider: ollama
+    provider: :ollama
     model: nomic-embed-text:latest
     dimensions: 768
     timeout: 120
@@ -65,7 +65,7 @@ defaults:
   #   %{taxonomy_context} - existing taxonomy info or new taxonomy message
   # ---------------------------------------------------------------------------
   tag:
-    provider: ollama
+    provider: :ollama
     model: gemma3:latest
     timeout: 180
     max_depth: 4
@@ -110,7 +110,7 @@ defaults:
   #   %{text} - the content to extract propositions from
   # ---------------------------------------------------------------------------
   proposition:
-    provider: ollama
+    provider: :ollama
     model: gemma3:latest
     timeout: 180
     enabled: true
@@ -164,11 +164,12 @@ defaults:
 
   # ---------------------------------------------------------------------------
   # Chunking Configuration (for file loading)
-  # Access: HTM.config.chunking.size, HTM.config.chunking.overlap
+  # Access: HTM.config.chunking.chunk_size, HTM.config.chunking.chunk_overlap
+  # Note: Using chunk_size/chunk_overlap to avoid collision with Enumerable#size
   # ---------------------------------------------------------------------------
   chunking:
-    size: 1024
-    overlap: 64
+    chunk_size: 1024
+    chunk_overlap: 64
 
   # ---------------------------------------------------------------------------
   # Circuit Breaker Configuration
@@ -195,16 +196,16 @@ defaults:
   # Access: HTM.config.job.backend
   # ---------------------------------------------------------------------------
   job:
-    backend: fiber
+    backend: :fiber
 
   # ---------------------------------------------------------------------------
   # General Settings
   # Access: HTM.config.week_start, HTM.config.connection_timeout, etc.
   # ---------------------------------------------------------------------------
-  week_start: sunday
+  week_start: :sunday
   connection_timeout: 60
   telemetry_enabled: false
-  log_level: info
+  log_level: :info
 
   # ---------------------------------------------------------------------------
   # Provider Credentials
@@ -250,7 +251,7 @@ defaults:
 development:
   database:
     name: htm_development
-  log_level: debug
+  log_level: :debug
 
 # =============================================================================
 # Test Environment Overrides
@@ -259,8 +260,8 @@ test:
   database:
     name: htm_test
   job:
-    backend: inline
-  log_level: warn
+    backend: :inline
+  log_level: :warn
   telemetry_enabled: false
 
 # =============================================================================
@@ -270,5 +271,5 @@ production:
   database:
     pool_size: 25
     sslmode: require
-  log_level: warn
+  log_level: :warn
   telemetry_enabled: true

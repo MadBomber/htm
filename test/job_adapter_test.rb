@@ -108,6 +108,10 @@ class JobAdapterTest < Minitest::Test
     ENV['RACK_ENV'] = 'test'
     # Isolate from user's XDG config to test bundled defaults
     ENV['XDG_CONFIG_HOME'] = temp_dir
+    # Create empty config to shadow user's ~/.config/htm/htm.yml
+    config_dir = File.join(temp_dir, 'htm')
+    FileUtils.mkdir_p(config_dir)
+    File.write(File.join(config_dir, 'htm.yml'), "# Empty config\n")
 
     config = HTM::Config.new
     assert_equal :inline, config.job_backend

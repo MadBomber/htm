@@ -46,7 +46,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "chronic"
   spec.add_dependency "fast-mcp"
   spec.add_dependency "baran"
-  spec.add_dependency "anyway_config", ">= 2.6"
+  spec.add_dependency "myway_config", ">= 0.1.2"
   spec.add_dependency "simple_flow"
   spec.add_dependency "async", "~> 2.0"
   spec.add_dependency "activesupport"  # For inflections (singularize/pluralize)

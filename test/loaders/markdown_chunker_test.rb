@@ -146,8 +146,8 @@ class MarkdownChunkerTest < Minitest::Test
   def test_uses_config_defaults
     # Reset to default configuration
     HTM.configure do |config|
-      config.chunking.size = 512
-      config.chunking.overlap = 32
+      config.chunking.chunk_size = 512
+      config.chunking.chunk_overlap = 32
     end
 
     default_chunker = HTM::Loaders::MarkdownChunker.new
@@ -157,8 +157,8 @@ class MarkdownChunkerTest < Minitest::Test
 
   def test_custom_chunk_size_overrides_config
     HTM.configure do |config|
-      config.chunking.size = 1000
-      config.chunking.overlap = 100
+      config.chunking.chunk_size = 1000
+      config.chunking.chunk_overlap = 100
     end
 
     custom_chunker = HTM::Loaders::MarkdownChunker.new(chunk_size: 200, chunk_overlap: 20)
