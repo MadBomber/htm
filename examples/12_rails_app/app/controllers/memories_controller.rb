@@ -68,13 +68,13 @@ class MemoriesController < ApplicationController
 
     if content.blank?
       flash[:alert] = 'Content is required'
-      redirect_to edit_memory_path(@memory)
+      redirect_to edit_memory_path(@memory.id)
       return
     end
 
     @memory.update(content: content)
     flash[:notice] = 'Memory updated successfully'
-    redirect_to memory_path(@memory)
+    redirect_to memory_path(@memory.id)
   end
 
   def destroy
@@ -92,7 +92,7 @@ class MemoriesController < ApplicationController
   def restore
     htm.restore(@memory.id)
     flash[:notice] = 'Memory restored successfully.'
-    redirect_to memory_path(@memory)
+    redirect_to memory_path(@memory.id)
   end
 
   def deleted

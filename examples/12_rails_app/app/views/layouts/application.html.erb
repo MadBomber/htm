@@ -3,9 +3,6 @@
 <head>
   <title>HTM Memory Explorer</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="turbo-cache-control" content="no-preview">
-  <meta name="turbo-refresh-method" content="morph">
-  <meta name="turbo-refresh-scroll" content="preserve">
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
@@ -40,28 +37,33 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= stylesheet_link_tag "application" %>
 
-  <%# Hotwire via CDN - no build step needed %>
-  <script type="module">
-    import * as Turbo from 'https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.12/+esm'
-
-    // Live reload: auto-refresh every 3 seconds using Turbo morphing
-    // This preserves scroll position and smoothly updates only changed elements
+  <%# Auto-refresh without Turbo Drive - CDN Turbo doesn't integrate well with Rails %>
+  <script>
+    // Simple auto-refresh using standard page reload
+    // Turbo Drive via CDN causes navigation issues, so we use plain JS instead
+    // Auto-refresh can be disabled by adding data-no-auto-refresh to the body
     let autoRefreshEnabled = true;
     let formFieldFocused = false;
     let refreshInterval = 3000;
 
     function autoRefresh() {
+      // Don't refresh if disabled globally or via data attribute
+      if (!autoRefreshEnabled) return;
+      if (document.body.hasAttribute('data-no-auto-refresh')) return;
       // Don't refresh if form field is focused (would interrupt typing)
-      if (autoRefreshEnabled && document.visibilityState === 'visible' && !formFieldFocused) {
-        Turbo.visit(window.location.href, { action: 'replace' });
-      }
+      if (document.visibilityState !== 'visible' || formFieldFocused) return;
+
+      window.location.reload();
     }
 
     // Start auto-refresh after page loads
-    document.addEventListener('turbo:load', () => {
-      setInterval(autoRefresh, refreshInterval);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Only start auto-refresh if not disabled
+      if (!document.body.hasAttribute('data-no-auto-refresh')) {
+        setInterval(autoRefresh, refreshInterval);
+      }
 
       // Pause refresh when any form field is focused
       document.addEventListener('focusin', (e) => {
@@ -79,8 +81,8 @@
 
     // Pause refresh when page is hidden
     document.addEventListener('visibilitychange', () => {
-      // Refresh immediately when tab becomes visible again
-      if (document.visibilityState === 'visible') {
+      // Refresh immediately when tab becomes visible again (if enabled)
+      if (document.visibilityState === 'visible' && !document.body.hasAttribute('data-no-auto-refresh')) {
         autoRefresh();
       }
     });
@@ -99,7 +101,7 @@
   </style>
 </head>
 
-<body class="h-full bg-gray-900 text-gray-100">
+<body class="h-full bg-gray-900 text-gray-100" <%= yield :body_attributes %>>
   <div class="min-h-full">
     <%= render 'shared/navbar' %>
 

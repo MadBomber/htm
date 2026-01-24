@@ -14,7 +14,7 @@ require 'htm'
 
 module HtmRailsExample
   class Application < Rails::Application
-    config.load_defaults 7.1
+    config.load_defaults 8.0
 
     # Full-stack Rails app (not API-only)
     config.api_only = false

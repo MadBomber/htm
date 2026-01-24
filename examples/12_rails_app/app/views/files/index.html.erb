@@ -1,3 +1,5 @@
+<% content_for :body_attributes do %>data-no-auto-refresh<% end %>
+
 <div class="space-y-6">
   <!-- Header -->
   <div class="flex items-center justify-between">
@@ -33,7 +35,10 @@
       </div>
       <div class="ml-3">
         <p class="text-sm text-blue-300">
-          <strong>File Loading:</strong> HTM can load markdown files into memory with automatic chunking. Each chunk becomes a separate memory node with its own embedding and tags. Changes are tracked for re-sync.
+          <strong>File Loading:</strong> HTM can load markdown files into memory with automatic chunking. Each chunk becomes a separate memory node with its own embedding and tags.
+        </p>
+        <p class="text-sm text-blue-300/70 mt-2">
+          <strong>Sync:</strong> Re-reads the source file and performs a differential update. Unchanged content is preserved (keeping embeddings and tags); new content is added; removed content is soft-deleted (recoverable).
         </p>
       </div>
     </div>
@@ -56,7 +61,7 @@
           <% @file_sources.each do |source| %>
             <tr class="hover:bg-gray-700/50 transition-colors">
               <td class="px-6 py-4">
-                <%= link_to file_path(source), class: 'text-sm text-indigo-400 hover:text-indigo-300' do %>
+                <%= link_to file_path(source.id), class: 'text-sm text-indigo-400 hover:text-indigo-300' do %>
                   <span class="font-mono"><%= source.file_path %></span>
                 <% end %>
                 <% if source.frontmatter.present? && source.frontmatter['title'] %>
@@ -83,11 +88,11 @@
                 <%= time_ago_in_words(source.updated_at) %> ago
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <%= link_to 'View', file_path(source), class: 'text-indigo-400 hover:text-indigo-300' %>
+                <%= link_to 'View', file_path(source.id), class: 'text-indigo-400 hover:text-indigo-300' %>
                 <span class="mx-2 text-gray-600">|</span>
-                <%= button_to 'Sync', sync_file_path(source), method: :post, class: 'text-indigo-400 hover:text-indigo-300 bg-transparent border-0 cursor-pointer' %>
+                <%= button_to 'Sync', sync_file_path(source.id), method: :post, class: 'text-indigo-400 hover:text-indigo-300 bg-transparent border-0 cursor-pointer' %>
                 <span class="mx-2 text-gray-600">|</span>
-                <%= button_to 'Unload', file_path(source), method: :delete, class: 'text-red-400 hover:text-red-300 bg-transparent border-0 cursor-pointer', data: { turbo_confirm: 'Unload this file? All chunks will be soft-deleted.' } %>
+                <%= button_to 'Unload', file_path(source.id), method: :delete, data: { confirm: 'Unload this file? All chunks will be soft-deleted.' }, class: 'text-red-400 hover:text-red-300 bg-transparent border-0 cursor-pointer' %>
               </td>
             </tr>
           <% end %>

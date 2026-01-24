@@ -12,7 +12,7 @@ class FilesController < ApplicationController
       redirect_to files_path
       return
     end
-    @chunks = @file_source.chunks.order(:id)
+    @chunks = @file_source.nodes_dataset.order(:chunk_position).all
   end
 
   def new
@@ -146,7 +146,7 @@ class FilesController < ApplicationController
       flash[:alert] = "Error syncing file: #{e.message}"
     end
 
-    redirect_to file_path(@file_source)
+    redirect_to file_path(@file_source.id)
   end
 
   def destroy

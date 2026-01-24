@@ -36,6 +36,14 @@ class TagsController < ApplicationController
       redirect_to tags_path
       return
     end
-    @memories = @tag.nodes_dataset.active.eager(:tags).order(Sequel.desc(:created_at)).all
+    # Note: Node has a default scope that excludes deleted nodes, so we don't need .active
+    # We need to filter through node_tags that aren't deleted and join properly
+    @memories = HTM::Models::Node
+      .join(:node_tags, node_id: Sequel[:nodes][:id])
+      .where(Sequel[:node_tags][:tag_id] => @tag.id)
+      .where(Sequel[:node_tags][:deleted_at] => nil)
+      .eager(:tags)
+      .order(Sequel.desc(Sequel[:nodes][:created_at]))
+      .all
   end
 end

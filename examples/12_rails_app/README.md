@@ -13,14 +13,16 @@ A full-stack Rails application demonstrating HTM integration with a compelling U
 
 ## Tech Stack
 
-- Rails 7.1 with Hotwire (Turbo via CDN)
+- Rails 8.1
 - Tailwind CSS via CDN (no build step required)
 - PostgreSQL with pgvector
 - HTM gem for semantic memory management
 - Propshaft for asset pipeline
+- Auto-refresh via vanilla JavaScript (no Turbo/Hotwire)
 
 ## Prerequisites
 
+- Ruby 3.2+ (required by Rails 8.x)
 - PostgreSQL 17+ with pgvector and pg_trgm extensions
 - Ollama running locally (for embeddings and tag extraction)
 - direnv (for automatic environment setup)
@@ -132,10 +134,10 @@ The app features a dark theme with:
 The app uses:
 - `propshaft` for asset pipeline (CSS/images only)
 - Tailwind CSS via CDN (no build step)
-- Hotwire (Turbo) via CDN (no build step)
+- Vanilla JavaScript for auto-refresh (no Turbo/Hotwire)
 - Manual offset/limit pagination (no Kaminari)
 
-No JavaScript build step required. All frontend dependencies are loaded via CDN.
+No JavaScript build step required. Frontend dependencies loaded via CDN.
 
 ## Maintenance
 

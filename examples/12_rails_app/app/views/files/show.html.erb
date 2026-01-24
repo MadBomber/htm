@@ -1,3 +1,6 @@
+<%# Disable auto-refresh on file detail page %>
+<% content_for :body_attributes do %>data-no-auto-refresh<% end %>
+
 <div class="space-y-6">
   <!-- Back link -->
   <div>
@@ -41,19 +44,32 @@
           </span>
         <% end %>
 
-        <%= button_to sync_file_path(@file_source), method: :post, class: 'inline-flex items-center gap-2 rounded-md bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors' do %>
+        <%= button_to sync_file_path(@file_source.id), method: :post, class: 'inline-flex items-center gap-2 rounded-md bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors' do %>
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           Sync Now
         <% end %>
 
-        <%= button_to file_path(@file_source), method: :delete, class: 'inline-flex items-center gap-2 rounded-md bg-red-600/80 px-3 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors', data: { turbo_confirm: 'Unload this file? All chunks will be soft-deleted.' } do %>
+        <%= button_to file_path(@file_source.id), method: :delete, data: { confirm: 'Unload this file? All chunks will be soft-deleted.' }, class: 'inline-flex items-center gap-2 rounded-md bg-red-600/80 px-3 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors' do %>
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
           Unload
         <% end %>
+      </div>
+    </div>
+
+    <!-- Sync Info -->
+    <div class="mt-6 pt-6 border-t border-gray-700">
+      <div class="rounded-md bg-gray-700/50 p-3">
+        <p class="text-xs text-gray-400">
+          <strong class="text-gray-300">What does Sync do?</strong>
+          Re-reads the source file and performs a differential update. Unchanged chunks are preserved (keeping their embeddings and tags); new content creates new chunks; removed content is soft-deleted (recoverable).
+          <% if @file_source.needs_sync? %>
+            <span class="text-yellow-400 ml-1">The source file has changed since last sync.</span>
+          <% end %>
+        </p>
       </div>
     </div>
 
@@ -100,7 +116,7 @@
                 <%= i + 1 %>
               </span>
               <div class="flex-1 min-w-0">
-                <%= link_to memory_path(chunk), class: 'block group' do %>
+                <%= link_to memory_path(chunk.id), class: 'block group' do %>
                   <p class="text-sm text-gray-300 group-hover:text-white transition-colors whitespace-pre-wrap line-clamp-4">
                     <%= chunk.content %>
                   </p>

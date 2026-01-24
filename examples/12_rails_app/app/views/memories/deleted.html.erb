@@ -1,3 +1,5 @@
+<% content_for :body_attributes do %>data-no-auto-refresh<% end %>
+
 <div class="space-y-6">
   <!-- Header -->
   <div class="flex items-center justify-between">
@@ -39,7 +41,7 @@
                 </svg>
                 Restore
               <% end %>
-              <%= button_to memory_path(memory.id, permanent: true), method: :delete, class: 'inline-flex items-center gap-1 rounded-md bg-red-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 transition-colors', data: { turbo_confirm: 'Permanently delete? This cannot be undone!' } do %>
+              <%= button_to memory_path(memory.id, permanent: true), method: :delete, data: { confirm: 'Permanently delete? This cannot be undone!' }, class: 'inline-flex items-center gap-1 rounded-md bg-red-600/80 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 transition-colors' do %>
                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>

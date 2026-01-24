@@ -1,3 +1,5 @@
+<% content_for :body_attributes do %>data-no-auto-refresh<% end %>
+
 <!-- Full-page loading overlay -->
 <div id="upload-overlay" class="hidden fixed inset-0 bg-gray-900/90 z-50 flex items-center justify-center">
   <div class="bg-gray-800 rounded-lg border border-gray-700 p-8 max-w-md w-full mx-4 text-center">
@@ -30,7 +32,7 @@
     <div class="rounded-lg bg-gray-800 border border-gray-700 p-6">
       <h2 class="text-lg font-bold text-white mb-4">Upload Files</h2>
 
-      <%= form_with url: upload_files_path, method: :post, multipart: true, class: 'space-y-4', id: 'upload-files-form', data: { turbo: false } do %>
+      <%= form_with url: upload_files_path, method: :post, multipart: true, class: 'space-y-4', id: 'upload-files-form' do %>
         <div>
           <label for="files" class="block text-sm font-medium text-gray-300 mb-2">Select Files</label>
           <input
@@ -69,7 +71,7 @@
         <p class="text-xs text-yellow-400"><strong>Note:</strong> Browser uploads limited to ~100 files due to OS restrictions. For larger directories, use <strong>Load Directory by Path</strong> below.</p>
       </div>
 
-      <%= form_with url: upload_directory_files_path, method: :post, multipart: true, class: 'space-y-4', id: 'upload-dir-form', data: { turbo: false } do %>
+      <%= form_with url: upload_directory_files_path, method: :post, multipart: true, class: 'space-y-4', id: 'upload-dir-form' do %>
         <div>
           <label for="directory" class="block text-sm font-medium text-gray-300 mb-2">Select Directory</label>
           <input

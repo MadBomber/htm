@@ -2,8 +2,8 @@
 
 source 'https://rubygems.org'
 
-# Rails - full-stack setup
-gem 'rails', '~> 7.1'
+# Rails 8.1 - full-stack setup
+gem 'rails', '~> 8.1'
 gem 'puma', '~> 6.0'
 
 # HTM (use local development version)
@@ -12,8 +12,10 @@ gem 'htm', path: '../..'
 # PostgreSQL (required for HTM)
 gem 'pg', '~> 1.5'
 
-# Ruby 4.0+ bundled gems (no longer in stdlib)
+# Ruby 3.2+ bundled gems (no longer in stdlib)
 gem 'ostruct'
+gem 'logger'
+gem 'benchmark'
 
 # Frontend - using CDN for Tailwind and Hotwire (no build step)
 gem 'propshaft'                    # Asset pipeline for CSS/images
