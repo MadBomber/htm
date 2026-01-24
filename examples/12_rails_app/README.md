@@ -19,25 +19,63 @@ A full-stack Rails application demonstrating HTM integration with a compelling U
 - HTM gem for semantic memory management
 - Propshaft for asset pipeline
 
+## Prerequisites
+
+- PostgreSQL 17+ with pgvector and pg_trgm extensions
+- Ollama running locally (for embeddings and tag extraction)
+- direnv (for automatic environment setup)
+
 ## Setup
 
+### Environment Variables (via direnv)
+
+This project uses [direnv](https://direnv.net/) to automatically configure environment variables. When you `cd` into this directory, direnv loads settings from `examples/.envrc` (which inherits from the root `.envrc`).
+
+**Key environment variables set automatically:**
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `HTM_ENV` | `examples` | HTM environment name |
+| `HTM_DATABASE__URL` | `postgresql://...htm_examples` | HTM database connection |
+| `HTM_EMBEDDING__PROVIDER` | `ollama` | Embedding provider |
+| `HTM_EMBEDDING__MODEL` | `embeddinggemma` | Embedding model |
+| `HTM_TAG__PROVIDER` | `ollama` | Tag extraction provider |
+| `HTM_TAG__MODEL` | `phi4` | Tag extraction model |
+| `HTM_EXTRACT_PROPOSITIONS` | `true` | Enable proposition extraction |
+
+To verify your environment is configured:
 ```bash
-# From this directory
+# Should show HTM_ENV=examples and HTM_DATABASE__URL pointing to htm_examples
+env | grep HTM
+```
+
+### Installation
+
+```bash
+# Allow direnv (if prompted)
+direnv allow
+
+# Install Ruby dependencies
 bundle install
 
 # Create the Rails app database (required for Rails to boot)
 createdb htm_rails_example_dev
 
-# Ensure HTM database is set up (separate from Rails database)
-export HTM_DATABASE__URL="postgresql://localhost/htm_development"
+# Create and setup the HTM examples database
+createdb htm_examples
+psql htm_examples -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
-# Verify HTM database has required extensions
-psql htm_development -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+# Initialize HTM schema
+bundle exec rake htm:db:setup
+
+# Ensure Ollama models are available
+ollama pull embeddinggemma
+ollama pull phi4
 ```
 
 **Note:** This app uses two databases:
 - `htm_rails_example_dev` - Rails application database (minimal, required for Rails)
-- `htm_development` - HTM memory database (configured via `HTM_DATABASE__URL`)
+- `htm_examples` - HTM memory database (configured via direnv)
 
 ## Running
 
