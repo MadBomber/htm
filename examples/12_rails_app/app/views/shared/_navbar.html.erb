@@ -1,3 +1,9 @@
+<%
+  # Determine current section
+  in_chat_section = controller_name.in?(['chats', 'messages'])
+  in_htm_section = controller_name.in?(['dashboard', 'memories', 'tags', 'robots', 'search', 'files'])
+%>
+
 <nav class="bg-gray-800 border-b border-gray-700">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="flex h-16 items-center justify-between">
@@ -7,46 +13,86 @@
             <svg class="h-8 w-8 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
-            <span class="text-xl font-bold text-white">HTM Explorer</span>
+            <span class="text-xl font-bold text-white">HTM Demo</span>
           <% end %>
         </div>
-        <div class="hidden md:block">
-          <div class="ml-10 flex items-baseline space-x-4">
-            <%= link_to 'Dashboard', root_path,
-                class: "rounded-md px-3 py-2 text-sm font-medium #{current_page?(root_path) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
-            <%= link_to 'Memories', memories_path,
-                class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'memories' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
-            <%= link_to 'Tags', tags_path,
-                class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'tags' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
-            <%= link_to 'Robots', robots_path,
-                class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'robots' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
-            <%= link_to 'Search', search_path,
-                class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'search' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
-            <%= link_to 'Files', files_path,
-                class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'files' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
+
+        <% if in_chat_section %>
+          <!-- Chat section navigation -->
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <span class="rounded-full bg-indigo-900/50 border border-indigo-500/30 px-3 py-1 text-xs font-medium text-indigo-400">Chat</span>
+              <%= link_to 'All Chats', app_root_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'chats' && action_name == 'index' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
+              <%= link_to 'HTM Management', htm_root_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white" %>
+            </div>
+          </div>
+        <% elsif in_htm_section %>
+          <!-- HTM section navigation -->
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <span class="rounded-full bg-purple-900/50 border border-purple-500/30 px-3 py-1 text-xs font-medium text-purple-400">HTM</span>
+              <%= link_to 'Dashboard', htm_root_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'dashboard' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
+              <%= link_to 'Memories', memories_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'memories' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
+              <%= link_to 'Tags', tags_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'tags' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
+              <%= link_to 'Robots', robots_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'robots' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
+              <%= link_to 'Search', search_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'search' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
+              <%= link_to 'Files', files_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium #{controller_name == 'files' ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}" %>
+              <%= link_to 'Chat', app_root_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium text-gray-400 hover:bg-gray-700 hover:text-white" %>
+            </div>
+          </div>
+        <% else %>
+          <!-- Home page - show both section links -->
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <%= link_to 'Chat', app_root_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+              <%= link_to 'HTM Management', htm_root_path,
+                  class: "rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <% if in_htm_section %>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2 text-sm text-gray-400">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+            <span>Robot: <strong class="text-indigo-400"><%= current_robot_name %></strong></span>
           </div>
         </div>
-      </div>
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2 text-sm text-gray-400">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-          </svg>
-          <span>Robot: <strong class="text-indigo-400"><%= current_robot_name %></strong></span>
-        </div>
-      </div>
+      <% end %>
     </div>
   </div>
 
   <!-- Mobile menu -->
   <div class="md:hidden" data-controller="mobile-menu">
     <div class="space-y-1 px-2 pb-3 pt-2 sm:px-3">
-      <%= link_to 'Dashboard', root_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
-      <%= link_to 'Memories', memories_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
-      <%= link_to 'Tags', tags_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
-      <%= link_to 'Robots', robots_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
-      <%= link_to 'Search', search_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
-      <%= link_to 'Files', files_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+      <% if in_chat_section %>
+        <%= link_to 'All Chats', app_root_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+        <%= link_to 'HTM Management', htm_root_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white" %>
+      <% elsif in_htm_section %>
+        <%= link_to 'Dashboard', htm_root_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+        <%= link_to 'Memories', memories_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+        <%= link_to 'Tags', tags_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+        <%= link_to 'Robots', robots_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+        <%= link_to 'Search', search_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+        <%= link_to 'Files', files_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+        <%= link_to 'Chat', app_root_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white" %>
+      <% else %>
+        <%= link_to 'Chat', app_root_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+        <%= link_to 'HTM Management', htm_root_path, class: "block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white" %>
+      <% end %>
     </div>
   </div>
 </nav>

@@ -1,0 +1,45 @@
+<% content_for :body_attributes do %>data-no-auto-refresh<% end %>
+
+<div class="min-h-[calc(100vh-8rem)] flex items-center justify-center">
+  <div class="max-w-4xl mx-auto px-4">
+    <div class="text-center mb-12">
+      <div class="flex justify-center mb-4">
+        <svg class="h-16 w-16 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <h1 class="text-4xl font-bold text-white mb-4">HTM Demo</h1>
+      <p class="text-xl text-gray-400">Hierarchical Temporal Memory + RAG Chatbot</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Chat Section -->
+      <%= link_to app_root_path, class: 'block rounded-xl bg-gray-800 border border-gray-700 p-8 hover:border-indigo-500 transition-colors group' do %>
+        <div class="flex items-center gap-4 mb-4">
+          <div class="rounded-full bg-indigo-900/50 p-3">
+            <svg class="h-8 w-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-white group-hover:text-indigo-400 transition-colors">Chat</h2>
+        </div>
+        <p class="text-gray-400 mb-4">AI-powered chatbot with RAG. Answers are augmented with context from HTM memory.</p>
+        <p class="text-sm text-gray-500"><%= pluralize(@chat_count, 'conversation') %></p>
+      <% end %>
+
+      <!-- HTM Management Section -->
+      <%= link_to htm_root_path, class: 'block rounded-xl bg-gray-800 border border-gray-700 p-8 hover:border-purple-500 transition-colors group' do %>
+        <div class="flex items-center gap-4 mb-4">
+          <div class="rounded-full bg-purple-900/50 p-3">
+            <svg class="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-white group-hover:text-purple-400 transition-colors">HTM Management</h2>
+        </div>
+        <p class="text-gray-400 mb-4">Manage memories, tags, robots, and files in the HTM knowledge base.</p>
+        <p class="text-sm text-gray-500"><%= pluralize(@memory_count, 'memory') %></p>
+      <% end %>
+    </div>
+  </div>
+</div>

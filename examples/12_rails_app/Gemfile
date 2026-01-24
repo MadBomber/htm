@@ -9,6 +9,9 @@ gem 'puma', '~> 6.0'
 # HTM (use local development version)
 gem 'htm', path: '../..'
 
+# RubyLLM for chat persistence
+gem 'ruby_llm', '>= 1.0'
+
 # PostgreSQL (required for HTM)
 gem 'pg', '~> 1.5'
 

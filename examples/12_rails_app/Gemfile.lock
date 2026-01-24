@@ -339,6 +339,7 @@ DEPENDENCIES
   propshaft
   puma (~> 6.0)
   rails (~> 8.1)
+  ruby_llm (>= 1.0)
   web-console
 
 CHECKSUMS

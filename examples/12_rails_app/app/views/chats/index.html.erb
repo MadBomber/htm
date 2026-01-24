@@ -1,0 +1,61 @@
+<% content_for :body_attributes do %>data-no-auto-refresh<% end %>
+
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Chats</h1>
+      <p class="mt-1 text-sm text-gray-400">AI-powered conversations with RAG context from HTM</p>
+    </div>
+    <%= button_to chats_path, method: :post, class: 'inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors cursor-pointer' do %>
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      New Chat
+    <% end %>
+  </div>
+
+  <% if @chats.any? %>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <% @chats.each do |chat| %>
+        <%= link_to chat_path(chat), class: 'block rounded-lg bg-gray-800 border border-gray-700 p-4 hover:border-indigo-500 transition-colors group' do %>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="rounded-full bg-indigo-900/50 p-2">
+              <svg class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-white group-hover:text-indigo-400 transition-colors">
+                Chat #<%= chat.id %>
+              </p>
+              <p class="text-xs text-gray-500">
+                <%= chat.messages.count %> messages
+              </p>
+            </div>
+          </div>
+          <% if (last_message = chat.messages.last) %>
+            <p class="text-sm text-gray-400 line-clamp-2"><%= truncate(last_message.content, length: 100) %></p>
+          <% else %>
+            <p class="text-sm text-gray-500 italic">No messages yet</p>
+          <% end %>
+          <p class="mt-2 text-xs text-gray-500"><%= time_ago_in_words(chat.updated_at) %> ago</p>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="rounded-lg bg-gray-800 border border-gray-700 p-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+      <h3 class="mt-4 text-lg font-medium text-white">No chats yet</h3>
+      <p class="mt-2 text-sm text-gray-400">Start a new conversation to begin chatting with AI using HTM context.</p>
+      <%= button_to chats_path, method: :post, class: 'mt-4 inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors cursor-pointer' do %>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Start New Chat
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -4,6 +4,9 @@ require 'ostruct'
 
 class DashboardController < ApplicationController
   def index
+    # Show current HTM database connection
+    @htm_database_url = HTM.db.opts[:orig_uri] || "#{HTM.db.opts[:adapter]}://#{HTM.db.opts[:user]}@#{HTM.db.opts[:host]}:#{HTM.db.opts[:port]}/#{HTM.db.opts[:database]}"
+
     # Note: HTM::Models::Node has a default_scope that excludes deleted nodes
     # so we don't need to call .active explicitly
     @stats = {

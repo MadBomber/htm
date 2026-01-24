@@ -1,0 +1,20 @@
+<% is_user = message.role == 'user' %>
+
+<div class="flex <%= is_user ? 'justify-end' : 'justify-start' %>">
+  <div class="max-w-[80%] <%= is_user ? 'order-2' : 'order-1' %>">
+    <div class="rounded-lg px-4 py-3 <%= is_user ? 'bg-indigo-600 text-white' : 'bg-gray-800 border border-gray-700 text-gray-100' %>">
+      <div class="prose prose-sm <%= is_user ? 'prose-invert' : 'prose-gray' %> max-w-none">
+        <p class="whitespace-pre-wrap break-words"><%= message.content %></p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 mt-1 <%= is_user ? 'justify-end' : 'justify-start' %>">
+      <span class="text-xs text-gray-500">
+        <%= message.role.capitalize %>
+      </span>
+      <span class="text-xs text-gray-600">&bull;</span>
+      <span class="text-xs text-gray-500">
+        <%= message.created_at.strftime('%H:%M') %>
+      </span>
+    </div>
+  </div>
+</div>

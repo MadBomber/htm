@@ -1,0 +1,106 @@
+<% content_for :body_attributes do %>data-no-auto-refresh<% end %>
+
+<div class="flex flex-col h-[calc(100vh-10rem)]">
+  <!-- Header -->
+  <div class="flex items-center justify-between pb-4 border-b border-gray-700">
+    <div class="flex items-center gap-4">
+      <%= link_to app_root_path, class: 'text-gray-400 hover:text-white transition-colors' do %>
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      <% end %>
+      <div>
+        <h1 class="text-lg font-bold text-white">Chat #<%= @chat.id %></h1>
+        <p class="text-xs text-gray-500"><%= @messages.count %> messages</p>
+      </div>
+    </div>
+    <%= button_to chat_path(@chat), method: :delete, form: { data: { turbo_confirm: 'Delete this chat?' } }, class: 'text-gray-400 hover:text-red-400 transition-colors cursor-pointer' do %>
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    <% end %>
+  </div>
+
+  <!-- Messages -->
+  <div id="messages-container" class="flex-1 overflow-y-auto py-4 space-y-4">
+    <% if @messages.any? %>
+      <% @messages.each do |message| %>
+        <%= render 'messages/message', message: message %>
+      <% end %>
+    <% else %>
+      <div class="flex items-center justify-center h-full">
+        <div class="text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <p class="mt-4 text-gray-400">Start the conversation</p>
+          <p class="mt-1 text-sm text-gray-500">Your messages will be enhanced with HTM context</p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Input -->
+  <div class="pt-4 border-t border-gray-700">
+    <%= form_with url: chat_messages_path(@chat), method: :post, class: 'flex gap-3' do |f| %>
+      <div class="flex-1">
+        <%= f.text_area :content,
+            rows: 1,
+            placeholder: 'Type your message...',
+            class: 'block w-full rounded-lg border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 resize-none px-4 py-3',
+            autofocus: true %>
+      </div>
+      <%= f.submit 'Send', class: 'inline-flex items-center rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white hover:bg-indigo-500 transition-colors cursor-pointer' %>
+    <% end %>
+    <div class="mt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
+      <% current_provider = @chat.model&.provider || 'ollama' %>
+      <% current_model_name = @chat.model&.model_id %>
+
+      <!-- Provider dropdown -->
+      <div class="flex items-center gap-1">
+        <span>Provider:</span>
+        <%= form_with url: chat_path(@chat), method: :patch, id: 'provider-form', class: 'inline-flex items-center' do |f| %>
+          <%= f.select :provider,
+              options_for_select(@available_providers.map { |p| [p[:name], p[:id]] }, current_provider),
+              {},
+              id: 'provider-select',
+              class: 'rounded border-gray-600 bg-gray-800 text-gray-300 text-xs py-1 px-2 focus:border-indigo-500 focus:ring-indigo-500',
+              onchange: 'this.form.submit()' %>
+        <% end %>
+      </div>
+
+      <span class="text-gray-600">|</span>
+
+      <!-- Model dropdown -->
+      <div class="flex items-center gap-1">
+        <span>Model:</span>
+        <%= form_with url: chat_path(@chat), method: :patch, id: 'model-form', class: 'inline-flex items-center' do |f| %>
+          <%= f.select :model_id,
+              options_for_select(@available_models, current_model_name),
+              {},
+              id: 'model-select',
+              class: 'rounded border-gray-600 bg-gray-800 text-gray-300 text-xs py-1 px-2 focus:border-indigo-500 focus:ring-indigo-500',
+              onchange: 'this.form.submit()' %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Auto-scroll messages container to bottom on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('messages-container');
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  });
+
+  // Also scroll on turbo:load for Turbo Drive navigation
+  document.addEventListener('turbo:load', function() {
+    const container = document.getElementById('messages-container');
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  });
+</script>

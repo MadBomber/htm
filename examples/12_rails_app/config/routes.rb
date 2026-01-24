@@ -1,36 +1,51 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  root 'dashboard#index'
+  # Landing page
+  root 'home#index'
 
-  resources :memories do
-    collection do
-      get :deleted
+  # Chatbot section
+  scope '/app' do
+    get '/', to: 'chats#index', as: :app_root
+    resources :chats, only: [:index, :show, :create, :update, :destroy] do
+      resources :messages, only: [:create]
     end
-    member do
-      post :restore
-    end
+    get '/models', to: 'chats#models', as: :provider_models
   end
 
-  resources :tags, only: [:index, :show]
+  # HTM Management section (existing functionality)
+  scope '/htm' do
+    get '/', to: 'dashboard#index', as: :htm_root
 
-  resources :robots, only: [:index, :show, :new, :create] do
-    member do
-      post :switch
+    resources :memories do
+      collection do
+        get :deleted
+      end
+      member do
+        post :restore
+      end
     end
-  end
 
-  get '/search', to: 'search#index', as: :search
+    resources :tags, only: [:index, :show]
 
-  resources :files, only: [:index, :show, :new, :create, :destroy] do
-    collection do
-      post :load_directory
-      post :upload
-      post :upload_directory
-      post :sync_all
+    resources :robots, only: [:index, :show, :new, :create] do
+      member do
+        post :switch
+      end
     end
-    member do
-      post :sync
+
+    get '/search', to: 'search#index', as: :search
+
+    resources :files, only: [:index, :show, :new, :create, :destroy] do
+      collection do
+        post :load_directory
+        post :upload
+        post :upload_directory
+        post :sync_all
+      end
+      member do
+        post :sync
+      end
     end
   end
 end

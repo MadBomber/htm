@@ -1,15 +1,19 @@
-# Rails app database (not used - HTM uses its own database)
-# This is required for Rails to boot but can be sqlite/memory
+# Rails app database for RubyLLM chat persistence
+# HTM uses its own database (htm_examples)
 
 default: &default
   adapter: postgresql
   encoding: unicode
-  pool: 5
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 development:
   <<: *default
-  database: htm_rails_example_dev
+  database: chatbot_development
 
 test:
   <<: *default
-  database: htm_rails_example_test
+  database: chatbot_test
+
+examples:
+  <<: *default
+  database: chatbot_examples

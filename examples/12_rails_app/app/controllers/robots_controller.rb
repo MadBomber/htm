@@ -49,6 +49,6 @@ class RobotsController < ApplicationController
     end
     self.current_robot_name = robot.name
     flash[:notice] = "Switched to robot '#{robot.name}'"
-    redirect_to root_path
+    redirect_to htm_root_path
   end
 end
