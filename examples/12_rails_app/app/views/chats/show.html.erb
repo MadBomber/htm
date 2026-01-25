@@ -42,15 +42,22 @@
 
   <!-- Input -->
   <div class="pt-4 border-t border-gray-700">
-    <%= form_with url: chat_messages_path(@chat), method: :post, class: 'flex gap-3' do |f| %>
+    <%= form_with url: chat_messages_path(@chat), method: :post, id: 'message-form', class: 'flex gap-3' do |f| %>
       <div class="flex-1">
         <%= f.text_area :content,
             rows: 1,
             placeholder: 'Type your message...',
             class: 'block w-full rounded-lg border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500 resize-none px-4 py-3',
-            autofocus: true %>
+            autofocus: true,
+            id: 'message-input' %>
       </div>
-      <%= f.submit 'Send', class: 'inline-flex items-center rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white hover:bg-indigo-500 transition-colors cursor-pointer' %>
+      <button type="submit" id="send-button" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white hover:bg-indigo-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        <span id="send-text">Send</span>
+        <svg id="send-spinner" class="hidden animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </button>
     <% end %>
     <div class="mt-2 flex items-center justify-center gap-3 text-xs text-gray-500">
       <% current_provider = @chat.model&.provider || 'ollama' %>
@@ -88,19 +95,41 @@
 </div>
 
 <script>
-  // Auto-scroll messages container to bottom on page load
-  document.addEventListener('DOMContentLoaded', function() {
+  // Auto-scroll messages container to bottom
+  function scrollToBottom() {
     const container = document.getElementById('messages-container');
     if (container) {
       container.scrollTop = container.scrollHeight;
     }
-  });
+  }
 
-  // Also scroll on turbo:load for Turbo Drive navigation
-  document.addEventListener('turbo:load', function() {
-    const container = document.getElementById('messages-container');
-    if (container) {
-      container.scrollTop = container.scrollHeight;
+  // Initialize on page load (same pattern as search page spinner)
+  document.addEventListener('DOMContentLoaded', () => {
+    scrollToBottom();
+
+    const form = document.getElementById('message-form');
+    const btn = document.getElementById('send-button');
+    const spinner = document.getElementById('send-spinner');
+    const btnText = document.getElementById('send-text');
+    const input = document.getElementById('message-input');
+
+    if (form && btn) {
+      form.addEventListener('submit', (e) => {
+        // Validate: prevent submission if input is empty
+        if (!input || !input.value.trim()) {
+          e.preventDefault();
+          input && input.focus();
+          return;
+        }
+
+        // Show spinner and disable button (same pattern as search page)
+        spinner.classList.remove('hidden');
+        btnText.textContent = 'Sending...';
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-wait');
+        btn.classList.remove('hover:bg-indigo-500');
+        // Form submits normally - spinner shows until page reloads with response
+      });
     }
   });
 </script>
