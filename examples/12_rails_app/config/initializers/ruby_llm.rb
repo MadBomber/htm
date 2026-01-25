@@ -3,9 +3,9 @@
 require 'ruby_llm'
 
 RubyLLM.configure do |config|
-  # Enable debug logging to see HTTP requests
+  # Logging - use INFO level in production, DEBUG for troubleshooting
   config.logger = Rails.logger
-  config.log_level = Logger::DEBUG
+  config.log_level = Rails.env.development? ? Logger::INFO : Logger::WARN
 
   # Enable new acts_as API (required for acts_as_chat)
   config.use_new_acts_as = true
@@ -13,12 +13,13 @@ RubyLLM.configure do |config|
   # Model registry class for database storage
   config.model_registry_class = 'Model'
 
-  # Chat model configuration (separate from HTM's tag/embedding models)
+  # Default chat model
   config.default_model = ENV.fetch('CHAT_MODEL', 'gemma3:latest')
 
-  # Provider API keys (for cloud providers)
+  # Cloud provider API keys
   config.openai_api_key = ENV['OPENAI_API_KEY']
   config.anthropic_api_key = ENV['ANTHROPIC_API_KEY']
+  config.xai_api_key = ENV['XAI_API_KEY']
 
   # Ollama (local provider) - requires /v1 suffix for OpenAI-compatible API
   ollama_base = ENV.fetch('OLLAMA_URL', 'http://localhost:11434')

@@ -19,14 +19,21 @@ class ChatsController < ApplicationController
   end
 
   def create
-    # Ensure Ollama is configured with /v1 suffix for OpenAI-compatible API
-    RubyLLM.config.ollama_api_base ||= ENV.fetch('OLLAMA_URL', 'http://localhost:11434') + '/v1'
-
     @chat = Chat.new
     @chat.assume_model_exists = true
-    @chat.model = ENV.fetch('CHAT_MODEL', 'gemma3:latest')
-    @chat.provider = 'ollama'
+
+    # Use remembered model for default provider, or fall back to env default
+    default_provider = 'ollama'
+    remembered_model = provider_model_memory[default_provider]
+    default_model = remembered_model || ENV.fetch('CHAT_MODEL', 'gemma3:latest')
+
+    @chat.model = default_model
+    @chat.provider = default_provider
     @chat.save!
+
+    # Remember this model for the provider
+    remember_model_for_provider(default_provider, default_model)
+
     session[:chat_id] = @chat.id
     redirect_to chat_path(@chat)
   end
@@ -37,14 +44,24 @@ class ChatsController < ApplicationController
     # Handle provider change
     if params[:provider].present?
       new_provider = params[:provider]
-      # Get default model for the new provider
       models = fetch_models_for_provider(new_provider)
-      default_model = models.first || "#{new_provider}-default"
 
-      model = Model.find_or_create_by!(model_id: default_model, provider: new_provider) do |m|
-        m.name = default_model
+      # Restore last-used model for this provider, or use first available
+      remembered_model = provider_model_memory[new_provider]
+      selected_model = if remembered_model && models.include?(remembered_model)
+                         remembered_model
+                       else
+                         models.first || "#{new_provider}-default"
+                       end
+
+      model = Model.find_or_create_by!(model_id: selected_model, provider: new_provider) do |m|
+        m.name = selected_model
       end
       @chat.update_column(:model_id, model.id)
+
+      # Remember this model for the provider
+      remember_model_for_provider(new_provider, selected_model)
+
     # Handle model change
     elsif params[:model_id].present?
       current_provider = @chat.model&.provider || 'ollama'
@@ -52,6 +69,9 @@ class ChatsController < ApplicationController
         m.name = params[:model_id]
       end
       @chat.update_column(:model_id, model.id)
+
+      # Remember this model for the provider
+      remember_model_for_provider(current_provider, params[:model_id])
     end
 
     redirect_to chat_path(@chat)
@@ -237,5 +257,16 @@ class ChatsController < ApplicationController
   rescue StandardError => e
     Rails.logger.warn "Failed to fetch LM Studio models: #{e.message}"
     []
+  end
+
+  # Per-provider model memory stored in session
+  def provider_model_memory
+    session[:provider_models] ||= {}
+  end
+
+  def remember_model_for_provider(provider, model_id)
+    session[:provider_models] ||= {}
+    session[:provider_models][provider] = model_id
+    Rails.logger.info "Remembered model '#{model_id}' for provider '#{provider}'"
   end
 end
