@@ -12,9 +12,9 @@
         <%= message.role.capitalize %>
       </span>
       <span class="text-xs text-gray-600">&bull;</span>
-      <span class="text-xs text-gray-500">
+      <time class="text-xs text-gray-500 local-time" datetime="<%= message.created_at.utc.iso8601 %>">
         <%= message.created_at.strftime('%H:%M') %>
-      </span>
+      </time>
     </div>
   </div>
 </div>

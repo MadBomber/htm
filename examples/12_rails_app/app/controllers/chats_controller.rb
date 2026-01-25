@@ -15,6 +15,7 @@ class ChatsController < ApplicationController
     @available_providers = detect_available_providers
     current_provider = @chat.model&.provider || 'ollama'
     @available_models = fetch_models_for_provider(current_provider)
+    @htm_settings = htm_settings
     session[:chat_id] = @chat.id
   end
 
@@ -88,6 +89,25 @@ class ChatsController < ApplicationController
     Chat.find(params[:id]).destroy
     session.delete(:chat_id) if session[:chat_id] == params[:id].to_i
     redirect_to app_root_path, notice: 'Chat deleted'
+  end
+
+  def update_htm_settings
+    @chat = Chat.find(params[:id])
+
+    # Update HTM settings in session
+    limit_param = params[:htm_limit]
+    limit_value = limit_param == 'all' ? 'all' : (limit_param || 5).to_i
+
+    session[:htm_settings] = {
+      strategy: params[:htm_strategy] || 'hybrid',
+      limit: limit_value,
+      propositions: params[:htm_propositions] == '1',
+      tags_only: params[:htm_tags_only] == '1',
+      tag_filter: params[:htm_tag_filter].presence
+    }
+
+    Rails.logger.info "Updated HTM settings: #{session[:htm_settings].inspect}"
+    redirect_to chat_path(@chat)
   end
 
   private
@@ -268,5 +288,18 @@ class ChatsController < ApplicationController
     session[:provider_models] ||= {}
     session[:provider_models][provider] = model_id
     Rails.logger.info "Remembered model '#{model_id}' for provider '#{provider}'"
+  end
+
+  # HTM context enhancement settings stored in session
+  def htm_settings
+    defaults = {
+      strategy: 'hybrid',
+      limit: 5,
+      propositions: false,
+      tags_only: false,
+      tag_filter: nil
+    }
+    stored = session[:htm_settings] || {}
+    defaults.merge(stored.symbolize_keys)
   end
 end

@@ -8,6 +8,9 @@ Rails.application.routes.draw do
   scope '/app' do
     get '/', to: 'chats#index', as: :app_root
     resources :chats, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        patch :update_htm_settings
+      end
       resources :messages, only: [:create]
     end
     get '/models', to: 'chats#models', as: :provider_models

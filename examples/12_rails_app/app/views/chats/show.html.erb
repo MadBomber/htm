@@ -91,6 +91,73 @@
         <% end %>
       </div>
     </div>
+
+    <!-- HTM Context Enhancement Controls -->
+    <div class="mt-3 pt-3 border-t border-gray-700">
+      <%= form_with url: update_htm_settings_chat_path(@chat), method: :patch, id: 'htm-settings-form', class: 'flex flex-col gap-2' do |f| %>
+        <div class="flex items-center justify-center gap-4 text-xs text-gray-500">
+          <span class="text-gray-400 font-medium">HTM:</span>
+
+          <!-- Strategy radio buttons -->
+          <div class="flex items-center gap-3">
+            <% strategies = [['Off', 'off'], ['Vector', 'vector'], ['Fulltext', 'fulltext'], ['Hybrid', 'hybrid']] %>
+            <% strategies.each do |label, value| %>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <%= radio_button_tag :htm_strategy, value,
+                    @htm_settings[:strategy] == value,
+                    class: 'text-indigo-500 focus:ring-indigo-500 bg-gray-800 border-gray-600',
+                    onchange: 'this.form.submit()' %>
+                <span class="<%= @htm_settings[:strategy] == value ? 'text-indigo-400' : 'text-gray-400' %>"><%= label %></span>
+              </label>
+            <% end %>
+          </div>
+
+          <span class="text-gray-600">|</span>
+
+          <!-- Limit dropdown -->
+          <div class="flex items-center gap-1">
+            <span>Limit:</span>
+            <%= select_tag :htm_limit,
+                options_for_select([[3, 3], [5, 5], [10, 10], [15, 15], [20, 20], [30, 30], [40, 40], [50, 50], [75, 75], [100, 100], ['All', 'all']], @htm_settings[:limit]),
+                class: 'rounded border-gray-600 bg-gray-800 text-gray-300 text-xs py-1 px-2 focus:border-indigo-500 focus:ring-indigo-500',
+                onchange: 'this.form.submit()',
+                disabled: @htm_settings[:strategy] == 'off' %>
+          </div>
+        </div>
+
+        <!-- Additional options -->
+        <div class="flex items-center justify-center gap-4 text-xs text-gray-500">
+          <label class="flex items-center gap-1 cursor-pointer <%= @htm_settings[:strategy] == 'off' ? 'opacity-50' : '' %>">
+            <%= check_box_tag :htm_propositions, '1',
+                @htm_settings[:propositions],
+                class: 'rounded text-indigo-500 focus:ring-indigo-500 bg-gray-800 border-gray-600',
+                onchange: 'this.form.submit()',
+                disabled: @htm_settings[:strategy] == 'off' %>
+            <span>Include propositions</span>
+          </label>
+
+          <label class="flex items-center gap-1 cursor-pointer <%= @htm_settings[:strategy] == 'off' ? 'opacity-50' : '' %>">
+            <%= check_box_tag :htm_tags_only, '1',
+                @htm_settings[:tags_only],
+                class: 'rounded text-indigo-500 focus:ring-indigo-500 bg-gray-800 border-gray-600',
+                onchange: 'this.form.submit()',
+                disabled: @htm_settings[:strategy] == 'off' %>
+            <span>Tags only</span>
+          </label>
+
+          <!-- Tag filter input -->
+          <div class="flex items-center gap-1 <%= @htm_settings[:strategy] == 'off' ? 'opacity-50' : '' %>">
+            <span>Tag filter:</span>
+            <%= text_field_tag :htm_tag_filter,
+                @htm_settings[:tag_filter],
+                placeholder: 'e.g. database:',
+                class: 'rounded border-gray-600 bg-gray-800 text-gray-300 text-xs py-1 px-2 w-24 focus:border-indigo-500 focus:ring-indigo-500 placeholder-gray-600',
+                disabled: @htm_settings[:strategy] == 'off',
+                onblur: 'this.form.submit()' %>
+          </div>
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>
 
@@ -103,9 +170,20 @@
     }
   }
 
+  // Convert UTC timestamps to local timezone
+  function convertTimestampsToLocal() {
+    document.querySelectorAll('time.local-time').forEach(el => {
+      const utcTime = new Date(el.getAttribute('datetime'));
+      const hours = utcTime.getHours().toString().padStart(2, '0');
+      const minutes = utcTime.getMinutes().toString().padStart(2, '0');
+      el.textContent = `${hours}:${minutes}`;
+    });
+  }
+
   // Initialize on page load (same pattern as search page spinner)
   document.addEventListener('DOMContentLoaded', () => {
     scrollToBottom();
+    convertTimestampsToLocal();
 
     const form = document.getElementById('message-form');
     const btn = document.getElementById('send-button');

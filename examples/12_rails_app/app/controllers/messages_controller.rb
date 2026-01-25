@@ -36,12 +36,57 @@ class MessagesController < ApplicationController
   private
 
   def fetch_htm_context(query)
-    results = htm.recall(query, limit: 5, strategy: :fulltext)
-    Rails.logger.info "HTM recall returned #{results.size} results for: #{query[0..50]}"
+    settings = htm_settings
+
+    # If HTM is disabled, return empty context
+    if settings[:strategy] == 'off'
+      Rails.logger.info 'HTM context disabled (strategy: off)'
+      return []
+    end
+
+    # Build recall options from settings
+    recall_options = {
+      strategy: settings[:strategy].to_sym
+    }
+
+    # Handle limit - 'all' means no limit (use a large number)
+    if settings[:limit] == 'all'
+      recall_options[:limit] = 10_000
+    else
+      recall_options[:limit] = settings[:limit].to_i
+    end
+
+    # Add tag filter if specified
+    recall_options[:tags] = settings[:tag_filter] if settings[:tag_filter].present?
+
+    # Add metadata filter for propositions if enabled
+    if settings[:propositions]
+      # Include both regular nodes and proposition nodes
+      Rails.logger.info 'Including proposition nodes in HTM context'
+    elsif settings[:tags_only]
+      # Only search by tags, not content
+      Rails.logger.info 'Using tags-only search mode'
+    end
+
+    results = htm.recall(query, **recall_options)
+    limit_display = settings[:limit] == 'all' ? 'all' : settings[:limit]
+    Rails.logger.info "HTM recall (#{settings[:strategy]}, limit: #{limit_display}) returned #{results.size} results"
     results
   rescue StandardError => e
     Rails.logger.warn "HTM recall failed: #{e.class}: #{e.message}"
     []
+  end
+
+  def htm_settings
+    defaults = {
+      strategy: 'hybrid',
+      limit: 5,
+      propositions: false,
+      tags_only: false,
+      tag_filter: nil
+    }
+    stored = session[:htm_settings] || {}
+    defaults.merge(stored.symbolize_keys)
   end
 
   def format_context(results)
@@ -58,17 +103,26 @@ class MessagesController < ApplicationController
   end
 
   def build_system_prompt(context)
-    <<~PROMPT
-      You are a helpful assistant with access to a knowledge base.
+    settings = htm_settings
 
-      Use the following context from the knowledge base to answer questions.
-      If the context doesn't contain relevant information, acknowledge that
-      and provide your best answer based on your training.
+    if settings[:strategy] == 'off'
+      <<~PROMPT
+        You are a helpful assistant.
+        Answer questions based on your training knowledge.
+      PROMPT
+    else
+      <<~PROMPT
+        You are a helpful assistant with access to a knowledge base.
 
-      === Knowledge Base Context ===
-      #{context}
-      === End Context ===
-    PROMPT
+        Use the following context from the knowledge base to answer questions.
+        If the context doesn't contain relevant information, acknowledge that
+        and provide your best answer based on your training.
+
+        === Knowledge Base Context ===
+        #{context}
+        === End Context ===
+      PROMPT
+    end
   end
 
   def ensure_model_record(chat)
