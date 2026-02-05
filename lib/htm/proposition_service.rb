@@ -149,9 +149,9 @@ class HTM
     # @return [Integer] Minimum word count for valid propositions
     #
     def self.min_words
-      HTM.config.proposition.min_words || 5
+      HTM.config.proposition.min_words || 3
     rescue
-      5
+      3
     end
 
     # Check if proposition is a meta-response (LLM asking for input)

@@ -12,8 +12,8 @@ puts "=" * 60
 
 # Database Connection
 begin
-  HTM::ActiveRecordConfig.establish_connection! unless HTM::ActiveRecordConfig.connected?
-  db_name = HTM::Database.default_config[:dbname] rescue 'unknown'
+  HTM::SequelConfig.establish_connection! unless HTM::SequelConfig.connected?
+  db_name = HTM::SequelConfig.db.opts[:database] rescue 'unknown'
   puts "✓ Database connected: #{db_name}"
 rescue => e
   puts "✗ Database connection failed: #{e.message}"
@@ -27,7 +27,6 @@ HTM.configure do |config|
   config.embedding.dimensions = 768
   config.tag.provider = :ollama
   config.tag.model = 'gemma3:latest'
-  config.reset_to_defaults
 end
 puts "✓ HTM configured (inline jobs, Ollama provider)"
 
