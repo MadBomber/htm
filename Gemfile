@@ -12,6 +12,7 @@ gem "debug_me", "~> 1.0"
 
 # Development tools
 group :development do
+  gem "aigcm"
   gem "pry"
   gem "pry-byebug"
 end
