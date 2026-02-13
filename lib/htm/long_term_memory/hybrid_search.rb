@@ -66,11 +66,15 @@ class HTM
 
       private
 
-      # Hybrid search using Reciprocal Rank Fusion
+      # Hybrid search using Reciprocal Rank Fusion with retrieve-then-rerank
       #
-      # Runs vector, fulltext, and tag searches independently, then merges
-      # results using RRF scoring. Nodes appearing in multiple searches
-      # get contributions from each, naturally boosting them.
+      # Uses a single SQL CTE query instead of three round-trips:
+      # 1. Fulltext + tag candidates are retrieved first (cheap)
+      # 2. Vector similarity is computed only for those candidates (expensive but scoped)
+      # 3. RRF scoring merges all three rankings in SQL
+      #
+      # Trade-off: Queries with high semantic relevance but zero keyword/tag
+      # overlap will be missed. Use :vector strategy for pure semantic search.
       #
       # @param timeframe [nil, Range, Array<Range>] Time range(s) to search
       # @param query [String] Search query
@@ -81,41 +85,272 @@ class HTM
       # @return [Array<Hash>] Merged results with RRF scores
       #
       def search_hybrid_rrf(timeframe:, query:, limit:, embedding_service:, candidate_limit:, metadata: {})
-        # Run all three searches independently
-        vector_results = fetch_vector_candidates(
-          query: query,
-          embedding_service: embedding_service,
-          timeframe: timeframe,
-          metadata: metadata,
-          limit: candidate_limit
+        # === Ruby pre-processing (LLM calls can't be in SQL) ===
+
+        # 1. Extract query-matching tags via LLM
+        tag_extraction = find_query_matching_tags(query, include_extracted: true)
+        extracted_tags = tag_extraction[:extracted] || []
+        matched_db_tags = tag_extraction[:matched] || []
+        tag_depth_map = build_tag_depth_map(extracted_tags)
+
+        search_tags = matched_db_tags.any? ? matched_db_tags : extracted_tags
+
+        # 2. Generate query embedding
+        query_embedding = embedding_service.embed(query)
+        has_embedding = query_embedding.is_a?(Array) && query_embedding.any?
+
+        # Build SQL-safe literals
+        query_literal = HTM.db.literal(query)
+
+        embedding_literal = nil
+        if has_embedding
+          padded = HTM::SqlBuilder.pad_embedding(query_embedding)
+          embedding_str = HTM::SqlBuilder.sanitize_embedding(padded)
+          embedding_literal = HTM.db.literal(embedding_str)
+        end
+
+        tag_literals = search_tags.any? ? search_tags.map { |t| HTM.db.literal(t) }.join(', ') : nil
+
+        # Build filter conditions (no alias for fulltext, 'n' alias for tag candidates)
+        timeframe_cond = HTM::SqlBuilder.timeframe_condition(timeframe)
+        metadata_cond = HTM::SqlBuilder.metadata_condition(metadata)
+        parts = [timeframe_cond, metadata_cond].compact
+        additional_sql = parts.any? ? "AND #{parts.join(' AND ')}" : ""
+
+        timeframe_cond_n = HTM::SqlBuilder.timeframe_condition(timeframe, table_alias: 'n')
+        metadata_cond_n = HTM::SqlBuilder.metadata_condition(metadata, table_alias: 'n')
+        parts_n = [timeframe_cond_n, metadata_cond_n].compact
+        additional_sql_n = parts_n.any? ? "AND #{parts_n.join(' AND ')}" : ""
+
+        # === Single CTE query ===
+        sql = build_hybrid_cte_sql(
+          query_literal: query_literal,
+          embedding_literal: embedding_literal,
+          tag_literals: tag_literals,
+          additional_sql: additional_sql,
+          additional_sql_n: additional_sql_n,
+          candidate_limit: candidate_limit.to_i,
+          limit: limit.to_i
         )
 
-        fulltext_results = fetch_fulltext_candidates(
-          query: query,
-          timeframe: timeframe,
-          metadata: metadata,
-          limit: candidate_limit
-        )
+        results = HTM.db.fetch(sql).all
 
-        # Extract tags from query and find matching nodes
-        tag_results = fetch_tag_candidates(
-          query: query,
-          timeframe: timeframe,
-          metadata: metadata,
-          limit: candidate_limit
-        )
+        # === Ruby post-processing ===
+        top_results = results.map do |row|
+          r = row.transform_keys(&:to_s)
 
-        # Merge using RRF
-        merged = merge_with_rrf(vector_results, fulltext_results, tag_results)
+          # Parse matched_tags from PostgreSQL array (only present when tags CTE included)
+          r['matched_tags'] = r.key?('matched_tags') ? parse_pg_array(r['matched_tags']) : []
 
-        # Take top results
-        top_results = merged.first(limit)
+          # Calculate tag_depth_score in Ruby (depends on tag_depth_map from LLM)
+          r['tag_depth_score'] = if r['matched_tags'].any? && tag_depth_map.any?
+            calculate_tag_depth_score(r['matched_tags'], tag_depth_map)
+          else
+            0.0
+          end
+
+          # Build sources from non-nil rank fields
+          sources = []
+          sources << 'vector' if r['vector_rank']
+          sources << 'fulltext' if r['fulltext_rank']
+          sources << 'tags' if r['tag_rank']
+          r['sources'] = sources
+
+          # Ensure all expected fields have defaults
+          r['similarity'] = (r['similarity'] || 0.0).to_f
+          r['text_rank'] = (r['text_rank'] || 0.0).to_f
+          r['rrf_score'] = r['rrf_score'].to_f
+          r['vector_rank'] ||= nil
+          r['fulltext_rank'] ||= nil
+          r['tag_rank'] ||= nil
+
+          r
+        end
 
         # Track access for retrieved nodes
         node_ids = top_results.map { |r| r['id'] }
         track_access(node_ids)
 
         top_results
+      end
+
+      # Build the single-CTE SQL for hybrid search
+      #
+      # Conditionally includes/excludes CTEs based on available components:
+      # - Always: fulltext (tsvector + trigram) candidates
+      # - If tag_literals: tag candidates CTE
+      # - If embedding_literal: vector rerank CTE (only on candidate IDs)
+      #
+      # @param query_literal [String] SQL-escaped query string
+      # @param embedding_literal [String, nil] SQL-escaped embedding vector (nil to skip vector)
+      # @param tag_literals [String, nil] Comma-separated SQL-escaped tag names (nil to skip tags)
+      # @param additional_sql [String] Extra WHERE conditions (no table alias)
+      # @param additional_sql_n [String] Extra WHERE conditions (with 'n.' alias)
+      # @param candidate_limit [Integer] Max candidates per source
+      # @param limit [Integer] Final result limit
+      # @return [String] Complete SQL query
+      #
+      def build_hybrid_cte_sql(query_literal:, embedding_literal:, tag_literals:, additional_sql:, additional_sql_n:, candidate_limit:, limit:)
+        has_embedding = !embedding_literal.nil?
+        has_tags = !tag_literals.nil?
+
+        ctes = []
+
+        # --- Fulltext candidates (always included) ---
+        ctes << <<~SQL.chomp
+          tsvector_matches AS (
+            SELECT id,
+                   (1.0 + ts_rank(to_tsvector('english', content), plainto_tsquery('english', #{query_literal}))) as text_rank
+            FROM nodes
+            WHERE deleted_at IS NULL
+            AND to_tsvector('english', content) @@ plainto_tsquery('english', #{query_literal})
+            #{additional_sql}
+          )
+        SQL
+
+        ctes << <<~SQL.chomp
+          trigram_matches AS (
+            SELECT id,
+                   similarity(content, #{query_literal}) as text_rank
+            FROM nodes
+            WHERE deleted_at IS NULL
+            AND similarity(content, #{query_literal}) >= 0.1
+            AND id NOT IN (SELECT id FROM tsvector_matches)
+            #{additional_sql}
+          )
+        SQL
+
+        ctes << <<~SQL.chomp
+          fulltext_candidates AS (
+            SELECT * FROM tsvector_matches
+            UNION ALL
+            SELECT * FROM trigram_matches
+            ORDER BY text_rank DESC
+            LIMIT #{candidate_limit}
+          )
+        SQL
+
+        # --- Tag candidates (conditional) ---
+        if has_tags
+          ctes << <<~SQL.chomp
+            tag_candidates AS (
+              SELECT n.id, array_agg(t.name) as matched_tags, count(t.name) as tag_match_count
+              FROM nodes n
+              JOIN node_tags nt ON nt.node_id = n.id
+              JOIN tags t ON t.id = nt.tag_id
+              WHERE n.deleted_at IS NULL
+              AND t.name IN (#{tag_literals})
+              #{additional_sql_n}
+              GROUP BY n.id
+              LIMIT #{candidate_limit}
+            )
+          SQL
+        end
+
+        # --- Candidate ID pool (union of retrieval sources) ---
+        id_sources = ["SELECT id FROM fulltext_candidates"]
+        id_sources << "SELECT id FROM tag_candidates" if has_tags
+
+        ctes << <<~SQL.chomp
+          all_candidate_ids AS (
+            #{id_sources.join("\n    UNION\n    ")}
+          )
+        SQL
+
+        # --- Vector rerank (conditional - only on candidate pool) ---
+        if has_embedding
+          ctes << <<~SQL.chomp
+            vector_rerank AS (
+              SELECT id,
+                     1 - (embedding <=> #{embedding_literal}::vector) as similarity
+              FROM nodes
+              WHERE id IN (SELECT id FROM all_candidate_ids)
+              AND embedding IS NOT NULL
+            )
+          SQL
+        end
+
+        # --- Ranked CTEs with ROW_NUMBER ---
+        ctes << <<~SQL.chomp
+          fulltext_ranked AS (
+            SELECT id, text_rank, ROW_NUMBER() OVER (ORDER BY text_rank DESC) as rank
+            FROM fulltext_candidates
+          )
+        SQL
+
+        if has_tags
+          ctes << <<~SQL.chomp
+            tag_ranked AS (
+              SELECT id, matched_tags, ROW_NUMBER() OVER (ORDER BY tag_match_count DESC) as rank
+              FROM tag_candidates
+            )
+          SQL
+        end
+
+        if has_embedding
+          ctes << <<~SQL.chomp
+            vector_ranked AS (
+              SELECT id, similarity, ROW_NUMBER() OVER (ORDER BY similarity DESC) as rank
+              FROM vector_rerank
+            )
+          SQL
+        end
+
+        # --- RRF score calculation via FULL OUTER JOIN ---
+        rrf_id = ["fr.id"]
+        rrf_id << "tr.id" if has_tags
+        rrf_id << "vr.id" if has_embedding
+
+        rrf_score_terms = ["COALESCE(1.0/(#{RRF_K} + fr.rank), 0)"]
+        rrf_score_terms << "COALESCE(1.0/(#{RRF_K} + tr.rank), 0)" if has_tags
+        rrf_score_terms << "COALESCE(1.0/(#{RRF_K} + vr.rank), 0)" if has_embedding
+
+        rrf_fields = [
+          "COALESCE(#{rrf_id.join(', ')}) as id",
+          "#{rrf_score_terms.join(' + ')} as rrf_score",
+          "fr.rank as fulltext_rank",
+          "fr.text_rank"
+        ]
+        rrf_fields << "tr.rank as tag_rank" if has_tags
+        rrf_fields << "tr.matched_tags" if has_tags
+        rrf_fields << "vr.rank as vector_rank" if has_embedding
+        rrf_fields << "vr.similarity" if has_embedding
+
+        rrf_from = "fulltext_ranked fr"
+        if has_tags
+          rrf_from += "\n      FULL OUTER JOIN tag_ranked tr ON fr.id = tr.id"
+        end
+        if has_embedding
+          coalesce_id = has_tags ? "COALESCE(fr.id, tr.id)" : "fr.id"
+          rrf_from += "\n      FULL OUTER JOIN vector_ranked vr ON #{coalesce_id} = vr.id"
+        end
+
+        ctes << <<~SQL.chomp
+          rrf_scores AS (
+            SELECT #{rrf_fields.join(",\n           ")}
+            FROM #{rrf_from}
+          )
+        SQL
+
+        # --- Final SELECT: join back to nodes for content fields ---
+        final_fields = [
+          "rrf.id", "n.content", "n.access_count", "n.created_at", "n.token_count",
+          "rrf.rrf_score", "rrf.fulltext_rank",
+          "COALESCE(rrf.text_rank, 0.0) as text_rank"
+        ]
+        final_fields << "rrf.tag_rank" if has_tags
+        final_fields << "rrf.matched_tags" if has_tags
+        final_fields << "rrf.vector_rank" if has_embedding
+        final_fields << "COALESCE(rrf.similarity, 0.0) as similarity" if has_embedding
+
+        <<~SQL
+          WITH #{ctes.join(",\n")}
+          SELECT #{final_fields.join(",\n         ")}
+          FROM rrf_scores rrf
+          JOIN nodes n ON n.id = rrf.id
+          ORDER BY rrf.rrf_score DESC
+          LIMIT #{limit}
+        SQL
       end
 
       # Fetch candidates using vector similarity search

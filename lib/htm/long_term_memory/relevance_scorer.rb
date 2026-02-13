@@ -119,6 +119,11 @@ class HTM
           fetch_candidates_by_timeframe(timeframe: timeframe, metadata: metadata, limit: limit * 2)
         end
 
+        # Normalize similarity and text_rank to [0,1] across all candidates
+        # before scoring so weighted sum is unbiased (ts_rank is unbounded,
+        # similarity is already [0,1] but may be narrow)
+        normalize_scores_batch(candidates)
+
         # Batch load all tags for candidates (fixes N+1 query)
         node_ids = candidates.map { |n| n['id'] }
         tags_by_node = batch_load_node_tags(node_ids)
@@ -339,6 +344,45 @@ class HTM
         similarity = common_levels.to_f / max_depth
 
         [similarity, depth_weight]
+      end
+
+      # Min-max normalize signal columns across all candidates to [0, 1]
+      #
+      # Normalizes 'similarity' and 'text_rank' in-place so the weighted
+      # composite in calculate_relevance is not biased by different scales
+      # (ts_rank is unbounded, similarity is [0,1]).
+      #
+      # Handles edge cases:
+      # - Single element: no-op (already effectively normalized)
+      # - All-same values: maps to 1.0 (avoids division by zero)
+      # - Missing keys: skips normalization for that signal
+      #
+      # @param candidates [Array<Hash>] Candidate nodes (modified in-place)
+      # @return [Array<Hash>] Same array, normalized
+      #
+      def normalize_scores_batch(candidates)
+        return candidates if candidates.size <= 1
+
+        %w[similarity text_rank].each do |key|
+          values = candidates.filter_map { |c| c[key]&.to_f }
+          next if values.empty?
+
+          min_val = values.min
+          max_val = values.max
+          range = max_val - min_val
+
+          candidates.each do |c|
+            next unless c.key?(key) && c[key]
+
+            if range.zero?
+              c[key] = 1.0
+            else
+              c[key] = (c[key].to_f - min_val) / range
+            end
+          end
+        end
+
+        candidates
       end
 
       # Calculate similarity between two hierarchical tags (string version)

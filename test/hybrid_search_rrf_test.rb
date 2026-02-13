@@ -379,6 +379,108 @@ class HybridSearchRRFTest < Minitest::Test
   end
 
   # ==========================================================================
+  # build_hybrid_cte_sql Edge Case Tests
+  # ==========================================================================
+
+  def test_build_hybrid_cte_sql_without_embedding
+    ltm = @htm.instance_variable_get(:@long_term_memory)
+
+    sql = ltm.send(:build_hybrid_cte_sql,
+      query_literal: HTM.db.literal("test query"),
+      embedding_literal: nil,
+      tag_literals: "'database:postgresql'",
+      additional_sql: "",
+      additional_sql_n: "",
+      candidate_limit: 100,
+      limit: 10
+    )
+
+    # Should include fulltext and tag CTEs but NOT vector CTEs
+    assert_includes sql, "tsvector_matches"
+    assert_includes sql, "fulltext_candidates"
+    assert_includes sql, "tag_candidates"
+    assert_includes sql, "tag_ranked"
+    refute_includes sql, "vector_rerank"
+    refute_includes sql, "vector_ranked"
+    # RRF should only sum fulltext + tag contributions
+    refute_includes sql, "vr.rank"
+  end
+
+  def test_build_hybrid_cte_sql_without_tags
+    ltm = @htm.instance_variable_get(:@long_term_memory)
+
+    sql = ltm.send(:build_hybrid_cte_sql,
+      query_literal: HTM.db.literal("test query"),
+      embedding_literal: HTM.db.literal("[0.1,0.2,0.3]"),
+      tag_literals: nil,
+      additional_sql: "",
+      additional_sql_n: "",
+      candidate_limit: 100,
+      limit: 10
+    )
+
+    # Should include fulltext and vector CTEs but NOT tag CTEs
+    assert_includes sql, "tsvector_matches"
+    assert_includes sql, "fulltext_candidates"
+    assert_includes sql, "vector_rerank"
+    assert_includes sql, "vector_ranked"
+    refute_includes sql, "tag_candidates"
+    refute_includes sql, "tag_ranked"
+    # RRF should only sum fulltext + vector contributions
+    refute_includes sql, "tr.rank"
+  end
+
+  def test_build_hybrid_cte_sql_fulltext_only
+    ltm = @htm.instance_variable_get(:@long_term_memory)
+
+    sql = ltm.send(:build_hybrid_cte_sql,
+      query_literal: HTM.db.literal("test query"),
+      embedding_literal: nil,
+      tag_literals: nil,
+      additional_sql: "",
+      additional_sql_n: "",
+      candidate_limit: 100,
+      limit: 10
+    )
+
+    # Should only include fulltext CTEs
+    assert_includes sql, "tsvector_matches"
+    assert_includes sql, "fulltext_candidates"
+    assert_includes sql, "fulltext_ranked"
+    refute_includes sql, "tag_candidates"
+    refute_includes sql, "vector_rerank"
+    # Should still produce valid SQL with single-source RRF
+    assert_includes sql, "rrf_scores"
+  end
+
+  def test_build_hybrid_cte_sql_with_all_components
+    ltm = @htm.instance_variable_get(:@long_term_memory)
+
+    sql = ltm.send(:build_hybrid_cte_sql,
+      query_literal: HTM.db.literal("test query"),
+      embedding_literal: HTM.db.literal("[0.1,0.2,0.3]"),
+      tag_literals: "'database:postgresql'",
+      additional_sql: "",
+      additional_sql_n: "",
+      candidate_limit: 100,
+      limit: 10
+    )
+
+    # Should include all CTEs
+    assert_includes sql, "tsvector_matches"
+    assert_includes sql, "fulltext_candidates"
+    assert_includes sql, "tag_candidates"
+    assert_includes sql, "vector_rerank"
+    assert_includes sql, "fulltext_ranked"
+    assert_includes sql, "tag_ranked"
+    assert_includes sql, "vector_ranked"
+    assert_includes sql, "rrf_scores"
+    # Should use FULL OUTER JOIN for all three
+    assert_includes sql, "FULL OUTER JOIN tag_ranked"
+    assert_includes sql, "FULL OUTER JOIN vector_ranked"
+  end
+
+  # ==========================================================================
   # Integration Tests
   # ==========================================================================
 
