@@ -5041,6 +5041,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sequel-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sequel Models
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#common-usage-patterns" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5350,6 +5361,48 @@
 <td><a href="database/">Database</a></td>
 <td>Schema setup and configuration</td>
 <td><code>setup</code>, <code>default_config</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="sequel-models">Sequel Models<a class="headerlink" href="#sequel-models" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Table</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HTM::Models::Node</code></td>
+<td>nodes</td>
+<td>Core memory storage</td>
+</tr>
+<tr>
+<td><code>HTM::Models::Tag</code></td>
+<td>tags</td>
+<td>Hierarchical tag names</td>
+</tr>
+<tr>
+<td><code>HTM::Models::NodeTag</code></td>
+<td>node_tags</td>
+<td>Node ↔ tag join</td>
+</tr>
+<tr>
+<td><code>HTM::Models::NodeRelationship</code></td>
+<td>node_relationships</td>
+<td>Weighted directed edges between nodes; Jaccard-similarity scores from tag co-occurrence</td>
+</tr>
+<tr>
+<td><code>HTM::Models::Robot</code></td>
+<td>robots</td>
+<td>Robot registry</td>
+</tr>
+<tr>
+<td><code>HTM::Models::FileSource</code></td>
+<td>file_sources</td>
+<td>Source file tracking</td>
 </tr>
 </tbody>
 </table>
