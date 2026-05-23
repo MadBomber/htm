@@ -158,7 +158,7 @@ class HTM
           end
         when :closed
           # Reset failure count on success in closed state
-          @failure_count = 0 if @failure_count > 0
+          @failure_count = 0 if @failure_count.positive?
         end
       end
     end
@@ -190,11 +190,10 @@ class HTM
       return unless @state == :open && @last_failure_time
 
       elapsed = Time.now - @last_failure_time
-      if elapsed >= @reset_timeout
-        @state = :half_open
-        @success_count = 0
-        HTM.logger.info "CircuitBreaker[#{@name}]: Reset timeout elapsed (#{@reset_timeout}s), circuit HALF-OPEN"
-      end
+      return unless elapsed >= @reset_timeout
+      @state = :half_open
+      @success_count = 0
+      HTM.logger.info "CircuitBreaker[#{@name}]: Reset timeout elapsed (#{@reset_timeout}s), circuit HALF-OPEN"
     end
   end
 end

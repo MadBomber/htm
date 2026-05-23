@@ -103,7 +103,7 @@ class VariableDimensionsTest < Minitest::Test
     assert_equal "ai:llm:embedding", hierarchy[:full]
     assert_equal "ai", hierarchy[:root]
     assert_equal "ai:llm", hierarchy[:parent]
-    assert_equal ["ai", "llm", "embedding"], hierarchy[:levels]
+    assert_equal %w[ai llm embedding], hierarchy[:levels]
     assert_equal 3, hierarchy[:depth]
   end
 end

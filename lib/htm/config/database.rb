@@ -87,9 +87,9 @@ class HTM
 
         unless database_configured?
           raise HTM::ConfigurationError,
-            "No database configured for environment '#{environment}'. " \
-            "Set HTM_DATABASE__URL or HTM_DATABASE__NAME, " \
-            "or add database.name to the '#{environment}:' section in your config."
+                "No database configured for environment '#{environment}'. " \
+                "Set HTM_DATABASE__URL or HTM_DATABASE__NAME, " \
+                "or add database.name to the '#{environment}:' section in your config."
         end
 
         true
@@ -165,16 +165,16 @@ class HTM
         return true if actual == expected
 
         raise HTM::ConfigurationError,
-          "Database name '#{actual}' does not match expected '#{expected}'.\n" \
-          "Database names must follow the convention: {service_name}_{environment}\n" \
-          "  Service name: #{service_name}\n" \
-          "  Environment:  #{environment}\n" \
-          "  Expected:     #{expected}\n" \
-          "  Actual:       #{actual}\n\n" \
-          "Either:\n" \
-          "  - Set HTM_DATABASE__URL to point to '#{expected}'\n" \
-          "  - Set HTM_DATABASE__NAME=#{expected}\n" \
-          "  - Change HTM_ENV to match the database suffix"
+              "Database name '#{actual}' does not match expected '#{expected}'.\n" \
+              "Database names must follow the convention: {service_name}_{environment}\n  " \
+              "Service name: #{service_name}\n  " \
+              "Environment:  #{environment}\n  " \
+              "Expected:     #{expected}\n  " \
+              "Actual:       #{actual}\n\n" \
+              "Either:\n  " \
+              "- Set HTM_DATABASE__URL to point to '#{expected}'\n  " \
+              "- Set HTM_DATABASE__NAME=#{expected}\n  " \
+              "- Change HTM_ENV to match the database suffix"
       end
 
       # Check if the database name matches the expected convention
@@ -216,21 +216,15 @@ class HTM
 
       def build_database_url
         return nil unless database.name && !database.name.empty?
-
-        auth = if database.user && !database.user.empty?
-          database.password && !database.password.empty? ? "#{database.user}:#{database.password}@" : "#{database.user}@"
-        else
-          ''
-        end
-
-        url = "postgresql://#{auth}#{database.host}:#{database.port}/#{database.name}"
-
-        # Add sslmode as query parameter if set
-        if database.sslmode && !database.sslmode.empty?
-          url += "?sslmode=#{database.sslmode}"
-        end
-
+        url = "postgresql://#{database_auth_segment}#{database.host}:#{database.port}/#{database.name}"
+        url += "?sslmode=#{database.sslmode}" if database.sslmode && !database.sslmode.empty?
         url
+      end
+
+      def database_auth_segment
+        return '' unless database.user && !database.user.empty?
+        return "#{database.user}@" unless database.password && !database.password.empty?
+        "#{database.user}:#{database.password}@"
       end
 
       # ==========================================================================

@@ -93,14 +93,14 @@ class HTM
         # - Pool is healthy if no threads are waiting
         # - Pool is critical only if threads are waiting for connections
         # - size == max_size is normal (pre-allocated pool), not a problem
-        status = if waiting > 0
-          waiting > max_size / 2 ? :exhausted : :critical
-        else
-          :healthy
-        end
+        status = if waiting.positive?
+                   waiting > max_size / 2 ? :exhausted : :critical
+                 else
+                   :healthy
+                 end
 
         # Utilization based on waiting threads (pool stress indicator)
-        utilization = waiting > 0 ? ((waiting.to_f / max_size) * 100).round(2) : 0.0
+        utilization = waiting.positive? ? ((waiting.to_f / max_size) * 100).round(2) : 0.0
 
         stats = {
           size: max_size,
@@ -252,47 +252,11 @@ class HTM
       def health_check
         checks = {}
         issues = []
-
-        # Check database connection
-        checks[:database] = connected?
-        issues << "Database not connected" unless checks[:database]
-
-        # Check connection pool
-        pool_stats = connection_pool_stats
-        checks[:connection_pool] = pool_stats[:status] == :healthy || pool_stats[:status] == :warning
-        issues << "Connection pool #{pool_stats[:status]}" if [:critical, :exhausted].include?(pool_stats[:status])
-
-        # Check circuit breakers
-        cb_stats = circuit_breaker_stats
-        if cb_stats[:embedding_service]
-          checks[:embedding_circuit] = cb_stats[:embedding_service][:state] != :open
-          issues << "Embedding service circuit breaker open" unless checks[:embedding_circuit]
-        end
-        if cb_stats[:tag_service]
-          checks[:tag_circuit] = cb_stats[:tag_service][:state] != :open
-          issues << "Tag service circuit breaker open" unless checks[:tag_circuit]
-        end
-
-        # Check required extensions
-        if connected?
-          begin
-            checks[:pgvector] = extension_installed?('vector')
-            issues << "pgvector extension not installed" unless checks[:pgvector]
-
-            checks[:pg_trgm] = extension_installed?('pg_trgm')
-            issues << "pg_trgm extension not installed" unless checks[:pg_trgm]
-          rescue StandardError => e
-            checks[:extensions] = false
-            issues << "Failed to check extensions: #{e.message}"
-          end
-        end
-
-        {
-          healthy: issues.empty?,
-          checks: checks,
-          issues: issues,
-          checked_at: Time.now
-        }
+        check_database(checks, issues)
+        check_pool(checks, issues)
+        check_circuit_breakers(checks, issues)
+        check_extensions(checks, issues) if connected?
+        { healthy: issues.empty?, checks: checks, issues: issues, checked_at: Time.now }
       end
 
       # Quick health check - returns boolean
@@ -317,6 +281,38 @@ class HTM
 
       private
 
+      def check_database(checks, issues)
+        checks[:database] = connected?
+        issues << "Database not connected" unless checks[:database]
+      end
+
+      def check_pool(checks, issues)
+        pool_stats = connection_pool_stats
+        checks[:connection_pool] = %i[healthy warning].include?(pool_stats[:status])
+        issues << "Connection pool #{pool_stats[:status]}" if %i[critical exhausted].include?(pool_stats[:status])
+      end
+
+      def check_circuit_breakers(checks, issues)
+        cb_stats = circuit_breaker_stats
+        if cb_stats[:embedding_service]
+          checks[:embedding_circuit] = cb_stats[:embedding_service][:state] != :open
+          issues << "Embedding service circuit breaker open" unless checks[:embedding_circuit]
+        end
+        return unless cb_stats[:tag_service]
+        checks[:tag_circuit] = cb_stats[:tag_service][:state] != :open
+        issues << "Tag service circuit breaker open" unless checks[:tag_circuit]
+      end
+
+      def check_extensions(checks, issues)
+        checks[:pgvector] = extension_installed?('vector')
+        issues << "pgvector extension not installed" unless checks[:pgvector]
+        checks[:pg_trgm] = extension_installed?('pg_trgm')
+        issues << "pg_trgm extension not installed" unless checks[:pg_trgm]
+      rescue StandardError => e
+        checks[:extensions] = false
+        issues << "Failed to check extensions: #{e.message}"
+      end
+
       # Check if Sequel database is connected
       def connected?
         return false unless defined?(HTM) && HTM.respond_to?(:db)
@@ -332,7 +328,7 @@ class HTM
         result = HTM.db.fetch(
           "SELECT COUNT(*) AS cnt FROM pg_extension WHERE extname = ?", name
         ).first
-        result[:cnt].to_i > 0
+        result[:cnt].to_i.positive?
       end
 
       # Calculate timing statistics from samples
@@ -365,7 +361,7 @@ class HTM
 
         return sorted_array[f] if f == c
 
-        sorted_array[f] * (c - k) + sorted_array[c] * (k - f)
+        (sorted_array[f] * (c - k)) + (sorted_array[c] * (k - f))
       end
 
       # Get process memory in MB
@@ -376,8 +372,6 @@ class HTM
         elsif File.exist?('/proc/self/status')
           # Linux: Read from proc
           File.read('/proc/self/status').match(/VmRSS:\s+(\d+)/)[1].to_i / 1024.0
-        else
-          nil
         end
       rescue StandardError
         nil

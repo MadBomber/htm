@@ -41,24 +41,24 @@ class HTM
     private
 
     # Delegate common methods to db
-    def create_table(name, **options, &block)
-      db.create_table(name, **options, &block)
+    def create_table(name, **, &)
+      db.create_table(name, **, &)
     end
 
-    def drop_table(name, **options)
-      db.drop_table(name, **options)
+    def drop_table(name, **)
+      db.drop_table(name, **)
     end
 
-    def alter_table(name, &block)
-      db.alter_table(name, &block)
+    def alter_table(name, &)
+      db.alter_table(name, &)
     end
 
-    def add_index(table, columns, **options)
-      db.add_index(table, columns, **options)
+    def add_index(table, columns, **)
+      db.add_index(table, columns, **)
     end
 
-    def drop_index(table, columns, **options)
-      db.drop_index(table, columns, **options)
+    def drop_index(table, columns, **)
+      db.drop_index(table, columns, **)
     end
 
     def run(sql)

@@ -34,7 +34,7 @@ class JobAdapterTest < Minitest::Test
     # Track job execution
     executed = false
     job_class = Class.new do
-      define_singleton_method(:perform) do |**params|
+      define_singleton_method(:perform) do |**_params|
         executed = true
       end
 
@@ -54,7 +54,7 @@ class JobAdapterTest < Minitest::Test
     # Track job execution
     executed = false
     job_class = Class.new do
-      define_singleton_method(:perform) do |**params|
+      define_singleton_method(:perform) do |**_params|
         executed = true
       end
 
@@ -95,10 +95,10 @@ class JobAdapterTest < Minitest::Test
   # Test auto-detection in test environment
   def test_auto_detect_inline_in_test_env
     # Save current environment values
-    saved_htm_env = ENV['HTM_ENV']
-    saved_rails_env = ENV['RAILS_ENV']
-    saved_rack_env = ENV['RACK_ENV']
-    saved_xdg_config = ENV['XDG_CONFIG_HOME']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_rails_env = ENV.fetch('RAILS_ENV', nil)
+    saved_rack_env = ENV.fetch('RACK_ENV', nil)
+    saved_xdg_config = ENV.fetch('XDG_CONFIG_HOME', nil)
     temp_dir = Dir.mktmpdir('htm_job_test')
 
     # Clear HTM_ENV to test RACK_ENV detection
@@ -158,7 +158,7 @@ class JobAdapterTest < Minitest::Test
     HTM.configuration.job.backend = :inline
 
     job_class = Class.new do
-      define_singleton_method(:perform) do |**params|
+      define_singleton_method(:perform) do |**_params|
         raise StandardError, "Test error"
       end
 
@@ -176,7 +176,7 @@ class JobAdapterTest < Minitest::Test
     HTM.configuration.job.backend = :thread
 
     job_class = Class.new do
-      define_singleton_method(:perform) do |**params|
+      define_singleton_method(:perform) do |**_params|
         raise StandardError, "Test error in thread"
       end
 
@@ -196,7 +196,7 @@ class JobAdapterTest < Minitest::Test
 
     executed = false
     job_class = Class.new do
-      define_singleton_method(:perform) do |**params|
+      define_singleton_method(:perform) do |**_params|
         executed = true
       end
 
@@ -251,14 +251,14 @@ class JobAdapterTest < Minitest::Test
     order = []
 
     job_class_a = Class.new do
-      define_singleton_method(:perform) do |**params|
+      define_singleton_method(:perform) do |**_params|
         order << :a
       end
       define_singleton_method(:name) { "JobA" }
     end
 
     job_class_b = Class.new do
-      define_singleton_method(:perform) do |**params|
+      define_singleton_method(:perform) do |**_params|
         order << :b
       end
       define_singleton_method(:name) { "JobB" }
@@ -272,7 +272,7 @@ class JobAdapterTest < Minitest::Test
     HTM::JobAdapter.enqueue_parallel(jobs)
 
     # Inline executes sequentially
-    assert_equal [:a, :b], order
+    assert_equal %i[a b], order
   end
 
   # Test parallel execution with empty jobs array
@@ -288,7 +288,7 @@ class JobAdapterTest < Minitest::Test
     HTM.configuration.job.backend = :fiber
 
     job_class = Class.new do
-      define_singleton_method(:perform) do |**params|
+      define_singleton_method(:perform) do |**_params|
         raise StandardError, "Test error in fiber"
       end
 
@@ -297,7 +297,8 @@ class JobAdapterTest < Minitest::Test
 
     # Should not raise (errors are logged)
     # Suppress Ruby warnings during test (Ruby 4.0.0 emits IO::Buffer experimental warning)
-    old_verbose, $VERBOSE = $VERBOSE, nil
+    old_verbose = $VERBOSE
+    $VERBOSE = nil
     begin
       assert_silent do
         HTM::JobAdapter.enqueue(job_class, test_param: 'value')

@@ -16,7 +16,7 @@ class ParentTagCreationTest < Minitest::Test
     cleanup_old_test_tags
 
     # Create HTM instance for tests
-    @robot_name = "parent_tag_test_robot_#{Time.now.to_i}_#{rand(10000)}"
+    @robot_name = "parent_tag_test_robot_#{Time.now.to_i}_#{rand(10_000)}"
     @htm = HTM.new(robot_name: @robot_name)
   end
 
@@ -181,10 +181,10 @@ class ParentTagCreationTest < Minitest::Test
     ltm.add_tag(node_id: node.id, tag: "cloud:aws:lambda")
 
     tag_names = HTM::Models::NodeTag
-      .join(:tags, id: :tag_id)
-      .where(node_id: node.id)
-      .select_map(Sequel[:tags][:name])
-      .sort
+                .join(:tags, id: :tag_id)
+                .where(node_id: node.id)
+                .select_map(Sequel[:tags][:name])
+                .sort
 
     assert_includes tag_names, "cloud"
     assert_includes tag_names, "cloud:aws"
@@ -201,10 +201,10 @@ class ParentTagCreationTest < Minitest::Test
     ltm.add_tag(node_id: node.id, tag: "testing:unit")
 
     tag_names = HTM::Models::NodeTag
-      .join(:tags, id: :tag_id)
-      .where(node_id: node.id)
-      .select_map(Sequel[:tags][:name])
-      .sort
+                .join(:tags, id: :tag_id)
+                .where(node_id: node.id)
+                .select_map(Sequel[:tags][:name])
+                .sort
 
     # Should not have duplicates
     assert_equal ["testing", "testing:unit"], tag_names
@@ -274,7 +274,7 @@ class ParentTagCreationTest < Minitest::Test
 
   def create_test_node(content)
     # Make content unique by appending timestamp and random number
-    unique_content = "#{content} [test:#{Time.now.to_f}:#{rand(100000)}]"
+    unique_content = "#{content} [test:#{Time.now.to_f}:#{rand(100_000)}]"
     token_count = HTM.count_tokens(unique_content)
     node = HTM::Models::Node.create(
       content: unique_content,

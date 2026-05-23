@@ -1,5 +1,21 @@
 # frozen_string_literal: true
 
+require 'simplecov'
+SimpleCov.start do
+  add_filter '/test/'
+  add_filter '/vendor/'
+
+  add_group 'Core',         'lib/htm.rb'
+  add_group 'Long-term',    'lib/htm/long_term_memory'
+  add_group 'Models',       'lib/htm/models'
+  add_group 'Jobs',         'lib/htm/jobs'
+  add_group 'Loaders',      'lib/htm/loaders'
+  add_group 'MCP',          'lib/htm/mcp'
+  add_group 'Config',       'lib/htm/config'
+
+  enable_coverage :branch
+end
+
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 # Ensure test environment is set BEFORE loading HTM
@@ -20,7 +36,7 @@ if ENV['HTM_DATABASE__URL'] && !ENV['HTM_DATABASE__URL'].include?('_test')
 
     To fix, either:
       1. Run tests via: rake test (recommended)
-      2. Set: export HTM_DATABASE__URL="postgresql://#{ENV['USER']}@localhost:5432/#{service_name}_test"
+      2. Set: export HTM_DATABASE__URL="postgresql://#{ENV.fetch('USER', nil)}@localhost:5432/#{service_name}_test"
       3. Unset HTM_DATABASE__URL and let defaults.yml handle it
 
   ERROR
@@ -29,58 +45,7 @@ end
 require "htm"
 
 require "minitest/autorun"
-require "minitest/reporters"
 require "tiktoken_ruby"
-
-# Use SpecReporter with failure summary at end
-Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new]
-
-# Collect failures and errors to display summary at end
-module Minitest
-  class << self
-    attr_accessor :failure_details
-  end
-  self.failure_details = []
-end
-
-# Hook to collect failure details
-module FailureCollector
-  def record(result)
-    super
-    if result.failure
-      Minitest.failure_details << result
-    end
-  end
-end
-
-Minitest::Reporters::SpecReporter.prepend(FailureCollector)
-
-# Print failure summary after all tests complete
-Minitest.after_run do
-  if Minitest.failure_details.any?
-    puts "\n"
-    puts "=" * 70
-    puts "FAILURE SUMMARY (#{Minitest.failure_details.size} failures/errors)"
-    puts "=" * 70
-
-    Minitest.failure_details.each_with_index do |result, idx|
-      puts "\n#{idx + 1}) #{result.class}##{result.name}"
-      puts "-" * 70
-
-      failure = result.failure
-      case failure
-      when Minitest::UnexpectedError
-        puts "Error: #{failure.error.class}: #{failure.error.message}"
-        puts failure.error.backtrace.first(10).map { |line| "  #{line}" }.join("\n")
-      else
-        puts "Failure: #{failure.message}"
-        puts "Location: #{failure.location}"
-      end
-    end
-
-    puts "\n" + "=" * 70
-  end
-end
 
 # Mock embedding service for tests that don't require real Ollama
 class MockEmbeddingService
@@ -99,12 +64,11 @@ class MockEmbeddingService
     @tokenizer = Tiktoken.encoding_for_model("gpt-3.5-turbo")
 
     # Initialize embedding cache (same as real EmbeddingService)
-    if cache_size > 0
-      require 'lru_redux'
-      require 'digest'
-      @embedding_cache = LruRedux::Cache.new(cache_size)
-      @cache_stats = { hits: 0, misses: 0 }
-    end
+    return unless cache_size.positive?
+    require 'lru_redux'
+    require 'digest'
+    @embedding_cache = LruRedux::Cache.new(cache_size)
+    @cache_stats = { hits: 0, misses: 0 }
   end
 
   def embed(text)
@@ -134,7 +98,7 @@ class MockEmbeddingService
     return nil unless @embedding_cache
 
     total = @cache_stats[:hits] + @cache_stats[:misses]
-    hit_rate = total > 0 ? (@cache_stats[:hits].to_f / total * 100).round(2) : 0.0
+    hit_rate = total.positive? ? (@cache_stats[:hits].to_f / total * 100).round(2) : 0.0
 
     {
       hits: @cache_stats[:hits],
@@ -188,22 +152,22 @@ def configure_htm_with_mocks(dimensions: 768)
     config.job.backend = :inline
 
     # Mock embedding generator
-    config.embedding_generator = ->(text) {
+    config.embedding_generator = lambda { |text|
       seed = text.hash.abs
       dimensions.times.map { |i| Random.new(seed + i).rand(-1.0..1.0) }
     }
 
     # Mock tag extractor (returns empty tags to speed up tests)
-    config.tag_extractor = ->(text, ontology) { [] }
+    config.tag_extractor = ->(_text, _ontology) { [] }
 
     # Mock proposition extractor (returns empty propositions to speed up tests)
-    config.proposition_extractor = ->(text) { [] }
+    config.proposition_extractor = ->(_text) { [] }
 
     # Disable proposition extraction by default in tests
     config.proposition.enabled = false
 
     # Mock token counter
-    config.token_counter = ->(text) {
+    config.token_counter = lambda { |text|
       begin
         Tiktoken.encoding_for_model("gpt-3.5-turbo").encode(text.to_s).length
       rescue
@@ -218,11 +182,10 @@ def configure_htm_with_mocks(dimensions: 768)
   mock_service
 end
 
-# Reset HTM configuration to defaults
+# Reset HTM configuration to defaults (with mock services)
 def reset_htm_configuration
   HTM.reset_configuration!
-  # Set inline backend for tests
-  HTM.configuration.job.backend = :inline
+  configure_htm_with_mocks
 end
 
 # Check if database is available for integration tests
@@ -248,7 +211,7 @@ def database_available?
     # Establish connection using HTM's config
     HTM::SequelConfig.establish_connection!
     @database_available = HTM::SequelConfig.connected?
-  rescue => e
+  rescue
     @database_available = false
   end
 
@@ -258,9 +221,8 @@ end
 # Helper method for tests that require database
 # Use in setup: `skip_without_database` (returns early if DB not available)
 def skip_without_database
-  unless database_available?
-    skip "Database not configured or unavailable. Set HTM_DATABASE__URL or ensure defaults.yml database settings are correct."
-  end
+  return if database_available?
+  skip "Database not configured or unavailable. Set HTM_DATABASE__URL or ensure defaults.yml database settings are correct."
 end
 
 # Setup default test configuration

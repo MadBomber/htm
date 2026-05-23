@@ -82,8 +82,8 @@ class HTM
       # @param options [Hash] Recall options (timeframe, limit, strategy, etc.)
       # @return [Array<Hash>] Matching memories
       #
-      def recall(topic, **options)
-        htm.recall(topic, **options)
+      def recall(topic, **)
+        htm.recall(topic, **)
       end
 
       # JSON response helper
@@ -174,11 +174,11 @@ module ::Sinatra
         config.logger = logger if respond_to?(:logger)
 
         # Use Sidekiq if available, otherwise thread-based
-        if defined?(::Sidekiq)
-          config.job.backend = :sidekiq
-        else
-          config.job.backend = :thread
-        end
+        config.job.backend = if defined?(::Sidekiq)
+                               :sidekiq
+                             else
+                               :thread
+                             end
       end
 
       # Establish initial connection (Sequel handles pooling automatically)

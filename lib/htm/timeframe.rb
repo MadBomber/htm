@@ -61,7 +61,7 @@ class HTM
 
         else
           raise ArgumentError, "Unsupported timeframe type: #{input.class}. " \
-            "Expected nil, Range, Array<Range>, Date, DateTime, Time, String, or :auto"
+                               "Expected nil, Range, Array<Range>, Date, DateTime, Time, String, or :auto"
         end
       end
 
@@ -75,7 +75,7 @@ class HTM
         when nil, :auto, Range, Date, DateTime, Time, String
           true
         when Array
-          input.all? { |r| r.is_a?(Range) }
+          input.all?(Range)
         else
           false
         end
@@ -185,9 +185,8 @@ class HTM
       # @raise [ArgumentError] If range is invalid
       #
       def validate_range!(range)
-        unless range.begin.respond_to?(:to_time) && range.end.respond_to?(:to_time)
-          raise ArgumentError, "Range must have Time-compatible begin and end values"
-        end
+        return if range.begin.respond_to?(:to_time) && range.end.respond_to?(:to_time)
+        raise ArgumentError, "Range must have Time-compatible begin and end values"
       end
     end
   end

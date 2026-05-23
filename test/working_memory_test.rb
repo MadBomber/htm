@@ -89,7 +89,7 @@ class WorkingMemoryTest < Minitest::Test
 
     # The algorithm uses combined LFU + LRU scoring
     # With significantly different access counts, low access should be evicted
-    evicted_keys = evicted.map { |e| e[:key] }
+    evicted.map { |e| e[:key] }
     # At least one node should be evicted
     assert evicted.any?, "Expected at least one node to be evicted"
     # The evicted node should free enough tokens

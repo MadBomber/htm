@@ -8,6 +8,11 @@ class IntegrationTest < Minitest::Test
     skip_without_database
     return if skipped?
 
+    # Ensure mock services are active and circuit breakers are closed
+    configure_htm_with_mocks
+    HTM::EmbeddingService.reset_circuit_breaker!
+    HTM::TagService.reset_circuit_breaker!
+
     # Initialize HTM with mock embedding service
     @htm = HTM.new(
       robot_name: "Test Robot",
@@ -25,7 +30,7 @@ class IntegrationTest < Minitest::Test
         node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
         HTM::Models::Node.where(id: node_ids).delete if node_ids.any?
       end
-    rescue => e
+    rescue
       # Ignore errors during cleanup
     end
   end
@@ -41,8 +46,8 @@ class IntegrationTest < Minitest::Test
     @htm.remember("Working memory test with Ollama embeddings")
 
     # Check working memory stats
-    assert @htm.working_memory.node_count > 0
-    assert @htm.working_memory.token_count > 0
+    assert @htm.working_memory.node_count.positive?
+    assert @htm.working_memory.token_count.positive?
     assert @htm.working_memory.utilization_percentage >= 0
   end
 
@@ -127,7 +132,7 @@ class IntegrationTest < Minitest::Test
 
     # Verify embedding is deserialized as Array, not String
     assert_instance_of Array, node.embedding, "Embedding should be deserialized as Array"
-    assert node.embedding.size > 0, "Embedding should have elements"
+    assert node.embedding.size.positive?, "Embedding should have elements"
     assert_instance_of Float, node.embedding.first, "Embedding elements should be Floats"
   end
 
@@ -147,12 +152,12 @@ class IntegrationTest < Minitest::Test
 
     # Test class method nearest_neighbors
     neighbors = HTM::Models::Node.with_embeddings
-      .nearest_neighbors(:embedding, sample.embedding, distance: "cosine")
-      .limit(3)
-      .to_a
+                                 .nearest_neighbors(:embedding, sample.embedding, distance: "cosine")
+                                 .limit(3)
+                                 .to_a
 
     assert_instance_of Array, neighbors, "Should return results as array"
-    assert neighbors.size > 0, "Should find at least one neighbor"
+    assert neighbors.size.positive?, "Should find at least one neighbor"
 
     # Each neighbor should have a distance
     neighbors.each do |node|
@@ -194,9 +199,8 @@ class IntegrationTest < Minitest::Test
     results = @htm.recall("PostgreSQL", strategy: :fulltext)
 
     assert_instance_of Array, results
-    if results.any?
-      assert_instance_of String, results.first, "Default recall should return content strings"
-    end
+    return unless results.any?
+    assert_instance_of String, results.first, "Default recall should return content strings"
   end
 
   def test_recall_with_raw_true_returns_node_hashes
@@ -208,12 +212,11 @@ class IntegrationTest < Minitest::Test
     results = @htm.recall("PostgreSQL", strategy: :fulltext, raw: true)
 
     assert_instance_of Array, results
-    if results.any?
-      result = results.first
-      assert_instance_of Hash, result, "Raw recall should return hashes"
-      assert result.key?("content") || result.key?(:content), "Raw result should include content"
-      assert result.key?("id") || result.key?(:id), "Raw result should include id"
-    end
+    return unless results.any?
+    result = results.first
+    assert_instance_of Hash, result, "Raw recall should return hashes"
+    assert result.key?("content") || result.key?(:content), "Raw result should include content"
+    assert result.key?("id") || result.key?(:id), "Raw result should include id"
   end
 
   # Additional integration tests for comprehensive coverage
@@ -272,11 +275,10 @@ class IntegrationTest < Minitest::Test
     results = @htm.recall("PostgreSQL", strategy: :fulltext, with_relevance: true, raw: true)
 
     assert_instance_of Array, results
-    if results.any?
-      result = results.first
-      assert result.key?('relevance'), "Result should include relevance score"
-      assert result['relevance'].is_a?(Numeric), "Relevance should be numeric"
-    end
+    return unless results.any?
+    result = results.first
+    assert result.key?('relevance'), "Result should include relevance score"
+    assert result['relevance'].is_a?(Numeric), "Relevance should be numeric"
   end
 
   def test_observability_during_operations
@@ -290,7 +292,7 @@ class IntegrationTest < Minitest::Test
     # Check connection pool stats
     pool_stats = HTM::Observability.connection_pool_stats
 
-    assert pool_stats[:status] == :healthy || pool_stats[:status] == :warning,
+    assert %i[healthy warning].include?(pool_stats[:status]),
            "Pool should be healthy or warning status"
     assert pool_stats[:connections] >= 0
   end
@@ -318,9 +320,8 @@ class IntegrationTest < Minitest::Test
     if health[:checks].key?(:embedding_circuit)
       assert health[:checks][:embedding_circuit], "Embedding circuit should be closed"
     end
-    if health[:checks].key?(:tag_circuit)
-      assert health[:checks][:tag_circuit], "Tag circuit should be closed"
-    end
+    return unless health[:checks].key?(:tag_circuit)
+    assert health[:checks][:tag_circuit], "Tag circuit should be closed"
   end
 
   def test_search_by_tags
@@ -332,14 +333,14 @@ class IntegrationTest < Minitest::Test
     # Search by tag
     results = @htm.long_term_memory.search_by_tags(tags: ["database:postgresql"])
 
-    assert results.any? { |r| r['content']&.include?('PostgreSQL') }
+    assert(results.any? { |r| r['content']&.include?('PostgreSQL') })
   end
 
   def test_popular_tags
     # Add nodes with various tags
     3.times { @htm.remember("PostgreSQL content #{rand(1000)}", tags: ["database:postgresql"]) }
     2.times { @htm.remember("Ruby content #{rand(1000)}", tags: ["programming:ruby"]) }
-    1.times { @htm.remember("Python content #{rand(1000)}", tags: ["programming:python"]) }
+    @htm.remember("Python content #{rand(1000)}", tags: ["programming:python"])
 
     # Get popular tags
     popular = @htm.long_term_memory.popular_tags(limit: 10)
@@ -361,6 +362,6 @@ class IntegrationTest < Minitest::Test
     results = @htm.recall("forgotten", strategy: :fulltext)
 
     # The forgotten node shouldn't appear in results
-    refute results.any? { |r| r.include?("Content to be forgotten") }
+    refute(results.any? { |r| r.include?("Content to be forgotten") })
   end
 end

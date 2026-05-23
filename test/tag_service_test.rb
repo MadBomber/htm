@@ -13,7 +13,7 @@ class TagServiceTest < Minitest::Test
     # Configure HTM with mock tag extractor for tests
     HTM.configure do |config|
       config.job.backend = :inline
-      config.tag_extractor = ->(text, ontology) {
+      config.tag_extractor = lambda { |text, _ontology|
         # Simple mock that extracts "tags" based on keywords
         tags = []
         tags << "database:postgresql" if text.to_s.downcase.include?("postgresql")
@@ -105,7 +105,7 @@ class TagServiceTest < Minitest::Test
     # Configure to return empty array for empty content
     HTM.configure do |config|
       config.job.backend = :inline
-      config.tag_extractor = ->(text, ontology) { [] }
+      config.tag_extractor = ->(_text, _ontology) { [] }
     end
 
     tags = HTM::TagService.extract("")
@@ -137,18 +137,18 @@ class TagServiceTest < Minitest::Test
   def test_parse_tags_strips_whitespace
     result = HTM::TagService.parse_tags(["  database  ", "  ruby  "])
 
-    assert_equal ["database", "ruby"], result
+    assert_equal %w[database ruby], result
   end
 
   def test_parse_tags_rejects_empty_strings
     result = HTM::TagService.parse_tags(["database", "", "ruby"])
 
-    assert_equal ["database", "ruby"], result
+    assert_equal %w[database ruby], result
   end
 
   def test_parse_tags_raises_on_invalid_type
     assert_raises(HTM::TagError) do
-      HTM::TagService.parse_tags(12345)
+      HTM::TagService.parse_tags(12_345)
     end
   end
 
@@ -160,7 +160,7 @@ class TagServiceTest < Minitest::Test
   end
 
   def test_validate_and_filter_tags_rejects_invalid_format
-    result = HTM::TagService.validate_and_filter_tags(["Database", "valid-tag"])
+    result = HTM::TagService.validate_and_filter_tags(%w[Database valid-tag])
 
     assert_equal ["valid-tag"], result
   end
@@ -172,9 +172,9 @@ class TagServiceTest < Minitest::Test
   end
 
   def test_validate_and_filter_tags_removes_duplicates
-    result = HTM::TagService.validate_and_filter_tags(["database", "database", "ruby"])
+    result = HTM::TagService.validate_and_filter_tags(%w[database database ruby])
 
-    assert_equal ["database", "ruby"], result
+    assert_equal %w[database ruby], result
   end
 
   # Tests for singularization
@@ -245,7 +245,7 @@ class TagServiceTest < Minitest::Test
     assert_equal "database:postgresql", result[:full]
     assert_equal "database", result[:root]
     assert_equal "database", result[:parent]
-    assert_equal ["database", "postgresql"], result[:levels]
+    assert_equal %w[database postgresql], result[:levels]
     assert_equal 2, result[:depth]
   end
 
@@ -255,7 +255,7 @@ class TagServiceTest < Minitest::Test
     assert_equal "ai:llm:embeddings", result[:full]
     assert_equal "ai", result[:root]
     assert_equal "ai:llm", result[:parent]
-    assert_equal ["ai", "llm", "embeddings"], result[:levels]
+    assert_equal %w[ai llm embeddings], result[:levels]
     assert_equal 3, result[:depth]
   end
 
@@ -283,7 +283,7 @@ class TagServiceTest < Minitest::Test
   def test_circuit_breaker_opens_after_failures
     HTM.configure do |config|
       config.job.backend = :inline
-      config.tag_extractor = ->(_text, _ontology) {
+      config.tag_extractor = lambda { |_text, _ontology|
         raise StandardError, "API unavailable"
       }
     end
@@ -304,7 +304,7 @@ class TagServiceTest < Minitest::Test
   def test_circuit_breaker_can_be_reset
     HTM.configure do |config|
       config.job.backend = :inline
-      config.tag_extractor = ->(_text, _ontology) {
+      config.tag_extractor = lambda { |_text, _ontology|
         raise StandardError, "API unavailable"
       }
     end
@@ -328,7 +328,7 @@ class TagServiceTest < Minitest::Test
   def test_extract_raises_tag_error_for_invalid_response_type
     HTM.configure do |config|
       config.job.backend = :inline
-      config.tag_extractor = ->(_text, _ontology) { 12345 }
+      config.tag_extractor = ->(_text, _ontology) { 12_345 }
     end
 
     error = assert_raises(HTM::TagError) do

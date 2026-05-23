@@ -40,7 +40,7 @@ class RobotGroupTest < Minitest::Test
   def test_initialization_with_active_robots
     @group = HTM::RobotGroup.new(
       name: @group_name,
-      active: ["agent-1", "agent-2"]
+      active: %w[agent-1 agent-2]
     )
 
     assert_equal 2, @group.active_robot_names.length
@@ -51,7 +51,7 @@ class RobotGroupTest < Minitest::Test
   def test_initialization_with_passive_robots
     @group = HTM::RobotGroup.new(
       name: @group_name,
-      passive: ["standby-1", "standby-2"]
+      passive: %w[standby-1 standby-2]
     )
 
     assert_equal 2, @group.passive_robot_names.length
@@ -167,7 +167,7 @@ class RobotGroupTest < Minitest::Test
   def test_demote_active_to_passive
     @group = HTM::RobotGroup.new(
       name: @group_name,
-      active: ["agent-1", "agent-2"]
+      active: %w[agent-1 agent-2]
     )
 
     @group.demote("agent-1")
@@ -202,7 +202,7 @@ class RobotGroupTest < Minitest::Test
     ids = @group.member_ids
 
     assert_equal 2, ids.length
-    assert ids.all? { |id| id.is_a?(Integer) }
+    assert(ids.all?(Integer))
   end
 
   # ========================================
@@ -276,7 +276,7 @@ class RobotGroupTest < Minitest::Test
   def test_remember_with_specific_originator
     @group = HTM::RobotGroup.new(
       name: @group_name,
-      active: ["agent-1", "agent-2"]
+      active: %w[agent-1 agent-2]
     )
 
     node_id = @group.remember("Content from agent-2", originator: "agent-2")
@@ -426,7 +426,7 @@ class RobotGroupTest < Minitest::Test
   def test_transfer_working_memory_with_clear_source_false
     @group = HTM::RobotGroup.new(
       name: @group_name,
-      active: ["agent-1", "agent-2"]
+      active: %w[agent-1 agent-2]
     )
     @group.remember("Memory to copy")
 
@@ -459,7 +459,7 @@ class RobotGroupTest < Minitest::Test
     @group = HTM::RobotGroup.new(
       name: @group_name,
       active: ["agent-1"],
-      passive: ["standby-1", "standby-2"]
+      passive: %w[standby-1 standby-2]
     )
 
     promoted = @group.failover!
@@ -544,7 +544,7 @@ class RobotGroupTest < Minitest::Test
       Sequel.like(:name, "primary%") |
       Sequel.like(:name, "only-%")
     ).delete
-  rescue => e
+  rescue
     # Ignore cleanup errors
   end
 end

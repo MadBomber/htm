@@ -61,6 +61,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Increased specificity requirements for self-contained facts
 
 ### Fixed
+- **`token_counter` never set on config load** - `setup_defaults` on-load hook assigned to `@setup_defaults` (typo) instead of `@token_counter`, causing `HTM::ValidationError: token_counter must be callable` in any test that triggered a fresh config load via `HTM.configure`
+- **`reset_htm_configuration` lost mock services** - After `HTM.reset_configuration!` the helper only set `job.backend = :inline`, leaving the real Ollama embedding generator active; subsequent tests accumulated circuit breaker failures and left nodes without embeddings. Now calls `configure_htm_with_mocks` to fully restore test defaults
+- **Integration test circuit breaker leak** - `IntegrationTest#setup` now explicitly resets `EmbeddingService` and `TagService` circuit breakers before each test to prevent state bleed from other test classes
+- **Duplicate rescue branches** - Merged redundant `rescue HTM::CircuitBreakerOpenError` + service-specific error rescues (both just `raise`) into single `rescue A, B` in `EmbeddingService`, `TagService`, and `PropositionService`
+- **Duplicate `when "cosine"` branch in Node distance operator** - Removed branch whose body was identical to the `else` fallback (`"<=>"`), eliminating the `Lint/DuplicateBranch` offense
+- **Identical conditional branches in `Tag.format_tree_branch`** - `branch = is_last ? '+-- ' : '+-- '` both sides were identical; simplified to a direct string literal
+- **`EmptyElse` in `Observability#process_memory_mb`** - Removed redundant `else nil` branch from the platform detection conditional
+
+### Refactored
+- **Flog complexity reduced across 15+ files** - All methods now score below the 50.0 failure threshold (previously 9 methods failed):
+  - `HTM::Models::Tag::generate_tree_svg` (93.6 → passing): extracted `svg_title_element`, `svg_node_elements`, `svg_node_coords`, `svg_edge_path`, `svg_node_rect`, `svg_node_label`
+  - `HybridSearch#search_hybrid_rrf` (83.2 → passing): extracted `extract_rrf_tag_info`, `build_rrf_literals`, `build_rrf_filter_sql`, `post_process_rrf_results`
+  - `HybridSearch#merge_with_rrf` (65.7 → passing): extracted `merge_vector_rrf_entry`, `merge_fulltext_rrf_entry`, `merge_tag_rrf_entry`
+  - `RelevanceScorer#fetch_nodes_by_tags` (62.6 → passing): extracted `build_tag_base_query`, `apply_match_all_constraint`
+  - `MarkdownLoader#sync_chunks` (61.2 → passing): extracted `update_existing_chunk`, `soft_delete_removed_chunks`
+  - `HybridSearch#build_hybrid_cte_sql` (55.9 → passing): extracted per-CTE builder methods
+  - `Config::Database#build_database_url` (55.6 → passing): extracted `database_auth_segment`
+  - `MCP::GetWorkingMemoryTool#call` (56.0 → passing): extracted `format_working_memory_entry`
+  - `MarkdownLoader#load_file` (50.1 → passing): extracted `validate_file_path!`, `read_file_content`, `prepend_frontmatter_to_chunk`
+  - `Config#apply_provider_config` (77.4 → passing): replaced `case` statement with dynamic dispatch (`send(:"apply_#{provider}_provider_config", config)`)
+  - `RememberWorkflow#finalize_step` (50.7 → passing): extracted `finalize_node`, `evict_working_memory_if_needed`
+  - `HTM#remember`: extracted `validate_remember_content!`, `validate_remember_tags!`, `enqueue_background_jobs`, `handle_existing_node_tags`, `store_in_working_memory`
+- **RuboCop: 128 offenses resolved** - Zero offenses across 89 files:
+  - Replaced all `[[x, min].max, max].min` patterns with `x.clamp(min, max)` in `tag_operations.rb`, `fulltext_search.rb`, `vector_search.rb`, `hybrid_search.rb`
+  - Broke all `end.sort_by {}` / `end.map {}` multiline block chains into two statements across `database.rb`, `hybrid_search.rb`, `relevance_scorer.rb`, `mcp/cli.rb`, `working_memory.rb`
+  - Updated `.rubocop.yml`: added `AllowedMethods` for bang methods (`soft_delete!`, `restore!`) and MCP DSL (`arguments` block), excluded `lib/tasks/**/*` from `BlockLength`, `MethodLength`, `FormatStringToken`, and `LineLength` cops
+  - Removed development dependencies from `htm.gemspec` in favour of `Gemfile` group blocks (enforced by `Gemspec/DevelopmentDependencies`)
+
 - **Test database isolation** - Two-layer protection prevents tests from polluting development/production
   - `Rakefile`: `set_test_env` task now ALWAYS overrides `HTM_DATABASE__URL` to test database
   - Uses `#{service_name}_test` pattern (e.g., `htm_test`) based on `HTM_SERVICE__NAME` env var

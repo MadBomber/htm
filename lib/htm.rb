@@ -65,7 +65,7 @@ class HTM
   MAX_VALUE_LENGTH = 1_000_000  # 1MB
   MAX_ARRAY_SIZE = 1000
 
-  VALID_RECALL_STRATEGIES = [:vector, :fulltext, :hybrid].freeze
+  VALID_RECALL_STRATEGIES = %i[vector fulltext hybrid].freeze
 
   # Initialize a new HTM instance
   #
@@ -125,77 +125,30 @@ class HTM
   #   node_id = htm.remember("User prefers dark mode", metadata: { source: "user", confidence: 0.95 })
   #
   def remember(content, tags: [], metadata: {})
-    # Validate inputs
     raise ValidationError, "Content cannot be nil" if content.nil?
-
-    content_str = content.to_s.strip
-    raise ValidationError, "Content cannot be empty" if content_str.empty?
-
-    if content_str.bytesize > MAX_VALUE_LENGTH
-      raise ValidationError, "Content exceeds maximum size (#{MAX_VALUE_LENGTH} bytes)"
-    end
-
-    validate_array!(tags, "tags")
-    tags.each do |tag|
-      unless tag.is_a?(String) && tag.match?(/\A[a-z0-9\-]+(:[a-z0-9\-]+)*\z/)
-        raise ValidationError, "Invalid tag format: #{tag.inspect}. Tags must be lowercase alphanumeric with hyphens, separated by colons."
-      end
-    end
-
+    content = content.to_s.strip
+    raise ValidationError, "Content cannot be empty" if content.empty?
+    validate_remember_content!(content)
+    validate_remember_tags!(tags)
     validate_metadata!(metadata)
 
-    content = content_str
-
-    # Calculate token count using configured counter
     token_count = HTM.count_tokens(content)
-
-    # Store in long-term memory (with deduplication)
-    # Returns { node_id:, is_new:, robot_node: }
     result = @long_term_memory.add(
-      content: content,
-      token_count: token_count,
-      robot_id: @robot_id,
-      embedding: nil,  # Will be generated in background
-      metadata: metadata
+      content: content, token_count: token_count, robot_id: @robot_id,
+      embedding: nil, metadata: metadata
     )
-
     node_id = result[:node_id]
-    is_new = result[:is_new]
 
-    if is_new
+    if result[:is_new]
       HTM.logger.info "Node #{node_id} created for robot #{@robot_name} (#{token_count} tokens)"
-
-      # Enqueue background jobs for embedding and tag generation
-      # Only for NEW nodes - existing nodes already have embeddings/tags
-      enqueue_embedding_job(node_id)
-      enqueue_tags_job(node_id, manual_tags: tags)
-
-      # Enqueue proposition extraction if enabled and not already a proposition
-      if HTM.config.extract_propositions && !metadata[:is_proposition]
-        enqueue_propositions_job(node_id)
-      end
+      enqueue_background_jobs(node_id, tags: tags, metadata: metadata)
     else
-      HTM.logger.info "Node #{node_id} already exists, linked to robot #{@robot_name} (remember_count: #{result[:robot_node].remember_count})"
-
-      # For existing nodes, only add manual tags if provided
-      if tags.any?
-        node = HTM::Models::Node[node_id]
-        node.add_tags(tags)
-        HTM.logger.info "Added #{tags.length} manual tags to existing node #{node_id}"
-      end
+      rc = result[:robot_node].remember_count
+      HTM.logger.info "Node #{node_id} already exists, linked to robot #{@robot_name} (remember_count: #{rc})"
+      handle_existing_node_tags(node_id, tags)
     end
 
-    # Add to working memory (evict if needed, access_count starts at 0)
-    unless @working_memory.has_space?(token_count)
-      evicted = @working_memory.evict_to_make_space(token_count)
-      evicted_keys = evicted.map { |n| n[:key] }
-      @long_term_memory.mark_evicted(robot_id: @robot_id, node_ids: evicted_keys) if evicted_keys.any?
-    end
-    @working_memory.add(node_id, content, token_count: token_count, access_count: 0)
-
-    # Mark node as in working memory in the robot_nodes join table
-    result[:robot_node].update(working_memory: true)
-
+    store_in_working_memory(node_id, content, token_count: token_count, robot_node: result[:robot_node])
     update_robot_activity
     node_id
   end
@@ -250,53 +203,53 @@ class HTM
     # Normalize timeframe and potentially extract from query
     search_query = topic
     normalized_timeframe = if timeframe == :auto
-      result = HTM::Timeframe.normalize(:auto, query: topic)
-      search_query = result.query  # Use cleaned query for search
-      result.timeframe
-    else
-      HTM::Timeframe.normalize(timeframe)
-    end
+                             result = HTM::Timeframe.normalize(:auto, query: topic)
+                             search_query = result.query  # Use cleaned query for search
+                             result.timeframe
+                           else
+                             HTM::Timeframe.normalize(timeframe)
+                           end
 
     # Use relevance-based search if requested
-    if with_relevance
-      nodes = @long_term_memory.search_with_relevance(
-        timeframe: normalized_timeframe,
-        query: search_query,
-        query_tags: query_tags,
-        limit: limit,
-        embedding_service: (strategy == :vector || strategy == :hybrid) ? HTM : nil,
-        metadata: metadata
-      )
-    else
-      # Perform standard RAG-based retrieval
-      nodes = case strategy
-      when :vector
-        # Vector search using query embedding
-        @long_term_memory.search(
-          timeframe: normalized_timeframe,
-          query: search_query,
-          limit: limit,
-          embedding_service: HTM,
-          metadata: metadata
-        )
-      when :fulltext
-        @long_term_memory.search_fulltext(
-          timeframe: normalized_timeframe,
-          query: search_query,
-          limit: limit,
-          metadata: metadata
-        )
-      when :hybrid
-        # Hybrid search combining vector + fulltext
-        @long_term_memory.search_hybrid(
-          timeframe: normalized_timeframe,
-          query: search_query,
-          limit: limit,
-          embedding_service: HTM,
-          metadata: metadata
-        )
-      end
-    end
+    nodes = if with_relevance
+              @long_term_memory.search_with_relevance(
+                timeframe: normalized_timeframe,
+                query: search_query,
+                query_tags: query_tags,
+                limit: limit,
+                embedding_service: %i[vector hybrid].include?(strategy) ? HTM : nil,
+                metadata: metadata
+              )
+            else
+              # Perform standard RAG-based retrieval
+              case strategy
+              when :vector
+                # Vector search using query embedding
+                @long_term_memory.search(
+                  timeframe: normalized_timeframe,
+                  query: search_query,
+                  limit: limit,
+                  embedding_service: HTM,
+                  metadata: metadata
+                )
+              when :fulltext
+                @long_term_memory.search_fulltext(
+                  timeframe: normalized_timeframe,
+                  query: search_query,
+                  limit: limit,
+                  metadata: metadata
+                )
+              when :hybrid
+                # Hybrid search combining vector + fulltext
+                @long_term_memory.search_hybrid(
+                  timeframe: normalized_timeframe,
+                  query: search_query,
+                  limit: limit,
+                  embedding_service: HTM,
+                  metadata: metadata
+                )
+              end
+            end
 
     # Add to working memory (evict if needed)
     nodes.each do |node|
@@ -471,8 +424,8 @@ class HTM
 
     # Update database: mark all as evicted from working memory
     count = HTM::Models::RobotNode
-      .where(robot_id: @robot_id, working_memory: true)
-      .update(working_memory: false)
+            .where(robot_id: @robot_id, working_memory: true)
+            .update(working_memory: false)
 
     HTM.logger.info "Cleared #{count} nodes from working memory"
     count
@@ -580,6 +533,41 @@ class HTM
     @long_term_memory.update_robot_activity(@robot_id)
   end
 
+  def validate_remember_content!(content)
+    return unless content.bytesize > MAX_VALUE_LENGTH
+    raise ValidationError, "Content exceeds maximum size (#{MAX_VALUE_LENGTH} bytes)"
+  end
+
+  def validate_remember_tags!(tags)
+    validate_array!(tags, "tags")
+    tags.each do |tag|
+      next if tag.is_a?(String) && tag.match?(/\A[a-z0-9-]+(:[a-z0-9-]+)*\z/)
+      raise ValidationError, "Invalid tag format: #{tag.inspect}. Tags must be lowercase alphanumeric with hyphens, separated by colons."
+    end
+  end
+
+  def enqueue_background_jobs(node_id, tags:, metadata:)
+    enqueue_embedding_job(node_id)
+    enqueue_tags_job(node_id, manual_tags: tags)
+    enqueue_propositions_job(node_id) if HTM.config.extract_propositions && !metadata[:is_proposition]
+  end
+
+  def handle_existing_node_tags(node_id, tags)
+    return unless tags.any?
+    HTM::Models::Node[node_id].add_tags(tags)
+    HTM.logger.info "Added #{tags.length} manual tags to existing node #{node_id}"
+  end
+
+  def store_in_working_memory(node_id, content, token_count:, robot_node:)
+    unless @working_memory.has_space?(token_count)
+      evicted      = @working_memory.evict_to_make_space(token_count)
+      evicted_keys = evicted.map { |n| n[:key] }
+      @long_term_memory.mark_evicted(robot_id: @robot_id, node_ids: evicted_keys) if evicted_keys.any?
+    end
+    @working_memory.add(node_id, content, token_count: token_count, access_count: 0)
+    robot_node.update(working_memory: true)
+  end
+
   def enqueue_embedding_job(node_id)
     # Enqueue embedding generation using configured job backend
     # Job will use HTM.embed which delegates to configured embedding_generator
@@ -655,20 +643,18 @@ class HTM
 
   def validate_recall_strategy!(strategy)
     raise ValidationError, "Strategy must be a Symbol" unless strategy.is_a?(Symbol)
-    unless VALID_RECALL_STRATEGIES.include?(strategy)
-      raise ValidationError, "Invalid strategy: #{strategy}. Must be one of #{VALID_RECALL_STRATEGIES.join(', ')}"
-    end
+    return if VALID_RECALL_STRATEGIES.include?(strategy)
+    raise ValidationError, "Invalid strategy: #{strategy}. Must be one of #{VALID_RECALL_STRATEGIES.join(', ')}"
   end
-
 
   def validate_timeframe!(timeframe)
     return if HTM::Timeframe.valid?(timeframe)
     raise ValidationError, "Invalid timeframe type: #{timeframe.class}. " \
-      "Expected nil, Range, Array<Range>, Date, DateTime, Time, String, or :auto"
+                           "Expected nil, Range, Array<Range>, Date, DateTime, Time, String, or :auto"
   end
 
   def validate_positive_integer!(value, name)
-    raise ValidationError, "#{name} must be a positive Integer" unless value.is_a?(Integer) && value > 0
+    raise ValidationError, "#{name} must be a positive Integer" unless value.is_a?(Integer) && value.positive?
   end
 
   def validate_metadata!(metadata)

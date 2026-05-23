@@ -84,21 +84,17 @@ class HTM
 
       # Execute job inline (synchronously)
       def enqueue_inline(job_class, **params)
-        begin
-          job_class.perform(**params)
-        rescue StandardError => e
-          HTM.logger.error "Inline job #{job_class.name} failed: #{e.class.name} - #{e.message}"
-        end
+        job_class.perform(**params)
+      rescue StandardError => e
+        HTM.logger.error "Inline job #{job_class.name} failed: #{e.class.name} - #{e.message}"
       end
 
       # Execute job in background thread (legacy)
       def enqueue_thread(job_class, **params)
         Thread.new do
-          begin
-            job_class.perform(**params)
-          rescue StandardError => e
-            HTM.logger.error "Thread job #{job_class.name} failed: #{e.class.name} - #{e.message}"
-          end
+          job_class.perform(**params)
+        rescue StandardError => e
+          HTM.logger.error "Thread job #{job_class.name} failed: #{e.class.name} - #{e.message}"
         end
       rescue StandardError => e
         HTM.logger.error "Failed to start thread for #{job_class.name}: #{e.message}"
@@ -108,11 +104,9 @@ class HTM
       # Non-blocking for I/O-bound operations like LLM API calls
       def enqueue_fiber(job_class, **params)
         Async do
-          begin
-            job_class.perform(**params)
-          rescue StandardError => e
-            HTM.logger.error "Fiber job #{job_class.name} failed: #{e.class.name} - #{e.message}"
-          end
+          job_class.perform(**params)
+        rescue StandardError => e
+          HTM.logger.error "Fiber job #{job_class.name} failed: #{e.class.name} - #{e.message}"
         end
       rescue StandardError => e
         HTM.logger.error "Failed to start fiber for #{job_class.name}: #{e.message}"
@@ -153,16 +147,14 @@ class HTM
 
       # Execute multiple jobs in parallel using async fibers
       def enqueue_parallel_fiber(jobs)
-        Async do |task|
+        Async do |_task|
           barrier = Async::Barrier.new
 
           jobs.each do |job_class, params|
             barrier.async do
-              begin
-                job_class.perform(**params)
-              rescue StandardError => e
-                HTM.logger.error "Parallel fiber job #{job_class.name} failed: #{e.class.name} - #{e.message}"
-              end
+              job_class.perform(**params)
+            rescue StandardError => e
+              HTM.logger.error "Parallel fiber job #{job_class.name} failed: #{e.class.name} - #{e.message}"
             end
           end
 
@@ -202,6 +194,7 @@ class HTM
         # and convert string keys back to symbols for the underlying job
         Class.new do
           include Sidekiq::Worker
+
           sidekiq_options queue: :htm, retry: 3
 
           define_method(:perform) do |params|

@@ -28,7 +28,7 @@ class HTM
       #
       def search(timeframe:, query:, limit:, embedding_service:, metadata: {})
         # Enforce limit to prevent DoS
-        safe_limit = [[limit.to_i, 1].max, MAX_VECTOR_LIMIT].min
+        safe_limit = limit.to_i.clamp(1, MAX_VECTOR_LIMIT)
 
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         result = @cache.fetch(:search, timeframe, query, safe_limit, metadata) do

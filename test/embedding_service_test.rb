@@ -30,7 +30,7 @@ class EmbeddingServiceTest < Minitest::Test
   end
 
   def test_generate_returns_correct_dimensions
-    HTM.configuration.embedding_generator = ->(text) {
+    HTM.configuration.embedding_generator = lambda { |text|
       # Return 512-dimension embedding
       512.times.map { |i| Random.new(text.hash + i).rand(-1.0..1.0) }
     }
@@ -42,7 +42,7 @@ class EmbeddingServiceTest < Minitest::Test
   end
 
   def test_generate_pads_embedding_to_max_dimension
-    HTM.configuration.embedding_generator = ->(text) {
+    HTM.configuration.embedding_generator = lambda { |_text|
       [0.1, 0.2, 0.3]  # Only 3 dimensions
     }
 
@@ -157,7 +157,7 @@ class EmbeddingServiceTest < Minitest::Test
   def test_circuit_breaker_opens_after_failures
     failure_count = 0
 
-    HTM.configuration.embedding_generator = ->(_text) {
+    HTM.configuration.embedding_generator = lambda { |_text|
       failure_count += 1
       raise StandardError, "API unavailable"
     }
@@ -176,7 +176,7 @@ class EmbeddingServiceTest < Minitest::Test
   end
 
   def test_circuit_breaker_can_be_reset
-    HTM.configuration.embedding_generator = ->(_text) {
+    HTM.configuration.embedding_generator = lambda { |_text|
       raise StandardError, "API unavailable"
     }
 
@@ -199,8 +199,8 @@ class EmbeddingServiceTest < Minitest::Test
   # Error handling tests
 
   def test_generate_raises_embedding_error_on_failure
-    HTM.configuration.embedding_generator = ->(_text) {
-      raise RuntimeError, "Connection timeout"
+    HTM.configuration.embedding_generator = lambda { |_text|
+      raise "Connection timeout"
     }
 
     # Error is wrapped in EmbeddingError

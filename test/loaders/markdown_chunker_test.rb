@@ -136,10 +136,9 @@ class MarkdownChunkerTest < Minitest::Test
     chunks = small_chunker.chunk_with_metadata(text)
 
     # Cursor positions should increase (though not strictly due to overlap)
-    if chunks.size > 1
-      chunks.each_cons(2) do |a, b|
-        assert b[:cursor] > a[:cursor], "Later chunks should have higher cursor positions"
-      end
+    return unless chunks.size > 1
+    chunks.each_cons(2) do |a, b|
+      assert b[:cursor] > a[:cursor], "Later chunks should have higher cursor positions"
     end
   end
 

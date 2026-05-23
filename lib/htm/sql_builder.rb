@@ -63,7 +63,7 @@ class HTM
           raise ArgumentError, "Embedding contains invalid values at #{sample}"
         end
 
-        "[#{embedding.map { |v| v.to_f }.join(',')}]"
+        "[#{embedding.map(&:to_f).join(',')}]"
       end
 
       # Pad embedding to target dimension

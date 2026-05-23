@@ -15,14 +15,14 @@ class HTM
       plugin :timestamps, update_on_create: true
 
       # Tag name format regex
-      TAG_FORMAT = /\A[a-z0-9\-]+(:[a-z0-9\-]+)*\z/
+      TAG_FORMAT = /\A[a-z0-9-]+(:[a-z0-9-]+)*\z/
 
       # Validations
       def validate
         super
         validates_presence :name
         validates_format TAG_FORMAT, :name,
-          message: "must be lowercase with hyphens, using colons for hierarchy (e.g., 'database:postgresql:performance')"
+                         message: "must be lowercase with hyphens, using colons for hierarchy (e.g., 'database:postgresql:performance')"
         validates_unique :name, message: "already exists"
       end
 
@@ -233,8 +233,7 @@ class HTM
 
           line_prefix = is_last_array.map { |was_last| was_last ? '    ' : '|   ' }.join
 
-          branch = is_last ? '+-- ' : '+-- '
-          result += "#{line_prefix}#{branch}#{key}\n"
+          result += "#{line_prefix}+-- #{key}\n"
 
           children = node[key]
           unless children.empty?
@@ -313,44 +312,58 @@ class HTM
 
       # Generate SVG tree visualization (internal helper)
       def self.generate_tree_svg(tree_data, positions, width, height, padding, node_width, node_height, title)
-        colors = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#6366F1']
-
+        colors    = ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#6366F1']
         svg_lines = []
         svg_lines << %(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 #{width} #{height + 40}">)
         svg_lines << '  <rect width="100%" height="100%" fill="transparent"/>'
-
-        svg_lines << %Q(  <text x="#{width / 2}" y="25" text-anchor="middle" fill="#F3F4F6" font-family="system-ui, sans-serif" font-size="16" font-weight="bold">#{title}</text>)
+        svg_lines << svg_title_element(width, title)
 
         positions.each do |path, pos|
           parent_path = path.include?(':') ? path.split(':')[0..-2].join(':') : nil
           next unless parent_path && positions[parent_path]
-
-          parent_pos = positions[parent_path]
-          x1 = padding + (parent_pos[:x] * (node_width + 40)) + node_width
-          y1 = 40 + padding + (parent_pos[:y] * (node_height + 20)) + (node_height / 2)
-          x2 = padding + (pos[:x] * (node_width + 40))
-          y2 = 40 + padding + (pos[:y] * (node_height + 20)) + (node_height / 2)
-
-          mid_x = (x1 + x2) / 2
-          svg_lines << %Q(  <path d="M#{x1},#{y1} C#{mid_x},#{y1} #{mid_x},#{y2} #{x2},#{y2}" stroke="#4B5563" stroke-width="2" fill="none"/>)
-        end
-
-        positions.each do |path, pos|
-          depth = path.count(':')
-          color = colors[depth % colors.size]
-
-          x = padding + (pos[:x] * (node_width + 40))
-          y = 40 + padding + (pos[:y] * (node_height + 20))
-
-          svg_lines << %Q(  <rect x="#{x}" y="#{y}" width="#{node_width}" height="#{node_height}" rx="6" fill="#{color}" opacity="0.9"/>)
-
-          text_x = x + (node_width / 2)
-          text_y = y + (node_height / 2) + 4
-          svg_lines << %Q(  <text x="#{text_x}" y="#{text_y}" text-anchor="middle" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="11" font-weight="500">#{pos[:label]}</text>)
+          svg_lines.concat svg_node_elements(path, pos, positions[parent_path], colors, padding, node_width, node_height)
         end
 
         svg_lines << '</svg>'
         svg_lines.join("\n")
+      end
+
+      def self.svg_title_element(width, title)
+        %(  <text x="#{width / 2}" y="25" text-anchor="middle" fill="#F3F4F6" font-family="system-ui, sans-serif" font-size="16" font-weight="bold">#{title}</text>) # rubocop:disable Layout/LineLength
+      end
+
+      def self.svg_node_elements(path, pos, parent_pos, colors, padding, node_width, node_height)
+        c     = svg_node_coords(pos, parent_pos, padding, node_width, node_height)
+        color = colors[path.count(':') % colors.size]
+        [
+          svg_edge_path(c[:x1], c[:y1], c[:x2], c[:y2]),
+          svg_node_rect(c[:x], c[:y], node_width, node_height, color),
+          svg_node_label(c[:x], c[:y], node_width, node_height, pos[:label])
+        ]
+      end
+
+      def self.svg_node_coords(pos, parent_pos, padding, node_width, node_height)
+        x2 = padding + (pos[:x] * (node_width + 40))
+        y2 = 40 + padding + (pos[:y] * (node_height + 20)) + (node_height / 2)
+        {
+          x1: padding + (parent_pos[:x] * (node_width + 40)) + node_width,
+          y1: 40 + padding + (parent_pos[:y] * (node_height + 20)) + (node_height / 2),
+          x2: x2, y2: y2,
+          x:  x2, y:  40 + padding + (pos[:y] * (node_height + 20))
+        }
+      end
+
+      def self.svg_edge_path(x1, y1, x2, y2)
+        mid_x = (x1 + x2) / 2
+        %(  <path d="M#{x1},#{y1} C#{mid_x},#{y1} #{mid_x},#{y2} #{x2},#{y2}" stroke="#4B5563" stroke-width="2" fill="none"/>)
+      end
+
+      def self.svg_node_rect(x, y, node_width, node_height, color)
+        %(  <rect x="#{x}" y="#{y}" width="#{node_width}" height="#{node_height}" rx="6" fill="#{color}" opacity="0.9"/>)
+      end
+
+      def self.svg_node_label(x, y, node_width, node_height, label)
+        %(  <text x="#{x + (node_width / 2)}" y="#{y + (node_height / 2) + 4}" text-anchor="middle" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="11" font-weight="500">#{label}</text>) # rubocop:disable Layout/LineLength
       end
 
       # Instance methods

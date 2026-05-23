@@ -88,43 +88,37 @@ class HTM
       end
 
       def call
-        htm = Session.htm_instance
+        htm   = Session.htm_instance
         robot = HTM::Models::Robot[htm.robot_id]
         Session.logger&.info "GetWorkingMemoryTool called for robot=#{htm.robot_name}"
 
-        # Get all nodes in working memory with their metadata
-        # Filter out any robot_nodes where the node has been deleted
-        working_memory_nodes = robot.robot_nodes_dataset
-                                    .in_working_memory
-                                    .eager(node: :tags)
-                                    .order(Sequel.desc(:last_remembered_at))
-                                    .all
-                                    .filter_map do |rn|
-          node = rn.node
-          next unless node  # Exclude if node is nil (was deleted)
+        nodes = robot.robot_nodes_dataset
+                     .in_working_memory
+                     .eager(node: :tags)
+                     .order(Sequel.desc(:last_remembered_at))
+                     .all
+                     .filter_map { |rn| format_working_memory_entry(rn) }
 
-          {
-            id:                 node.id,
-            content:            node.content,
-            tags:               node.tags.map(&:name),
-            remember_count:     rn.remember_count,
-            last_remembered_at: rn.last_remembered_at&.iso8601,
-            created_at:         node.created_at.iso8601
-          }
-        end
-
-        Session.logger&.info "GetWorkingMemoryTool complete: #{working_memory_nodes.length} nodes in working memory"
-
-        {
-          success:        true,
-          robot_id:       htm.robot_id,
-          robot_name:     htm.robot_name,
-          count:          working_memory_nodes.length,
-          working_memory: working_memory_nodes
-        }.to_json
+        Session.logger&.info "GetWorkingMemoryTool complete: #{nodes.length} nodes in working memory"
+        { success: true, robot_id: htm.robot_id, robot_name: htm.robot_name, count: nodes.length, working_memory: nodes }.to_json
       rescue StandardError => e
         Session.logger&.error "GetWorkingMemoryTool error: #{e.message}"
         { success: false, error: e.message, count: 0, working_memory: [] }.to_json
+      end
+
+      private
+
+      def format_working_memory_entry(rn)
+        node = rn.node
+        return nil unless node
+        {
+          id:                 node.id,
+          content:            node.content,
+          tags:               node.tags.map(&:name),
+          remember_count:     rn.remember_count,
+          last_remembered_at: rn.last_remembered_at&.iso8601,
+          created_at:         node.created_at.iso8601
+        }
       end
     end
 
@@ -221,10 +215,10 @@ class HTM
           Time.new(now.year, now.month, now.day)..now
         when 'this week'
           # 7 days ago
-          (now - 7 * 24 * 60 * 60)..now
+          (now - (7 * 24 * 60 * 60))..now
         when 'this month'
           # 30 days ago
-          (now - 30 * 24 * 60 * 60)..now
+          (now - (30 * 24 * 60 * 60))..now
         else
           # Try to parse as ISO8601 range (start..end)
           if timeframe.include?('..')
@@ -438,14 +432,14 @@ class HTM
         robot = HTM::Models::Robot[htm.robot_id]
         Session.logger&.info "StatsTool called for robot=#{htm.robot_name}"
 
-        # Note: Node uses set_dataset to exclude deleted, so .count returns active nodes
+        # NOTE: Node uses set_dataset to exclude deleted, so .count returns active nodes
         total_nodes           = HTM::Models::Node.count
         deleted_nodes         = HTM::Models::Node.deleted.count
         nodes_with_embeddings = HTM::Models::Node.with_embeddings.count
         nodes_with_tags       = HTM::Models::Node
-                                  .join(:node_tags, node_id: :id)
-                                  .distinct
-                                  .count
+                                .join(:node_tags, node_id: :id)
+                                .distinct
+                                .count
         total_tags            = HTM::Models::Tag.count
         total_robots          = HTM::Models::Robot.count
 

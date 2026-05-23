@@ -3,11 +3,14 @@
 require "bundler/gem_tasks"
 require "rake/testtask"
 
+RUBOCOP_ENV = { "RUBOCOP_CACHE_ROOT" => "tmp/rubocop_cache" }.freeze
+
 Rake::TestTask.new(:test) do |t|
   t.libs << "test"
   t.libs << "lib"
   t.test_files = FileList["test/**/*_test.rb"]
   t.verbose = true
+  t.ruby_opts << "-rtest_helper"
 end
 
 # Prepend environment setup before test runs
@@ -23,7 +26,7 @@ task :set_test_env do
 
   # ALWAYS use the test database - never allow tests to run against other databases
   # This prevents accidental pollution of development/production data
-  test_db_url = "postgresql://#{ENV['USER']}@localhost:5432/#{test_db_name}"
+  test_db_url = "postgresql://#{ENV.fetch('USER', nil)}@localhost:5432/#{test_db_name}"
 
   if ENV['HTM_DATABASE__URL'] && !ENV['HTM_DATABASE__URL'].include?('_test')
     warn "WARNING: HTM_DATABASE__URL was set to '#{ENV['HTM_DATABASE__URL']}'"
@@ -52,7 +55,7 @@ task :set_examples_env do
   examples_db_name = "#{service_name}_examples"
 
   # ALWAYS use the examples database
-  examples_db_url = "postgresql://#{ENV['USER']}@localhost:5432/#{examples_db_name}"
+  examples_db_url = "postgresql://#{ENV.fetch('USER', nil)}@localhost:5432/#{examples_db_name}"
 
   if ENV['HTM_DATABASE__URL'] && !ENV['HTM_DATABASE__URL'].include?('_examples')
     warn "WARNING: HTM_DATABASE__URL was set to '#{ENV['HTM_DATABASE__URL']}'"
@@ -80,7 +83,7 @@ namespace :examples do
   end
 
   desc "Run all standalone examples"
-  task :all => :set_examples_env do
+  task all: :set_examples_env do
     examples = %w[
       examples/01_basic_usage.rb
       examples/03_custom_llm_configuration.rb
@@ -88,12 +91,11 @@ namespace :examples do
       examples/05_timeframe_demo.rb
     ]
     examples.each do |example|
-      if File.exist?(example)
-        puts "\n#{'=' * 60}"
-        puts "Running: #{example}"
-        puts "#{'=' * 60}"
-        ruby example
-      end
+      next unless File.exist?(example)
+      puts "\n#{'=' * 60}"
+      puts "Running: #{example}"
+      puts('=' * 60)
+      ruby example
     end
   end
 
@@ -102,8 +104,8 @@ namespace :examples do
     require_relative 'lib/htm'
     puts "Examples Environment Status"
     puts "=" * 40
-    puts "HTM_ENV: #{ENV['HTM_ENV']}"
-    puts "Database URL: #{ENV['HTM_DATABASE__URL']}"
+    puts "HTM_ENV: #{ENV.fetch('HTM_ENV', nil)}"
+    puts "Database URL: #{ENV.fetch('HTM_DATABASE__URL', nil)}"
     puts "Expected database: #{HTM.config.expected_database_name}"
     if HTM.config.database_configured?
       puts "Database configured: Yes"
@@ -129,11 +131,90 @@ namespace :examples do
 end
 
 desc "Run example (alias for examples:basic)"
-task :example => 'examples:basic'
+task example: 'examples:basic'
 
 desc "Run timeframe demo"
 task :timeframe_demo do
   ruby "examples/05_timeframe_demo.rb"
+end
+
+desc "Check code style with RuboCop"
+task :rubocop do
+  sh RUBOCOP_ENV, "bundle exec rubocop"
+end
+
+desc "Auto-correct RuboCop offenses"
+task :rubocop_fix do
+  sh RUBOCOP_ENV, "bundle exec rubocop -a"
+end
+
+desc "Check code complexity with Flog (warn >=20, fail >=50)"
+task :flog_check do
+  require 'flog'
+
+  method_warn = 20.0
+  method_fail = 50.0
+
+  flogger = Flog.new(all: true)
+  flogger.flog(*Dir.glob('lib/**/*.rb').reject { |f| f.start_with?('lib/tasks/') })
+
+  warnings = []
+  failures = []
+
+  flogger.each_by_score do |method, score|
+    next if method.end_with?('#none')
+
+    if score > method_fail
+      failures << "#{format('%.1f', score)}: #{method}"
+    elsif score > method_warn
+      warnings << "#{format('%.1f', score)}: #{method}"
+    end
+  end
+
+  unless warnings.empty?
+    puts "\nFlog warnings (#{method_warn}–#{method_fail}) — target for future refactoring:"
+    warnings.each { |v| puts "  #{v}" }
+  end
+
+  if failures.empty?
+    puts "\nFlog: no methods exceed the failure threshold (>=#{method_fail})"
+  else
+    puts "\nFlog failures (>=#{method_fail}) — must be refactored:"
+    failures.each { |v| puts "  #{v}" }
+    abort "\nFlog quality gate failed: #{failures.size} method(s) exceed #{method_fail}"
+  end
+end
+
+desc "Run all quality checks: tests (with coverage), RuboCop, and Flog"
+task :quality do
+  results = {}
+
+  puts "\n#{'=' * 60}"
+  puts "Quality Gate: Tests + Coverage"
+  puts '=' * 60
+  results[:tests] = system("bundle exec rake test") ? :pass : :fail
+
+  puts "\n#{'=' * 60}"
+  puts "Quality Gate: RuboCop"
+  puts '=' * 60
+  results[:rubocop] = system(RUBOCOP_ENV, "bundle exec rubocop") ? :pass : :fail
+
+  puts "\n#{'=' * 60}"
+  puts "Quality Gate: Flog Complexity"
+  puts '=' * 60
+  results[:flog] = system("bundle exec rake flog_check") ? :pass : :fail
+
+  puts "\n#{'=' * 60}"
+  puts "Quality Summary"
+  puts '=' * 60
+  results.each do |gate, status|
+    icon = status == :pass ? 'PASS' : 'FAIL'
+    puts "  [#{icon}] #{gate}"
+  end
+  puts '=' * 60
+
+  abort "\nQuality gate failed" if results.values.any?(:fail)
+  puts "\nAll quality gates passed."
 end
 
 desc "Show gem stats"

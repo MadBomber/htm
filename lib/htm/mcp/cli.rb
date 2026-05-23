@@ -138,51 +138,16 @@ class HTM
       end
 
       def check_database_config!
-        unless ENV['HTM_DATABASE__URL'] || ENV['HTM_DATABASE__NAME']
-          warn "Error: Database not configured."
-          warn "Set HTM_DATABASE__URL or HTM_DATABASE__NAME environment variable."
-          warn "Run 'htm_mcp help' for details."
-          exit 1
-        end
+        return if ENV['HTM_DATABASE__URL'] || ENV['HTM_DATABASE__NAME']
+        warn "Error: Database not configured."
+        warn "Set HTM_DATABASE__URL or HTM_DATABASE__NAME environment variable."
+        warn "Run 'htm_mcp help' for details."
+        exit 1
       end
 
       def print_error_suggestion(error_message)
-        msg = error_message.to_s.downcase
-
         warn ""
-        if msg.include?("does not exist")
-          warn "Suggestion: The database does not exist. Create it with:"
-          warn "  createdb #{extract_dbname(ENV['HTM_DATABASE__URL'] || ENV['HTM_DATABASE__NAME'])}"
-          warn "Then initialize the schema with:"
-          warn "  htm_mcp setup"
-        elsif msg.include?("password authentication failed") || msg.include?("no password supplied")
-          warn "Suggestion: Check your database credentials."
-          warn "Verify HTM_DATABASE__URL has correct username and password:"
-          warn "  postgresql://USER:PASSWORD@localhost:5432/DATABASE"
-        elsif msg.include?("connection refused") || msg.include?("could not connect")
-          warn "Suggestion: PostgreSQL server is not running or not accepting connections."
-          warn "Start PostgreSQL with:"
-          warn "  brew services start postgresql@17  # macOS with Homebrew"
-          warn "  sudo systemctl start postgresql    # Linux"
-        elsif msg.include?("role") && msg.include?("does not exist")
-          warn "Suggestion: The database user does not exist. Create it with:"
-          warn "  createuser -s YOUR_USERNAME"
-        elsif msg.include?("permission denied")
-          warn "Suggestion: The user lacks permission to access this database."
-          warn "Grant access or use a different user with appropriate privileges."
-        elsif msg.include?("timeout") || msg.include?("timed out")
-          warn "Suggestion: Connection timed out. Check:"
-          warn "  - PostgreSQL is running"
-          warn "  - Firewall allows connections on port 5432"
-          warn "  - Host address is correct"
-        elsif msg.include?("extension") && msg.include?("vector")
-          warn "Suggestion: pgvector extension is not installed. Install it with:"
-          warn "  brew install pgvector  # macOS"
-          warn "Then enable it in your database:"
-          warn "  psql -d DATABASE -c 'CREATE EXTENSION vector;'"
-        else
-          warn "Suggestion: Run 'htm_mcp help' for configuration details."
-        end
+        suggestion_lines_for(error_message.to_s.downcase).each { |line| warn line }
       end
 
       def extract_dbname(url_or_name)
@@ -190,7 +155,7 @@ class HTM
 
         # Extract database name from URL like postgresql://user@host:port/dbname
         if url_or_name =~ %r{/([^/?]+)(?:\?|$)}
-          $1
+          ::Regexp.last_match(1)
         else
           "htm_development"
         end
@@ -231,7 +196,7 @@ class HTM
           pending = check_migration_status
           puts
 
-          if pending > 0
+          if pending.positive?
             warn "Warning: #{pending} pending migration(s) detected."
             warn "  Run 'htm_mcp setup' to apply pending migrations."
             puts
@@ -255,7 +220,8 @@ class HTM
             version: File.basename(file).split('_').first,
             name: File.basename(file, '.rb')
           }
-        end.sort_by { |m| m[:version] }
+        end
+        available_migrations = available_migrations.sort_by { |m| m[:version] }
 
         # Ensure Sequel connection for migration check
         HTM::SequelConfig.establish_connection!
@@ -308,12 +274,9 @@ class HTM
 
         begin
           require 'yaml'
-          config_data = YAML.safe_load(
-            File.read(path),
-            permitted_classes: [Symbol],
+          config_data = YAML.safe_load_file(path, permitted_classes: [Symbol],
             symbolize_names: true,
-            aliases: true
-          ) || {}
+            aliases: true) || {}
 
           # Determine which section to use based on environment
           env = HTM::Config.env.to_sym
@@ -425,7 +388,7 @@ class HTM
         args = args.dup
 
         # Handle -c / --config option first (can be combined with other commands)
-        config_loaded = handle_config_option(args)
+        handle_config_option(args)
 
         # Process remaining command
         case args[0]&.downcase
@@ -448,12 +411,12 @@ class HTM
           # 'stdio' is accepted for compatibility with MCP clients that pass it as an argument
           return false
         when /^-/
-          $stderr.puts "Unknown option: #{args[0]}"
-          $stderr.puts "Run 'htm_mcp help' for usage."
+          warn "Unknown option: #{args[0]}"
+          warn "Run 'htm_mcp help' for usage."
           exit 1
         else
-          $stderr.puts "Unknown command: #{args[0]}"
-          $stderr.puts "Run 'htm_mcp help' for usage."
+          warn "Unknown command: #{args[0]}"
+          warn "Run 'htm_mcp help' for usage."
           exit 1
         end
         true
@@ -494,7 +457,7 @@ class HTM
         if args.empty? || args.first == '--tasks' || args.first == '-T'
           # Check for optional pattern after -T/--tasks
           pattern = nil
-          if args.first == '--tasks' || args.first == '-T'
+          if ['--tasks', '-T'].include?(args.first)
             pattern = args[1] # May be nil if no pattern provided
           end
           list_rake_tasks(pattern: pattern)
@@ -532,7 +495,7 @@ class HTM
 
         # Load all HTM task files
         tasks_dir = File.expand_path('../../tasks', __dir__)
-        Dir.glob(File.join(tasks_dir, '*.rake')).sort.each do |rake_file|
+        Dir.glob(File.join(tasks_dir, '*.rake')).each do |rake_file|
           load rake_file
         end
       end
@@ -542,8 +505,8 @@ class HTM
 
         # Collect tasks with descriptions, sorted by name
         tasks = Rake.application.tasks
-          .select { |t| t.comment && t.name.start_with?('htm:') }
-          .sort_by(&:name)
+                    .select { |t| t.comment && t.name.start_with?('htm:') }
+                    .sort_by(&:name)
 
         # Filter by pattern if provided (matches task name)
         if pattern
@@ -576,6 +539,44 @@ class HTM
         puts
         puts "Run with: htm_mcp rake <task_name>"
         puts "Example:  htm_mcp rake htm:db:stats"
+      end
+
+      private
+
+      def suggestion_lines_for(msg)
+        if msg.include?("does not exist") && !msg.include?("role")
+          dbname = extract_dbname(ENV['HTM_DATABASE__URL'] || ENV.fetch('HTM_DATABASE__NAME', nil))
+          ["Suggestion: The database does not exist. Create it with:",
+           "  createdb #{dbname}",
+           "Then initialize the schema with:", "  htm_mcp setup"]
+        elsif msg.include?("password authentication failed") || msg.include?("no password supplied")
+          ["Suggestion: Check your database credentials.",
+           "Verify HTM_DATABASE__URL has correct username and password:",
+           "  postgresql://USER:PASSWORD@localhost:5432/DATABASE"]
+        elsif msg.include?("connection refused") || msg.include?("could not connect")
+          ["Suggestion: PostgreSQL server is not running or not accepting connections.",
+           "Start PostgreSQL with:",
+           "  brew services start postgresql@17  # macOS with Homebrew",
+           "  sudo systemctl start postgresql    # Linux"]
+        elsif msg.include?("role") && msg.include?("does not exist")
+          ["Suggestion: The database user does not exist. Create it with:",
+           "  createuser -s YOUR_USERNAME"]
+        elsif msg.include?("permission denied")
+          ["Suggestion: The user lacks permission to access this database.",
+           "Grant access or use a different user with appropriate privileges."]
+        elsif msg.include?("timeout") || msg.include?("timed out")
+          ["Suggestion: Connection timed out. Check:",
+           "  - PostgreSQL is running",
+           "  - Firewall allows connections on port 5432",
+           "  - Host address is correct"]
+        elsif msg.include?("extension") && msg.include?("vector")
+          ["Suggestion: pgvector extension is not installed. Install it with:",
+           "  brew install pgvector  # macOS",
+           "Then enable it in your database:",
+           "  psql -d DATABASE -c 'CREATE EXTENSION vector;'"]
+        else
+          ["Suggestion: Run 'htm_mcp help' for configuration details."]
+        end
       end
     end
   end

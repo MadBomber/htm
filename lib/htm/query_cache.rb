@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'lru_redux'
-require 'set'
 
 class HTM
   # Thread-safe query result cache with TTL and statistics
@@ -31,7 +30,7 @@ class HTM
     attr_reader :enabled
 
     # Cache key prefix for method-based invalidation
-    METHOD_PREFIX = "m:".freeze
+    METHOD_PREFIX = "m:"
 
     # Initialize a new query cache
     #
@@ -39,16 +38,15 @@ class HTM
     # @param ttl [Integer] Time-to-live in seconds (default: 300)
     #
     def initialize(size: 1000, ttl: 300)
-      @enabled = size > 0
+      @enabled = size.positive?
 
-      if @enabled
-        @cache = LruRedux::TTL::ThreadSafeCache.new(size, ttl)
-        @hits = 0
-        @misses = 0
-        @mutex = Mutex.new
-        # Track keys by method for selective invalidation
-        @keys_by_method = Hash.new { |h, k| h[k] = Set.new }
-      end
+      return unless @enabled
+      @cache = LruRedux::TTL::ThreadSafeCache.new(size, ttl)
+      @hits = 0
+      @misses = 0
+      @mutex = Mutex.new
+      # Track keys by method for selective invalidation
+      @keys_by_method = Hash.new { |h, k| h[k] = Set.new }
     end
 
     # Fetch a value from cache or execute block
@@ -58,10 +56,10 @@ class HTM
     # @yield Block that computes the value if not cached
     # @return [Object] Cached or computed value
     #
-    def fetch(method, *args, &block)
+    def fetch(method, *, &)
       return yield unless @enabled
 
-      key = cache_key(method, *args)
+      key = cache_key(method, *)
 
       if (cached = @cache[key])
         @mutex.synchronize { @hits += 1 }
@@ -131,7 +129,7 @@ class HTM
       return nil unless @enabled
 
       total = @hits + @misses
-      hit_rate = total > 0 ? (@hits.to_f / total * 100).round(2) : 0.0
+      hit_rate = total.positive? ? (@hits.to_f / total * 100).round(2) : 0.0
 
       {
         hits: @hits,

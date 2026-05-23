@@ -44,6 +44,17 @@ class HTM
       'six' => 6, 'seven' => 7, 'eight' => 8, 'nine' => 9, 'ten' => 10
     }.freeze
 
+    # Seconds per singular time unit (used by parse_last_x and parse_recent)
+    UNIT_SECONDS = {
+      'second' => 1,
+      'minute' => 60,
+      'hour'   => 3_600,
+      'day'    => 86_400,
+      'week'   => 604_800,
+      'month'  => 2_592_000,
+      'year'   => 31_536_000
+    }.freeze
+
     # Patterns for temporal expressions (order matters - more specific first)
     # Each pattern should match ORIGINAL text (including "few", "a few")
     TEMPORAL_PATTERNS = [
@@ -84,7 +95,7 @@ class HTM
       /\b(?:recently|recent)\b/i,
 
       # Standard time words
-      /\b(?:yesterday|today|tonight|this\s+morning|this\s+afternoon|this\s+evening|last\s+night)\b/i,
+      /\b(?:yesterday|today|tonight|this\s+morning|this\s+afternoon|this\s+evening|last\s+night)\b/i
     ].freeze
 
     # Result structure for extracted timeframe
@@ -153,49 +164,21 @@ class HTM
       # @return [Time, Range, nil] Parsed timeframe
       #
       def parse_expression(expression)
-        # Handle "recently/recent" specially - default to FEW days
-        if expression.match?(/\b(?:recently|recent)\b/i)
-          return parse_recent
+        return parse_recent if expression.match?(/\b(?:recently|recent)\b/i)
+        return parse_weekends_ago(2) if expression.match?(/\bweekend\s+before\s+last\b/i)
+
+        if (match = expression.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|few|a\s+few|several)\s+weekends?\s+ago\b/i))
+          return parse_weekends_ago(parse_number(match[1]))
         end
 
-        # Handle "weekend before last" - 2 weekends ago
-        if expression.match?(/\bweekend\s+before\s+last\b/i)
-          return parse_weekends_ago(2)
-        end
+        normalized    = normalize_few_keywords(expression)
+        chronic_expr  = normalized.gsub(/\bin\s+the\s+/i, '')
 
-        # Handle "N weekends ago" (numeric or written)
-        if match = expression.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|few|a\s+few|several)\s+weekends?\s+ago\b/i)
-          count = parse_number(match[1])
-          return parse_weekends_ago(count)
-        end
-
-        # Normalize "few" to numeric value for Chronic
-        normalized = normalize_few_keywords(expression)
-
-        # Handle "in the last/past X units" - create range from X ago to now
-        if match = normalized.match(/(?:in\s+the\s+)?(?:last|past)\s+(\d+)\s+(#{TIME_UNITS})/i)
+        if (match = normalized.match(/(?:in\s+the\s+)?(?:last|past)\s+(\d+)\s+(#{TIME_UNITS})/i))
           return parse_last_x(match[1].to_i, match[2])
         end
 
-        # Strip "in the" prefix for Chronic
-        chronic_expr = normalized.gsub(/\bin\s+the\s+/i, '')
-
-        # Get week_start from HTM configuration (default: :sunday)
-        week_start = :sunday
-        if defined?(HTM) && HTM.respond_to?(:configuration)
-          week_start = HTM.configuration.week_start
-        end
-
-        # Try to get a span/range first
-        result = Chronic.parse(chronic_expr, guess: false, week_start: week_start)
-
-        # Convert Chronic::Span to Range if needed
-        if result.respond_to?(:begin) && result.respond_to?(:end)
-          return result.begin..result.end
-        end
-
-        # Fall back to point in time
-        Chronic.parse(chronic_expr, week_start: week_start)
+        chronic_parse_expression(chronic_expr)
       end
 
       # Parse a number from string (numeric or written word)
@@ -205,7 +188,7 @@ class HTM
       #
       def parse_number(str)
         normalized = str.downcase.strip
-        return FEW if normalized == 'few' || normalized == 'a few' || normalized == 'several'
+        return FEW if ['few', 'a few', 'several'].include?(normalized)
         return WORD_NUMBERS[normalized] if WORD_NUMBERS.key?(normalized)
         normalized.to_i
       end
@@ -217,23 +200,26 @@ class HTM
       #
       def parse_weekends_ago(count)
         now = Time.now
+        target_saturday = last_saturday_before(now) - ((count - 1) * 7 * 86_400)
+        target_saturday..(target_saturday + (2 * 86_400))
+      end
 
-        # Find last Saturday (most recent Saturday before or equal to today)
-        days_since_saturday = (now.wday - 6) % 7
-        days_since_saturday = 7 if days_since_saturday == 0 && now.wday != 6  # If today is Sunday, last Saturday was yesterday
+      def chronic_parse_expression(expr)
+        week_start = fetch_week_start
+        result     = Chronic.parse(expr, guess: false, week_start: week_start)
+        return result.begin..result.end if result.respond_to?(:begin) && result.respond_to?(:end)
+        Chronic.parse(expr, week_start: week_start)
+      end
 
-        last_saturday = Time.new(now.year, now.month, now.day, 0, 0, 0) - (days_since_saturday * 24 * 60 * 60)
+      def fetch_week_start
+        return HTM.configuration.week_start if defined?(HTM) && HTM.respond_to?(:configuration)
+        :sunday
+      end
 
-        # Go back (count - 1) more weeks to get to the target weekend
-        # count=1 means "last weekend" = the most recent past weekend
-        # count=2 means "weekend before last" = 2 weekends ago
-        target_saturday = last_saturday - ((count - 1) * 7 * 24 * 60 * 60)
-
-        # Weekend spans Saturday 00:00 to Monday 00:00
-        weekend_start = target_saturday
-        weekend_end = target_saturday + (2 * 24 * 60 * 60)  # Monday 00:00
-
-        weekend_start..weekend_end
+      def last_saturday_before(now)
+        days_since = (now.wday - 6) % 7
+        days_since = 7 if days_since.zero? && now.wday != 6
+        Time.new(now.year, now.month, now.day, 0, 0, 0) - (days_since * 86_400)
       end
 
       # Parse "last X units" or "past X units" to a proper range
@@ -244,19 +230,8 @@ class HTM
       #
       def parse_last_x(count, unit)
         now = Time.now
-        unit_normalized = unit.downcase.sub(/s$/, '')  # Remove trailing 's'
-
-        seconds = case unit_normalized
-        when 'second' then count
-        when 'minute' then count * 60
-        when 'hour' then count * 60 * 60
-        when 'day' then count * 24 * 60 * 60
-        when 'week' then count * 7 * 24 * 60 * 60
-        when 'month' then count * 30 * 24 * 60 * 60
-        when 'year' then count * 365 * 24 * 60 * 60
-        else count * 24 * 60 * 60  # Default to days
-        end
-
+        unit_singular = unit.downcase.sub(/s$/, '')
+        seconds = count * (UNIT_SECONDS[unit_singular] || UNIT_SECONDS['day'])
         (now - seconds)..now
       end
 
@@ -266,24 +241,8 @@ class HTM
       #
       def parse_recent
         now = Time.now
-        case DEFAULT_RECENT_UNIT
-        when :seconds
-          (now - FEW)..now
-        when :minutes
-          (now - (FEW * 60))..now
-        when :hours
-          (now - (FEW * 60 * 60))..now
-        when :days
-          (now - (FEW * 24 * 60 * 60))..now
-        when :weeks
-          (now - (FEW * 7 * 24 * 60 * 60))..now
-        when :months
-          (now - (FEW * 30 * 24 * 60 * 60))..now
-        when :years
-          (now - (FEW * 365 * 24 * 60 * 60))..now
-        else
-          (now - (FEW * 24 * 60 * 60))..now
-        end
+        seconds = FEW * (UNIT_SECONDS[DEFAULT_RECENT_UNIT.to_s] || UNIT_SECONDS['day'])
+        (now - seconds)..now
       end
 
       # Clean the query by removing the temporal expression

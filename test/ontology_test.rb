@@ -25,7 +25,7 @@ class OntologyTest < Minitest::Test
         node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
         HTM::Models::Node.where(id: node_ids).delete if node_ids.any?
       end
-    rescue => e
+    rescue
       # Ignore errors during cleanup
     end
 
@@ -72,8 +72,8 @@ class OntologyTest < Minitest::Test
 
     # Verify all topics match the expected format: lowercase, hyphens, colons
     topics.each do |topic|
-      assert_match(/^[a-z0-9\-]+(:[a-z0-9\-]+)*$/, topic,
-        "Topic '#{topic}' should match format: root:level1:level2")
+      assert_match(/^[a-z0-9-]+(:[a-z0-9-]+)*$/, topic,
+                   "Topic '#{topic}' should match format: root:level1:level2")
     end
 
     # Clean up
@@ -94,7 +94,7 @@ class OntologyTest < Minitest::Test
 
     # Should have topics from multiple domains
     assert root_topics.length >= 2,
-      "Should have multiple classification paths (got: #{root_topics.join(', ')})"
+           "Should have multiple classification paths (got: #{root_topics.join(', ')})"
 
     # Clean up
     delete_node(node_id)
@@ -118,7 +118,7 @@ class OntologyTest < Minitest::Test
 
     # Topics should have changed
     refute_equal initial_topics.sort, updated_topics.sort,
-      "Topics should change when manually updated"
+                 "Topics should change when manually updated"
 
     # New topics should be present
     assert_includes updated_topics, "database:postgresql:performance"
@@ -143,7 +143,7 @@ class OntologyTest < Minitest::Test
 
     # Verify no duplicate topics for this node (database enforces this)
     assert_equal topics.length, unique_topics.length,
-      "Should not have duplicate topics for a single node"
+                 "Should not have duplicate topics for a single node"
 
     # Clean up
     delete_node(node_id)

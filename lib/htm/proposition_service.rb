@@ -89,11 +89,7 @@ class HTM
 
       # Validate and filter propositions
       validate_and_filter_propositions(parsed_propositions)
-
-    rescue HTM::CircuitBreakerOpenError
-      # Re-raise circuit breaker errors without wrapping
-      raise
-    rescue HTM::PropositionError
+    rescue HTM::CircuitBreakerOpenError, HTM::PropositionError
       raise
     rescue StandardError => e
       HTM.logger.error "PropositionService: Failed to extract propositions: #{e.message}"

@@ -13,8 +13,8 @@ class ObservabilityTest < Minitest::Test
 
     stats = HTM::Observability.connection_pool_stats
 
-    assert_includes [:healthy, :warning, :critical, :exhausted], stats[:status]
-    assert stats[:size] > 0, "Pool size should be positive"
+    assert_includes %i[healthy warning critical exhausted], stats[:status]
+    assert stats[:size].positive?, "Pool size should be positive"
     assert stats[:connections] >= 0, "Connections should be non-negative"
     assert stats[:in_use] >= 0, "In-use connections should be non-negative"
     assert stats[:available] >= 0, "Available connections should be non-negative"
@@ -44,11 +44,11 @@ class ObservabilityTest < Minitest::Test
     stats = HTM::Observability.query_timing_stats
 
     assert_equal 3, stats[:sample_count]
-    assert stats[:avg_ms] > 0
-    assert stats[:min_ms] > 0
+    assert stats[:avg_ms].positive?
+    assert stats[:min_ms].positive?
     assert stats[:max_ms] >= stats[:min_ms]
-    assert stats[:p50_ms] > 0
-    assert stats[:p95_ms] > 0
+    assert stats[:p50_ms].positive?
+    assert stats[:p95_ms].positive?
   end
 
   def test_record_embedding_timings
@@ -58,7 +58,7 @@ class ObservabilityTest < Minitest::Test
     stats = HTM::Observability.service_timing_stats
 
     assert_equal 2, stats[:embedding][:sample_count]
-    assert stats[:embedding][:avg_ms] > 0
+    assert stats[:embedding][:avg_ms].positive?
   end
 
   def test_record_tag_timings
@@ -68,7 +68,7 @@ class ObservabilityTest < Minitest::Test
     stats = HTM::Observability.service_timing_stats
 
     assert_equal 2, stats[:tag_extraction][:sample_count]
-    assert stats[:tag_extraction][:avg_ms] > 0
+    assert stats[:tag_extraction][:avg_ms].positive?
   end
 
   def test_memory_stats
@@ -127,7 +127,7 @@ class ObservabilityTest < Minitest::Test
     HTM::Observability.record_tag_timing(200.0)
 
     # Verify data exists
-    assert HTM::Observability.query_timing_stats[:sample_count] > 0
+    assert HTM::Observability.query_timing_stats[:sample_count].positive?
 
     # Reset
     HTM::Observability.reset_metrics!

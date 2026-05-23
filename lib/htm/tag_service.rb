@@ -16,7 +16,7 @@ class HTM
   # The actual LLM call is delegated to HTM.configuration.tag_extractor
   #
   class TagService
-    TAG_FORMAT = /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/  # Validation regex
+    TAG_FORMAT = /^[a-z0-9-]+(:[a-z0-9-]+)*$/  # Validation regex
 
     # Circuit breaker for tag extraction API calls
     @circuit_breaker = nil
@@ -76,11 +76,7 @@ class HTM
 
       # Validate and filter tags
       validate_and_filter_tags(parsed_tags)
-
-    rescue HTM::CircuitBreakerOpenError
-      # Re-raise circuit breaker errors without wrapping
-      raise
-    rescue HTM::TagError
+    rescue HTM::CircuitBreakerOpenError, HTM::TagError
       raise
     rescue StandardError => e
       HTM.logger.error "TagService: Failed to extract tags: #{e.message}"

@@ -22,7 +22,7 @@ class InputValidationTest < Minitest::Test
         node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
         HTM::Models::Node.where(id: node_ids).delete if node_ids.any?
       end
-    rescue => e
+    rescue
       # Ignore errors during cleanup
     end
   end

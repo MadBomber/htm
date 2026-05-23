@@ -56,7 +56,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_mcp_session_set_robot_changes_robot
-    HTM::MCP::Session.set_robot("test_robot_#{rand(10000)}")
+    HTM::MCP::Session.set_robot("test_robot_#{rand(10_000)}")
     assert HTM::MCP::Session.robot_initialized?
     refute_equal "mcp_default", HTM::MCP::Session.robot_name
   end
@@ -72,7 +72,7 @@ class MCPServerTest < Minitest::Test
 
   def test_set_robot_tool_creates_new_robot
     tool = HTM::MCP::SetRobotTool.new
-    robot_name = "test_robot_#{rand(10000)}"
+    robot_name = "test_robot_#{rand(10_000)}"
 
     result = JSON.parse(tool.call(name: robot_name))
 
@@ -83,7 +83,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_set_robot_tool_uses_existing_robot
-    robot_name = "existing_robot_#{rand(10000)}"
+    robot_name = "existing_robot_#{rand(10_000)}"
 
     # Create robot first
     HTM.new(robot_name: robot_name)
@@ -100,7 +100,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_get_robot_tool_returns_current_robot_info
-    robot_name = "get_robot_test_#{rand(10000)}"
+    robot_name = "get_robot_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::GetRobotTool.new
@@ -126,7 +126,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_get_working_memory_tool_returns_empty_initially
-    robot_name = "wm_test_#{rand(10000)}"
+    robot_name = "wm_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::GetWorkingMemoryTool.new
@@ -139,7 +139,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_get_working_memory_tool_returns_remembered_nodes
-    robot_name = "wm_content_test_#{rand(10000)}"
+    robot_name = "wm_content_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -158,7 +158,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_remember_tool_stores_content
-    robot_name = "remember_test_#{rand(10000)}"
+    robot_name = "remember_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::RememberTool.new
@@ -171,14 +171,14 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_remember_tool_with_tags
-    robot_name = "remember_tags_test_#{rand(10000)}"
+    robot_name = "remember_tags_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::RememberTool.new
     result = JSON.parse(tool.call(
-      content: "PostgreSQL configuration",
-      tags: ["database:postgresql", "config"]
-    ))
+                          content: "PostgreSQL configuration",
+                          tags: ["database:postgresql", "config"]
+                        ))
 
     assert result["success"]
     assert_includes result["tags"], "database:postgresql"
@@ -186,14 +186,14 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_remember_tool_with_metadata
-    robot_name = "remember_meta_test_#{rand(10000)}"
+    robot_name = "remember_meta_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::RememberTool.new
     result = JSON.parse(tool.call(
-      content: "API configuration",
-      metadata: { priority: "high", category: "config" }
-    ))
+                          content: "API configuration",
+                          metadata: { priority: "high", category: "config" }
+                        ))
 
     assert result["success"]
     assert_instance_of Integer, result["node_id"]
@@ -208,7 +208,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_recall_tool_searches_memories
-    robot_name = "recall_test_#{rand(10000)}"
+    robot_name = "recall_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -225,7 +225,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_recall_tool_with_limit
-    robot_name = "recall_limit_test_#{rand(10000)}"
+    robot_name = "recall_limit_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -240,7 +240,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_recall_tool_with_timeframe
-    robot_name = "recall_time_test_#{rand(10000)}"
+    robot_name = "recall_time_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -253,7 +253,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_recall_tool_hybrid_strategy
-    robot_name = "recall_hybrid_test_#{rand(10000)}"
+    robot_name = "recall_hybrid_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -271,7 +271,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_forget_tool_soft_deletes_node
-    robot_name = "forget_test_#{rand(10000)}"
+    robot_name = "forget_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -290,11 +290,11 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_forget_tool_handles_not_found
-    robot_name = "forget_404_test_#{rand(10000)}"
+    robot_name = "forget_404_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::ForgetTool.new
-    result = JSON.parse(tool.call(node_id: 999999999))
+    result = JSON.parse(tool.call(node_id: 999_999_999))
 
     refute result["success"]
     assert result["error"].include?("not found")
@@ -305,7 +305,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_restore_tool_restores_deleted_node
-    robot_name = "restore_test_#{rand(10000)}"
+    robot_name = "restore_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -328,11 +328,11 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_restore_tool_handles_not_found
-    robot_name = "restore_404_test_#{rand(10000)}"
+    robot_name = "restore_404_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::RestoreTool.new
-    result = JSON.parse(tool.call(node_id: 999999999))
+    result = JSON.parse(tool.call(node_id: 999_999_999))
 
     refute result["success"]
     assert result["error"].include?("not found")
@@ -343,7 +343,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_list_tags_tool_returns_all_tags
-    robot_name = "list_tags_test_#{rand(10000)}"
+    robot_name = "list_tags_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -358,7 +358,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_list_tags_tool_with_prefix_filter
-    robot_name = "list_tags_prefix_test_#{rand(10000)}"
+    robot_name = "list_tags_prefix_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -380,7 +380,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_search_tags_tool_fuzzy_match
-    robot_name = "search_tags_test_#{rand(10000)}"
+    robot_name = "search_tags_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -394,7 +394,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_search_tags_tool_with_min_similarity
-    robot_name = "search_tags_sim_test_#{rand(10000)}"
+    robot_name = "search_tags_sim_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::SearchTagsTool.new
@@ -409,7 +409,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_find_by_topic_tool_exact_match
-    robot_name = "topic_exact_test_#{rand(10000)}"
+    robot_name = "topic_exact_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -424,7 +424,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_find_by_topic_tool_prefix_match
-    robot_name = "topic_prefix_test_#{rand(10000)}"
+    robot_name = "topic_prefix_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -439,7 +439,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_find_by_topic_tool_fuzzy_mode
-    robot_name = "topic_fuzzy_test_#{rand(10000)}"
+    robot_name = "topic_fuzzy_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -457,7 +457,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_stats_tool_returns_statistics
-    robot_name = "stats_test_#{rand(10000)}"
+    robot_name = "stats_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -475,7 +475,7 @@ class MCPServerTest < Minitest::Test
   end
 
   def test_stats_tool_shows_current_robot
-    robot_name = "stats_robot_test_#{rand(10000)}"
+    robot_name = "stats_robot_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::StatsTool.new
@@ -490,7 +490,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_memory_stats_resource_content
-    robot_name = "res_stats_test_#{rand(10000)}"
+    robot_name = "res_stats_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     resource = HTM::MCP::MemoryStatsResource.new
@@ -512,7 +512,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_tag_hierarchy_resource_content
-    robot_name = "res_tags_test_#{rand(10000)}"
+    robot_name = "res_tags_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -533,7 +533,7 @@ class MCPServerTest < Minitest::Test
   # ============================================================
 
   def test_recent_memories_resource_content
-    robot_name = "res_recent_test_#{rand(10000)}"
+    robot_name = "res_recent_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
     htm = HTM::MCP::Session.htm_instance
 
@@ -561,7 +561,7 @@ class MCPServerTest < Minitest::Test
 
   def test_mcp_group_session_set_and_get_group
     reset_mcp_group_session
-    robot_name = "group_session_test_#{rand(10000)}"
+    robot_name = "group_session_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     group = HTM::RobotGroup.new(name: "test-group", active: [robot_name], max_tokens: 1000)
@@ -579,7 +579,7 @@ class MCPServerTest < Minitest::Test
 
   def test_create_group_tool_creates_group
     reset_mcp_group_session
-    robot_name = "create_group_test_#{rand(10000)}"
+    robot_name = "create_group_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::CreateGroupTool.new
@@ -597,7 +597,7 @@ class MCPServerTest < Minitest::Test
 
   def test_create_group_tool_with_passive_role
     reset_mcp_group_session
-    robot_name = "create_passive_test_#{rand(10000)}"
+    robot_name = "create_passive_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::CreateGroupTool.new
@@ -611,7 +611,7 @@ class MCPServerTest < Minitest::Test
 
   def test_create_group_tool_prevents_duplicates
     reset_mcp_group_session
-    robot_name = "dup_group_test_#{rand(10000)}"
+    robot_name = "dup_group_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::CreateGroupTool.new
@@ -630,7 +630,7 @@ class MCPServerTest < Minitest::Test
 
   def test_list_groups_tool_empty
     reset_mcp_group_session
-    robot_name = "list_empty_test_#{rand(10000)}"
+    robot_name = "list_empty_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::ListGroupsTool.new
@@ -643,7 +643,7 @@ class MCPServerTest < Minitest::Test
 
   def test_list_groups_tool_with_groups
     reset_mcp_group_session
-    robot_name = "list_groups_test_#{rand(10000)}"
+    robot_name = "list_groups_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "group-a")
@@ -665,7 +665,7 @@ class MCPServerTest < Minitest::Test
 
   def test_get_group_status_tool
     reset_mcp_group_session
-    robot_name = "status_test_#{rand(10000)}"
+    robot_name = "status_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "status-group")
@@ -683,7 +683,7 @@ class MCPServerTest < Minitest::Test
 
   def test_get_group_status_tool_not_found
     reset_mcp_group_session
-    robot_name = "status_404_test_#{rand(10000)}"
+    robot_name = "status_404_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::GetGroupStatusTool.new
@@ -699,7 +699,7 @@ class MCPServerTest < Minitest::Test
 
   def test_join_group_tool_already_member
     reset_mcp_group_session
-    robot_name = "join_test_#{rand(10000)}"
+    robot_name = "join_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "join-group")
@@ -719,7 +719,7 @@ class MCPServerTest < Minitest::Test
 
   def test_leave_group_tool
     reset_mcp_group_session
-    robot_name = "leave_test_#{rand(10000)}"
+    robot_name = "leave_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "leave-group")
@@ -735,7 +735,7 @@ class MCPServerTest < Minitest::Test
 
   def test_leave_group_tool_not_member
     reset_mcp_group_session
-    robot_name = "leave_nomember_test_#{rand(10000)}"
+    robot_name = "leave_nomember_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     # Create group and immediately leave
@@ -758,7 +758,7 @@ class MCPServerTest < Minitest::Test
 
   def test_group_remember_tool
     reset_mcp_group_session
-    robot_name = "group_remember_test_#{rand(10000)}"
+    robot_name = "group_remember_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "remember-group")
@@ -775,7 +775,7 @@ class MCPServerTest < Minitest::Test
 
   def test_group_remember_tool_not_found
     reset_mcp_group_session
-    robot_name = "group_remember_404_#{rand(10000)}"
+    robot_name = "group_remember_404_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::GroupRememberTool.new
@@ -791,7 +791,7 @@ class MCPServerTest < Minitest::Test
 
   def test_group_recall_tool
     reset_mcp_group_session
-    robot_name = "group_recall_test_#{rand(10000)}"
+    robot_name = "group_recall_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "recall-group")
@@ -813,7 +813,7 @@ class MCPServerTest < Minitest::Test
 
   def test_get_group_working_memory_tool
     reset_mcp_group_session
-    robot_name = "group_wm_test_#{rand(10000)}"
+    robot_name = "group_wm_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "wm-group")
@@ -836,7 +836,7 @@ class MCPServerTest < Minitest::Test
 
   def test_promote_robot_tool_not_passive
     reset_mcp_group_session
-    robot_name = "promote_test_#{rand(10000)}"
+    robot_name = "promote_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "promote-group")
@@ -856,7 +856,7 @@ class MCPServerTest < Minitest::Test
 
   def test_failover_tool_no_passive
     reset_mcp_group_session
-    robot_name = "failover_test_#{rand(10000)}"
+    robot_name = "failover_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "failover-group")
@@ -876,7 +876,7 @@ class MCPServerTest < Minitest::Test
 
   def test_sync_group_tool
     reset_mcp_group_session
-    robot_name = "sync_test_#{rand(10000)}"
+    robot_name = "sync_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "sync-group")
@@ -898,7 +898,7 @@ class MCPServerTest < Minitest::Test
 
   def test_shutdown_group_tool
     reset_mcp_group_session
-    robot_name = "shutdown_test_#{rand(10000)}"
+    robot_name = "shutdown_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "shutdown-group")
@@ -912,7 +912,7 @@ class MCPServerTest < Minitest::Test
 
   def test_shutdown_group_tool_not_found
     reset_mcp_group_session
-    robot_name = "shutdown_404_test_#{rand(10000)}"
+    robot_name = "shutdown_404_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     tool = HTM::MCP::ShutdownGroupTool.new
@@ -928,7 +928,7 @@ class MCPServerTest < Minitest::Test
 
   def test_robot_groups_resource_content
     reset_mcp_group_session
-    robot_name = "res_groups_test_#{rand(10000)}"
+    robot_name = "res_groups_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
 
     HTM::MCP::CreateGroupTool.new.call(name: "res-group")
@@ -998,7 +998,7 @@ class MCPServerTest < Minitest::Test
         HTM::Models::RobotNode.where(robot_id: robot.id).delete
       end
     end
-  rescue => e
+  rescue
     # Ignore cleanup errors
   end
 end

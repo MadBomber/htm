@@ -78,45 +78,10 @@ class HTM
       # - default - LIKE prefix match (e.g., "database" matches "database:postgresql")
       #
       def nodes_by_topic(topic_path, exact: false, fuzzy: false, min_similarity: DEFAULT_TAG_SIMILARITY_THRESHOLD, limit: 50)
-        # Enforce limit to prevent DoS
-        safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
-
-        # Build base query with joins
-        # Use subquery with DISTINCT ON to get unique nodes by id
-        if exact
-          node_ids = HTM::Models::Node
-            .select(Sequel[:nodes][:id])
-            .join(:node_tags, node_id: :id)
-            .join(:tags, id: Sequel[:node_tags][:tag_id])
-            .where(Sequel[:tags][:name] => topic_path)
-            .distinct
-            .select_map(Sequel[:nodes][:id])
-        elsif fuzzy
-          # Trigram similarity search - tolerates typos and partial matches
-          safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
-          node_ids = HTM::Models::Node
-            .select(Sequel[:nodes][:id])
-            .join(:node_tags, node_id: :id)
-            .join(:tags, id: Sequel[:node_tags][:tag_id])
-            .where(Sequel.lit("similarity(tags.name, ?) >= ?", topic_path, safe_similarity))
-            .distinct
-            .select_map(Sequel[:nodes][:id])
-        else
-          # Sanitize LIKE pattern to prevent wildcard injection
-          safe_pattern = HTM::SqlBuilder.sanitize_like_pattern(topic_path)
-          node_ids = HTM::Models::Node
-            .select(Sequel[:nodes][:id])
-            .join(:node_tags, node_id: :id)
-            .join(:tags, id: Sequel[:node_tags][:tag_id])
-            .where(Sequel.like(Sequel[:tags][:name], "#{safe_pattern}%"))
-            .distinct
-            .select_map(Sequel[:nodes][:id])
-        end
-
-        # Return empty array if no node_ids found
+        safe_limit = limit.to_i.clamp(1, MAX_TAG_QUERY_LIMIT)
+        node_ids   = node_ids_for_topic(topic_path, exact: exact, fuzzy: fuzzy, min_similarity: min_similarity)
         return [] if node_ids.empty?
 
-        # Fetch full node records for the matching ids
         HTM::Models::Node
           .where(id: node_ids)
           .order(Sequel.desc(:created_at))
@@ -143,7 +108,7 @@ class HTM
       #
       def topic_relationships(min_shared_nodes: 2, limit: 50)
         # Enforce limit to prevent DoS
-        safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
+        safe_limit = limit.to_i.clamp(1, MAX_TAG_QUERY_LIMIT)
         safe_min = [min_shared_nodes.to_i, 1].max
 
         sql = <<~SQL
@@ -200,9 +165,9 @@ class HTM
 
         # Single query to get all tags for all nodes
         results = HTM::Models::NodeTag
-          .join(:tags, id: :tag_id)
-          .where(node_id: node_ids)
-          .select_map([:node_id, Sequel[:tags][:name]])
+                  .join(:tags, id: :tag_id)
+                  .where(node_id: node_ids)
+                  .select_map([:node_id, Sequel[:tags][:name]])
 
         # Group by node_id
         results.group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
@@ -218,25 +183,11 @@ class HTM
       # @return [Array<Hash>] Tags with usage counts
       #
       def popular_tags(limit: 20, timeframe: nil)
-        # Enforce limit to prevent DoS
-        safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
-
-        query = HTM::Models::Tag
-          .join(:node_tags, tag_id: :id)
-          .join(:nodes, id: Sequel[:node_tags][:node_id])
-          .group(Sequel[:tags][:id], Sequel[:tags][:name])
-          .select(Sequel[:tags][:name], Sequel.function(:count, Sequel[:node_tags][:id]).as(:usage_count))
-
-        if timeframe
-          query = query.where(Sequel[:nodes][:created_at] >= timeframe.begin)
-            .where(Sequel[:nodes][:created_at] <= timeframe.end)
-        end
-
-        query
-          .order(Sequel.desc(:usage_count))
-          .limit(safe_limit)
-          .all
-          .map { |tag| { name: tag[:name], usage_count: tag[:usage_count].to_i } }
+        safe_limit = limit.to_i.clamp(1, MAX_TAG_QUERY_LIMIT)
+        query = base_popular_tags_query
+        query = filter_by_timeframe(query, timeframe) if timeframe
+        query.order(Sequel.desc(:usage_count)).limit(safe_limit).all
+             .map { |tag| { name: tag[:name], usage_count: tag[:usage_count].to_i } }
       end
 
       # Fuzzy search for tags using trigram similarity
@@ -254,8 +205,8 @@ class HTM
         return [] if query.nil? || query.strip.empty?
 
         # Enforce limits
-        safe_limit = [[limit.to_i, 1].max, MAX_TAG_QUERY_LIMIT].min
-        safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
+        safe_limit = limit.to_i.clamp(1, MAX_TAG_QUERY_LIMIT)
+        safe_similarity = min_similarity.to_f.clamp(0.0, 1.0)
 
         sql = <<~SQL
           SELECT name, similarity(name, ?) as similarity
@@ -266,8 +217,8 @@ class HTM
         SQL
 
         HTM.db.fetch(sql, query, query, safe_similarity, safe_limit)
-          .all
-          .map { |r| { name: r[:name], similarity: r[:similarity].to_f } }
+           .all
+           .map { |r| { name: r[:name], similarity: r[:similarity].to_f } }
       rescue Sequel::Error => e
         HTM.logger.error("Failed to search tags: #{e.message}")
         []
@@ -366,76 +317,92 @@ class HTM
       # @param min_similarity [Float] Minimum similarity for trigram matching
       # @return [Array<String>] Matched tag names
       #
-      def find_matching_tags_unified(exact_candidates:, prefix_candidates:, component_candidates:, fuzzy_fallback: true, min_similarity: DEFAULT_TAG_SIMILARITY_THRESHOLD)
+      def find_matching_tags_unified(exact_candidates:, prefix_candidates:, component_candidates:, fuzzy_fallback: true,
+                                     min_similarity: DEFAULT_TAG_SIMILARITY_THRESHOLD)
         return [] if exact_candidates.empty? && prefix_candidates.empty? && component_candidates.empty?
 
         conditions = []
         params = []
-
-        # Exact matches (highest priority)
-        # Use Sequel.lit with ? placeholders for proper parameter binding
-        if exact_candidates.any?
-          placeholders = exact_candidates.map { '?' }.join(', ')
-          conditions << "(SELECT name, 1 as priority FROM tags WHERE name IN (#{placeholders}))"
-          params.concat(exact_candidates)
-        end
-
-        # Prefix matches
-        if prefix_candidates.any?
-          placeholders = prefix_candidates.map { '?' }.join(', ')
-          conditions << "(SELECT name, 2 as priority FROM tags WHERE name IN (#{placeholders}))"
-          params.concat(prefix_candidates)
-        end
-
-        # Component matches
-        if component_candidates.any?
-          component_conditions = component_candidates.map do |_|
-            "(name = ? OR name LIKE ? OR name LIKE ? OR name LIKE ?)"
-          end
-
-          component_params = component_candidates.flat_map do |component|
-            safe_component = HTM::SqlBuilder.sanitize_like_pattern(component)
-            [
-              component,                 # exact match
-              "#{safe_component}:%",     # starts with
-              "%:#{safe_component}",     # ends with
-              "%:#{safe_component}:%"    # in middle
-            ]
-          end
-
-          conditions << "(SELECT name, 3 as priority FROM tags WHERE #{component_conditions.join(' OR ')})"
-          params.concat(component_params)
-        end
-
-        # Trigram fuzzy matches (lowest priority - fallback for typos)
-        if fuzzy_fallback && component_candidates.any?
-          safe_similarity = [[min_similarity.to_f, 0.0].max, 1.0].min
-          trigram_conditions = component_candidates.map do |_|
-            "similarity(name, ?) >= ?"
-          end
-          trigram_params = component_candidates.flat_map { |c| [c, safe_similarity] }
-
-          conditions << "(SELECT name, 4 as priority FROM tags WHERE #{trigram_conditions.join(' OR ')})"
-          params.concat(trigram_params)
-        end
-
+        append_exact_conditions(conditions, params, exact_candidates)
+        append_prefix_conditions(conditions, params, prefix_candidates)
+        append_component_conditions(conditions, params, component_candidates)
+        append_trigram_conditions(conditions, params, component_candidates, min_similarity) if fuzzy_fallback && component_candidates.any?
         return [] if conditions.empty?
 
-        # Combine with UNION and order by priority
         params << MAX_TAG_QUERY_LIMIT
-
-        sql = <<~SQL
-          SELECT DISTINCT name FROM (
-            #{conditions.join(' UNION ')}
-          ) AS matches
-          ORDER BY name
-          LIMIT ?
-        SQL
-
+        sql = "SELECT DISTINCT name FROM (#{conditions.join(' UNION ')}) AS matches ORDER BY name LIMIT ?"
         HTM.db.fetch(sql, *params).all.map { |r| r[:name] }
       rescue Sequel::Error => e
         HTM.logger.error("Failed to find matching tags: #{e.message}")
         []
+      end
+
+      def base_popular_tags_query
+        HTM::Models::Tag
+          .join(:node_tags, tag_id: :id)
+          .join(:nodes, id: Sequel[:node_tags][:node_id])
+          .group(Sequel[:tags][:id], Sequel[:tags][:name])
+          .select(Sequel[:tags][:name], Sequel.function(:count, Sequel[:node_tags][:id]).as(:usage_count))
+      end
+
+      def filter_by_timeframe(query, timeframe)
+        query
+          .where(Sequel[:nodes][:created_at] >= timeframe.begin)
+          .where(Sequel[:nodes][:created_at] <= timeframe.end)
+      end
+
+      def node_ids_for_topic(topic_path, exact:, fuzzy:, min_similarity:)
+        base = HTM::Models::Node
+               .select(Sequel[:nodes][:id])
+               .join(:node_tags, node_id: :id)
+               .join(:tags, id: Sequel[:node_tags][:tag_id])
+               .distinct
+
+        node_ids_dataset =
+          if exact
+            base.where(Sequel[:tags][:name] => topic_path)
+          elsif fuzzy
+            safe_sim = min_similarity.to_f.clamp(0.0, 1.0)
+            base.where(Sequel.lit("similarity(tags.name, ?) >= ?", topic_path, safe_sim))
+          else
+            safe_pattern = HTM::SqlBuilder.sanitize_like_pattern(topic_path)
+            base.where(Sequel.like(Sequel[:tags][:name], "#{safe_pattern}%"))
+          end
+
+        node_ids_dataset.select_map(Sequel[:nodes][:id])
+      end
+
+      def append_exact_conditions(conditions, params, exact_candidates)
+        return unless exact_candidates.any?
+        placeholders = exact_candidates.map { '?' }.join(', ')
+        conditions << "(SELECT name, 1 as priority FROM tags WHERE name IN (#{placeholders}))"
+        params.concat(exact_candidates)
+      end
+
+      def append_prefix_conditions(conditions, params, prefix_candidates)
+        return unless prefix_candidates.any?
+        placeholders = prefix_candidates.map { '?' }.join(', ')
+        conditions << "(SELECT name, 2 as priority FROM tags WHERE name IN (#{placeholders}))"
+        params.concat(prefix_candidates)
+      end
+
+      def append_component_conditions(conditions, params, component_candidates)
+        return unless component_candidates.any?
+        component_conditions = component_candidates.map { "(name = ? OR name LIKE ? OR name LIKE ? OR name LIKE ?)" }
+        component_params = component_candidates.flat_map do |component|
+          safe = HTM::SqlBuilder.sanitize_like_pattern(component)
+          [component, "#{safe}:%", "%:#{safe}", "%:#{safe}:%"]
+        end
+        conditions << "(SELECT name, 3 as priority FROM tags WHERE #{component_conditions.join(' OR ')})"
+        params.concat(component_params)
+      end
+
+      def append_trigram_conditions(conditions, params, component_candidates, min_similarity)
+        safe_similarity = min_similarity.to_f.clamp(0.0, 1.0)
+        trigram_conditions = component_candidates.map { "similarity(name, ?) >= ?" }
+        trigram_params = component_candidates.flat_map { |c| [c, safe_similarity] }
+        conditions << "(SELECT name, 4 as priority FROM tags WHERE #{trigram_conditions.join(' OR ')})"
+        params.concat(trigram_params)
       end
     end
   end

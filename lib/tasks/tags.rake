@@ -12,7 +12,6 @@ namespace :htm do
   namespace :tags do
     desc "Display tags as a hierarchical tree (text format). Optional prefix filter."
     task :tree, [:prefix] do |_t, args|
-
       # Ensure database connection
       HTM::SequelConfig.establish_connection!
 
@@ -25,7 +24,7 @@ namespace :htm do
       end
 
       # Display tree using Tag model method
-      puts "\nHTM Tags Tree#{args[:prefix] ? " (prefix: #{args[:prefix]})" : ''}"
+      puts "\nHTM Tags Tree#{" (prefix: #{args[:prefix]})" if args[:prefix]}"
       puts "=" * 40
       print tags.tree_string
       puts "\nTotal tags: #{count}"
@@ -33,7 +32,6 @@ namespace :htm do
 
     desc "Export tags as Mermaid flowchart to tags.md. Optional prefix filter."
     task :mermaid, [:prefix] do |_t, args|
-
       # Ensure database connection
       HTM::SequelConfig.establish_connection!
 
@@ -49,12 +47,11 @@ namespace :htm do
       File.write('tags.md', mermaid)
 
       puts "Mermaid flowchart written to: tags.md"
-      puts "Tags exported: #{count}#{args[:prefix] ? " (prefix: #{args[:prefix]})" : ''}"
+      puts "Tags exported: #{count}#{" (prefix: #{args[:prefix]})" if args[:prefix]}"
     end
 
     desc "Export tags as SVG visualization to tags.svg. Optional prefix filter."
     task :svg, [:prefix] do |_t, args|
-
       # Ensure database connection
       HTM::SequelConfig.establish_connection!
 
@@ -71,12 +68,11 @@ namespace :htm do
       File.write('tags.svg', svg)
 
       puts "SVG visualization written to: tags.svg"
-      puts "Tags exported: #{count}#{args[:prefix] ? " (prefix: #{args[:prefix]})" : ''}"
+      puts "Tags exported: #{count}#{" (prefix: #{args[:prefix]})" if args[:prefix]}"
     end
 
     desc "Rebuild all tags from node content. Clears existing tags and regenerates using LLM."
     task :rebuild do
-
       # Ensure database connection
       HTM::SequelConfig.establish_connection!
 
@@ -153,7 +149,6 @@ namespace :htm do
 
     desc "Export tags in all formats (tags.txt, tags.md, tags.svg). Optional prefix filter."
     task :export, [:prefix] do |_t, args|
-
       # Ensure database connection
       HTM::SequelConfig.establish_connection!
 

@@ -18,7 +18,7 @@ class ConfigurationTest < Minitest::Test
     # Temporarily clear HTM env vars and isolate from user XDG config
     saved_env = ENV.to_h.select { |k, _| k.start_with?('HTM_') }
     saved_env.each_key { |k| ENV.delete(k) }
-    saved_xdg = ENV['XDG_CONFIG_HOME']
+    saved_xdg = ENV.fetch('XDG_CONFIG_HOME', nil)
     temp_dir = Dir.mktmpdir('htm_config_test')
     ENV['XDG_CONFIG_HOME'] = temp_dir
 
@@ -72,7 +72,7 @@ class ConfigurationTest < Minitest::Test
 
   def test_validate_tag_extractor
     config = HTM::Config.new
-    config.embedding_generator = ->(text) { [0.1, 0.2] }
+    config.embedding_generator = ->(_text) { [0.1, 0.2] }
     config.tag_extractor = "not callable"
 
     assert_raises(HTM::ValidationError) do
@@ -82,8 +82,8 @@ class ConfigurationTest < Minitest::Test
 
   def test_validate_token_counter
     config = HTM::Config.new
-    config.embedding_generator = ->(text) { [0.1, 0.2] }
-    config.tag_extractor = ->(text, ont) { [] }
+    config.embedding_generator = ->(_text) { [0.1, 0.2] }
+    config.tag_extractor = ->(_text, _ont) { [] }
     config.token_counter = "not callable"
 
     assert_raises(HTM::ValidationError) do
@@ -172,7 +172,7 @@ class ConfigurationTest < Minitest::Test
   def test_reset_to_defaults
     config = HTM::Config.new
 
-    config.embedding_generator = ->(text) { [0.0] }
+    config.embedding_generator = ->(_text) { [0.0] }
     config.reset_to_defaults
 
     assert_respond_to config.embedding_generator, :call
@@ -188,7 +188,7 @@ class ConfigurationTest < Minitest::Test
 
   def test_count_tokens_error
     HTM.configure do |config|
-      config.token_counter = ->(text) { raise "boom" }
+      config.token_counter = ->(_text) { raise "boom" }
     end
 
     assert_raises(HTM::ValidationError) do
@@ -233,7 +233,7 @@ class ConfigurationTest < Minitest::Test
     saved_vars = {}
     %w[HTM_DATABASE__URL HTM_DATABASE__HOST HTM_DATABASE__PORT HTM_DATABASE__NAME
        HTM_DATABASE__USER HTM_DATABASE__PASSWORD HTM_DATABASE__SSLMODE].each do |var|
-      saved_vars[var] = ENV[var]
+      saved_vars[var] = ENV.fetch(var, nil)
     end
 
     ENV.delete('HTM_DATABASE__URL')
@@ -266,7 +266,7 @@ class ConfigurationTest < Minitest::Test
   def test_database_configured
     # Test database_configured? reflects state after reconciliation.
     # With a URL set, database is configured.
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_DATABASE__URL'] = 'postgresql://user@localhost:5432/testdb'
 
     config = HTM::Config.new
@@ -281,7 +281,7 @@ class ConfigurationTest < Minitest::Test
     saved_vars = {}
     %w[HTM_DATABASE__URL HTM_DATABASE__HOST HTM_DATABASE__PORT HTM_DATABASE__NAME
        HTM_DATABASE__USER HTM_DATABASE__PASSWORD].each do |var|
-      saved_vars[var] = ENV[var]
+      saved_vars[var] = ENV.fetch(var, nil)
       ENV.delete(var)
     end
 
@@ -305,7 +305,7 @@ class ConfigurationTest < Minitest::Test
     saved_vars = {}
     %w[HTM_DATABASE__URL HTM_DATABASE__HOST HTM_DATABASE__PORT HTM_DATABASE__NAME
        HTM_DATABASE__USER HTM_DATABASE__PASSWORD HTM_DATABASE__POOL_SIZE].each do |var|
-      saved_vars[var] = ENV[var]
+      saved_vars[var] = ENV.fetch(var, nil)
     end
 
     ENV.delete('HTM_DATABASE__URL')
@@ -343,7 +343,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_class_valid_environment_with_valid_env
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'test'
 
     assert HTM::Config.valid_environment?
@@ -352,7 +352,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_class_valid_environment_with_invalid_env
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'staginr'
 
     refute HTM::Config.valid_environment?
@@ -361,7 +361,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_class_valid_environment_with_defaults_env
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'defaults'
 
     refute HTM::Config.valid_environment?
@@ -370,7 +370,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_class_validate_environment_raises_for_invalid_env
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'staginr'
 
     error = assert_raises(HTM::ConfigurationError) do
@@ -387,7 +387,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_class_validate_environment_raises_for_defaults_env
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'defaults'
 
     error = assert_raises(HTM::ConfigurationError) do
@@ -400,7 +400,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_class_validate_environment_succeeds_for_valid_env
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'test'
 
     # Should not raise
@@ -410,7 +410,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_instance_validate_database_raises_for_invalid_env
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'staginr'
 
     # myway_config validates environment during initialization
@@ -424,8 +424,8 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_instance_validate_database_raises_when_database_not_configured
-    saved_htm_env = ENV['HTM_ENV']
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
 
     ENV['HTM_ENV'] = 'test'
     ENV.delete('HTM_DATABASE__URL')
@@ -446,7 +446,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_instance_validate_database_succeeds_when_properly_configured
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'test'
 
     config = HTM::Config.new
@@ -459,7 +459,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_instance_validate_environment
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'test'
 
     config = HTM::Config.new
@@ -471,7 +471,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_instance_validate_environment_raises_for_invalid
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'invalid_env'
 
     # myway_config validates environment during initialization
@@ -489,7 +489,7 @@ class ConfigurationTest < Minitest::Test
   # ==========================================================================
 
   def test_expected_database_name
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'test'
 
     config = HTM::Config.new
@@ -508,7 +508,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_expected_database_name_with_custom_service
-    saved_htm_env = ENV['HTM_ENV']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
     ENV['HTM_ENV'] = 'production'
 
     config = HTM::Config.new
@@ -520,7 +520,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_actual_database_name_from_url
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
 
     config = HTM::Config.new
     config.database.url = 'postgresql://user@localhost:5432/myapp_test'
@@ -531,7 +531,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_actual_database_name_from_config
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV.delete('HTM_DATABASE__URL')
 
     config = HTM::Config.new
@@ -552,8 +552,8 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_valid_database_name_when_matching
-    saved_htm_env = ENV['HTM_ENV']
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_ENV'] = 'test'
 
     config = HTM::Config.new
@@ -566,8 +566,8 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_valid_database_name_when_not_matching
-    saved_htm_env = ENV['HTM_ENV']
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_ENV'] = 'test'
 
     config = HTM::Config.new
@@ -580,8 +580,8 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_validate_database_name_succeeds_when_matching
-    saved_htm_env = ENV['HTM_ENV']
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_ENV'] = 'test'
 
     config = HTM::Config.new
@@ -595,8 +595,8 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_validate_database_name_raises_when_environment_wrong
-    saved_htm_env = ENV['HTM_ENV']
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_ENV'] = 'test'
 
     config = HTM::Config.new
@@ -617,8 +617,8 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_validate_database_name_raises_when_service_wrong
-    saved_htm_env = ENV['HTM_ENV']
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_ENV'] = 'production'
 
     config = HTM::Config.new
@@ -639,8 +639,8 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_validate_database_name_raises_when_format_wrong
-    saved_htm_env = ENV['HTM_ENV']
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_ENV'] = 'test'
 
     config = HTM::Config.new
@@ -659,8 +659,8 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_validate_database_name_custom_service_and_env
-    saved_htm_env = ENV['HTM_ENV']
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_htm_env = ENV.fetch('HTM_ENV', nil)
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_ENV'] = 'production'
 
     config = HTM::Config.new
@@ -703,7 +703,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_parse_database_url_returns_nil_when_no_url
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV.delete('HTM_DATABASE__URL')
 
     config = HTM::Config.new
@@ -731,7 +731,7 @@ class ConfigurationTest < Minitest::Test
     saved_vars = {}
     %w[HTM_DATABASE__URL HTM_DATABASE__HOST HTM_DATABASE__PORT HTM_DATABASE__NAME
        HTM_DATABASE__USER HTM_DATABASE__SSLMODE].each do |var|
-      saved_vars[var] = ENV[var]
+      saved_vars[var] = ENV.fetch(var, nil)
     end
 
     ENV.delete('HTM_DATABASE__URL')
@@ -751,7 +751,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_reconciliation_extracts_sslmode_from_url
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_DATABASE__URL'] = 'postgresql://testuser@testhost:5432/testdb?sslmode=verify-full'
 
     config = HTM::Config.new
@@ -771,7 +771,7 @@ class ConfigurationTest < Minitest::Test
   #
 
   def test_reconciliation_populates_components_from_url_at_load_time
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_DATABASE__URL'] = 'postgresql://testuser:testpass@testhost:5433/testdb'
 
     config = HTM::Config.new
@@ -787,10 +787,10 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_reconciliation_builds_url_from_components_when_no_url
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV.delete('HTM_DATABASE__URL')
-    saved_name = ENV['HTM_DATABASE__NAME']
-    saved_user = ENV['HTM_DATABASE__USER']
+    saved_name = ENV.fetch('HTM_DATABASE__NAME', nil)
+    saved_user = ENV.fetch('HTM_DATABASE__USER', nil)
 
     ENV['HTM_DATABASE__NAME'] = 'component_db'
     ENV['HTM_DATABASE__USER'] = 'component_user'
@@ -806,9 +806,9 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_reconciliation_uses_defaults_for_host_and_port_when_building_url
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV.delete('HTM_DATABASE__URL')
-    saved_name = ENV['HTM_DATABASE__NAME']
+    saved_name = ENV.fetch('HTM_DATABASE__NAME', nil)
 
     ENV['HTM_DATABASE__NAME'] = 'mydb'
 
@@ -828,7 +828,7 @@ class ConfigurationTest < Minitest::Test
     # auto-generate name from service.name and environment
     saved_vars = {}
     %w[HTM_DATABASE__URL HTM_DATABASE__NAME HTM_DATABASE__USER HTM_ENV HTM_SERVICE__NAME].each do |var|
-      saved_vars[var] = ENV[var]
+      saved_vars[var] = ENV.fetch(var, nil)
     end
 
     ENV.delete('HTM_DATABASE__URL')
@@ -857,7 +857,7 @@ class ConfigurationTest < Minitest::Test
   #
 
   def test_database_host_returns_component_value
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_DATABASE__URL'] = 'postgresql://user@myhost:5432/mydb'
 
     config = HTM::Config.new
@@ -869,7 +869,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_port_returns_component_value
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_DATABASE__URL'] = 'postgresql://user@localhost:5433/mydb'
 
     config = HTM::Config.new
@@ -881,7 +881,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_name_returns_component_value
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_DATABASE__URL'] = 'postgresql://user@localhost:5432/extracted_db'
 
     config = HTM::Config.new
@@ -893,7 +893,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_user_returns_component_value
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_DATABASE__URL'] = 'postgresql://dbuser@localhost:5432/mydb'
 
     config = HTM::Config.new
@@ -905,7 +905,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_database_password_returns_component_value
-    saved_dburl = ENV['HTM_DATABASE__URL']
+    saved_dburl = ENV.fetch('HTM_DATABASE__URL', nil)
     ENV['HTM_DATABASE__URL'] = 'postgresql://user:secret123@localhost:5432/mydb'
 
     config = HTM::Config.new

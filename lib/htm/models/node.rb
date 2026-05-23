@@ -43,7 +43,7 @@ class HTM
       # Validations
       def validate
         super
-        validates_presence [:content, :content_hash]
+        validates_presence %i[content content_hash]
         validates_unique :content_hash
       end
 
@@ -110,7 +110,6 @@ class HTM
 
           # Select distance operator based on metric
           operator = case distance.to_s
-                     when "cosine" then "<=>"
                      when "euclidean", "l2" then "<->"
                      when "inner_product" then "<#>"
                      else "<=>"
@@ -356,7 +355,7 @@ class HTM
       def to_hash
         values.transform_keys(&:to_s)
       end
-      alias_method :attributes, :to_hash
+      alias attributes to_hash
     end
   end
 end

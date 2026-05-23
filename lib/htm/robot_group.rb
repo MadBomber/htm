@@ -320,7 +320,7 @@ class HTM
     #     originator: 'agent-2'
     #   )
     #
-    def remember(content, originator: nil, **options)
+    def remember(content, originator: nil, **)
       raise 'No active robots in group' if @active_robots.empty?
 
       # Use first active robot (or specified originator) to create the memory
@@ -330,7 +330,7 @@ class HTM
                   @active_robots.values.first
                 end
 
-      node_id = primary.remember(content, **options)
+      node_id = primary.remember(content, **)
 
       # Sync to database (robot_nodes table) for all other members
       sync_node_to_members(node_id, exclude: primary.robot_id)
@@ -356,11 +356,11 @@ class HTM
     # @example
     #   results = group.recall('billing issue', limit: 5, strategy: :fulltext)
     #
-    def recall(query, **options)
+    def recall(query, **)
       raise 'No active robots in group' if @active_robots.empty?
 
       primary = @active_robots.values.first
-      primary.recall(query, **options)
+      primary.recall(query, **)
     end
 
     # Returns all nodes currently in shared working memory.
@@ -476,7 +476,7 @@ class HTM
 
       all_robots.each_key do |robot_name|
         synced = sync_robot(robot_name)
-        if synced > 0
+        if synced.positive?
           members_updated += 1
           total_synced    += synced
         end
@@ -634,7 +634,7 @@ class HTM
         working_memory_nodes: wm_contents.count,
         working_memory_tokens: token_count,
         max_tokens: @max_tokens,
-        token_utilization: @max_tokens > 0 ? (token_count.to_f / @max_tokens).round(2) : 0,
+        token_utilization: @max_tokens.positive? ? (token_count.to_f / @max_tokens).round(2) : 0,
         in_sync: in_sync?
       }
     end
@@ -685,7 +685,7 @@ class HTM
       node = HTM::Models::Node.first(id: node_id)
       return unless node
 
-      all_robots.each do |_name, htm|
+      all_robots.each_value do |htm|
         next if htm.robot_id == origin_robot_id
 
         htm.working_memory.add_from_sync(
@@ -698,7 +698,7 @@ class HTM
     end
 
     def evict_from_in_memory_caches(node_id, origin_robot_id)
-      all_robots.each do |_name, htm|
+      all_robots.each_value do |htm|
         next if htm.robot_id == origin_robot_id
 
         htm.working_memory.remove_from_sync(node_id)
@@ -706,7 +706,7 @@ class HTM
     end
 
     def clear_all_in_memory_caches(origin_robot_id)
-      all_robots.each do |_name, htm|
+      all_robots.each_value do |htm|
         next if htm.robot_id == origin_robot_id
 
         htm.working_memory.clear_from_sync

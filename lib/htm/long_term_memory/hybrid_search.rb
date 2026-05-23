@@ -45,7 +45,7 @@ class HTM
       #
       def search_hybrid(timeframe:, query:, limit:, embedding_service:, prefilter_limit: 100, metadata: {})
         # Enforce limits to prevent DoS
-        safe_limit = [[limit.to_i, 1].max, MAX_HYBRID_LIMIT].min
+        safe_limit = limit.to_i.clamp(1, MAX_HYBRID_LIMIT)
         safe_prefilter = [prefilter_limit.to_i, 1].max
 
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -66,6 +66,25 @@ class HTM
 
       private
 
+      def init_rrf_entry(result, rank)
+        {
+          'id'              => result['id'],
+          'content'         => result['content'],
+          'access_count'    => result['access_count'],
+          'created_at'      => result['created_at'],
+          'token_count'     => result['token_count'],
+          'similarity'      => 0.0,
+          'text_rank'       => 0.0,
+          'tag_depth_score' => 0.0,
+          'matched_tags'    => [],
+          'rrf_score'       => 1.0 / (RRF_K + rank),
+          'vector_rank'     => nil,
+          'fulltext_rank'   => nil,
+          'tag_rank'        => nil,
+          'sources'         => []
+        }
+      end
+
       # Hybrid search using Reciprocal Rank Fusion with retrieve-then-rerank
       #
       # Uses a single SQL CTE query instead of three round-trips:
@@ -85,93 +104,79 @@ class HTM
       # @return [Array<Hash>] Merged results with RRF scores
       #
       def search_hybrid_rrf(timeframe:, query:, limit:, embedding_service:, candidate_limit:, metadata: {})
-        # === Ruby pre-processing (LLM calls can't be in SQL) ===
+        tag_info   = extract_rrf_tag_info(query)
+        literals   = build_rrf_literals(query, tag_info[:search_tags], embedding_service)
+        filter_sql = build_rrf_filter_sql(timeframe, metadata)
 
-        # 1. Extract query-matching tags via LLM
-        tag_extraction = find_query_matching_tags(query, include_extracted: true)
-        extracted_tags = tag_extraction[:extracted] || []
-        matched_db_tags = tag_extraction[:matched] || []
-        tag_depth_map = build_tag_depth_map(extracted_tags)
-
-        search_tags = matched_db_tags.any? ? matched_db_tags : extracted_tags
-
-        # 2. Generate query embedding
-        query_embedding = embedding_service.embed(query)
-        has_embedding = query_embedding.is_a?(Array) && query_embedding.any?
-
-        # Build SQL-safe literals
-        query_literal = HTM.db.literal(query)
-
-        embedding_literal = nil
-        if has_embedding
-          padded = HTM::SqlBuilder.pad_embedding(query_embedding)
-          embedding_str = HTM::SqlBuilder.sanitize_embedding(padded)
-          embedding_literal = HTM.db.literal(embedding_str)
-        end
-
-        tag_literals = search_tags.any? ? search_tags.map { |t| HTM.db.literal(t) }.join(', ') : nil
-
-        # Build filter conditions (no alias for fulltext, 'n' alias for tag candidates)
-        timeframe_cond = HTM::SqlBuilder.timeframe_condition(timeframe)
-        metadata_cond = HTM::SqlBuilder.metadata_condition(metadata)
-        parts = [timeframe_cond, metadata_cond].compact
-        additional_sql = parts.any? ? "AND #{parts.join(' AND ')}" : ""
-
-        timeframe_cond_n = HTM::SqlBuilder.timeframe_condition(timeframe, table_alias: 'n')
-        metadata_cond_n = HTM::SqlBuilder.metadata_condition(metadata, table_alias: 'n')
-        parts_n = [timeframe_cond_n, metadata_cond_n].compact
-        additional_sql_n = parts_n.any? ? "AND #{parts_n.join(' AND ')}" : ""
-
-        # === Single CTE query ===
         sql = build_hybrid_cte_sql(
-          query_literal: query_literal,
-          embedding_literal: embedding_literal,
-          tag_literals: tag_literals,
-          additional_sql: additional_sql,
-          additional_sql_n: additional_sql_n,
-          candidate_limit: candidate_limit.to_i,
-          limit: limit.to_i
+          query_literal:    literals[:query_literal],
+          embedding_literal: literals[:embedding_literal],
+          tag_literals:     literals[:tag_literals],
+          additional_sql:   filter_sql[:additional_sql],
+          additional_sql_n: filter_sql[:additional_sql_n],
+          candidate_limit:  candidate_limit.to_i,
+          limit:            limit.to_i
         )
 
-        results = HTM.db.fetch(sql).all
+        results     = HTM.db.fetch(sql).all
+        top_results = post_process_rrf_results(results, tag_info[:tag_depth_map])
+        track_access(top_results.map { |r| r['id'] })
+        top_results
+      end
 
-        # === Ruby post-processing ===
-        top_results = results.map do |row|
+      def extract_rrf_tag_info(query)
+        extraction      = find_query_matching_tags(query, include_extracted: true)
+        extracted_tags  = extraction[:extracted] || []
+        matched_db_tags = extraction[:matched]   || []
+        {
+          search_tags:   matched_db_tags.any? ? matched_db_tags : extracted_tags,
+          tag_depth_map: build_tag_depth_map(extracted_tags)
+        }
+      end
+
+      def build_rrf_literals(query, search_tags, embedding_service)
+        query_literal   = HTM.db.literal(query)
+        query_embedding = embedding_service.embed(query)
+        has_embedding   = query_embedding.is_a?(Array) && query_embedding.any?
+        embedding_literal = if has_embedding
+                              padded = HTM::SqlBuilder.pad_embedding(query_embedding)
+                              HTM.db.literal(HTM::SqlBuilder.sanitize_embedding(padded))
+                            end
+        tag_literals = search_tags.any? ? search_tags.map { |t| HTM.db.literal(t) }.join(', ') : nil
+        { query_literal: query_literal, embedding_literal: embedding_literal, tag_literals: tag_literals }
+      end
+
+      def build_rrf_filter_sql(timeframe, metadata)
+        tc = HTM::SqlBuilder.timeframe_condition(timeframe)
+        mc = HTM::SqlBuilder.metadata_condition(metadata)
+        tn = HTM::SqlBuilder.timeframe_condition(timeframe, table_alias: 'n')
+        mn = HTM::SqlBuilder.metadata_condition(metadata, table_alias: 'n')
+        {
+          additional_sql:   [tc, mc].compact.then { |p| p.any? ? "AND #{p.join(' AND ')}" : "" },
+          additional_sql_n: [tn, mn].compact.then { |p| p.any? ? "AND #{p.join(' AND ')}" : "" }
+        }
+      end
+
+      def post_process_rrf_results(results, tag_depth_map)
+        results.map do |row|
           r = row.transform_keys(&:to_s)
-
-          # Parse matched_tags from PostgreSQL array (only present when tags CTE included)
           r['matched_tags'] = r.key?('matched_tags') ? parse_pg_array(r['matched_tags']) : []
-
-          # Calculate tag_depth_score in Ruby (depends on tag_depth_map from LLM)
-          r['tag_depth_score'] = if r['matched_tags'].any? && tag_depth_map.any?
-            calculate_tag_depth_score(r['matched_tags'], tag_depth_map)
-          else
-            0.0
-          end
-
-          # Build sources from non-nil rank fields
+          r['tag_depth_score'] = r['matched_tags'].any? && tag_depth_map.any? ?
+                                   calculate_tag_depth_score(r['matched_tags'], tag_depth_map) : 0.0
           sources = []
-          sources << 'vector' if r['vector_rank']
+          sources << 'vector'   if r['vector_rank']
           sources << 'fulltext' if r['fulltext_rank']
-          sources << 'tags' if r['tag_rank']
-          r['sources'] = sources
-
-          # Ensure all expected fields have defaults
-          r['similarity'] = (r['similarity'] || 0.0).to_f
-          r['text_rank'] = (r['text_rank'] || 0.0).to_f
-          r['rrf_score'] = r['rrf_score'].to_f
+          sources << 'tags'     if r['tag_rank']
+          r['sources']      = sources
+          r['similarity']   = (r['similarity']  || 0.0).to_f
+          r['text_rank']    = (r['text_rank']   || 0.0).to_f
+          r['rrf_score']    = r['rrf_score'].to_f
           r['vector_rank'] ||= nil
           r['fulltext_rank'] ||= nil
-          r['tag_rank'] ||= nil
+          r['tag_rank']     ||= nil
 
           r
         end
-
-        # Track access for retrieved nodes
-        node_ids = top_results.map { |r| r['id'] }
-        track_access(node_ids)
-
-        top_results
       end
 
       # Build the single-CTE SQL for hybrid search
@@ -190,14 +195,32 @@ class HTM
       # @param limit [Integer] Final result limit
       # @return [String] Complete SQL query
       #
-      def build_hybrid_cte_sql(query_literal:, embedding_literal:, tag_literals:, additional_sql:, additional_sql_n:, candidate_limit:, limit:)
+      def build_hybrid_cte_sql(query_literal:, embedding_literal:, tag_literals:, additional_sql:, additional_sql_n:, candidate_limit:,
+                               limit:)
         has_embedding = !embedding_literal.nil?
-        has_tags = !tag_literals.nil?
+        has_tags      = !tag_literals.nil?
 
-        ctes = []
+        ctes = fulltext_ctes_sql(query_literal, additional_sql, candidate_limit)
+        ctes << tag_candidates_cte_sql(tag_literals, additional_sql_n, candidate_limit) if has_tags
+        ctes << candidate_ids_cte_sql(has_tags)
+        ctes << vector_rerank_cte_sql(embedding_literal) if has_embedding
+        ctes.concat ranked_ctes_sql(has_tags, has_embedding)
+        ctes << rrf_scores_cte_sql(has_tags, has_embedding)
 
-        # --- Fulltext candidates (always included) ---
-        ctes << <<~SQL.chomp
+        final_fields = build_final_select_fields(has_tags, has_embedding)
+
+        <<~SQL
+          WITH #{ctes.join(",\n")}
+          SELECT #{final_fields.join(",\n         ")}
+          FROM rrf_scores rrf
+          JOIN nodes n ON n.id = rrf.id
+          ORDER BY rrf.rrf_score DESC
+          LIMIT #{limit}
+        SQL
+      end
+
+      def fulltext_ctes_sql(query_literal, additional_sql, candidate_limit)
+        [<<~SQL.chomp, <<~SQL.chomp, <<~SQL.chomp]
           tsvector_matches AS (
             SELECT id,
                    (1.0 + ts_rank(to_tsvector('english', content), plainto_tsquery('english', #{query_literal}))) as text_rank
@@ -207,8 +230,6 @@ class HTM
             #{additional_sql}
           )
         SQL
-
-        ctes << <<~SQL.chomp
           trigram_matches AS (
             SELECT id,
                    similarity(content, #{query_literal}) as text_rank
@@ -219,8 +240,6 @@ class HTM
             #{additional_sql}
           )
         SQL
-
-        ctes << <<~SQL.chomp
           fulltext_candidates AS (
             SELECT * FROM tsvector_matches
             UNION ALL
@@ -229,128 +248,97 @@ class HTM
             LIMIT #{candidate_limit}
           )
         SQL
+      end
 
-        # --- Tag candidates (conditional) ---
-        if has_tags
-          ctes << <<~SQL.chomp
-            tag_candidates AS (
-              SELECT n.id, array_agg(t.name) as matched_tags, count(t.name) as tag_match_count
-              FROM nodes n
-              JOIN node_tags nt ON nt.node_id = n.id
-              JOIN tags t ON t.id = nt.tag_id
-              WHERE n.deleted_at IS NULL
-              AND t.name IN (#{tag_literals})
-              #{additional_sql_n}
-              GROUP BY n.id
-              LIMIT #{candidate_limit}
-            )
-          SQL
-        end
+      def tag_candidates_cte_sql(tag_literals, additional_sql_n, candidate_limit)
+        <<~SQL.chomp
+          tag_candidates AS (
+            SELECT n.id, array_agg(t.name) as matched_tags, count(t.name) as tag_match_count
+            FROM nodes n
+            JOIN node_tags nt ON nt.node_id = n.id
+            JOIN tags t ON t.id = nt.tag_id
+            WHERE n.deleted_at IS NULL
+            AND t.name IN (#{tag_literals})
+            #{additional_sql_n}
+            GROUP BY n.id
+            LIMIT #{candidate_limit}
+          )
+        SQL
+      end
 
-        # --- Candidate ID pool (union of retrieval sources) ---
+      def candidate_ids_cte_sql(has_tags)
         id_sources = ["SELECT id FROM fulltext_candidates"]
         id_sources << "SELECT id FROM tag_candidates" if has_tags
-
-        ctes << <<~SQL.chomp
+        <<~SQL.chomp
           all_candidate_ids AS (
             #{id_sources.join("\n    UNION\n    ")}
           )
         SQL
+      end
 
-        # --- Vector rerank (conditional - only on candidate pool) ---
-        if has_embedding
-          ctes << <<~SQL.chomp
-            vector_rerank AS (
-              SELECT id,
-                     1 - (embedding <=> #{embedding_literal}::vector) as similarity
-              FROM nodes
-              WHERE id IN (SELECT id FROM all_candidate_ids)
-              AND embedding IS NOT NULL
-            )
-          SQL
-        end
+      def vector_rerank_cte_sql(embedding_literal)
+        <<~SQL.chomp
+          vector_rerank AS (
+            SELECT id,
+                   1 - (embedding <=> #{embedding_literal}::vector) as similarity
+            FROM nodes
+            WHERE id IN (SELECT id FROM all_candidate_ids)
+            AND embedding IS NOT NULL
+          )
+        SQL
+      end
 
-        # --- Ranked CTEs with ROW_NUMBER ---
-        ctes << <<~SQL.chomp
+      def ranked_ctes_sql(has_tags, has_embedding)
+        ctes = [<<~SQL.chomp]
           fulltext_ranked AS (
             SELECT id, text_rank, ROW_NUMBER() OVER (ORDER BY text_rank DESC) as rank
             FROM fulltext_candidates
           )
         SQL
-
-        if has_tags
-          ctes << <<~SQL.chomp
-            tag_ranked AS (
-              SELECT id, matched_tags, ROW_NUMBER() OVER (ORDER BY tag_match_count DESC) as rank
-              FROM tag_candidates
-            )
-          SQL
-        end
-
-        if has_embedding
-          ctes << <<~SQL.chomp
-            vector_ranked AS (
-              SELECT id, similarity, ROW_NUMBER() OVER (ORDER BY similarity DESC) as rank
-              FROM vector_rerank
-            )
-          SQL
-        end
-
-        # --- RRF score calculation via FULL OUTER JOIN ---
-        rrf_id = ["fr.id"]
-        rrf_id << "tr.id" if has_tags
-        rrf_id << "vr.id" if has_embedding
-
-        rrf_score_terms = ["COALESCE(1.0/(#{RRF_K} + fr.rank), 0)"]
-        rrf_score_terms << "COALESCE(1.0/(#{RRF_K} + tr.rank), 0)" if has_tags
-        rrf_score_terms << "COALESCE(1.0/(#{RRF_K} + vr.rank), 0)" if has_embedding
-
-        rrf_fields = [
-          "COALESCE(#{rrf_id.join(', ')}) as id",
-          "#{rrf_score_terms.join(' + ')} as rrf_score",
-          "fr.rank as fulltext_rank",
-          "fr.text_rank"
-        ]
-        rrf_fields << "tr.rank as tag_rank" if has_tags
-        rrf_fields << "tr.matched_tags" if has_tags
-        rrf_fields << "vr.rank as vector_rank" if has_embedding
-        rrf_fields << "vr.similarity" if has_embedding
-
-        rrf_from = "fulltext_ranked fr"
-        if has_tags
-          rrf_from += "\n      FULL OUTER JOIN tag_ranked tr ON fr.id = tr.id"
-        end
-        if has_embedding
-          coalesce_id = has_tags ? "COALESCE(fr.id, tr.id)" : "fr.id"
-          rrf_from += "\n      FULL OUTER JOIN vector_ranked vr ON #{coalesce_id} = vr.id"
-        end
-
-        ctes << <<~SQL.chomp
-          rrf_scores AS (
-            SELECT #{rrf_fields.join(",\n           ")}
-            FROM #{rrf_from}
+        ctes << <<~SQL.chomp if has_tags
+          tag_ranked AS (
+            SELECT id, matched_tags, ROW_NUMBER() OVER (ORDER BY tag_match_count DESC) as rank
+            FROM tag_candidates
           )
         SQL
-
-        # --- Final SELECT: join back to nodes for content fields ---
-        final_fields = [
-          "rrf.id", "n.content", "n.access_count", "n.created_at", "n.token_count",
-          "rrf.rrf_score", "rrf.fulltext_rank",
-          "COALESCE(rrf.text_rank, 0.0) as text_rank"
-        ]
-        final_fields << "rrf.tag_rank" if has_tags
-        final_fields << "rrf.matched_tags" if has_tags
-        final_fields << "rrf.vector_rank" if has_embedding
-        final_fields << "COALESCE(rrf.similarity, 0.0) as similarity" if has_embedding
-
-        <<~SQL
-          WITH #{ctes.join(",\n")}
-          SELECT #{final_fields.join(",\n         ")}
-          FROM rrf_scores rrf
-          JOIN nodes n ON n.id = rrf.id
-          ORDER BY rrf.rrf_score DESC
-          LIMIT #{limit}
+        ctes << <<~SQL.chomp if has_embedding
+          vector_ranked AS (
+            SELECT id, similarity, ROW_NUMBER() OVER (ORDER BY similarity DESC) as rank
+            FROM vector_rerank
+          )
         SQL
+        ctes
+      end
+
+      def rrf_scores_cte_sql(has_tags, has_embedding)
+        rrf_id         = ["fr.id"]
+        rrf_id         << "tr.id" if has_tags
+        rrf_id         << "vr.id" if has_embedding
+        score_terms    = ["COALESCE(1.0/(#{RRF_K} + fr.rank), 0)"]
+        score_terms    << "COALESCE(1.0/(#{RRF_K} + tr.rank), 0)" if has_tags
+        score_terms    << "COALESCE(1.0/(#{RRF_K} + vr.rank), 0)" if has_embedding
+        fields         = ["COALESCE(#{rrf_id.join(', ')}) as id", "#{score_terms.join(' + ')} as rrf_score",
+                          "fr.rank as fulltext_rank", "fr.text_rank"]
+        fields         << "tr.rank as tag_rank" << "tr.matched_tags" if has_tags
+        fields         << "vr.rank as vector_rank" << "vr.similarity" if has_embedding
+        from           = "fulltext_ranked fr"
+        from += "\n      FULL OUTER JOIN tag_ranked tr ON fr.id = tr.id" if has_tags
+        coalesce_id = has_tags ? "COALESCE(fr.id, tr.id)" : "fr.id"
+        from += "\n      FULL OUTER JOIN vector_ranked vr ON #{coalesce_id} = vr.id" if has_embedding
+        <<~SQL.chomp
+          rrf_scores AS (
+            SELECT #{fields.join(",\n           ")}
+            FROM #{from}
+          )
+        SQL
+      end
+
+      def build_final_select_fields(has_tags, has_embedding)
+        fields = ["rrf.id", "n.content", "n.access_count", "n.created_at", "n.token_count",
+                  "rrf.rrf_score", "rrf.fulltext_rank", "COALESCE(rrf.text_rank, 0.0) as text_rank"]
+        fields << "rrf.tag_rank" << "rrf.matched_tags" if has_tags
+        fields << "rrf.vector_rank" << "COALESCE(rrf.similarity, 0.0) as similarity" if has_embedding
+        fields
       end
 
       # Fetch candidates using vector similarity search
@@ -384,7 +372,7 @@ class HTM
 
         where_clause = "WHERE #{conditions.join(' AND ')}"
 
-        # Note: Using Sequel.lit for the vector comparison since it needs special handling
+        # NOTE: Using Sequel.lit for the vector comparison since it needs special handling
         embedding_literal = HTM.db.literal(embedding_str)
         sql = <<~SQL
           SELECT id, content, access_count, created_at, token_count,
@@ -517,7 +505,8 @@ class HTM
           depth_score = calculate_tag_depth_score(matched_tags, tag_depth_map)
 
           result.transform_keys(&:to_s).merge('tag_depth_score' => depth_score, 'matched_tags' => matched_tags)
-        end.sort_by { |r| -r['tag_depth_score'] }
+        end
+        results.sort_by { |r| -r['tag_depth_score'] }
       end
 
       # Build a map of tag prefixes to their depth information
@@ -571,13 +560,13 @@ class HTM
             # Score is depth / max_depth
             # e.g., "database:postgresql" matching query "database:postgresql:extensions"
             # gives 2/3 = 0.67
-            score = info[:depth].to_f / info[:max_depth].to_f
+            score = info[:depth].to_f / info[:max_depth]
             best_score = [best_score, score].max
           else
             # Check if this tag is a parent of any extracted tag
             tag_depth_map.each do |prefix, info|
               if prefix.start_with?(tag + ':') || prefix == tag
-                score = tag.split(':').size.to_f / info[:max_depth].to_f
+                score = tag.split(':').size.to_f / info[:max_depth]
                 best_score = [best_score, score].max
               end
             end
@@ -623,103 +612,51 @@ class HTM
       # @return [Array<Hash>] Merged results sorted by RRF score
       #
       def merge_with_rrf(vector_results, fulltext_results, tag_results = [])
-        # Build RRF scores
-        # Key: node_id, Value: { node_data:, rrf_score:, sources: }
         merged = {}
-
-        # Process vector results
-        vector_results.each_with_index do |result, index|
-          id = result['id']
-          rank = index + 1  # 1-based rank
-          rrf_contribution = 1.0 / (RRF_K + rank)
-
-          merged[id] = {
-            'id' => result['id'],
-            'content' => result['content'],
-            'access_count' => result['access_count'],
-            'created_at' => result['created_at'],
-            'token_count' => result['token_count'],
-            'similarity' => result['similarity'],
-            'text_rank' => 0.0,
-            'tag_depth_score' => 0.0,
-            'matched_tags' => [],
-            'rrf_score' => rrf_contribution,
-            'vector_rank' => rank,
-            'fulltext_rank' => nil,
-            'tag_rank' => nil,
-            'sources' => ['vector']
-          }
-        end
-
-        # Process fulltext results
-        fulltext_results.each_with_index do |result, index|
-          id = result['id']
-          rank = index + 1  # 1-based rank
-          rrf_contribution = 1.0 / (RRF_K + rank)
-
-          if merged.key?(id)
-            # Node appears in both - add RRF contribution (this is the boost!)
-            merged[id]['rrf_score'] += rrf_contribution
-            merged[id]['text_rank'] = result['text_rank']
-            merged[id]['fulltext_rank'] = rank
-            merged[id]['sources'] << 'fulltext'
-          else
-            # Node only in fulltext
-            merged[id] = {
-              'id' => result['id'],
-              'content' => result['content'],
-              'access_count' => result['access_count'],
-              'created_at' => result['created_at'],
-              'token_count' => result['token_count'],
-              'similarity' => 0.0,
-              'text_rank' => result['text_rank'],
-              'tag_depth_score' => 0.0,
-              'matched_tags' => [],
-              'rrf_score' => rrf_contribution,
-              'vector_rank' => nil,
-              'fulltext_rank' => rank,
-              'tag_rank' => nil,
-              'sources' => ['fulltext']
-            }
-          end
-        end
-
-        # Process tag results
-        tag_results.each_with_index do |result, index|
-          id = result['id']
-          rank = index + 1  # 1-based rank
-          rrf_contribution = 1.0 / (RRF_K + rank)
-
-          if merged.key?(id)
-            # Node already found - add RRF contribution (boost!)
-            merged[id]['rrf_score'] += rrf_contribution
-            merged[id]['tag_depth_score'] = result['tag_depth_score']
-            merged[id]['matched_tags'] = result['matched_tags']
-            merged[id]['tag_rank'] = rank
-            merged[id]['sources'] << 'tags'
-          else
-            # Node only found via tags
-            merged[id] = {
-              'id' => result['id'],
-              'content' => result['content'],
-              'access_count' => result['access_count'],
-              'created_at' => result['created_at'],
-              'token_count' => result['token_count'],
-              'similarity' => 0.0,
-              'text_rank' => 0.0,
-              'tag_depth_score' => result['tag_depth_score'],
-              'matched_tags' => result['matched_tags'],
-              'rrf_score' => rrf_contribution,
-              'vector_rank' => nil,
-              'fulltext_rank' => nil,
-              'tag_rank' => rank,
-              'sources' => ['tags']
-            }
-          end
-        end
-
-        # Sort by RRF score descending
+        vector_results.each_with_index   { |r, i| merge_vector_rrf_entry(merged, r, i + 1) }
+        fulltext_results.each_with_index  { |r, i| merge_fulltext_rrf_entry(merged, r, i + 1) }
+        tag_results.each_with_index       { |r, i| merge_tag_rrf_entry(merged, r, i + 1) }
         merged.values.sort_by { |r| -r['rrf_score'] }
+      end
+
+      def merge_vector_rrf_entry(merged, result, rank)
+        merged[result['id']] = init_rrf_entry(result, rank).merge(
+          'similarity' => result['similarity'], 'vector_rank' => rank, 'sources' => ['vector']
+        )
+      end
+
+      def merge_fulltext_rrf_entry(merged, result, rank)
+        rrf = 1.0 / (RRF_K + rank)
+        id  = result['id']
+        if merged.key?(id)
+          merged[id]['rrf_score']    += rrf
+          merged[id]['text_rank']     = result['text_rank']
+          merged[id]['fulltext_rank'] = rank
+          merged[id]['sources'] << 'fulltext'
+        else
+          merged[id] = init_rrf_entry(result, rank).merge(
+            'text_rank' => result['text_rank'], 'fulltext_rank' => rank, 'sources' => ['fulltext']
+          )
+        end
+      end
+
+      def merge_tag_rrf_entry(merged, result, rank)
+        rrf = 1.0 / (RRF_K + rank)
+        id  = result['id']
+        if merged.key?(id)
+          merged[id]['rrf_score']       += rrf
+          merged[id]['tag_depth_score']  = result['tag_depth_score']
+          merged[id]['matched_tags']     = result['matched_tags']
+          merged[id]['tag_rank']         = rank
+          merged[id]['sources'] << 'tags'
+        else
+          merged[id] = init_rrf_entry(result, rank).merge(
+            'tag_depth_score' => result['tag_depth_score'],
+            'matched_tags'    => result['matched_tags'],
+            'tag_rank'        => rank,
+            'sources'         => ['tags']
+          )
+        end
       end
     end
   end

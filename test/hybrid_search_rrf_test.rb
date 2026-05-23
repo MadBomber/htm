@@ -70,50 +70,47 @@ class HybridSearchRRFTest < Minitest::Test
 
   def test_hybrid_search_returns_results_with_rrf_score
     # Add test data with embeddings
-    node = create_node_with_embedding("[RRF_TEST] PostgreSQL supports vector search")
+    create_node_with_embedding("[RRF_TEST] PostgreSQL supports vector search")
 
     # Use raw: true to get full hash results instead of just content strings
     results = @htm.recall("PostgreSQL vector", strategy: :hybrid, limit: 10, raw: true)
 
     assert_instance_of Array, results
     # Results should include RRF-specific fields
-    if results.any?
-      result = results.first
-      assert result.key?('rrf_score'), "Result should include rrf_score"
-      assert result.key?('sources'), "Result should include sources array"
-    end
+    return unless results.any?
+    result = results.first
+    assert result.key?('rrf_score'), "Result should include rrf_score"
+    assert result.key?('sources'), "Result should include sources array"
   end
 
   def test_hybrid_search_includes_sources_array
-    node = create_node_with_embedding("[RRF_TEST] Ruby on Rails web framework")
+    create_node_with_embedding("[RRF_TEST] Ruby on Rails web framework")
 
     # Use raw: true to get full hash results
     results = @htm.recall("Ruby Rails", strategy: :hybrid, limit: 10, raw: true)
 
-    if results.any?
-      result = results.first
-      assert_instance_of Array, result['sources']
-      # Sources should be from: vector, fulltext, or tags
-      valid_sources = %w[vector fulltext tags]
-      result['sources'].each do |source|
-        assert_includes valid_sources, source, "Invalid source: #{source}"
-      end
+    return unless results.any?
+    result = results.first
+    assert_instance_of Array, result['sources']
+    # Sources should be from: vector, fulltext, or tags
+    valid_sources = %w[vector fulltext tags]
+    result['sources'].each do |source|
+      assert_includes valid_sources, source, "Invalid source: #{source}"
     end
   end
 
   def test_hybrid_search_includes_rank_fields
-    node = create_node_with_embedding("[RRF_TEST] Database optimization techniques")
+    create_node_with_embedding("[RRF_TEST] Database optimization techniques")
 
     # Use raw: true to get full hash results
     results = @htm.recall("database optimization", strategy: :hybrid, limit: 10, raw: true)
 
-    if results.any?
-      result = results.first
-      # Should have rank fields (may be nil if not found in that search)
-      assert result.key?('vector_rank'), "Result should include vector_rank"
-      assert result.key?('fulltext_rank'), "Result should include fulltext_rank"
-      assert result.key?('tag_rank'), "Result should include tag_rank"
-    end
+    return unless results.any?
+    result = results.first
+    # Should have rank fields (may be nil if not found in that search)
+    assert result.key?('vector_rank'), "Result should include vector_rank"
+    assert result.key?('fulltext_rank'), "Result should include fulltext_rank"
+    assert result.key?('tag_rank'), "Result should include tag_rank"
   end
 
   # ==========================================================================
@@ -122,7 +119,7 @@ class HybridSearchRRFTest < Minitest::Test
 
   def test_hybrid_search_includes_tag_search_results
     # Create node with specific tag
-    node = create_node_with_tag(
+    create_node_with_tag(
       "[RRF_TEST] pgvector extension information",
       "database:postgresql:extensions"
     )
@@ -131,11 +128,10 @@ class HybridSearchRRFTest < Minitest::Test
     results = @htm.recall("postgresql extensions", strategy: :hybrid, limit: 10, raw: true)
 
     assert_instance_of Array, results
-    if results.any?
-      result = results.first
-      assert result.key?('tag_depth_score'), "Result should include tag_depth_score"
-      assert result.key?('matched_tags'), "Result should include matched_tags"
-    end
+    return unless results.any?
+    result = results.first
+    assert result.key?('tag_depth_score'), "Result should include tag_depth_score"
+    assert result.key?('matched_tags'), "Result should include matched_tags"
   end
 
   def test_tag_search_finds_nodes_by_tag_only
@@ -147,7 +143,7 @@ class HybridSearchRRFTest < Minitest::Test
 
     # Configure tag extractor to return database:postgresql for this query
     HTM.configure do |config|
-      config.tag_extractor = ->(text, ontology) {
+      config.tag_extractor = lambda { |text, _ontology|
         if text.downcase.include?("postgresql") || text.downcase.include?("database")
           ["database:postgresql"]
         else
@@ -160,10 +156,9 @@ class HybridSearchRRFTest < Minitest::Test
 
     # Should find the node via tag search even though content doesn't match well
     found = results.any? { |r| r['id'] == node.id }
-    if found
-      result = results.find { |r| r['id'] == node.id }
-      assert_includes result['sources'], 'tags', "Node should be found via tags"
-    end
+    return unless found
+    result = results.find { |r| r['id'] == node.id }
+    assert_includes result['sources'], 'tags', "Node should be found via tags"
   end
 
   def test_hybrid_search_boosts_nodes_found_in_multiple_searches
@@ -175,21 +170,19 @@ class HybridSearchRRFTest < Minitest::Test
 
     # Configure tag extractor
     HTM.configure do |config|
-      config.tag_extractor = ->(text, ontology) {
+      config.tag_extractor = lambda { |text, _ontology|
         ["database:postgresql"] if text.downcase.include?("postgresql")
       }
     end
 
     results = @htm.recall("PostgreSQL database", strategy: :hybrid, limit: 10, raw: true)
 
-    if results.any?
-      result = results.find { |r| r['id'] == node.id }
-      if result
-        # Node found in multiple searches should have higher RRF score
-        # and multiple sources
-        assert result['sources'].size >= 1, "Should have at least one source"
-      end
-    end
+    return unless results.any?
+    result = results.find { |r| r['id'] == node.id }
+    return unless result
+    # Node found in multiple searches should have higher RRF score
+    # and multiple sources
+    assert result['sources'].size >= 1, "Should have at least one source"
   end
 
   # ==========================================================================
@@ -290,8 +283,10 @@ class HybridSearchRRFTest < Minitest::Test
     ]
 
     tag_results = [
-      { 'id' => 2, 'content' => 'Node 2', 'access_count' => 0, 'created_at' => Time.now, 'token_count' => 10, 'tag_depth_score' => 1.0, 'matched_tags' => ['test:tag'] },
-      { 'id' => 4, 'content' => 'Node 4', 'access_count' => 0, 'created_at' => Time.now, 'token_count' => 10, 'tag_depth_score' => 0.5, 'matched_tags' => ['test'] }
+      { 'id' => 2, 'content' => 'Node 2', 'access_count' => 0, 'created_at' => Time.now, 'token_count' => 10, 'tag_depth_score' => 1.0,
+'matched_tags' => ['test:tag'] },
+      { 'id' => 4, 'content' => 'Node 4', 'access_count' => 0, 'created_at' => Time.now, 'token_count' => 10, 'tag_depth_score' => 0.5,
+'matched_tags' => ['test'] }
     ]
 
     merged = ltm.send(:merge_with_rrf, vector_results, fulltext_results, tag_results)
@@ -353,7 +348,7 @@ class HybridSearchRRFTest < Minitest::Test
     ltm = @htm.instance_variable_get(:@long_term_memory)
 
     # Already a Ruby array
-    result = ltm.send(:parse_pg_array, ['tag1', 'tag2'])
+    result = ltm.send(:parse_pg_array, %w[tag1 tag2])
     assert_equal %w[tag1 tag2], result
   end
 
@@ -386,14 +381,13 @@ class HybridSearchRRFTest < Minitest::Test
     ltm = @htm.instance_variable_get(:@long_term_memory)
 
     sql = ltm.send(:build_hybrid_cte_sql,
-      query_literal: HTM.db.literal("test query"),
-      embedding_literal: nil,
-      tag_literals: "'database:postgresql'",
-      additional_sql: "",
-      additional_sql_n: "",
-      candidate_limit: 100,
-      limit: 10
-    )
+                   query_literal: HTM.db.literal("test query"),
+                   embedding_literal: nil,
+                   tag_literals: "'database:postgresql'",
+                   additional_sql: "",
+                   additional_sql_n: "",
+                   candidate_limit: 100,
+                   limit: 10)
 
     # Should include fulltext and tag CTEs but NOT vector CTEs
     assert_includes sql, "tsvector_matches"
@@ -410,14 +404,13 @@ class HybridSearchRRFTest < Minitest::Test
     ltm = @htm.instance_variable_get(:@long_term_memory)
 
     sql = ltm.send(:build_hybrid_cte_sql,
-      query_literal: HTM.db.literal("test query"),
-      embedding_literal: HTM.db.literal("[0.1,0.2,0.3]"),
-      tag_literals: nil,
-      additional_sql: "",
-      additional_sql_n: "",
-      candidate_limit: 100,
-      limit: 10
-    )
+                   query_literal: HTM.db.literal("test query"),
+                   embedding_literal: HTM.db.literal("[0.1,0.2,0.3]"),
+                   tag_literals: nil,
+                   additional_sql: "",
+                   additional_sql_n: "",
+                   candidate_limit: 100,
+                   limit: 10)
 
     # Should include fulltext and vector CTEs but NOT tag CTEs
     assert_includes sql, "tsvector_matches"
@@ -434,14 +427,13 @@ class HybridSearchRRFTest < Minitest::Test
     ltm = @htm.instance_variable_get(:@long_term_memory)
 
     sql = ltm.send(:build_hybrid_cte_sql,
-      query_literal: HTM.db.literal("test query"),
-      embedding_literal: nil,
-      tag_literals: nil,
-      additional_sql: "",
-      additional_sql_n: "",
-      candidate_limit: 100,
-      limit: 10
-    )
+                   query_literal: HTM.db.literal("test query"),
+                   embedding_literal: nil,
+                   tag_literals: nil,
+                   additional_sql: "",
+                   additional_sql_n: "",
+                   candidate_limit: 100,
+                   limit: 10)
 
     # Should only include fulltext CTEs
     assert_includes sql, "tsvector_matches"
@@ -457,14 +449,13 @@ class HybridSearchRRFTest < Minitest::Test
     ltm = @htm.instance_variable_get(:@long_term_memory)
 
     sql = ltm.send(:build_hybrid_cte_sql,
-      query_literal: HTM.db.literal("test query"),
-      embedding_literal: HTM.db.literal("[0.1,0.2,0.3]"),
-      tag_literals: "'database:postgresql'",
-      additional_sql: "",
-      additional_sql_n: "",
-      candidate_limit: 100,
-      limit: 10
-    )
+                   query_literal: HTM.db.literal("test query"),
+                   embedding_literal: HTM.db.literal("[0.1,0.2,0.3]"),
+                   tag_literals: "'database:postgresql'",
+                   additional_sql: "",
+                   additional_sql_n: "",
+                   candidate_limit: 100,
+                   limit: 10)
 
     # Should include all CTEs
     assert_includes sql, "tsvector_matches"
@@ -487,7 +478,7 @@ class HybridSearchRRFTest < Minitest::Test
   def test_full_hybrid_search_with_all_three_dimensions
     # Set up tag extractor that returns predictable tags
     HTM.configure do |config|
-      config.tag_extractor = ->(text, ontology) {
+      config.tag_extractor = lambda { |text, _ontology|
         tags = []
         tags << "database:postgresql" if text.downcase.include?("postgresql")
         tags << "language:ruby" if text.downcase.include?("ruby")
@@ -496,12 +487,12 @@ class HybridSearchRRFTest < Minitest::Test
     end
 
     # Create nodes that will be found by different search methods
-    node1 = create_node_with_tag(
+    create_node_with_tag(
       "[RRF_TEST] PostgreSQL database with Ruby integration",
       "database:postgresql"
     )
 
-    node2 = create_node_with_embedding(
+    create_node_with_embedding(
       "[RRF_TEST] Semantic search and embeddings"
     )
 
@@ -510,15 +501,14 @@ class HybridSearchRRFTest < Minitest::Test
 
     assert_instance_of Array, results
     # Verify result structure
-    if results.any?
-      result = results.first
-      assert result.key?('rrf_score')
-      assert result.key?('sources')
-      assert result.key?('similarity')
-      assert result.key?('text_rank')
-      assert result.key?('tag_depth_score')
-      assert result.key?('matched_tags')
-    end
+    return unless results.any?
+    result = results.first
+    assert result.key?('rrf_score')
+    assert result.key?('sources')
+    assert result.key?('similarity')
+    assert result.key?('text_rank')
+    assert result.key?('tag_depth_score')
+    assert result.key?('matched_tags')
   end
 
   private

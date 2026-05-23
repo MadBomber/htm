@@ -13,7 +13,7 @@ class TimeframeTest < Minitest::Test
   end
 
   def test_valid_range
-    assert HTM::Timeframe.valid?(Time.now - 3600..Time.now)
+    assert HTM::Timeframe.valid?((Time.now - 3600)..Time.now)
   end
 
   def test_valid_date
@@ -55,7 +55,7 @@ class TimeframeTest < Minitest::Test
 
   # Test normalize with Range
   def test_normalize_range_passes_through
-    range = Time.now - 3600..Time.now
+    range = (Time.now - 3600)..Time.now
     assert_equal range, HTM::Timeframe.normalize(range)
   end
 
@@ -165,8 +165,8 @@ class TimeframeTest < Minitest::Test
 
   # Test normalize with Array
   def test_normalize_array_of_ranges
-    range1 = Time.now - 7200..Time.now - 3600
-    range2 = Time.now - 1800..Time.now
+    range1 = (Time.now - 7200)..(Time.now - 3600)
+    range2 = (Time.now - 1800)..Time.now
     result = HTM::Timeframe.normalize([range1, range2])
 
     assert_kind_of Array, result
@@ -186,7 +186,7 @@ class TimeframeTest < Minitest::Test
   end
 
   def test_normalize_array_mixed_types
-    items = [Date.new(2025, 11, 25), Time.now - 3600..Time.now]
+    items = [Date.new(2025, 11, 25), (Time.now - 3600)..Time.now]
     result = HTM::Timeframe.normalize(items)
 
     assert_kind_of Array, result

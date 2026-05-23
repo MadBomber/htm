@@ -84,7 +84,7 @@ class HTM
         tokens_freed = 0
 
         # Sort by access frequency + recency (lower score = more evictable)
-        candidates = @nodes.sort_by do |key, node|
+        candidates = @nodes.sort_by do |_key, node|
           access_frequency = node[:access_count] || 0
           time_since_accessed = Time.now - (node[:last_accessed] || node[:added_at])
 
@@ -92,7 +92,7 @@ class HTM
           # Frequently accessed = higher score (keep)
           # Recently accessed = higher score (keep)
           access_score = Math.log(1 + access_frequency)
-          recency_score = 1.0 / (1 + time_since_accessed / 3600.0)
+          recency_score = 1.0 / (1 + (time_since_accessed / 3600.0))
 
           -(access_score + recency_score)  # Negative for ascending sort
         end
@@ -122,33 +122,10 @@ class HTM
     def assemble_context(strategy:, max_tokens: nil)
       @mutex.synchronize do
         max = max_tokens || @max_tokens
+        nodes = sorted_nodes_by_strategy(strategy)
 
-        # Make defensive copies of nodes to prevent external mutation of internal state
-        nodes = case strategy
-        when :recent
-          # Most recently accessed (LRU)
-          @access_order.reverse.map { |k| @nodes[k]&.dup }.compact
-        when :frequent
-          # Most frequently accessed (LFU)
-          @nodes.sort_by { |k, v| -(v[:access_count] || 0) }.map { |_, v| v.dup }
-        when :balanced
-          # Combined frequency × recency
-          @nodes.sort_by { |k, v|
-            access_frequency = v[:access_count] || 0
-            time_since_accessed = Time.now - (v[:last_accessed] || v[:added_at])
-            recency_factor = 1.0 / (1 + time_since_accessed / 3600.0)
-
-            # Higher score = more relevant
-            -(Math.log(1 + access_frequency) * recency_factor)
-          }.map { |_, v| v.dup }
-        else
-          raise ArgumentError, "Unknown strategy: #{strategy}. Use :recent, :frequent, or :balanced"
-        end
-
-        # Build context up to token limit
         context_parts = []
         current_tokens = 0
-
         nodes.each do |node|
           break if current_tokens + node[:token_count] > max
           context_parts << node[:value]
@@ -262,6 +239,24 @@ class HTM
     end
 
     private
+
+    def sorted_nodes_by_strategy(strategy)
+      case strategy
+      when :recent
+        @access_order.reverse.map { |k| @nodes[k]&.dup }.compact
+      when :frequent
+        @nodes.sort_by { |_k, v| -(v[:access_count] || 0) }.map { |_, v| v.dup }
+      when :balanced
+        sorted = @nodes.sort_by do |_k, v|
+          freq = v[:access_count] || 0
+          age  = Time.now - (v[:last_accessed] || v[:added_at])
+          -(Math.log(1 + freq) * (1.0 / (1 + (age / 3600.0))))
+        end
+        sorted.map { |_, v| v.dup }
+      else
+        raise ArgumentError, "Unknown strategy: #{strategy}. Use :recent, :frequent, or :balanced"
+      end
+    end
 
     # Internal unlocked version - must be called within @mutex.synchronize
     def current_tokens_unlocked

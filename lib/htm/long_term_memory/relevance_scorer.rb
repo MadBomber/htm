@@ -58,21 +58,21 @@ class HTM
       def calculate_relevance(node:, query_tags: [], vector_similarity: nil, node_tags: nil)
         # 1. Vector similarity (semantic match)
         semantic_score = if vector_similarity
-          vector_similarity
-        elsif node['similarity']
-          node['similarity'].to_f
-        else
-          DEFAULT_NEUTRAL_SCORE  # Neutral if no embedding
-        end
+                           vector_similarity
+                         elsif node['similarity']
+                           node['similarity'].to_f
+                         else
+                           DEFAULT_NEUTRAL_SCORE  # Neutral if no embedding
+                         end
 
         # 2. Tag overlap (categorical relevance)
         # Use pre-loaded tags if provided, otherwise fetch (for backward compatibility)
         node_tags ||= get_node_tags(node['id'])
         tag_score = if query_tags.any? && node_tags.any?
-          weighted_hierarchical_jaccard(query_tags, node_tags)
-        else
-          DEFAULT_NEUTRAL_SCORE  # Neutral if no tags
-        end
+                      weighted_hierarchical_jaccard(query_tags, node_tags)
+                    else
+                      DEFAULT_NEUTRAL_SCORE  # Neutral if no tags
+                    end
 
         # 3. Recency (temporal relevance) - exponential decay with half-life
         age_hours = (Time.now - Time.parse(node['created_at'].to_s)) / 3600.0
@@ -108,16 +108,17 @@ class HTM
       def search_with_relevance(timeframe:, query: nil, query_tags: [], limit: 20, embedding_service: nil, metadata: {})
         # Get candidates from appropriate search method
         candidates = if query && embedding_service
-          # Vector search (returns hashes directly)
-          search_uncached(timeframe: timeframe, query: query, limit: limit * 2, embedding_service: embedding_service, metadata: metadata)
-        elsif query
-          # Full-text search (returns hashes directly)
-          search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 2, metadata: metadata)
-        else
-          # Time-range only - use raw SQL to avoid ORM object instantiation
-          # This is more efficient than .map(&:attributes) which creates intermediate objects
-          fetch_candidates_by_timeframe(timeframe: timeframe, metadata: metadata, limit: limit * 2)
-        end
+                       # Vector search (returns hashes directly)
+                       search_uncached(timeframe: timeframe, query: query, limit: limit * 2, embedding_service: embedding_service,
+                                       metadata: metadata)
+                     elsif query
+                       # Full-text search (returns hashes directly)
+                       search_fulltext_uncached(timeframe: timeframe, query: query, limit: limit * 2, metadata: metadata)
+                     else
+                       # Time-range only - use raw SQL to avoid ORM object instantiation
+                       # This is more efficient than .map(&:attributes) which creates intermediate objects
+                       fetch_candidates_by_timeframe(timeframe: timeframe, metadata: metadata, limit: limit * 2)
+                     end
 
         # Normalize similarity and text_rank to [0,1] across all candidates
         # before scoring so weighted sum is unbiased (ts_rank is unbounded,
@@ -188,61 +189,48 @@ class HTM
       def search_by_tags(tags:, match_all: false, timeframe: nil, limit: 20)
         return [] if tags.empty?
 
-        # Build base query with specific columns to avoid loading unnecessary data
-        query = HTM::Models::Node
-          .select(
-            Sequel[:nodes][:id],
-            Sequel[:nodes][:content],
-            Sequel[:nodes][:access_count],
-            Sequel[:nodes][:created_at],
-            Sequel[:nodes][:token_count]
-          )
-          .join(:node_tags, node_id: :id)
-          .join(:tags, id: Sequel[:node_tags][:tag_id])
-          .where(Sequel[:tags][:name] => tags)
-          .distinct
-
-        # Apply timeframe filter if provided
-        query = query.where(Sequel[:nodes][:created_at] => timeframe) if timeframe
-
-        if match_all
-          # Match ALL tags (intersection)
-          query = query
-            .group(Sequel[:nodes][:id])
-            .having { Sequel.function(:count, Sequel[:tags][:name].distinct) =~ tags.size }
-        end
-
-        # Fetch and convert to hashes with string keys
-        nodes = query.limit(limit).all.map do |row|
-          {
-            'id' => row[:id],
-            'content' => row[:content],
-            'access_count' => row[:access_count],
-            'created_at' => row[:created_at],
-            'token_count' => row[:token_count]
-          }
-        end
-
-        # Batch load all tags for nodes (fixes N+1 query)
-        node_ids = nodes.map { |n| n['id'] }
-        tags_by_node = batch_load_node_tags(node_ids)
-
-        # Calculate relevance and enrich with tags (modify in-place)
-        nodes.map do |node|
-          node_tags = tags_by_node[node['id']] || []
-          relevance = calculate_relevance(
-            node: node,
-            query_tags: tags,
-            node_tags: node_tags
-          )
-
-          node['relevance'] = relevance
-          node['tags'] = node_tags
-          node
-        end.sort_by { |n| -n['relevance'] }
+        nodes = fetch_nodes_by_tags(tags, match_all: match_all, timeframe: timeframe, limit: limit)
+        enrich_nodes_with_relevance(nodes, query_tags: tags)
       end
 
       private
+
+      def fetch_nodes_by_tags(tags, match_all:, timeframe:, limit:)
+        query = build_tag_base_query(tags, timeframe)
+        query = apply_match_all_constraint(query, tags) if match_all
+        query.limit(limit).all.map do |row|
+          { 'id' => row[:id], 'content' => row[:content],
+            'access_count' => row[:access_count], 'created_at' => row[:created_at], 'token_count' => row[:token_count] }
+        end
+      end
+
+      def build_tag_base_query(tags, timeframe)
+        cols  = [Sequel[:nodes][:id], Sequel[:nodes][:content], Sequel[:nodes][:access_count],
+                 Sequel[:nodes][:created_at], Sequel[:nodes][:token_count]]
+        query = HTM::Models::Node
+                .select(*cols)
+                .join(:node_tags, node_id: :id)
+                .join(:tags, id: Sequel[:node_tags][:tag_id])
+                .where(Sequel[:tags][:name] => tags)
+                .distinct
+        timeframe ? query.where(Sequel[:nodes][:created_at] => timeframe) : query
+      end
+
+      def apply_match_all_constraint(query, tags)
+        query.group(Sequel[:nodes][:id])
+             .having { Sequel.function(:count, Sequel[:tags][:name].distinct) =~ tags.size }
+      end
+
+      def enrich_nodes_with_relevance(nodes, query_tags:)
+        tags_by_node = batch_load_node_tags(nodes.map { |n| n['id'] })
+        enriched = nodes.map do |node|
+          node_tags = tags_by_node[node['id']] || []
+          node['relevance'] = calculate_relevance(node: node, query_tags: query_tags, node_tags: node_tags)
+          node['tags'] = node_tags
+          node
+        end
+        enriched.sort_by { |n| -n['relevance'] }
+      end
 
       # Calculate Jaccard similarity between two sets
       #
@@ -314,7 +302,7 @@ class HTM
           end
         end
 
-        total_weights > 0 ? total_weighted_similarity / total_weights : 0.0
+        total_weights.positive? ? total_weighted_similarity / total_weights : 0.0
       end
 
       # Calculate similarity between two pre-split hierarchical tags
@@ -374,11 +362,11 @@ class HTM
           candidates.each do |c|
             next unless c.key?(key) && c[key]
 
-            if range.zero?
-              c[key] = 1.0
-            else
-              c[key] = (c[key].to_f - min_val) / range
-            end
+            c[key] = if range.zero?
+                       1.0
+                     else
+                       (c[key].to_f - min_val) / range
+                     end
           end
         end
 

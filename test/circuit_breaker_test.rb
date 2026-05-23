@@ -151,11 +151,9 @@ class CircuitBreakerTest < Minitest::Test
     threads = 10.times.map do
       Thread.new do
         10.times do
-          begin
-            @breaker.call { rand > 0.5 ? "success" : raise("fail") }
-          rescue
-            # Ignore errors
-          end
+          @breaker.call { rand > 0.5 ? "success" : raise("fail") }
+        rescue
+          # Ignore errors
         end
       end
     end

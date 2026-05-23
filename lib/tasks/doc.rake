@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'English'
 namespace :htm do
   namespace :doc do
     desc "Build YARD API documentation (markdown format for MkDocs)"
@@ -13,7 +14,7 @@ namespace :htm do
       puts
 
       # Clean previous output
-      FileUtils.rm_rf(output_dir) if Dir.exist?(output_dir)
+      FileUtils.rm_rf(output_dir)
       FileUtils.mkdir_p(output_dir)
 
       # Build YARD documentation in markdown format
@@ -35,7 +36,7 @@ namespace :htm do
 
       system("yard doc #{options.join(' ')}")
 
-      if $?.success?
+      if $CHILD_STATUS.success?
         # Post-process markdown files for MkDocs compatibility
         fix_yard_anchors_for_mkdocs(output_dir)
 
@@ -71,7 +72,7 @@ namespace :htm do
 
         # Pattern 0: Fix malformed YARD output where code fence is joined with heading
         # "```## method_name() [](#anchor)" -> "```\n## method_name() {: #anchor }"
-        content.gsub!(%r{^(```)(\#{1,6}\s+.+?)\s*\[\]\(\#([^)]+)\)\s*$}) do
+        content.gsub!(/^(```)(\#{1,6}\s+.+?)\s*\[\]\(\#([^)]+)\)\s*$/) do
           fence = Regexp.last_match(1)
           heading = Regexp.last_match(2)
           anchor_id = Regexp.last_match(3)
@@ -82,7 +83,7 @@ namespace :htm do
         # Pattern 1: Heading with trailing anchor link
         # "## method_name() [](#anchor-id)" -> "## method_name() {: #anchor-id }"
         # Use %r{} to avoid # interpolation issues in regex
-        content.gsub!(%r{^(\#{1,6}\s+.+?)\s*\[\]\(\#([^)]+)\)\s*$}) do
+        content.gsub!(/^(\#{1,6}\s+.+?)\s*\[\]\(\#([^)]+)\)\s*$/) do
           heading = Regexp.last_match(1)
           anchor_id = Regexp.last_match(2)
           anchors_fixed += 1
@@ -91,7 +92,7 @@ namespace :htm do
 
         # Pattern 2: Attribute headings with [RW]/[R]/[W] markers
         # "## attr_name[RW] [](#attribute-i-attr_name)" -> "## attr_name [RW] {: #attribute-i-attr_name }"
-        content.gsub!(%r{^(\#{1,6}\s+\w+)\[([RW]+)\]\s*\[\]\(\#([^)]+)\)\s*$}) do
+        content.gsub!(/^(\#{1,6}\s+\w+)\[([RW]+)\]\s*\[\]\(\#([^)]+)\)\s*$/) do
           heading = Regexp.last_match(1)
           rw_marker = Regexp.last_match(2)
           anchor_id = Regexp.last_match(3)
@@ -103,7 +104,8 @@ namespace :htm do
         # "**@param**" -> "**`@param`**" (inline code prevents magiclink processing)
         # Common YARD tags: @param, @return, @raise, @yield, @yieldparam, @yieldreturn,
         #                   @option, @overload, @example, @see, @note, @todo, @deprecated
-        yard_tags = %w[param return raise yield yieldparam yieldreturn option overload example see note todo deprecated abstract api author since version private]
+        yard_tags = %w[param return raise yield yieldparam yieldreturn option overload example see note todo deprecated abstract api author
+                       since version private]
         yard_tags.each do |tag|
           # Match **@tag** and replace with **`@tag`**
           if content.gsub!(/\*\*@#{tag}\*\*/i, "**`@#{tag}`**")
@@ -117,10 +119,9 @@ namespace :htm do
         end
       end
 
-      if files_fixed > 0
-        puts "Fixed #{anchors_fixed} anchors in #{files_fixed} files for MkDocs compatibility"
-        puts "Escaped #{mentions_escaped} YARD annotations to prevent @mention linking" if mentions_escaped > 0
-      end
+      return unless files_fixed.positive?
+      puts "Fixed #{anchors_fixed} anchors in #{files_fixed} files for MkDocs compatibility"
+      puts "Escaped #{mentions_escaped} YARD annotations to prevent @mention linking" if mentions_escaped.positive?
     end
 
     def create_yard_index_page(yard_output_dir)
@@ -192,12 +193,12 @@ namespace :htm do
       classes = []
 
       # Check for markdown files in output directory
-      Dir.glob(File.join(yard_output_dir, "**/*.md")).sort.each do |file|
+      Dir.glob(File.join(yard_output_dir, "**/*.md")).each do |file|
         relative_path = file.sub("#{yard_output_dir}/", "")
         basename = File.basename(file, ".md")
 
         # Skip index files and non-class files
-        next if basename == "index" || basename == "_index"
+        next if %w[index _index].include?(basename)
         next if basename.start_with?("_")
 
         # Determine class name from path
@@ -224,7 +225,7 @@ namespace :htm do
 
         htm_dir = File.join(yard_output_dir, "HTM")
         if Dir.exist?(htm_dir)
-          Dir.glob(File.join(htm_dir, "*.html")).sort.each do |file|
+          Dir.glob(File.join(htm_dir, "*.html")).each do |file|
             basename = File.basename(file, ".html")
             next if basename.end_with?("Error")
             next if basename == "Railtie"

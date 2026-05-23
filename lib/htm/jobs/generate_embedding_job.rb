@@ -7,70 +7,54 @@ class HTM
   module Jobs
     # Background job to generate and store vector embeddings for nodes
     #
-    # This job is enqueued after a node is saved to avoid blocking the
-    # main request path. It generates embeddings asynchronously and updates
-    # the node record with the embedding vector.
-    #
     # @see ADR-016: Async Embedding and Tag Generation
     #
     class GenerateEmbeddingJob
       # Generate embedding for a node
       #
-      # Uses the configured embedding generator (HTM.embed) which delegates
-      # to the application-provided or default RubyLLM implementation.
-      #
       # @param node_id [Integer] ID of the node to process
       #
       def self.perform(node_id:)
-        node = HTM::Models::Node.first(id: node_id)
-
-        unless node
-          HTM.logger.warn "GenerateEmbeddingJob: Node #{node_id} not found"
-          return
-        end
-
-        # Skip if already has embedding
+        node = find_node(node_id) or return
         return if node.embedding
 
-        provider = HTM.configuration.embedding_provider.to_s
+        provider   = HTM.configuration.embedding_provider.to_s
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
         begin
-          # Generate and process embedding using EmbeddingService
           result = HTM::EmbeddingService.generate(node.content)
-
-          # Update node with processed embedding
           node.update(embedding: result[:storage_embedding])
-
-          # Record success metrics
-          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
-          HTM::Telemetry.embedding_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'success' })
-          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'embedding', 'status' => 'success' })
-
-          HTM.logger.info "GenerateEmbeddingJob: Successfully generated embedding for node #{node_id} (#{result[:dimension]} dimensions)"
-
-        rescue HTM::CircuitBreakerOpenError => e
-          # Circuit breaker is open - service is unavailable, will retry later
+          record_telemetry(provider, start_time, 'success', :embedding)
+          HTM.logger.info "GenerateEmbeddingJob: Generated embedding for node #{node_id} (#{result[:dimension]} dimensions)"
+        rescue HTM::CircuitBreakerOpenError
           HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'embedding', 'status' => 'circuit_open' })
-          HTM.logger.warn "GenerateEmbeddingJob: Circuit breaker open for node #{node_id}, will retry when service recovers"
-
+          HTM.logger.warn "GenerateEmbeddingJob: Circuit breaker open for node #{node_id}"
         rescue HTM::EmbeddingError => e
-          # Record failure metrics
-          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
-          HTM::Telemetry.embedding_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'error' })
-          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'embedding', 'status' => 'error' })
-
-          # Log embedding-specific errors
-          HTM.logger.error "GenerateEmbeddingJob: Embedding generation failed for node #{node_id}: #{e.message}"
-
+          record_telemetry(provider, start_time, 'error', :embedding)
+          HTM.logger.error "GenerateEmbeddingJob: Embedding failed for node #{node_id}: #{e.message}"
         rescue StandardError => e
-          # Record failure metrics
-          elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
-          HTM::Telemetry.embedding_latency.record(elapsed_ms, attributes: { 'provider' => provider, 'status' => 'error' })
-          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'embedding', 'status' => 'error' })
-
-          # Log unexpected errors
+          record_telemetry(provider, start_time, 'error', :embedding)
           HTM.logger.error "GenerateEmbeddingJob: Unexpected error for node #{node_id}: #{e.class.name} - #{e.message}"
+        end
+      end
+
+      class << self
+        private
+
+        def find_node(node_id)
+          node = HTM::Models::Node.first(id: node_id)
+          HTM.logger.warn "GenerateEmbeddingJob: Node #{node_id} not found" unless node
+          node
+        end
+
+        def elapsed_ms(start_time)
+          ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time) * 1000).round
+        end
+
+        def record_telemetry(provider, start_time, status, metric_type)
+          ms = elapsed_ms(start_time)
+          HTM::Telemetry.public_send(:"#{metric_type}_latency").record(ms, attributes: { 'provider' => provider, 'status' => status })
+          HTM::Telemetry.job_counter.add(1, attributes: { 'job' => metric_type.to_s, 'status' => status })
         end
       end
     end

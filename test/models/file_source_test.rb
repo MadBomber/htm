@@ -18,7 +18,7 @@ class FileSourceTest < Minitest::Test
     HTM::Models::FileSource.where(Sequel.like(:file_path, "%test_file_source%")).delete
 
     # Clean up any temp files created during tests
-    @temp_files&.each { |f| File.delete(f) if File.exist?(f) }
+    @temp_files&.each { |f| FileUtils.rm_f(f) }
   end
 
   # Helper to create a temp file that exists on disk
@@ -158,19 +158,19 @@ class FileSourceTest < Minitest::Test
   def test_frontmatter_tags_returns_tags_array
     source = HTM::Models::FileSource.create(
       file_path: '/tmp/test_file_source_fm_tags.md',
-      frontmatter: { 'tags' => ['ruby', 'testing'] }
+      frontmatter: { 'tags' => %w[ruby testing] }
     )
 
-    assert_equal ['ruby', 'testing'], source.frontmatter_tags
+    assert_equal %w[ruby testing], source.frontmatter_tags
   end
 
   def test_frontmatter_tags_handles_symbol_keys
     source = HTM::Models::FileSource.create(
       file_path: '/tmp/test_file_source_fm_sym.md',
-      frontmatter: { tags: ['symbol', 'keys'] }
+      frontmatter: { tags: %w[symbol keys] }
     )
 
-    assert_equal ['symbol', 'keys'], source.frontmatter_tags
+    assert_equal %w[symbol keys], source.frontmatter_tags
   end
 
   def test_title_returns_nil_when_no_frontmatter
@@ -209,5 +209,4 @@ class FileSourceTest < Minitest::Test
 
     assert_equal source.id, found.id
   end
-
 end

@@ -27,32 +27,28 @@ class HTM
       def validate_provider(name, value)
         return if value.nil?
 
-        unless SUPPORTED_PROVIDERS.include?(value)
-          raise_validation_error("#{name} must be one of: #{SUPPORTED_PROVIDERS.join(', ')} (got #{value.inspect})")
-        end
+        return if SUPPORTED_PROVIDERS.include?(value)
+        raise_validation_error("#{name} must be one of: #{SUPPORTED_PROVIDERS.join(', ')} (got #{value.inspect})")
       end
 
       def validate_job_backend
         return unless job_backend
 
-        unless SUPPORTED_JOB_BACKENDS.include?(job_backend)
-          raise_validation_error("job.backend must be one of: #{SUPPORTED_JOB_BACKENDS.join(', ')} (got #{job_backend.inspect})")
-        end
+        return if SUPPORTED_JOB_BACKENDS.include?(job_backend)
+        raise_validation_error("job.backend must be one of: #{SUPPORTED_JOB_BACKENDS.join(', ')} (got #{job_backend.inspect})")
       end
 
       def validate_week_start
-        unless SUPPORTED_WEEK_STARTS.include?(week_start)
-          raise_validation_error("week_start must be one of: #{SUPPORTED_WEEK_STARTS.join(', ')} (got #{week_start.inspect})")
-        end
+        return if SUPPORTED_WEEK_STARTS.include?(week_start)
+        raise_validation_error("week_start must be one of: #{SUPPORTED_WEEK_STARTS.join(', ')} (got #{week_start.inspect})")
       end
 
       def validate_relevance_weights
         total = relevance_semantic_weight + relevance_tag_weight +
                 relevance_recency_weight + relevance_access_weight
 
-        unless (0.99..1.01).cover?(total)
-          raise_validation_error("relevance weights must sum to 1.0 (got #{total})")
-        end
+        return if (0.99..1.01).cover?(total)
+        raise_validation_error("relevance weights must sum to 1.0 (got #{total})")
       end
 
       def validate_callables
@@ -68,15 +64,13 @@ class HTM
           raise HTM::ValidationError, "proposition_extractor must be callable"
         end
 
-        unless @token_counter.respond_to?(:call)
-          raise HTM::ValidationError, "token_counter must be callable"
-        end
+        return if @token_counter.respond_to?(:call)
+        raise HTM::ValidationError, "token_counter must be callable"
       end
 
       def validate_logger
-        unless @logger.respond_to?(:info) && @logger.respond_to?(:warn) && @logger.respond_to?(:error)
-          raise HTM::ValidationError, "logger must respond to :info, :warn, and :error"
-        end
+        return if @logger.respond_to?(:info) && @logger.respond_to?(:warn) && @logger.respond_to?(:error)
+        raise HTM::ValidationError, "logger must respond to :info, :warn, and :error"
       end
     end
   end

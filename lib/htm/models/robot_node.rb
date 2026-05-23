@@ -19,8 +19,8 @@ class HTM
       # Validations
       def validate
         super
-        validates_presence [:robot_id, :node_id]
-        validates_unique [:robot_id, :node_id], message: 'already linked to this node'
+        validates_presence %i[robot_id node_id]
+        validates_unique %i[robot_id node_id], message: 'already linked to this node'
       end
 
       # Dataset methods (scopes)

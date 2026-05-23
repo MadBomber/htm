@@ -24,7 +24,7 @@ class HTM
       # @return [Hash] { node_id:, is_new:, robot_node: }
       # @raise [ArgumentError] If metadata is not a Hash
       #
-      def add(content:, token_count: 0, robot_id:, embedding: nil, metadata: {})
+      def add(content:, robot_id:, token_count: 0, embedding: nil, metadata: {})
         # Validate metadata parameter
         unless metadata.is_a?(Hash)
           raise ArgumentError, "metadata must be a Hash, got #{metadata.class}"
@@ -169,7 +169,7 @@ class HTM
       # @return [Boolean] True if node exists
       #
       def exists?(node_id)
-        HTM::Models::Node.where(id: node_id).count > 0
+        HTM::Models::Node.where(id: node_id).any?
       end
 
       # Mark nodes as evicted from working memory

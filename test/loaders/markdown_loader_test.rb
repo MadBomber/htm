@@ -26,13 +26,12 @@ class MarkdownLoaderTest < Minitest::Test
     return unless database_available?
 
     # Clean up test file sources and associated nodes
-    if @temp_dir && Dir.exist?(@temp_dir)
-      HTM::Models::FileSource.where(Sequel.like(:file_path, "%#{@temp_dir}%")).each do |fs|
-        fs.nodes_dataset.update(source_id: nil)
-        fs.destroy
-      end
-      FileUtils.rm_rf(@temp_dir)
+    return unless @temp_dir && Dir.exist?(@temp_dir)
+    HTM::Models::FileSource.where(Sequel.like(:file_path, "%#{@temp_dir}%")).each do |fs|
+      fs.nodes_dataset.update(source_id: nil)
+      fs.destroy
     end
+    FileUtils.rm_rf(@temp_dir)
   end
 
   # Helper to create a test markdown file
@@ -94,7 +93,7 @@ class MarkdownLoaderTest < Minitest::Test
 
     assert_equal 'My Document', source.frontmatter['title']
     assert_equal 'Test Author', source.frontmatter['author']
-    assert_equal ['ruby', 'testing'], source.frontmatter['tags']
+    assert_equal %w[ruby testing], source.frontmatter['tags']
   end
 
   def test_load_file_prepends_frontmatter_to_first_chunk
@@ -223,7 +222,7 @@ class MarkdownLoaderTest < Minitest::Test
     nodes = @htm.nodes_from_file(path)
 
     assert nodes.size >= 1
-    assert nodes.all? { |n| n.is_a?(HTM::Models::Node) }
+    assert(nodes.all?(HTM::Models::Node))
   end
 
   def test_nodes_from_file_returns_empty_for_unknown_file

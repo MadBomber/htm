@@ -2,7 +2,6 @@
 
 require 'pg'
 require 'uri'
-require 'set'
 
 class HTM
   # Database setup and configuration for HTM
@@ -35,10 +34,9 @@ class HTM
         puts "HTM database schema created successfully"
 
         # Optionally dump schema
-        if dump_schema
-          puts ""
-          self.dump_schema(db_url)
-        end
+        return unless dump_schema
+        puts ""
+        self.dump_schema(db_url)
       end
 
       # Run pending database migrations
@@ -70,45 +68,12 @@ class HTM
         require 'sequel'
         require_relative 'sequel_config'
 
-        # Establish Sequel connection (don't load models - we just need the DB)
         HTM::SequelConfig.establish_connection!(load_models: false)
 
-        migrations_path = File.expand_path('../../db/migrate', __dir__)
+        available = load_available_migrations
+        applied   = load_applied_versions
 
-        # Get available migrations from files
-        available_migrations = Dir.glob(File.join(migrations_path, '*.rb')).map do |file|
-          {
-            version: File.basename(file).split('_').first.to_i,
-            name: File.basename(file, '.rb')
-          }
-        end.sort_by { |m| m[:version] }
-
-        # Get applied migrations from database
-        applied_versions = begin
-          HTM.db[:schema_migrations].select_map(:version).map(&:to_i)
-        rescue Sequel::DatabaseError
-          []
-        end
-
-        puts "\nMigration Status"
-        puts "=" * 100
-
-        if available_migrations.empty?
-          puts "No migration files found in db/migrate/"
-        else
-          available_migrations.each do |migration|
-            status = applied_versions.include?(migration[:version])
-            status_mark = status ? "[x]" : "[ ]"
-
-            puts "#{status_mark} #{migration[:name]}"
-          end
-        end
-
-        applied_count = applied_versions.length
-        pending_count = available_migrations.length - applied_count
-
-        puts "\nSummary: #{applied_count} applied, #{pending_count} pending"
-        puts "=" * 100
+        print_migration_status_table(available, applied)
       end
 
       # Drop all HTM tables (respects RAILS_ENV)
@@ -125,16 +90,14 @@ class HTM
 
         conn = PG.connect(config)
 
-        tables = ['nodes', 'node_tags', 'tags', 'robots', 'robot_nodes', 'file_sources', 'schema_migrations']
+        tables = %w[nodes node_tags tags robots robot_nodes file_sources schema_migrations]
 
         puts "Dropping HTM tables..."
         tables.each do |table|
-          begin
-            conn.exec("DROP TABLE IF EXISTS #{table} CASCADE")
-            puts "  Dropped #{table}"
-          rescue PG::Error => e
-            puts "  Error dropping #{table}: #{e.message}"
-          end
+          conn.exec("DROP TABLE IF EXISTS #{table} CASCADE")
+          puts "  Dropped #{table}"
+        rescue PG::Error => e
+          puts "  Error dropping #{table}: #{e.message}"
         end
 
         # Drop functions and triggers
@@ -264,7 +227,7 @@ class HTM
         ]
 
         require 'open3'
-        stdout, stderr, status = Open3.capture3(env, *cmd)
+        _, stderr, status = Open3.capture3(env, *cmd)
 
         unless status.success?
           puts "Error loading schema:"
@@ -281,60 +244,11 @@ class HTM
       # @return [void]
       #
       def generate_docs(db_url = nil)
-        unless system('which tbls > /dev/null 2>&1')
-          puts "Error: 'tbls' is not installed"
-          puts ""
-          puts "Install tbls:"
-          puts "  brew install k1LoW/tap/tbls"
-          puts "  # or"
-          puts "  go install github.com/k1LoW/tbls@latest"
-          puts ""
-          puts "See: https://github.com/k1LoW/tbls"
-          exit 1
-        end
-
-        project_root = File.expand_path('../..', __dir__)
-        tbls_config = File.join(project_root, '.tbls.yml')
-
-        unless File.exist?(tbls_config)
-          puts "Error: .tbls.yml not found at #{tbls_config}"
-          exit 1
-        end
-
-        dsn = db_url || ENV['HTM_DATABASE__URL']
-        raise "Database configuration not found. Set HTM_DATABASE__URL environment variable." unless dsn
-
-        unless dsn.include?('sslmode=')
-          separator = dsn.include?('?') ? '&' : '?'
-          dsn = "#{dsn}#{separator}sslmode=disable"
-        end
-
-        puts "Generating database documentation using #{tbls_config}..."
-
-        require 'open3'
-        cmd = ['tbls', 'doc', '--config', tbls_config, '--dsn', dsn, '--force']
-
-        stdout, stderr, status = Open3.capture3(*cmd)
-
-        unless status.success?
-          puts "Error generating documentation:"
-          puts stderr
-          puts stdout
-          exit 1
-        end
-
-        puts stdout if stdout && !stdout.empty?
-
-        doc_path = 'docs/database'
-        puts "Database documentation generated successfully"
-        puts ""
-        puts "Documentation files:"
-        puts "  #{doc_path}/README.md       - Main documentation"
-        puts "  #{doc_path}/schema.svg      - ER diagram"
-        puts "  #{doc_path}/*.md            - Individual table documentation"
-        puts ""
-        puts "View documentation:"
-        puts "  open #{doc_path}/README.md"
+        check_tbls_installed!
+        tbls_config = locate_tbls_config!
+        dsn         = build_tbls_dsn(db_url)
+        run_tbls_doc(tbls_config, dsn)
+        print_tbls_doc_success
       end
 
       # Show database info (respects RAILS_ENV)
@@ -347,44 +261,13 @@ class HTM
         raise "Database configuration not found" unless config
 
         conn = PG.connect(config)
-
         puts "\nHTM Database Information (#{HTM.env})"
         puts "=" * 80
-
-        puts "\nConnection:"
-        puts "  Environment: #{HTM.env}"
-        puts "  Host: #{config[:host]}"
-        puts "  Port: #{config[:port]}"
-        puts "  Database: #{config[:dbname]}"
-        puts "  User: #{config[:user]}"
-
-        version = conn.exec("SELECT version()").first['version']
-        puts "\nPostgreSQL Version:"
-        puts "  #{version.split(',').first}"
-
-        puts "\nExtensions:"
-        extensions = conn.exec("SELECT extname, extversion FROM pg_extension ORDER BY extname").to_a
-        extensions.each do |ext|
-          puts "  #{ext['extname']} (#{ext['extversion']})"
-        end
-
-        puts "\nHTM Tables:"
-        tables = ['nodes', 'node_tags', 'tags', 'robots', 'robot_nodes', 'file_sources', 'schema_migrations']
-        tables.each do |table|
-          begin
-            count = conn.exec("SELECT COUNT(*) FROM #{table}").first['count']
-            puts "  #{table}: #{count} rows"
-          rescue PG::UndefinedTable
-            puts "  #{table}: not created"
-          end
-        end
-
-        db_size = conn.exec(
-          "SELECT pg_size_pretty(pg_database_size($1)) AS size",
-          [config[:dbname]]
-        ).first['size']
-        puts "\nDatabase Size: #{db_size}"
-
+        print_connection_info(config)
+        print_pg_version(conn)
+        print_extensions_list(conn)
+        print_table_counts(conn)
+        print_db_size(conn, config[:dbname])
         conn.close
         puts "=" * 80
       end
@@ -399,20 +282,9 @@ class HTM
         return nil unless url
 
         uri = URI.parse(url)
-
-        unless uri.scheme&.match?(/\Apostgres(?:ql)?\z/i)
-          raise ArgumentError, "Invalid database URL scheme: #{uri.scheme}. Expected 'postgresql' or 'postgres'."
-        end
-
-        unless uri.host && !uri.host.empty?
-          raise ArgumentError, "Database URL must include a host"
-        end
+        validate_pg_uri!(uri)
 
         dbname = uri.path&.slice(1..-1)
-        if dbname.nil? || dbname.empty?
-          raise ArgumentError, "Database URL must include a database name (path segment)"
-        end
-
         params = URI.decode_www_form(uri.query || '').to_h
 
         {
@@ -437,9 +309,9 @@ class HTM
         {
           host: ENV['HTM_DATABASE__HOST'] || 'localhost',
           port: (ENV['HTM_DATABASE__PORT'] || 5432).to_i,
-          dbname: ENV['HTM_DATABASE__NAME'],
-          user: ENV['HTM_DATABASE__USER'],
-          password: ENV['HTM_DATABASE__PASSWORD'],
+          dbname: ENV.fetch('HTM_DATABASE__NAME', nil),
+          user: ENV.fetch('HTM_DATABASE__USER', nil),
+          password: ENV.fetch('HTM_DATABASE__PASSWORD', nil),
           sslmode: ENV['HTM_DATABASE__SSLMODE'] || 'prefer'
         }
       end
@@ -474,6 +346,65 @@ class HTM
 
       private
 
+      def print_connection_info(config)
+        puts "\nConnection:"
+        puts "  Environment: #{HTM.env}"
+        puts "  Host: #{config[:host]}"
+        puts "  Port: #{config[:port]}"
+        puts "  Database: #{config[:dbname]}"
+        puts "  User: #{config[:user]}"
+      end
+
+      def print_pg_version(conn)
+        version = conn.exec("SELECT version()").first['version']
+        puts "\nPostgreSQL Version:"
+        puts "  #{version.split(',').first}"
+      end
+
+      def print_extensions_list(conn)
+        puts "\nExtensions:"
+        conn.exec("SELECT extname, extversion FROM pg_extension ORDER BY extname").each do |ext|
+          puts "  #{ext['extname']} (#{ext['extversion']})"
+        end
+      end
+
+      def print_table_counts(conn)
+        puts "\nHTM Tables:"
+        %w[nodes node_tags tags robots robot_nodes file_sources schema_migrations].each do |table|
+          count = conn.exec("SELECT COUNT(*) FROM #{table}").first['count']
+          puts "  #{table}: #{count} rows"
+        rescue PG::UndefinedTable
+          puts "  #{table}: not created"
+        end
+      end
+
+      def print_db_size(conn, dbname)
+        size = conn.exec("SELECT pg_size_pretty(pg_database_size($1)) AS size", [dbname]).first['size']
+        puts "\nDatabase Size: #{size}"
+      end
+
+      def ensure_schema_migrations_table(db)
+        return if db.table_exists?(:schema_migrations)
+        db.create_table(:schema_migrations) { String :version, primary_key: true, null: false }
+      end
+
+      def run_migration_file(file, db)
+        version = File.basename(file).split('_').first
+        name    = File.basename(file, '.rb')
+
+        if db[:schema_migrations].where(version: version).any?
+          puts "  [x] #{name} (already migrated)"
+        else
+          puts "  --> Running #{name}..."
+          require file
+          class_name = name.split('_')[1..].map(&:capitalize).join
+          migration_class = Object.const_get(class_name)
+          migration_class.new(db).up
+          db[:schema_migrations].insert(version: version)
+          puts "      Completed"
+        end
+      end
+
       def verify_extensions(conn)
         # Check pgvector
         pgvector = conn.exec("SELECT extversion FROM pg_extension WHERE extname='vector'").first
@@ -506,54 +437,17 @@ class HTM
       #
       def run_sequel_migrations
         migrations_path = File.expand_path('../../db/migrate', __dir__)
-
         unless Dir.exist?(migrations_path)
           puts "No migrations directory found at #{migrations_path}"
           return
         end
 
         db = HTM.db
+        ensure_schema_migrations_table(db)
 
-        # Create schema_migrations table if it doesn't exist
-        unless db.table_exists?(:schema_migrations)
-          db.create_table(:schema_migrations) do
-            String :version, primary_key: true, null: false
-          end
-        end
-
-        # Get list of migration files
-        migration_files = Dir.glob("#{migrations_path}/*.rb").sort
+        migration_files = Dir.glob("#{migrations_path}/*.rb")
         puts "Found #{migration_files.length} migration files"
-
-        # Run each migration
-        migration_files.each do |file|
-          version = File.basename(file).split('_').first
-          name = File.basename(file, '.rb')
-
-          # Check if already run
-          already_run = db[:schema_migrations].where(version: version).count > 0
-
-          if already_run
-            puts "  [x] #{name} (already migrated)"
-          else
-            puts "  --> Running #{name}..."
-            require file
-
-            # Get the migration class
-            class_name = name.split('_')[1..].map(&:capitalize).join
-            migration_class = Object.const_get(class_name)
-
-            # Run the migration
-            migration = migration_class.new(db)
-            migration.up
-
-            # Record in schema_migrations
-            db[:schema_migrations].insert(version: version)
-
-            puts "      Completed"
-          end
-        end
-
+        migration_files.each { |file| run_migration_file(file, db) }
         puts "All migrations completed"
       end
 
@@ -576,11 +470,9 @@ class HTM
 
         lines.each do |line|
           if skip_until_content
-            if line =~ /^(SET|CREATE|ALTER|--\s*Name:|COMMENT)/
-              skip_until_content = false
-            else
-              next
-            end
+            next unless line =~ /^(SET|CREATE|ALTER|--\s*Name:|COMMENT)/
+            skip_until_content = false
+
           end
 
           next if line =~ /^SET /
@@ -594,6 +486,108 @@ class HTM
         result.gsub!(/\n{3,}/, "\n\n")
 
         result
+      end
+
+      def load_available_migrations
+        migrations_path = File.expand_path('../../db/migrate', __dir__)
+        migrations = Dir.glob(File.join(migrations_path, '*.rb')).map do |file|
+          { version: File.basename(file).split('_').first.to_i, name: File.basename(file, '.rb') }
+        end
+        migrations.sort_by { |m| m[:version] }
+      end
+
+      def load_applied_versions
+        HTM.db[:schema_migrations].select_map(:version).map(&:to_i)
+      rescue Sequel::DatabaseError
+        []
+      end
+
+      def print_migration_status_table(available, applied)
+        puts "\nMigration Status"
+        puts "=" * 100
+        if available.empty?
+          puts "No migration files found in db/migrate/"
+        else
+          available.each do |m|
+            mark = applied.include?(m[:version]) ? "[x]" : "[ ]"
+            puts "#{mark} #{m[:name]}"
+          end
+        end
+        pending = available.length - applied.length
+        puts "\nSummary: #{applied.length} applied, #{pending} pending"
+        puts "=" * 100
+      end
+
+      def check_tbls_installed!
+        return if system('which tbls > /dev/null 2>&1')
+
+        puts <<~MSG
+          Error: 'tbls' is not installed
+
+          Install tbls:
+            brew install k1LoW/tap/tbls
+            # or
+            go install github.com/k1LoW/tbls@latest
+
+          See: https://github.com/k1LoW/tbls
+        MSG
+        exit 1
+      end
+
+      def locate_tbls_config!
+        project_root = File.expand_path('../..', __dir__)
+        config_path  = File.join(project_root, '.tbls.yml')
+        return config_path if File.exist?(config_path)
+
+        puts "Error: .tbls.yml not found at #{config_path}"
+        exit 1
+      end
+
+      def build_tbls_dsn(db_url)
+        dsn = db_url || ENV.fetch('HTM_DATABASE__URL', nil)
+        raise "Database configuration not found. Set HTM_DATABASE__URL environment variable." unless dsn
+
+        return dsn if dsn.include?('sslmode=')
+
+        separator = dsn.include?('?') ? '&' : '?'
+        "#{dsn}#{separator}sslmode=disable"
+      end
+
+      def run_tbls_doc(tbls_config, dsn)
+        require 'open3'
+        puts "Generating database documentation using #{tbls_config}..."
+        stdout, stderr, status = Open3.capture3('tbls', 'doc', '--config', tbls_config, '--dsn', dsn, '--force')
+        return puts(stdout) if status.success? && stdout && !stdout.empty?
+
+        puts "Error generating documentation:"
+        puts stderr
+        puts stdout
+        exit 1
+      end
+
+      def print_tbls_doc_success
+        doc_path = 'docs/database'
+        puts <<~MSG
+          Database documentation generated successfully
+
+          Documentation files:
+            #{doc_path}/README.md       - Main documentation
+            #{doc_path}/schema.svg      - ER diagram
+            #{doc_path}/*.md            - Individual table documentation
+
+          View documentation:
+            open #{doc_path}/README.md
+        MSG
+      end
+
+      def validate_pg_uri!(uri)
+        unless uri.scheme&.match?(/\Apostgres(?:ql)?\z/i)
+          raise ArgumentError, "Invalid database URL scheme: #{uri.scheme}. Expected 'postgresql' or 'postgres'."
+        end
+        raise ArgumentError, "Database URL must include a host"    if uri.host.nil? || uri.host.empty?
+
+        dbname = uri.path&.slice(1..-1)
+        raise ArgumentError, "Database URL must include a database name (path segment)" if dbname.nil? || dbname.empty?
       end
     end
   end

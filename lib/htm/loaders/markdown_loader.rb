@@ -48,83 +48,28 @@ class HTM
       #   - :skipped [Boolean] True if file was unchanged and skipped
       #
       def load_file(path, force: false)
-        expanded_path = File.expand_path(path)
+        expanded_path = validate_file_path!(path)
+        content       = read_file_content(expanded_path, path)
+        stat          = File.stat(expanded_path)
+        file_hash     = Digest::SHA256.hexdigest(content)
 
-        unless File.exist?(expanded_path)
-          raise ArgumentError, "File not found: #{path}"
-        end
-
-        unless File.file?(expanded_path)
-          raise ArgumentError, "Not a file: #{path}"
-        end
-
-        # Validate file size before reading
-        file_size = File.size(expanded_path)
-        if file_size > MAX_FILE_SIZE
-          raise ArgumentError, "File too large: #{path} (#{file_size} bytes). Maximum size is #{MAX_FILE_SIZE} bytes (10 MB)."
-        end
-
-        # Read file with encoding detection and fallback
-        # Try UTF-8 first, then fall back to binary if encoding errors occur
-        begin
-          content = File.read(expanded_path, encoding: 'UTF-8')
-        rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
-          # Try reading as binary and force encoding to UTF-8, replacing invalid chars
-          content = File.read(expanded_path, encoding: 'BINARY')
-          content = content.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
-          HTM.logger.warn "File #{path} has non-UTF-8 encoding, some characters may be replaced"
-        end
-        stat = File.stat(expanded_path)
-        file_hash = Digest::SHA256.hexdigest(content)
-
-        # Find or create source record
         source = HTM::Models::FileSource.first(file_path: expanded_path)
         is_new = source.nil?
         source ||= HTM::Models::FileSource.new(file_path: expanded_path)
 
-        # Check if sync needed
         unless force || is_new || source.needs_sync?(stat.mtime)
-          return {
-            file_path: expanded_path,
-            chunks_created: 0,
-            chunks_updated: 0,
-            chunks_deleted: 0,
-            skipped: true
-          }
+          return { file_path: expanded_path, chunks_created: 0, chunks_updated: 0, chunks_deleted: 0, skipped: true }
         end
 
-        # Parse frontmatter and body
         frontmatter, body = extract_frontmatter(content)
-
-        # Chunk the body with metadata (includes cursor positions)
         chunks = @chunker.chunk_with_metadata(body)
+        prepend_frontmatter_to_chunk(frontmatter, chunks)
 
-        # Prepend frontmatter to first chunk if present
-        if frontmatter.any? && chunks.any?
-          frontmatter_yaml = YAML.dump(frontmatter).sub(/\A---\n/, "---\n")
-          chunks[0][:text] = "#{frontmatter_yaml}---\n\n#{chunks[0][:text]}"
-        end
-
-        # Save source first (need ID for node association)
         source.save if is_new
-
-        # Sync chunks to database (chunks now include cursor positions)
         result = sync_chunks(source, chunks)
-
-        # Update source record
-        source.update(
-          file_hash: file_hash,
-          mtime: stat.mtime,
-          file_size: stat.size,
-          frontmatter: frontmatter,
-          last_synced_at: Time.now
-        )
-
-        result.merge(
-          file_path: expanded_path,
-          file_source_id: source.id,
-          skipped: false
-        )
+        source.update(file_hash: file_hash, mtime: stat.mtime, file_size: stat.size,
+                      frontmatter: frontmatter, last_synced_at: Time.now)
+        result.merge(file_path: expanded_path, file_source_id: source.id, skipped: false)
       end
 
       # Load all matching files from a directory
@@ -148,15 +93,59 @@ class HTM
         files = Dir.glob(File.join(expanded_path, pattern))
 
         files.map do |file_path|
-          begin
-            load_file(file_path, force: force)
-          rescue StandardError => e
-            { file_path: file_path, error: e.message, skipped: false }
-          end
+          load_file(file_path, force: force)
+        rescue StandardError => e
+          { file_path: file_path, error: e.message, skipped: false }
         end
       end
 
       private
+
+      def validate_file_path!(path)
+        expanded = File.expand_path(path)
+        raise ArgumentError, "File not found: #{path}"   unless File.exist?(expanded)
+        raise ArgumentError, "Not a file: #{path}"       unless File.file?(expanded)
+        size = File.size(expanded)
+        if size > MAX_FILE_SIZE
+          raise ArgumentError, "File too large: #{path} (#{size} bytes). Maximum size is #{MAX_FILE_SIZE} bytes (10 MB)."
+        end
+        expanded
+      end
+
+      def read_file_content(expanded_path, path)
+        File.read(expanded_path, encoding: 'UTF-8')
+      rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
+        content = File.read(expanded_path, encoding: 'BINARY')
+        HTM.logger.warn "File #{path} has non-UTF-8 encoding, some characters may be replaced"
+        content.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
+      end
+
+      def prepend_frontmatter_to_chunk(frontmatter, chunks)
+        return unless frontmatter.any? && chunks.any?
+        frontmatter_yaml = YAML.dump(frontmatter).sub(/\A---\n/, "---\n")
+        chunks[0][:text] = "#{frontmatter_yaml}---\n\n#{chunks[0][:text]}"
+      end
+
+      def update_existing_chunk(node, position, chunk_cursor)
+        changes = {}
+        changes[:chunk_position] = position              if node.chunk_position != position
+        changes[:deleted_at]     = nil                   if node.deleted_at
+        current_cursor = node.metadata&.dig('cursor')
+        changes[:metadata] = (node.metadata || {}).merge('cursor' => chunk_cursor) if current_cursor != chunk_cursor
+        return false unless changes.any?
+        node.update(changes)
+        true
+      end
+
+      def soft_delete_removed_chunks(existing_by_hash, matched_hashes)
+        count = 0
+        existing_by_hash.each_value do |node|
+          next if matched_hashes.include?(node.content_hash) || node.deleted_at
+          node.soft_delete!
+          count += 1
+        end
+        count
+      end
 
       # Extract YAML frontmatter from content
       #
@@ -194,60 +183,24 @@ class HTM
       def sync_chunks(source, chunks)
         created = 0
         updated = 0
-        deleted = 0
+        existing_nodes   = source.id ? HTM::Models::Node.with_deleted.where(source_id: source.id).all : []
+        existing_by_hash = existing_nodes.to_h { |n| [n.content_hash, n] }
+        matched_hashes   = Set.new
 
-        # Get existing nodes for this source (include soft-deleted for potential restore)
-        existing_nodes = source.id ?
-          HTM::Models::Node.with_deleted.where(source_id: source.id).all : []
-        existing_by_hash = existing_nodes.each_with_object({}) { |n, h| h[n.content_hash] = n }
-
-        # Track which existing nodes we've matched
-        matched_hashes = Set.new
-
-        # Process each new chunk (chunks are now Hashes with :text and :cursor)
         chunks.each_with_index do |chunk_data, position|
           chunk_content = chunk_data[:text].strip
-          chunk_cursor = chunk_data[:cursor]
           next if chunk_content.empty?
 
           chunk_hash = HTM::Models::Node.generate_content_hash(chunk_content)
-
           if existing_by_hash[chunk_hash]
-            # Chunk exists - update position/cursor if needed, restore if soft-deleted
-            node = existing_by_hash[chunk_hash]
             matched_hashes << chunk_hash
-
-            changes = {}
-            changes[:chunk_position] = position if node.chunk_position != position
-            changes[:deleted_at] = nil if node.deleted_at
-
-            # Update cursor in metadata if changed
-            current_cursor = node.metadata&.dig('cursor')
-            if current_cursor != chunk_cursor
-              new_metadata = (node.metadata || {}).merge('cursor' => chunk_cursor)
-              changes[:metadata] = new_metadata
-            end
-
-            if changes.any?
-              node.update(changes)
-              updated += 1
-            end
-          else
-            # New chunk - create node with cursor in metadata
-            node = create_chunk_node(source, chunk_content, position, cursor: chunk_cursor)
-            created += 1 if node
+            updated += 1 if update_existing_chunk(existing_by_hash[chunk_hash], position, chunk_data[:cursor])
+          elsif create_chunk_node(source, chunk_content, position, cursor: chunk_data[:cursor])
+            created += 1
           end
         end
 
-        # Soft-delete chunks that no longer exist in file
-        existing_by_hash.each do |hash, node|
-          next if matched_hashes.include?(hash)
-          next if node.deleted_at  # Already deleted
-
-          node.soft_delete!
-          deleted += 1
-        end
-
+        deleted = soft_delete_removed_chunks(existing_by_hash, matched_hashes)
         { chunks_created: created, chunks_updated: updated, chunks_deleted: deleted }
       end
 

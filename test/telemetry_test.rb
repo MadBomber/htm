@@ -158,7 +158,7 @@ class TelemetryTest < Minitest::Test
 
   def test_telemetry_enabled_via_env_var
     # Save original
-    original_env = ENV['HTM_TELEMETRY_ENABLED']
+    original_env = ENV.fetch('HTM_TELEMETRY_ENABLED', nil)
 
     begin
       # Reset configuration to pick up env var
@@ -180,7 +180,7 @@ class TelemetryTest < Minitest::Test
 
   def test_telemetry_disabled_via_env_var
     # Save original
-    original_env = ENV['HTM_TELEMETRY_ENABLED']
+    original_env = ENV.fetch('HTM_TELEMETRY_ENABLED', nil)
 
     begin
       # Reset configuration to pick up env var

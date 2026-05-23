@@ -28,7 +28,7 @@ class CachingTest < Minitest::Test
         node_ids = HTM::Models::RobotNode.where(robot_id: robot.id).select_map(:node_id)
         HTM::Models::Node.where(id: node_ids).delete if node_ids.any?
       end
-    rescue => e
+    rescue
       # Ignore errors during cleanup
     end
   end
@@ -124,7 +124,7 @@ class CachingTest < Minitest::Test
 
     # Use a fixed timeframe Range (not a string that gets parsed dynamically)
     now = Time.now
-    timeframe = (now - 7 * 24 * 3600)..now
+    timeframe = (now - (7 * 24 * 3600))..now
     topic = "PostgreSQL"
 
     # First query: cache miss
@@ -187,7 +187,7 @@ class CachingTest < Minitest::Test
     initial_size = result1.length
 
     # Get initial cache stats
-    cache_stats1 = @htm.long_term_memory.stats[:cache]
+    @htm.long_term_memory.stats[:cache]
 
     # Add new node - should invalidate cache
     @htm.remember("new content to trigger cache invalidation")
@@ -205,7 +205,7 @@ class CachingTest < Minitest::Test
 
   def test_cache_invalidation_on_delete_node
     # Add nodes
-    node_id1 = @htm.remember("content to cache")
+    @htm.remember("content to cache")
     node_id2 = @htm.remember("content to delete")
 
     # Query and cache
@@ -295,9 +295,9 @@ class CachingTest < Minitest::Test
 
     # Use a fixed timeframe Range
     now = Time.now
-    timeframe = (now - 7 * 24 * 3600)..now
+    timeframe = (now - (7 * 24 * 3600))..now
 
-    strategies = [:vector, :fulltext, :hybrid]
+    strategies = %i[vector fulltext hybrid]
 
     strategies.each do |strategy|
       # First query: miss
@@ -354,7 +354,7 @@ class CachingTest < Minitest::Test
     cache_stats = @htm.long_term_memory.stats[:cache]
 
     # Cache should contain entries
-    assert cache_stats[:size] > 0
+    assert cache_stats[:size].positive?
     assert cache_stats[:size] <= 100  # Max cache size
   end
 end

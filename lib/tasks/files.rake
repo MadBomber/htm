@@ -12,7 +12,6 @@ namespace :htm do
   namespace :files do
     desc "Load a markdown file into long-term memory. Usage: rake htm:files:load[path/to/file.md]"
     task :load, [:path] do |_t, args|
-
       path = args[:path]
       unless path
         puts "Error: File path required."
@@ -31,7 +30,7 @@ namespace :htm do
       htm = HTM.new(robot_name: "FileLoader")
       force = ENV['FORCE'] == 'true'
 
-      puts "Loading file: #{path}#{force ? ' (force)' : ''}"
+      puts "Loading file: #{path}#{' (force)' if force}"
       result = htm.load_file(path, force: force)
 
       if result[:skipped]
@@ -48,7 +47,6 @@ namespace :htm do
 
     desc "Load all markdown files from a directory. Usage: rake htm:files:load_dir[path/to/dir]"
     task :load_dir, [:path, :pattern] do |_t, args|
-
       path = args[:path]
       unless path
         puts "Error: Directory path required."
@@ -70,7 +68,7 @@ namespace :htm do
       force = ENV['FORCE'] == 'true'
 
       puts "Loading files from: #{path}"
-      puts "Pattern: #{pattern}#{force ? ' (force)' : ''}"
+      puts "Pattern: #{pattern}#{' (force)' if force}"
       puts
 
       results = htm.load_directory(path, pattern: pattern, force: force)
@@ -102,7 +100,6 @@ namespace :htm do
 
     desc "List all loaded file sources"
     task :list do
-
       # Ensure database connection
       HTM::SequelConfig.establish_connection!
 
@@ -133,7 +130,6 @@ namespace :htm do
 
     desc "Show details for a loaded file. Usage: rake htm:files:info[path/to/file.md]"
     task :info, [:path] do |_t, args|
-
       path = args[:path]
       unless path
         puts "Error: File path required."
@@ -188,7 +184,6 @@ namespace :htm do
 
     desc "Unload a file from memory. Usage: rake htm:files:unload[path/to/file.md]"
     task :unload, [:path] do |_t, args|
-
       path = args[:path]
       unless path
         puts "Error: File path required."
@@ -211,14 +206,13 @@ namespace :htm do
 
     desc "Sync all loaded files (reload changed files)"
     task :sync do
-
       # Ensure database connection
       HTM::SequelConfig.establish_connection!
 
       htm = HTM.new(robot_name: "FileLoader")
       sources = HTM::Models::FileSource.all
 
-      if sources.count.zero?
+      if sources.none?
         puts "No files loaded."
         next
       end
@@ -257,7 +251,6 @@ namespace :htm do
 
     desc "Show file loading statistics"
     task :stats do
-
       # Ensure database connection
       HTM::SequelConfig.establish_connection!
 
@@ -281,9 +274,9 @@ namespace :htm do
       puts "  Total files loaded: #{total_sources}"
       puts "  Total chunks: #{total_chunks}"
       puts "  Files needing sync: #{needs_sync}"
-      puts "  Missing files: #{missing}" if missing > 0
+      puts "  Missing files: #{missing}" if missing.positive?
 
-      if total_sources > 0
+      if total_sources.positive?
         avg_chunks = (total_chunks.to_f / total_sources).round(1)
         puts "  Average chunks per file: #{avg_chunks}"
       end

@@ -13,7 +13,7 @@ class PropositionServiceTest < Minitest::Test
     # Configure HTM with mock proposition extractor for tests
     HTM.configure do |config|
       config.job.backend = :inline
-      config.proposition_extractor = ->(text) {
+      config.proposition_extractor = lambda { |text|
         # Simple mock that returns propositions based on content
         if text.to_s.downcase.include?("neil armstrong")
           [
@@ -58,7 +58,7 @@ class PropositionServiceTest < Minitest::Test
     # Configure to return empty array
     HTM.configure do |config|
       config.job.backend = :inline
-      config.proposition_extractor = ->(text) { [] }
+      config.proposition_extractor = ->(_text) { [] }
     end
 
     propositions = HTM::PropositionService.extract("Some random text")
@@ -70,9 +70,9 @@ class PropositionServiceTest < Minitest::Test
   # Tests for parse_propositions
   def test_parse_propositions_from_array
     result = HTM::PropositionService.parse_propositions([
-      "Neil Armstrong was an astronaut.",
-      "The Moon is Earth's only natural satellite."
-    ])
+                                                          "Neil Armstrong was an astronaut.",
+                                                          "The Moon is Earth's only natural satellite."
+                                                        ])
 
     assert_equal [
       "Neil Armstrong was an astronaut.",
@@ -115,9 +115,9 @@ class PropositionServiceTest < Minitest::Test
 
   def test_parse_propositions_strips_whitespace
     result = HTM::PropositionService.parse_propositions([
-      "  Neil Armstrong was an astronaut.  ",
-      "  The Moon is Earth's satellite.  "
-    ])
+                                                          "  Neil Armstrong was an astronaut.  ",
+                                                          "  The Moon is Earth's satellite.  "
+                                                        ])
 
     assert_equal [
       "Neil Armstrong was an astronaut.",
@@ -127,10 +127,10 @@ class PropositionServiceTest < Minitest::Test
 
   def test_parse_propositions_rejects_empty_strings
     result = HTM::PropositionService.parse_propositions([
-      "Neil Armstrong was an astronaut.",
-      "",
-      "The Moon is far away."
-    ])
+                                                          "Neil Armstrong was an astronaut.",
+                                                          "",
+                                                          "The Moon is far away."
+                                                        ])
 
     assert_equal [
       "Neil Armstrong was an astronaut.",
@@ -140,16 +140,16 @@ class PropositionServiceTest < Minitest::Test
 
   def test_parse_propositions_raises_on_invalid_type
     assert_raises(HTM::PropositionError) do
-      HTM::PropositionService.parse_propositions(12345)
+      HTM::PropositionService.parse_propositions(12_345)
     end
   end
 
   # Tests for validate_and_filter_propositions
   def test_validate_and_filter_propositions_accepts_valid
     result = HTM::PropositionService.validate_and_filter_propositions([
-      "Neil Armstrong was an astronaut.",
-      "The Apollo 11 mission occurred in 1969."
-    ])
+                                                                        "Neil Armstrong was an astronaut.",
+                                                                        "The Apollo 11 mission occurred in 1969."
+                                                                      ])
 
     assert_equal [
       "Neil Armstrong was an astronaut.",
@@ -159,28 +159,28 @@ class PropositionServiceTest < Minitest::Test
 
   def test_validate_and_filter_propositions_rejects_too_short
     result = HTM::PropositionService.validate_and_filter_propositions([
-      "Hi",  # Too short (< 10 chars)
-      "Neil Armstrong was an astronaut."
-    ])
+                                                                        "Hi",  # Too short (< 10 chars)
+                                                                        "Neil Armstrong was an astronaut."
+                                                                      ])
 
     assert_equal ["Neil Armstrong was an astronaut."], result
   end
 
   def test_validate_and_filter_propositions_rejects_no_content
     result = HTM::PropositionService.validate_and_filter_propositions([
-      "123 456 789",  # No alphabetic content
-      "Neil Armstrong was an astronaut."
-    ])
+                                                                        "123 456 789",  # No alphabetic content
+                                                                        "Neil Armstrong was an astronaut."
+                                                                      ])
 
     assert_equal ["Neil Armstrong was an astronaut."], result
   end
 
   def test_validate_and_filter_propositions_removes_duplicates
     result = HTM::PropositionService.validate_and_filter_propositions([
-      "Neil Armstrong was an astronaut.",
-      "Neil Armstrong was an astronaut.",
-      "The Moon is far away."
-    ])
+                                                                        "Neil Armstrong was an astronaut.",
+                                                                        "Neil Armstrong was an astronaut.",
+                                                                        "The Moon is far away."
+                                                                      ])
 
     assert_equal [
       "Neil Armstrong was an astronaut.",
@@ -234,7 +234,7 @@ class PropositionServiceTest < Minitest::Test
   def test_circuit_breaker_opens_after_failures
     HTM.configure do |config|
       config.job.backend = :inline
-      config.proposition_extractor = ->(_text) {
+      config.proposition_extractor = lambda { |_text|
         raise StandardError, "API unavailable"
       }
     end
@@ -255,7 +255,7 @@ class PropositionServiceTest < Minitest::Test
   def test_circuit_breaker_can_be_reset
     HTM.configure do |config|
       config.job.backend = :inline
-      config.proposition_extractor = ->(_text) {
+      config.proposition_extractor = lambda { |_text|
         raise StandardError, "API unavailable"
       }
     end
@@ -279,7 +279,7 @@ class PropositionServiceTest < Minitest::Test
   def test_extract_raises_proposition_error_for_invalid_response_type
     HTM.configure do |config|
       config.job.backend = :inline
-      config.proposition_extractor = ->(_text) { 12345 }
+      config.proposition_extractor = ->(_text) { 12_345 }
     end
 
     error = assert_raises(HTM::PropositionError) do

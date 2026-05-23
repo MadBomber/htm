@@ -86,7 +86,8 @@ class HTM
     # @example Disable caching
     #   ltm = LongTermMemory.new(config, cache_size: 0)
     #
-    def initialize(config, pool_size: nil, query_timeout: DEFAULT_QUERY_TIMEOUT, cache_size: DEFAULT_CACHE_SIZE, cache_ttl: DEFAULT_CACHE_TTL)
+    def initialize(config, pool_size: nil, query_timeout: DEFAULT_QUERY_TIMEOUT, cache_size: DEFAULT_CACHE_SIZE,
+                   cache_ttl: DEFAULT_CACHE_TTL)
       @config = config
       @query_timeout = query_timeout  # in milliseconds
 

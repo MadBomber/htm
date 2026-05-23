@@ -114,7 +114,7 @@ class WorkingMemoryChannelTest < Minitest::Test
     @channel = HTM::WorkingMemoryChannel.new(@group_name, @db_config)
     callback_called = false
 
-    @channel.on_change do |event, node_id, robot_id|
+    @channel.on_change do |_event, _node_id, _robot_id|
       callback_called = true
     end
 
@@ -162,7 +162,7 @@ class WorkingMemoryChannelTest < Minitest::Test
 
   def test_notifications_received_count_increments
     @channel = HTM::WorkingMemoryChannel.new(@group_name, @db_config)
-    @channel.on_change { }  # Empty callback
+    @channel.on_change {}  # Empty callback
 
     @channel.start_listening
     sleep 0.2
@@ -202,7 +202,7 @@ class WorkingMemoryChannelTest < Minitest::Test
     received_count = 0
     mutex = Mutex.new
 
-    @channel.on_change do |event, node_id, robot_id|
+    @channel.on_change do |_event, _node_id, _robot_id|
       mutex.synchronize { received_count += 1 }
     end
 
@@ -231,7 +231,6 @@ class WorkingMemoryChannelTest < Minitest::Test
     # This tests the internal error handling - the channel should continue
     # working even if it receives invalid JSON
     @channel = HTM::WorkingMemoryChannel.new(@group_name, @db_config)
-    error_raised = false
 
     @channel.on_change do |event, node_id, robot_id|
       # Should not be called for malformed JSON

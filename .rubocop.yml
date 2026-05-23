@@ -1,0 +1,184 @@
+AllCops:
+  NewCops: enable
+  SuggestExtensions: false
+  TargetRubyVersion: 4.0
+  Exclude:
+    - 'examples/**/*'
+    - 'vendor/**/*'
+    - 'db/**/*'
+    - 'scripts/**/*'
+
+# ── Style: disabled cops ───────────────────────────────────────────────────
+Style/StringLiterals:
+  Enabled: false
+
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+# Ruby 4.0 freezes string literals by default
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Style/TrivialAccessors:
+  Enabled: false
+
+Style/MultilineTernaryOperator:
+  Enabled: false
+
+Style/SafeNavigation:
+  Enabled: false
+
+Style/EmptyClassDefinition:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/RescueStandardError:
+  Enabled: false
+
+Style/OneClassPerFile:
+  Enabled: false
+
+Style/FormatString:
+  Enabled: false
+
+Style/StringConcatenation:
+  Enabled: false
+
+# ── Layout ─────────────────────────────────────────────────────────────────
+Layout/LineLength:
+  Max: 140
+  Exclude:
+    - 'lib/tasks/**/*'
+    - 'test/**/*'
+
+Layout/ExtraSpacing:
+  Enabled: false
+
+Layout/HashAlignment:
+  Enabled: false
+
+Layout/FirstHashElementIndentation:
+  Enabled: false
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+# ── Naming ─────────────────────────────────────────────────────────────────
+Naming/MethodParameterName:
+  Enabled: false
+
+Naming/VariableNumber:
+  Exclude:
+    - 'test/**/*'
+
+Naming/RescuedExceptionsVariableName:
+  Enabled: false
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+Naming/PredicatePrefix:
+  Enabled: false
+
+Naming/PredicateMethod:
+  AllowedMethods:
+    - soft_delete!
+    - restore!
+    - forget
+    - restore
+    - run
+    - update_existing_chunk
+    - verify_extensions!
+    - validate_database!
+  Exclude:
+    - 'test/**/*'
+
+# ── Lint ───────────────────────────────────────────────────────────────────
+Lint/EmptyBlock:
+  AllowedMethods:
+    - arguments
+  Exclude:
+    - 'test/**/*'
+    - 'lib/htm/mcp/**/*'
+
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - 'Rakefile'
+    - 'test/**/*'
+
+# ── Gemspec ────────────────────────────────────────────────────────────────
+Gemspec/DevelopmentDependencies:
+  EnforcedStyle: Gemfile
+
+Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Gemspec/OrderedDependencies:
+  Enabled: false
+
+# ── Metrics ────────────────────────────────────────────────────────────────
+Metrics/MethodLength:
+  Max: 35
+  CountAsOne:
+    - heredoc
+    - array
+    - hash
+  Exclude:
+    - 'test/**/*'
+    - 'lib/tasks/**/*'
+
+Metrics/AbcSize:
+  Max: 40
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ClassLength:
+  Max: 600
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ModuleLength:
+  Max: 450
+  Exclude:
+    - 'test/**/*'
+    - 'lib/tasks/**/*'
+
+Metrics/CyclomaticComplexity:
+  Max: 20
+  Exclude:
+    - 'test/**/*'
+
+Metrics/PerceivedComplexity:
+  Max: 20
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Metrics/BlockLength:
+  Exclude:
+    - 'Rakefile'
+    - '*.gemspec'
+    - 'test/**/*'
+    - 'lib/tasks/**/*'
+    - 'lib/htm/models/**/*'
+    - 'lib/htm/long_term_memory/**/*'
+
+Style/FormatStringToken:
+  Exclude:
+    - 'lib/tasks/**/*'

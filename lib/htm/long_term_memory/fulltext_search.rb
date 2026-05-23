@@ -35,7 +35,7 @@ class HTM
       #
       def search_fulltext(timeframe:, query:, limit:, metadata: {})
         # Enforce limit to prevent DoS
-        safe_limit = [[limit.to_i, 1].max, MAX_FULLTEXT_LIMIT].min
+        safe_limit = limit.to_i.clamp(1, MAX_FULLTEXT_LIMIT)
 
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         result = @cache.fetch(:fulltext, timeframe, query, safe_limit, metadata) do

@@ -15,8 +15,8 @@ class HTM
       # Validations
       def validate
         super
-        validates_presence [:node_id, :tag_id]
-        validates_unique [:node_id, :tag_id], message: "already associated with this node"
+        validates_presence %i[node_id tag_id]
+        validates_unique %i[node_id tag_id], message: "already associated with this node"
       end
 
       # Dataset methods (scopes)

@@ -99,11 +99,7 @@ class HTM
         storage_embedding: storage_string,
         storage_dimension: max_dim
       }
-
-    rescue HTM::CircuitBreakerOpenError
-      # Re-raise circuit breaker errors without wrapping
-      raise
-    rescue HTM::EmbeddingError
+    rescue HTM::CircuitBreakerOpenError, HTM::EmbeddingError
       raise
     rescue StandardError => e
       HTM.logger.error "EmbeddingService: Failed to generate embedding: #{e.message}"
@@ -124,14 +120,13 @@ class HTM
         raise HTM::EmbeddingError, "Embedding array is empty"
       end
 
-      unless embedding.all? { |v| v.is_a?(Numeric) }
+      unless embedding.all?(Numeric)
         raise HTM::EmbeddingError, "Embedding must contain only numeric values"
       end
 
       # Check for NaN or Infinity
-      if embedding.any? { |v| v.respond_to?(:nan?) && v.nan? || v.respond_to?(:infinite?) && v.infinite? }
-        raise HTM::EmbeddingError, "Embedding contains NaN or Infinity values"
-      end
+      return unless embedding.any? { |v| (v.respond_to?(:nan?) && v.nan?) || (v.respond_to?(:infinite?) && v.infinite?) }
+      raise HTM::EmbeddingError, "Embedding contains NaN or Infinity values"
     end
 
     # Pad embedding to max_dimension with zeros

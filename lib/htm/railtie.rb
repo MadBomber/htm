@@ -26,7 +26,7 @@ class HTM
     railtie_name :htm
 
     # Configure HTM before Rails initializers run
-    initializer "htm.configure" do |app|
+    initializer "htm.configure" do |_app|
       HTM.configure do |config|
         # Use Rails logger
         config.logger = Rails.logger
@@ -66,6 +66,5 @@ class HTM
         end
       end
     end
-
   end
 end

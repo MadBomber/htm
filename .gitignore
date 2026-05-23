@@ -1,4 +1,5 @@
 .aigcm_msg
+Gemfile.lock
 *.gem
 *.rbc
 /.config

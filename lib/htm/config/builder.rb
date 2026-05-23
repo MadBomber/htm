@@ -31,7 +31,7 @@ class HTM
           response = RubyLLM.embed(text, model: model)
           embedding = extract_embedding_from_response(response)
 
-          unless embedding.is_a?(Array) && embedding.all? { |v| v.is_a?(Numeric) }
+          unless embedding.is_a?(Array) && embedding.all?(Numeric)
             raise HTM::EmbeddingError, "Invalid embedding response format from #{embedding_provider}"
           end
 
@@ -119,17 +119,17 @@ class HTM
 
       def parse_tag_response(text)
         tags = text.to_s.split("\n").map(&:strip).reject(&:empty?)
-        valid_tags = tags.select { |tag| tag =~ /^[a-z0-9\-]+(:[a-z0-9\-]+)*$/ }
+        valid_tags = tags.grep(/^[a-z0-9-]+(:[a-z0-9-]+)*$/)
         valid_tags.select { |tag| tag.count(':') < max_tag_depth }
       end
 
       def parse_proposition_response(text)
         text.to_s
-          .split("\n")
-          .map(&:strip)
-          .map { |line| line.sub(/^[-*]\s*/, '') }
-          .map(&:strip)
-          .reject(&:empty?)
+            .split("\n")
+            .map(&:strip)
+            .map { |line| line.sub(/^[-*]\s*/, '') }
+            .map(&:strip)
+            .reject(&:empty?)
       end
 
       # ==========================================================================
@@ -138,11 +138,11 @@ class HTM
 
       def build_tag_extraction_prompt(text, existing_ontology)
         taxonomy_context = if existing_ontology.any?
-          sample_tags = existing_ontology.sample([existing_ontology.size, 20].min)
-          tag.taxonomy_context_existing % { sample_tags: sample_tags.join(', ') }
-        else
-          tag.taxonomy_context_empty
-        end
+                             sample_tags = existing_ontology.sample([existing_ontology.size, 20].min)
+                             tag.taxonomy_context_existing % { sample_tags: sample_tags.join(', ') }
+                           else
+                             tag.taxonomy_context_empty
+                           end
 
         tag.user_prompt_template % {
           text: text,
