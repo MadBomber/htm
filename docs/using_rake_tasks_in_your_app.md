@@ -66,10 +66,10 @@ Create a `.envrc` file in your application's root:
 export HTM_DATABASE__URL="postgresql://user:password@host:port/dbname?sslmode=require"
 
 # Or use individual parameters
-export HTM_DATABASE__HOST="your-host.tsdb.cloud.timescale.com"
-export HTM_DATABASE__PORT="37807"
-export HTM_DATABASE__NAME="tsdb"
-export HTM_DATABASE__USER="tsdbadmin"
+export HTM_DATABASE__HOST="your-db-host.example.com"
+export HTM_DATABASE__PORT="5432"
+export HTM_DATABASE__NAME="htm_production"
+export HTM_DATABASE__USER="postgres"
 export HTM_DATABASE__PASSWORD="your_password"
 
 # Embedding configuration
@@ -277,7 +277,7 @@ jobs:
 
     services:
       postgres:
-        image: timescale/timescaledb-ha:pg17
+        image: pgvector/pgvector:pg17
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
@@ -323,7 +323,7 @@ services:
     command: bash -c "rake htm:db:setup && rake app:start"
 
   db:
-    image: timescale/timescaledb-ha:pg17
+    image: pgvector/pgvector:pg17
     environment:
       - POSTGRES_PASSWORD=postgres
 ```

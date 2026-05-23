@@ -188,7 +188,7 @@ def remember(content, tags: [])
   content_hash = Digest::SHA256.hexdigest(content)
 
   # 2. Check if node with same hash exists
-  existing_node = HTM::Models::Node.find_by(content_hash: content_hash)
+  existing_node = HTM::Models::Node.first(content_hash: content_hash)
 
   if existing_node
     # 3a. Link robot to existing node (or update remember_count)

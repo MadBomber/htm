@@ -252,11 +252,11 @@ git commit -m "wip"
 For more complex changes, include a body:
 
 ```bash
-git commit -m "feat: add compression policy for old memories
+git commit -m "feat: add partial index for active memories
 
-Implements automatic compression for memories older than 30 days
-using TimescaleDB compression policies. This reduces storage costs
-and improves query performance for recent data.
+Implements partial index for active (non-deleted) memories to improve
+query performance. This reduces index size and speeds up reads.
+
 
 - Adds compress_old_memories rake task
 - Updates schema with compression settings
@@ -672,7 +672,7 @@ HTM's hybrid search combines vector similarity search with full-text search for 
 
 ```ruby
 memories = htm.recall(
-  topic: "database decisions",
+  "database decisions",
   strategy: :hybrid,
   timeframe: "last week"
 )

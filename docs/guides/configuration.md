@@ -207,18 +207,18 @@ HTM_PROPOSITION__MODEL=gpt-4o-mini
 
 ### Chunking Configuration
 
-Access: `HTM.config.chunking.size`, `HTM.config.chunking.overlap`
+Access: `HTM.config.chunking.chunk_size`, `HTM.config.chunking.chunk_overlap`
 
 ```yaml
 chunking:
-  size: 1024                # Characters per chunk
-  overlap: 64               # Overlap between chunks
+  chunk_size: 1024          # Characters per chunk
+  chunk_overlap: 64         # Overlap between chunks
 ```
 
 **Environment variables:**
 ```bash
-HTM_CHUNKING__SIZE=512
-HTM_CHUNKING__OVERLAP=50
+HTM_CHUNKING__CHUNK_SIZE=512
+HTM_CHUNKING__CHUNK_OVERLAP=50
 ```
 
 ### Job Backend Configuration

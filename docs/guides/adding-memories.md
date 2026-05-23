@@ -266,7 +266,7 @@ Each robot-node relationship is tracked in `robot_nodes`:
 
 ```ruby
 # Check how many times a robot has "remembered" content
-rn = HTM::Models::RobotNode.find_by(robot_id: htm.robot_id, node_id: node_id)
+rn = HTM::Models::RobotNode.first(robot_id: htm.robot_id, node_id: node_id)
 rn.remember_count      # => 3 (remembered 3 times)
 rn.first_remembered_at # => When first encountered
 rn.last_remembered_at  # => When last tried to remember

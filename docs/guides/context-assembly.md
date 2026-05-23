@@ -52,10 +52,10 @@ Context assembly transforms working memory into LLM-ready context:
   <text x="350" y="120" class="text-label">:recent</text>
   <text x="550" y="120" text-anchor="end" class="text-small">Sort by access time</text>
 
-  <!-- Strategy 2: Important -->
+  <!-- Strategy 2: Frequent -->
   <rect x="340" y="145" width="220" height="35" fill="rgba(76, 175, 80, 0.3)" rx="3"/>
-  <text x="350" y="165" class="text-label">:important</text>
-  <text x="550" y="165" text-anchor="end" class="text-small">Sort by importance</text>
+  <text x="350" y="165" class="text-label">:frequent</text>
+  <text x="550" y="165" text-anchor="end" class="text-small">Sort by access count</text>
 
   <!-- Strategy 3: Balanced -->
   <rect x="340" y="190" width="220" height="35" fill="rgba(76, 175, 80, 0.3)" rx="3"/>
@@ -70,7 +70,7 @@ Context assembly transforms working memory into LLM-ready context:
   <text x="750" y="105" text-anchor="middle" class="text-small">(Ordered)</text>
 
   <text x="660" y="135" class="text-label">Node 3</text>
-  <text x="840" y="135" text-anchor="end" class="text-small">(important)</text>
+  <text x="840" y="135" text-anchor="end" class="text-small">(frequent)</text>
   <text x="660" y="155" class="text-label">Node 1</text>
   <text x="840" y="155" text-anchor="end" class="text-small">(recent)</text>
   <text x="660" y="175" class="text-label">Node 5</text>

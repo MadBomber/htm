@@ -189,20 +189,13 @@ end
 
 ```ruby
 # User having back-and-forth coding conversation
-context = htm.create_context(strategy: :recent, max_tokens: 8000)
+context = htm.working_memory.assemble_context(strategy: :recent, max_tokens: 8000)
 # Recent messages prioritized for coherent conversation flow
 ```
 
-#### 2. Important (`:important`)
+#### 2. Frequent (`:frequent`)
 
-Sort by importance score, highest first.
-
-```ruby
-def assemble_context(strategy: :important, max_tokens: nil)
-  nodes = @nodes.sort_by { |k, v| -v[:importance] }.map(&:last)
-  build_context(nodes, max_tokens || @max_tokens)
-end
-```
+Sort by access count, most accessed first.
 
 **Best For:**
 
@@ -215,8 +208,8 @@ end
 
 ```ruby
 # LLM helping with architectural review
-context = htm.create_context(strategy: :important)
-# Critical decisions and facts prioritized over recent chat
+context = htm.working_memory.assemble_context(strategy: :frequent)
+# Most frequently accessed decisions and facts prioritized
 ```
 
 #### 3. Balanced (`:balanced`) - **Recommended Default**
@@ -252,7 +245,7 @@ end
 
 ```ruby
 # Code helper assisting with debugging and design
-context = htm.create_context(strategy: :balanced)
+context = htm.working_memory.assemble_context(strategy: :balanced)
 # Recent debugging context + important architectural decisions
 ```
 
@@ -287,7 +280,7 @@ Long-term memory provides unlimited, durable storage for all memories with advan
 |--------|---------|
 | **Purpose** | Permanent knowledge base |
 | **Capacity** | Effectively unlimited |
-| **Storage** | PostgreSQL 16+ with TimescaleDB |
+| **Storage** | PostgreSQL 16+ with pgvector and pg_trgm |
 | **Access Pattern** | RAG-based retrieval (semantic + temporal) |
 | **Retention** | Permanent (explicit deletion only) |
 | **Lifetime** | Forever (survives process restarts) |
@@ -298,16 +291,16 @@ Long-term memory provides unlimited, durable storage for all memories with advan
 ```sql
 CREATE TABLE nodes (
   id BIGSERIAL PRIMARY KEY,
-  key TEXT UNIQUE NOT NULL,
-  value TEXT NOT NULL,
+  content TEXT NOT NULL,
+  content_hash TEXT UNIQUE,
   type TEXT,
-  importance REAL DEFAULT 1.0,
   token_count INTEGER,
-  in_working_memory BOOLEAN DEFAULT FALSE,
-  robot_id TEXT NOT NULL REFERENCES robots(id),
-  embedding vector(1536),
+  metadata JSONB DEFAULT '{}',
+  source_id BIGINT REFERENCES file_sources(id),
+  embedding vector(3072),
+  deleted_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  ...
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- HNSW index for vector similarity
@@ -316,58 +309,44 @@ CREATE INDEX idx_nodes_embedding ON nodes
   WITH (m = 16, ef_construction = 64);
 
 -- Full-text search
-CREATE INDEX idx_nodes_value_gin ON nodes
-  USING gin(to_tsvector('english', value));
+CREATE INDEX idx_nodes_content_gin ON nodes
+  USING gin(to_tsvector('english', content));
 ```
 
-### Why PostgreSQL + TimescaleDB?
+### Why PostgreSQL?
 
 **PostgreSQL provides:**
 
 - ACID guarantees for data integrity
 - Rich ecosystem and tooling
 - pgvector for vector similarity search
-- Full-text search with GIN indexes
+- Full-text search with GIN indexes and pg_trgm for fuzzy matching
+- Soft delete support via `deleted_at` column
+- JSONB metadata with GIN index for flexible filtering
 - Mature, production-proven
 
-**TimescaleDB adds:**
-
-- Hypertable partitioning by time
-- Automatic compression (70-90% reduction)
-- Time-range query optimization
-- Retention policies for data lifecycle
-
 !!! info "Related ADR"
-    See [ADR-001: Use PostgreSQL with TimescaleDB for Storage](../architecture/adrs/001-postgresql-timescaledb.md) for complete rationale.
+    See [ADR-001: Use PostgreSQL for Storage](../architecture/adrs/001-postgresql-timescaledb.md) for complete rationale.
 
 ### Long-Term Memory Operations
 
 #### Add Node
 
 ```ruby
-def add(key:, value:, embedding:, importance:, token_count:, robot_id:, type: nil)
-  result = @db.exec_params(<<~SQL, [key, value, type, importance, token_count, robot_id, embedding])
-    INSERT INTO nodes (key, value, type, importance, token_count, robot_id, embedding, in_working_memory)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)
-    RETURNING id
-  SQL
-
-  result[0]['id'].to_i
-end
+# High-level API (recommended)
+node_id = htm.remember("PostgreSQL is great for vector search",
+                       type: :fact,
+                       tags: ["database:postgresql"],
+                       metadata: { source: "docs" })
 ```
 
 **Time Complexity:** O(log n) with B-tree and HNSW indexes
 
-#### Retrieve by Key
+#### Retrieve by ID
 
 ```ruby
-def retrieve(key)
-  result = @db.exec_params(<<~SQL, [key])
-    SELECT * FROM nodes WHERE key = $1
-  SQL
-
-  result.first
-end
+# Direct model lookup
+node = HTM::Models::Node.first(id: node_id)
 ```
 
 **Time Complexity:** O(1) with unique index on key
@@ -447,7 +426,7 @@ Pure semantic similarity using cosine distance between embeddings.
 ```ruby
 # Query: "database optimization"
 # Finds: "PostgreSQL index tuning", "query performance", "EXPLAIN ANALYZE"
-memories = htm.recall(timeframe: "last month", topic: "database optimization", strategy: :vector)
+memories = htm.recall("database optimization", timeframe: "last month", strategy: :vector)
 ```
 
 ##### 2. Full-Text Search (`:fulltext`)
@@ -466,7 +445,7 @@ Keyword-based matching using PostgreSQL GIN indexes.
 ```ruby
 # Query: "TimescaleDB compression"
 # Finds exact matches for "TimescaleDB" and "compression"
-memories = htm.recall(timeframe: "last week", topic: "TimescaleDB compression", strategy: :fulltext)
+memories = htm.recall("TimescaleDB compression", timeframe: "last week", strategy: :fulltext)
 ```
 
 ##### 3. Hybrid Search (`:hybrid`) - **Recommended**
@@ -483,7 +462,7 @@ Combines vector and full-text with RRF scoring.
 
 ```ruby
 # Combines semantic similarity AND keyword matching
-memories = htm.recall(timeframe: "last month", topic: "PostgreSQL performance", strategy: :hybrid)
+memories = htm.recall("PostgreSQL performance", timeframe: "last month", strategy: :hybrid)
 ```
 
 ### Performance Characteristics
@@ -499,11 +478,11 @@ memories = htm.recall(timeframe: "last month", topic: "PostgreSQL performance", 
 
 **Storage Efficiency:**
 
-With TimescaleDB compression (after 30 days):
+With PostgreSQL TOAST compression:
 
-- Text node: ~1KB → ~200 bytes (80% reduction)
-- Node with embedding: ~7KB → ~1-2KB (70-85% reduction)
-- 100,000 nodes: ~700MB → ~100-200MB
+- Text node: ~1KB (minimal overhead)
+- Node with embedding: ~7KB (1536-dim float32 vector)
+- 100,000 nodes: ~700MB typical storage
 
 ## Memory Flow: Add → Evict → Recall
 
@@ -524,7 +503,7 @@ htm.memory_stats[:working_memory]
 # }
 
 # Add large memory
-htm.add_node("large_doc", large_documentation, importance: 7.0)
+htm.remember(large_documentation)
 
 # HTM automatically:
 # 1. Generates embedding (Ollama: ~50ms)
@@ -545,8 +524,8 @@ htm.memory_stats[:working_memory]
 # }
 
 # Evicted nodes still in long-term memory!
-evicted_node = htm.retrieve("old_debug_log")  # Still works
-# => { "key" => "old_debug_log", "in_working_memory" => false, ... }
+# Retrieve via recall with the original content
+evicted_results = htm.recall("old_debug_log", strategy: :fulltext)  # Still works
 ```
 
 ## Context Assembly Strategies in Detail
@@ -556,8 +535,8 @@ evicted_node = htm.retrieve("old_debug_log")  # Still works
 | Strategy | Sort Key | Best Use Case | Typical Output |
 |----------|----------|---------------|----------------|
 | **Recent** | Access order (newest first) | Conversations, debugging | Recent 5-10 messages |
-| **Important** | Importance score (highest first) | Planning, decisions | Top 10 most important facts |
-| **Balanced** | `importance / (1 + hours)` | General assistant | Mix of recent + important |
+| **Frequent** | Access count (highest first) | Planning, decisions | Top 10 most accessed facts |
+| **Balanced** | `importance / (1 + hours)` | General assistant | Mix of recent + frequent |
 
 ### Code Examples
 
@@ -565,7 +544,7 @@ evicted_node = htm.retrieve("old_debug_log")  # Still works
 
 ```ruby
 # Assemble context from most recent memories
-context = htm.create_context(strategy: :recent, max_tokens: 8000)
+context = htm.working_memory.assemble_context(strategy: :recent, max_tokens: 8000)
 
 # Typical output (recent conversation):
 # """
@@ -577,17 +556,17 @@ context = htm.create_context(strategy: :recent, max_tokens: 8000)
 # """
 ```
 
-#### Important Strategy
+#### Frequent Strategy
 
 ```ruby
-# Assemble context from most important memories
-context = htm.create_context(strategy: :important, max_tokens: 4000)
+# Assemble context from most frequently accessed memories
+context = htm.working_memory.assemble_context(strategy: :frequent, max_tokens: 4000)
 
 # Typical output (critical facts):
 # """
-# Decision: Use PostgreSQL with TimescaleDB for storage (importance: 10.0)
-# User preference: Always use debug_me over puts (importance: 9.0)
-# Architecture: Two-tier memory system (importance: 9.0)
+# Decision: Use PostgreSQL for storage (accessed 10 times)
+# User preference: Always use debug_me over puts (accessed 8 times)
+# Architecture: Two-tier memory system (accessed 7 times)
 # ...
 # """
 ```
@@ -596,13 +575,13 @@ context = htm.create_context(strategy: :important, max_tokens: 4000)
 
 ```ruby
 # Assemble context with time decay
-context = htm.create_context(strategy: :balanced)
+context = htm.working_memory.assemble_context(strategy: :balanced)
 
 # Typical output (hybrid):
 # """
-# Recent debugging: ValueError in embedding service (importance: 7.0, 10 min ago) [score: 42.0]
-# Critical decision: PostgreSQL chosen (importance: 10.0, 3 days ago) [score: 0.14]
-# Current task: Implementing RAG search (importance: 6.0, 1 hour ago) [score: 3.0]
+# Recent debugging: ValueError in embedding service (10 min ago)
+# Current task: Implementing RAG search (1 hour ago)
+# Critical decision: PostgreSQL chosen (accessed 10 times, 3 days ago)
 # ...
 # """
 ```
@@ -624,55 +603,54 @@ htm = HTM.new(working_memory_size: 128_000)  # Default
 #### 2. Adjust Importance Scores
 
 ```ruby
-# High importance for critical information
-htm.add_node("user_preference", "User prefers Vim keybindings", importance: 9.0)
+# Store critical information
+htm.remember("User prefers Vim keybindings", metadata: { priority: "high" })
 
-# Low importance for transient information
-htm.add_node("debug_log", "Temporary debug output", importance: 1.0)
+# Store transient information
+htm.remember("Temporary debug output", metadata: { category: "debug" })
 
-# Medium importance for general context
-htm.add_node("discussion", "Discussed API design patterns", importance: 5.0)
+# Store general context
+htm.remember("Discussed API design patterns")
 ```
 
 #### 3. Use Appropriate Context Strategy
 
 ```ruby
 # For chat: recent strategy
-chat_context = htm.create_context(strategy: :recent, max_tokens: 8000)
+chat_context = htm.working_memory.assemble_context(strategy: :recent, max_tokens: 8000)
 
-# For planning: important strategy
-planning_context = htm.create_context(strategy: :important, max_tokens: 4000)
+# For planning: frequent strategy
+planning_context = htm.working_memory.assemble_context(strategy: :frequent, max_tokens: 4000)
 
 # For general: balanced strategy (default)
-general_context = htm.create_context(strategy: :balanced)
+general_context = htm.working_memory.assemble_context(strategy: :balanced)
 ```
 
 ### Long-Term Memory Optimization
 
-#### 1. Leverage TimescaleDB Compression
+#### 1. Leverage PostgreSQL Partitioning
 
 ```sql
--- Enable compression after 30 days
-SELECT add_compression_policy('nodes', INTERVAL '30 days');
+-- Create a partial index for active (non-deleted) nodes
+CREATE INDEX CONCURRENTLY idx_nodes_active
+  ON nodes (created_at DESC)
+  WHERE deleted_at IS NULL;
 
--- Compress by robot_id and type for better ratio
-ALTER TABLE nodes SET (
-  timescaledb.compress,
-  timescaledb.compress_segmentby = 'robot_id,type'
-);
+-- Periodically VACUUM to reclaim space from soft-deleted rows
+VACUUM ANALYZE nodes;
 ```
 
 #### 2. Use Appropriate Search Strategy
 
 ```ruby
 # For exact matches: full-text
-exact_matches = htm.recall(timeframe: "last week", topic: "PostgreSQL", strategy: :fulltext)
+exact_matches = htm.recall("PostgreSQL", timeframe: "last week", strategy: :fulltext)
 
 # For semantic similarity: vector
-similar_concepts = htm.recall(timeframe: "last month", topic: "database performance", strategy: :vector)
+similar_concepts = htm.recall("database performance", timeframe: "last month", strategy: :vector)
 
 # For best results: hybrid (default)
-best_results = htm.recall(timeframe: "last month", topic: "PostgreSQL performance", strategy: :hybrid)
+best_results = htm.recall("PostgreSQL performance", timeframe: "last month", strategy: :hybrid)
 ```
 
 #### 3. Index Tuning

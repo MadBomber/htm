@@ -9,7 +9,7 @@ Setting up HTM for development involves:
 1. Cloning the repository
 2. Installing Ruby and system dependencies
 3. Installing Ruby gem dependencies
-4. Setting up TimescaleDB database
+4. Setting up PostgreSQL database
 5. Configuring an LLM provider (Ollama, OpenAI, etc.)
 6. Verifying your setup
 7. Running tests and examples
@@ -154,96 +154,57 @@ bundle exec ruby -e "require 'htm'; puts HTM::VERSION"
 # Should output: 0.1.0 (or current version)
 ```
 
-## Step 4: Set Up TimescaleDB Database
+## Step 4: Set Up PostgreSQL Database
 
-HTM requires PostgreSQL with TimescaleDB and pgvector extensions. You have two options:
+HTM requires PostgreSQL 16+ with pgvector and pg_trgm extensions. You have two options:
 
-### Option A: TimescaleDB Cloud (Recommended for Quick Start)
-
-This is the fastest way to get a working database:
-
-#### 1. Create Account
-
-Visit [https://www.timescale.com/](https://www.timescale.com/) and sign up for a free account.
-
-#### 2. Create Service
-
-- Click "Create Service"
-- Select your region (choose closest to you)
-- Choose the **Free Tier** (or your preferred plan)
-- Click "Create Service"
-- Wait 2-3 minutes for provisioning
-
-#### 3. Get Connection Details
-
-- Click on your new service
-- Click "Connection Info"
-- Copy the full connection string (looks like `postgres://username:password@host:port/database?sslmode=require`)
-
-#### 4. Configure Environment Variables
-
-Create or edit `~/.bashrc__tiger`:
+### Option A: Local PostgreSQL (macOS/Homebrew)
 
 ```bash
-# TimescaleDB Connection Configuration
-export HTM_SERVICE_NAME="db-67977"  # Your service name
-export HTM_DATABASE__NAME="tsdb"
-export HTM_DATABASE__USER="tsdbadmin"
-export HTM_DATABASE__PASSWORD="your_password_here"
-export HTM_DATABASE__PORT="37807"  # Your port number
-export HTM_DATABASE__URL="postgres://tsdbadmin:your_password@host:port/tsdb?sslmode=require"
+# Install PostgreSQL 17
+brew install postgresql@17
+brew services start postgresql@17
+
+# Create development database
+createdb htm_development
+
+# Enable required extensions
+psql htm_development -c "CREATE EXTENSION IF NOT EXISTS vector;"
+psql htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+
+# Configure environment variables
+export HTM_DATABASE__URL="postgresql://$(whoami)@localhost:5432/htm_development"
 ```
 
-Replace the placeholders with your actual connection details.
+### Option B: Local PostgreSQL with Docker
 
-#### 5. Load Environment Variables
-
-```bash
-# Load configuration
-source ~/.bashrc__tiger
-
-# Optionally, add to your ~/.bashrc for automatic loading
-echo 'source ~/.bashrc__tiger' >> ~/.bashrc
-```
-
-### Option B: Local PostgreSQL with Docker (Advanced)
-
-For local development with Docker:
+For Docker-based development:
 
 ```bash
 # Create docker-compose.yml
 cat > docker-compose.yml <<'EOF'
 version: '3.8'
 services:
-  timescaledb:
-    image: timescale/timescaledb-ha:pg17
+  postgres:
+    image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_USER: tsdbadmin
+      POSTGRES_USER: htm
       POSTGRES_PASSWORD: devpassword
-      POSTGRES_DB: tsdb
+      POSTGRES_DB: htm_development
     ports:
       - "5432:5432"
     volumes:
-      - timescale_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
 
 volumes:
-  timescale_data:
+  pg_data:
 EOF
 
-# Start TimescaleDB
+# Start PostgreSQL
 docker-compose up -d
 
 # Configure environment variables
-cat > ~/.bashrc__tiger <<'EOF'
-export HTM_SERVICE_NAME="local-dev"
-export HTM_DATABASE__NAME="tsdb"
-export HTM_DATABASE__USER="tsdbadmin"
-export HTM_DATABASE__PASSWORD="devpassword"
-export HTM_DATABASE__PORT="5432"
-export HTM_DATABASE__URL="postgres://tsdbadmin:devpassword@localhost:5432/tsdb?sslmode=disable"
-EOF
-
-source ~/.bashrc__tiger
+export HTM_DATABASE__URL="postgresql://htm:devpassword@localhost:5432/htm_development"
 ```
 
 ### Verify Database Connection
@@ -252,27 +213,26 @@ Test your database connection:
 
 ```bash
 # From the htm directory
-ruby test_connection.rb
+rake htm:db:verify
 ```
 
 Expected output:
 
 ```
 Connected successfully!
-TimescaleDB Extension: Version 2.22.1
-pgvector Extension: Version 0.8.1
+pgvector Extension: Version 0.8.0+
 pg_trgm Extension: Version 1.6
 ```
 
 ### Enable Required Extensions
 
-Run the extension setup script:
+Run the extension setup script if needed:
 
 ```bash
 ruby enable_extensions.rb
 ```
 
-This ensures that TimescaleDB, pgvector, and pg_trgm extensions are enabled.
+This ensures that pgvector and pg_trgm extensions are enabled.
 
 ## Step 5: Configure LLM Provider
 
@@ -495,12 +455,12 @@ HTM uses environment variables for configuration. Here's a complete reference:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `HTM_DATABASE__URL` | Full PostgreSQL connection URL (preferred) | `postgres://user:pass@host:port/db?sslmode=require` |
-| `HTM_DATABASE__NAME` | Database name | `tsdb` |
-| `HTM_DATABASE__USER` | Database username | `tsdbadmin` |
+| `HTM_DATABASE__URL` | Full PostgreSQL connection URL (preferred) | `postgresql://user:pass@localhost:5432/htm_development` |
+| `HTM_DATABASE__NAME` | Database name | `htm_development` |
+| `HTM_DATABASE__USER` | Database username | `postgres` |
 | `HTM_DATABASE__PASSWORD` | Database password | `your_password` |
-| `HTM_DATABASE__PORT` | Database port | `37807` |
-| `HTM_SERVICE_NAME` | Service identifier (informational) | `db-67977` |
+| `HTM_DATABASE__PORT` | Database port | `5432` |
+| `HTM_SERVICE__NAME` | Service identifier (for DB naming) | `htm` |
 
 ### LLM Provider Variables
 
@@ -540,11 +500,8 @@ echo $HTM_DATABASE__URL
 # Test connection directly with psql
 psql $HTM_DATABASE__URL
 
-# Check if service is running (TimescaleDB Cloud)
-# Visit your Timescale Cloud dashboard
-
 # For Docker, check if container is running
-docker ps | grep timescale
+docker ps | grep postgres
 ```
 
 #### "LLM provider connection failed"
@@ -582,7 +539,7 @@ curl https://api.openai.com/v1/models -H "Authorization: Bearer $OPENAI_API_KEY"
 
 #### "Extension not available"
 
-**Symptoms**: Errors about missing TimescaleDB or pgvector
+**Symptoms**: Errors about missing pgvector or pg_trgm
 
 **Solutions**:
 
@@ -593,8 +550,9 @@ ruby enable_extensions.rb
 # Check extension status
 psql $HTM_DATABASE__URL -c "SELECT extname, extversion FROM pg_extension ORDER BY extname"
 
-# For TimescaleDB Cloud, extensions should be pre-installed
-# For local PostgreSQL, ensure you're using timescale/timescaledb-ha image
+# For local PostgreSQL, install extensions manually:
+psql $HTM_DATABASE__URL -c "CREATE EXTENSION IF NOT EXISTS vector;"
+psql $HTM_DATABASE__URL -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 ```
 
 #### "Bundle install fails"
@@ -650,8 +608,8 @@ If you see SSL certificate errors:
 echo $HTM_DATABASE__URL | grep sslmode
 # Should show: sslmode=require
 
-# For local development without SSL
-export HTM_DATABASE__URL="postgres://user:pass@localhost:5432/tsdb?sslmode=disable"
+# For local development
+export HTM_DATABASE__URL="postgresql://user:pass@localhost:5432/htm_development"
 ```
 
 ### Ruby Version Issues

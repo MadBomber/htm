@@ -40,13 +40,13 @@ A proposition is an atomic factual statement that:
 ```ruby
 # Via configuration block
 HTM.configure do |config|
-  config.extract_propositions = true
-  config.proposition_provider = :ollama  # or :openai, :anthropic, etc.
-  config.proposition_model = 'gemma3:latest'
+  config.proposition.enabled = true
+  config.proposition.provider = :ollama  # or :openai, :anthropic, etc.
+  config.proposition.model = 'gemma3:latest'
 end
 
 # Or via environment variable
-# HTM_EXTRACT_PROPOSITIONS=true
+# HTM_PROPOSITION__ENABLED=true
 ```
 
 ### Provider Options
@@ -62,11 +62,11 @@ Proposition extraction uses LLM chat completion. Configure your preferred provid
 
 ```ruby
 HTM.configure do |config|
-  config.extract_propositions = true
+  config.proposition.enabled = true
 
   # Use OpenAI for higher quality extraction
-  config.proposition_provider = :openai
-  config.proposition_model = 'gpt-4o-mini'
+  config.proposition.provider = :openai
+  config.proposition.model = 'gpt-4o-mini'
 end
 ```
 
@@ -150,13 +150,14 @@ propositions.each { |p| htm.remember(p) }
 
 ```ruby
 # Find all proposition nodes
-propositions = HTM::Models::Node.where("metadata->>'is_proposition' = ?", 'true')
+propositions = HTM::Models::Node.where(
+  Sequel.lit("metadata->>'is_proposition' = ?", 'true')
+)
 
 # Find propositions from a specific source
 source_node_id = 123
 related = HTM::Models::Node.where(
-  "metadata->>'source_node_id' = ?",
-  source_node_id.to_s
+  Sequel.lit("metadata->>'source_node_id' = ?", source_node_id.to_s)
 )
 
 # Include propositions in recall (default behavior)
@@ -193,8 +194,8 @@ With async job backend, extraction happens in background:
 
 ```ruby
 HTM.configure do |config|
-  config.extract_propositions = true
-  config.job.backend = :thread  # or :sidekiq
+  config.proposition.enabled = true
+  config.job.backend = :fiber  # or :sidekiq
 end
 
 # Returns immediately, propositions created async
@@ -229,12 +230,12 @@ Use a capable model for better extraction:
 
 ```ruby
 # Higher quality (slower, costs more)
-config.proposition_provider = :openai
-config.proposition_model = 'gpt-4o'
+config.proposition.provider = :openai
+config.proposition.model = 'gpt-4o'
 
 # Balanced (faster, local)
-config.proposition_provider = :ollama
-config.proposition_model = 'gemma3:latest'
+config.proposition.provider = :ollama
+config.proposition.model = 'gemma3:latest'
 ```
 
 ### Selective Extraction
@@ -243,10 +244,10 @@ Enable/disable per operation if needed:
 
 ```ruby
 # Temporarily disable for specific content
-original_setting = HTM.configuration.extract_propositions
-HTM.configuration.extract_propositions = false
+original_setting = HTM.config.proposition.enabled
+HTM.config.proposition.enabled = false
 htm.remember("Simple fact that doesn't need decomposition.")
-HTM.configuration.extract_propositions = original_setting
+HTM.config.proposition.enabled = original_setting
 ```
 
 ## Rake Tasks

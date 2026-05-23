@@ -297,7 +297,7 @@ assemble_context(strategy:, max_tokens: nil)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `strategy` | Symbol | *required* | Assembly strategy (`:recent`, `:important`, `:balanced`) |
+| `strategy` | Symbol | *required* | Assembly strategy (`:recent`, `:frequent`, `:balanced`) |
 | `max_tokens` | Integer, nil | `@max_tokens` | Optional token limit |
 
 #### Assembly Strategies
@@ -309,10 +309,10 @@ assemble_context(strategy:, max_tokens: nil)
 # Good for: Conversational continuity
 ```
 
-**`:important`** - Highest importance scores first
+**`:frequent`** - Most frequently accessed first
 
 ```ruby
-# Ordered by importance score (highest first)
+# Ordered by access count (highest first)
 # Good for: Critical information prioritization
 ```
 
@@ -336,8 +336,8 @@ context = wm.assemble_context(strategy: :balanced)
 # Recent conversations only
 context = wm.assemble_context(strategy: :recent)
 
-# Most important information
-context = wm.assemble_context(strategy: :important)
+# Most frequently accessed information
+context = wm.assemble_context(strategy: :frequent)
 
 # Limited tokens
 context = wm.assemble_context(
@@ -524,8 +524,8 @@ class ContextManager
   end
 
   def for_analysis
-    # Important context for deep analysis
-    @wm.assemble_context(strategy: :important, max_tokens: 32000)
+    # Frequently accessed context for deep analysis
+    @wm.assemble_context(strategy: :frequent, max_tokens: 32000)
   end
 
   def for_general_task
@@ -652,7 +652,7 @@ end
 context = wm.assemble_context(strategy: :recent)
 
 # For analysis/reasoning
-context = wm.assemble_context(strategy: :important)
+context = wm.assemble_context(strategy: :frequent)
 
 # For general use
 context = wm.assemble_context(strategy: :balanced)

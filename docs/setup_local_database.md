@@ -36,24 +36,7 @@ psql --version
 brew install pgvector
 ```
 
-### 2.2 Install TimescaleDB (Time-Series Database)
-
-```bash
-# Add TimescaleDB tap
-brew tap timescale/tap
-
-# Install TimescaleDB
-brew install timescaledb
-
-# Configure PostgreSQL for TimescaleDB
-# This updates your postgresql.conf with TimescaleDB settings
-timescaledb-tune --quiet --yes
-
-# Restart PostgreSQL to load TimescaleDB
-brew services restart postgresql@17
-```
-
-### 2.3 pg_trgm (Trigram Matching)
+### 2.2 pg_trgm (Trigram Matching)
 
 This extension is included with PostgreSQL, no installation needed.
 
@@ -96,9 +79,6 @@ createdb htm_development
 # Enable pgvector
 psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
-# Enable TimescaleDB
-psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
-
 # Enable pg_trgm (trigram matching)
 psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 ```
@@ -112,20 +92,15 @@ be rake htm:db:setup
 This will:
 1. Verify extensions are available
 2. Create HTM schema (tables, indexes, triggers)
-3. Set up TimescaleDB hypertables
-4. Run any pending migrations
+3. Run any pending migrations
 
 Expected output:
 
 ```
-✓ TimescaleDB version: X.X.X
 ✓ pgvector version: X.X.X
 ✓ pg_trgm version: X.X.X
 Creating HTM schema...
 ✓ Schema created
-✓ Created hypertable for operations_log
-✓ Created hypertable for nodes
-✓ Enabled compression for nodes older than 30 days
 ✓ HTM database schema created successfully
 ```
 
@@ -176,17 +151,13 @@ brew install pgvector
 psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS vector;"
 ```
 
-### Error: "TimescaleDB extension not found"
+### Error: "pg_trgm extension not found"
 
-**Problem:** TimescaleDB not installed or not enabled.
+**Problem:** pg_trgm not enabled (it ships with PostgreSQL but needs to be enabled).
 
 **Solution:**
 ```bash
-brew tap timescale/tap
-brew install timescaledb
-timescaledb-tune --quiet --yes
-brew services restart postgresql@17
-psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS timescaledb;"
+psql -d htm_development -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 ```
 
 ### Error: "Connection refused" to Ollama
@@ -212,27 +183,12 @@ direnv allow
 echo $HTM_DATABASE__URL  # Verify it's set
 ```
 
-## Switching Back to TimescaleDB Cloud
+## Switching to a Remote Database
 
-To switch back to TimescaleDB Cloud (production), edit `.envrc`:
+To switch to a remote PostgreSQL database (e.g. production), update your environment:
 
 ```bash
-# Comment out localhost config
-# export HTM_DATABASE__HOST=localhost
-# export HTM_DATABASE__PORT=5432
-# export HTM_DATABASE__NAME=htm_development
-# export HTM_DATABASE__USER=${USER}
-# export HTM_DATABASE__PASSWORD=
-# export HTM_DATABASE__URL="postgresql://${HTM_DATABASE__USER}@${HTM_DATABASE__HOST}:${HTM_DATABASE__PORT}/${HTM_DATABASE__NAME}?sslmode=prefer"
-
-# Uncomment TimescaleDB Cloud config
-export HTM_SERVICE_NAME=$TIGER_SERVICE_NAME
-export HTM_DATABASE__URL=$TIGER_DBURL
-export HTM_DATABASE__NAME=$TIGER_DBNAME
-export HTM_DATABASE__USER=$TIGER_DBUSER
-export HTM_DATABASE__PASSWORD=$TIGER_DBPASS
-export HTM_DATABASE__HOST=$TIGER_DBHOST
-export HTM_DATABASE__PORT=$TIGER_DBPORT
+export HTM_DATABASE__URL="postgresql://user:password@remote-host:5432/htm_production"
 ```
 
 Then reload:
@@ -266,14 +222,12 @@ PostgreSQL Version:
 Extensions:
   pg_trgm (X.X.X)
   plpgsql (X.X.X)
-  timescaledb (X.X.X)
   vector (X.X.X)
 
 HTM Tables:
   nodes: X rows
   tags: X rows
   robots: X rows
-  operations_log: X rows
   schema_migrations: X rows
 
 Database Size: XX MB

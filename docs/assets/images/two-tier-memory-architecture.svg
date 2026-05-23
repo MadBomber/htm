@@ -16,7 +16,7 @@
   <rect x="450" y="80" width="300" height="180" fill="rgba(156, 39, 176, 0.2)" stroke="#9C27B0" stroke-width="3" rx="5"/>
   <text x="600" y="110" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">Long-Term Memory (Cold)</text>
   <text x="480" y="140" fill="#B0B0B0" font-size="12">Capacity: Unlimited</text>
-  <text x="480" y="160" fill="#B0B0B0" font-size="12">Storage: PostgreSQL + TimescaleDB</text>
+  <text x="480" y="160" fill="#B0B0B0" font-size="12">Storage: PostgreSQL + pgvector</text>
   <text x="480" y="180" fill="#B0B0B0" font-size="12">Speed: O(log n) with indexes</text>
   <text x="480" y="200" fill="#B0B0B0" font-size="12">Lifetime: Permanent</text>
   <text x="480" y="220" fill="#B0B0B0" font-size="12">Retrieval: RAG (semantic + temporal)</text>

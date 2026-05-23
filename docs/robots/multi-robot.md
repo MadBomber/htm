@@ -187,7 +187,7 @@ timeline = memory_timeline("architecture decisions", limit: 50)
 puts "Architecture discussion timeline:"
 timeline.each do |node|
   robot_ids = node.robot_nodes.map(&:robot_id)
-  robots = HTM::Models::Robot.where(id: robot_ids).pluck(:name)
+  robots = HTM::Models::Robot.where(id: robot_ids).select_map(:name)
 
   puts "#{node.created_at} - #{robots.join(', ')}"
   puts "  #{node.content[0..100]}..."
@@ -738,7 +738,7 @@ class DevTeam
 
     nodes.each do |node|
       robot_ids = node.robot_nodes.map(&:robot_id)
-      robots = HTM::Models::Robot.where(id: robot_ids).pluck(:name)
+      robots = HTM::Models::Robot.where(id: robot_ids).select_map(:name)
       puts "- #{robots.join(', ')}: #{node.content[0..50]}..."
     end
 

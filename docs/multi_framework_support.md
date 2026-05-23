@@ -75,7 +75,7 @@ end
 class MemoriesController < ApplicationController
   def create
     htm = HTM.new(robot_name: "user_#{current_user.id}")
-    node_id = htm.remember(params[:content], source: 'user')
+    node_id = htm.remember(params[:content], metadata: { source: 'user' })
 
     render json: { status: 'ok', node_id: node_id }
   end

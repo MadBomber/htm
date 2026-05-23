@@ -4,15 +4,13 @@ Database schema setup and configuration utilities for HTM.
 
 ## Overview
 
-`HTM::Database` provides class methods for setting up the HTM database schema, managing PostgreSQL connections, and configuring TimescaleDB hypertables.
+`HTM::Database` provides class methods for setting up the HTM database schema, managing PostgreSQL connections, and running migrations.
 
 **Key Features:**
 
 - Schema creation and migration
-- TimescaleDB hypertable setup
-- Extension verification (TimescaleDB, pgvector, pg_trgm)
+- Extension verification (pgvector, pg_trgm)
 - Connection configuration parsing
-- Automatic compression policies
 
 ## Class Definition
 
@@ -28,7 +26,7 @@ end
 
 ### `setup(db_url = nil)` {: #setup }
 
-Set up the HTM database schema and TimescaleDB hypertables.
+Set up the HTM database schema and run migrations.
 
 ```ruby
 HTM::Database.setup(db_url = nil)
@@ -52,10 +50,9 @@ HTM::Database.setup(db_url = nil)
 #### Side Effects
 
 - Connects to PostgreSQL database
-- Verifies required extensions (TimescaleDB, pgvector, pg_trgm)
+- Verifies required extensions (pgvector, pg_trgm)
 - Creates schema (tables, indexes, views)
-- Converts tables to hypertables
-- Sets up compression policies
+- Runs pending migrations
 - Prints status messages to stdout
 
 #### Examples
@@ -67,22 +64,18 @@ HTM::Database.setup
 # Use specific database URL
 HTM::Database.setup('postgresql://user:pass@host:5432/dbname')
 
-# Use TimescaleDB Cloud
-url = 'postgresql://tsdbadmin:pass@xxx.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require'
+# Use a remote PostgreSQL database
+url = 'postgresql://user:pass@db.example.com:5432/htm_production?sslmode=require'
 HTM::Database.setup(url)
 ```
 
 #### Output
 
 ```
-✓ TimescaleDB version: 2.13.0
-✓ pgvector version: 0.5.1
+✓ pgvector version: 0.8.1+
 ✓ pg_trgm version: 1.6
 Creating HTM schema...
 ✓ Schema created
-✓ Created hypertable for operations_log
-✓ Created hypertable for nodes
-✓ Enabled compression for nodes older than 30 days
 ✓ HTM database schema created successfully
 ```
 
@@ -140,14 +133,14 @@ url = 'postgresql://user:pass@host:5432/db?sslmode=require'
 config = HTM::Database.parse_connection_url(url)
 # => { ..., sslmode: "require" }
 
-# TimescaleDB Cloud URL
-url = 'postgresql://tsdbadmin:secret@xxx.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require'
+# Remote PostgreSQL URL
+url = 'postgresql://myuser:secret@db.example.com:5432/htm_production?sslmode=require'
 config = HTM::Database.parse_connection_url(url)
 # => {
-#   host: "xxx.tsdb.cloud.timescale.com",
-#   port: 37807,
-#   dbname: "tsdb",
-#   user: "tsdbadmin",
+#   host: "db.example.com",
+#   port: 5432,
+#   dbname: "htm_production",
+#   user: "myuser",
 #   password: "secret",
 #   sslmode: "require"
 # }
@@ -176,8 +169,8 @@ HTM::Database.parse_connection_params()
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HTM_DATABASE__HOST` | Database hostname | `'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com'` |
-| `HTM_DATABASE__PORT` | Database port | `37807` |
+| `HTM_DATABASE__HOST` | Database hostname | `'localhost'` |
+| `HTM_DATABASE__PORT` | Database port | `5432` |
 | `HTM_DATABASE__NAME` | Database name | *required* |
 | `HTM_DATABASE__USER` | Database user | *required* |
 | `HTM_DATABASE__PASSWORD` | Database password | *required* |
@@ -186,18 +179,17 @@ HTM::Database.parse_connection_params()
 
 ```ruby
 # Set environment variables
-ENV['HTM_DATABASE__NAME'] = 'tsdb'
-ENV['HTM_DATABASE__USER'] = 'tsdbadmin'
+ENV['HTM_DATABASE__NAME'] = 'htm_development'
+ENV['HTM_DATABASE__USER'] = 'postgres'
 ENV['HTM_DATABASE__PASSWORD'] = 'secret'
 
 config = HTM::Database.parse_connection_params()
 # => {
-#   host: "cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com",
-#   port: 37807,
-#   dbname: "tsdb",
-#   user: "tsdbadmin",
-#   password: "secret",
-#   sslmode: "require"
+#   host: "localhost",
+#   port: 5432,
+#   dbname: "htm_development",
+#   user: "postgres",
+#   password: "secret"
 # }
 
 # Custom host and port
@@ -293,13 +285,9 @@ For detailed database schema documentation, see:
 ### 1. Verify Extensions
 
 ```ruby
-# Check TimescaleDB
-timescale = conn.exec("SELECT extversion FROM pg_extension WHERE extname='timescaledb'").first
-# => {"extversion"=>"2.13.0"}
-
 # Check pgvector
 pgvector = conn.exec("SELECT extversion FROM pg_extension WHERE extname='vector'").first
-# => {"extversion"=>"0.5.1"}
+# => {"extversion"=>"0.8.1"}
 
 # Check pg_trgm
 pg_trgm = conn.exec("SELECT extversion FROM pg_extension WHERE extname='pg_trgm'").first
@@ -335,33 +323,22 @@ conn.exec("SELECT add_compression_policy('nodes', INTERVAL '30 days', if_not_exi
 
 ## Environment Configuration
 
-### TimescaleDB Cloud
-
-Using URL (recommended):
+### Local PostgreSQL (macOS)
 
 ```bash
-# In ~/.bashrc__tiger
-export HTM_DATABASE__URL='postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require'
+export HTM_DATABASE__URL='postgresql://localhost/htm_development'
 ```
 
-Using individual variables:
+### Local PostgreSQL (with auth)
 
 ```bash
-# In ~/.bashrc__tiger
-export HTM_DATABASE__HOST='xxx.tsdb.cloud.timescale.com'
-export HTM_DATABASE__PORT=37807
-export HTM_DATABASE__NAME='tsdb'
-export HTM_DATABASE__USER='tsdbadmin'
-export HTM_DATABASE__PASSWORD='your_password'
+export HTM_DATABASE__URL='postgresql://user:pass@localhost:5432/htm_development'
 ```
 
-### Local PostgreSQL
+### Remote PostgreSQL (with SSL)
 
 ```bash
-export HTM_DATABASE__URL='postgresql://localhost/htm_dev'
-
-# Or with auth
-export HTM_DATABASE__URL='postgresql://user:pass@localhost:5432/htm_dev'
+export HTM_DATABASE__URL='postgresql://user:pass@db.example.com:5432/htm_production?sslmode=require'
 ```
 
 ### Docker PostgreSQL
@@ -461,7 +438,6 @@ htm = HTM.new(db_config: config)
 ### Extensions Not Available
 
 ```
-⚠ Warning: TimescaleDB extension not found
 ⚠ Warning: pgvector extension not found
 ```
 
@@ -469,12 +445,14 @@ htm = HTM.new(db_config: config)
 
 ```bash
 # Ubuntu/Debian
-sudo apt install postgresql-15-timescaledb postgresql-15-pgvector
+sudo apt install postgresql-17-pgvector
 
 # macOS with Homebrew
-brew install timescaledb pgvector
+brew install pgvector
 
-# Or use TimescaleDB Cloud (extensions pre-installed)
+# Then enable in your database:
+psql $HTM_DATABASE__URL -c "CREATE EXTENSION IF NOT EXISTS vector;"
+psql $HTM_DATABASE__URL -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 ```
 
 ### Connection Refused

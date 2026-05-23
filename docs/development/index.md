@@ -25,7 +25,7 @@ Learn how to set up your development environment, clone the repository, install 
 
 - Cloning the repository
 - Installing Ruby and dependencies
-- Setting up TimescaleDB for development
+- Setting up PostgreSQL for development
 - Configuring Ollama for embeddings
 - Running tests and examples
 - Development tools and rake tasks
@@ -73,7 +73,7 @@ Complete reference for all 44 HTM rake tasks covering database management, docum
 - Troubleshooting guide
 
 ### [Database Schema](schema.md)
-Deep dive into HTM's database architecture, tables, indexes, and TimescaleDB optimization strategies.
+Deep dive into HTM's database architecture, tables, indexes, and PostgreSQL optimization strategies.
 
 **Topics covered:**
 
@@ -82,8 +82,6 @@ Deep dive into HTM's database architecture, tables, indexes, and TimescaleDB opt
 - Table definitions and column details
 - Indexes and constraints
 - Views and functions
-- TimescaleDB hypertables
-- Compression policies
 - Migration strategies
 
 ## Quick Start for Contributors
@@ -202,7 +200,7 @@ A: Check out issues labeled `good-first-issue` on GitHub. These are specifically
 
 **Q: How do I run tests without a database?**
 
-A: Unit tests (like `test/htm_test.rb`) don't require a database. Integration tests require TimescaleDB. See the [Testing Guide](testing.md) for details.
+A: Unit tests (like `test/htm_test.rb`) don't require a database. Integration tests require PostgreSQL with pgvector. See the [Testing Guide](testing.md) for details.
 
 **Q: What's the preferred debugging approach?**
 
@@ -277,8 +275,7 @@ HTM is built with modern Ruby tools:
 ### Core Technologies
 
 - **Ruby 3.0+**: Modern Ruby with pattern matching and better performance
-- **PostgreSQL 17**: Robust relational database
-- **TimescaleDB**: Time-series optimization for PostgreSQL
+- **PostgreSQL 17**: Robust relational database with pgvector and pg_trgm
 - **pgvector**: Vector similarity search
 - **RubyLLM**: LLM client library for embeddings
 - **Ollama**: Local embedding generation

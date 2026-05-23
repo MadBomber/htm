@@ -125,7 +125,7 @@ Content starts here...
 Access frontmatter via the FileSource model:
 
 ```ruby
-source = HTM::Models::FileSource.find_by(file_path: "docs/guide.md")
+source = HTM::Models::FileSource.first(file_path: "docs/guide.md")
 source.title            # => "PostgreSQL Guide"
 source.author           # => "HTM Team"
 source.frontmatter_tags # => ["database", "postgresql"]
@@ -146,13 +146,13 @@ HTM uses the [Baran gem](https://github.com/baran) with `MarkdownSplitter` for i
 ```ruby
 # Global configuration
 HTM.configure do |config|
-  config.chunk_size = 1024    # Characters per chunk (default: 1024)
-  config.chunk_overlap = 64   # Overlap between chunks (default: 64)
+  config.chunking.chunk_size = 1024    # Characters per chunk (default: 1024)
+  config.chunking.chunk_overlap = 64   # Overlap between chunks (default: 64)
 end
 
 # Or via environment variables
-# HTM_CHUNK_SIZE=512
-# HTM_CHUNK_OVERLAP=50
+# HTM_CHUNKING__CHUNK_SIZE=512
+# HTM_CHUNKING__CHUNK_OVERLAP=50
 ```
 
 ### Per-Loader Configuration
@@ -198,7 +198,7 @@ htm.load_file("docs/guide.md", force: true)
 The `HTM::Models::FileSource` tracks loaded files:
 
 ```ruby
-source = HTM::Models::FileSource.find_by(file_path: "docs/guide.md")
+source = HTM::Models::FileSource.first(file_path: "docs/guide.md")
 
 source.file_path       # Full path to file
 source.mtime           # Last modification time
@@ -269,17 +269,17 @@ priority: high
 
 ```ruby
 # Smaller chunks for dense technical content
-HTM.configure { |c| c.chunk_size = 512 }
+HTM.configure { |c| c.chunking.chunk_size = 512 }
 
 # Larger chunks for narrative content
-HTM.configure { |c| c.chunk_size = 2048 }
+HTM.configure { |c| c.chunking.chunk_size = 2048 }
 ```
 
 ### Regular Sync for Updated Content
 
 ```ruby
-# Sync all loaded files periodically
-htm.sync_files  # Re-checks all FileSource records
+# Sync all loaded files periodically (via rake task)
+# rake htm:files:sync  # Re-checks all FileSource records
 ```
 
 ## Example: Building a Knowledge Base
@@ -292,8 +292,8 @@ htm = HTM.new(robot_name: "Knowledge Base")
 
 # Configure chunking for technical docs
 HTM.configure do |config|
-  config.chunk_size = 768
-  config.chunk_overlap = 100
+  config.chunking.chunk_size = 768
+  config.chunking.chunk_overlap = 100
 end
 
 # Load documentation

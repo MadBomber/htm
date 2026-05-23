@@ -625,11 +625,11 @@ For known node IDs, access the node directly via the model:
 
 ```ruby
 # Look up by node ID
-node = HTM::Models::Node.find_by(id: node_id)
+node = HTM::Models::Node.first(id: node_id)
 
 if node
   puts node.content
-  puts "Tags: #{node.tags.pluck(:name).join(', ')}"
+  puts "Tags: #{node.tag_names.join(', ')}"
   puts "Created: #{node.created_at}"
 else
   puts "Memory not found"
@@ -792,10 +792,10 @@ Times vary based on database size and query complexity.
 
 ```ruby
 # Slow: Wide timeframe + high limit
-htm.recall(timeframe: "last 5 years", topic: "...", limit: 1000)
+htm.recall("...", timeframe: "last 5 years", limit: 1000)
 
 # Fast: Narrow timeframe + reasonable limit
-htm.recall(timeframe: "last week", topic: "...", limit: 20)
+htm.recall("...", timeframe: "last week", limit: 20)
 ```
 
 ### Caching Results
@@ -860,7 +860,7 @@ good_results = results.select do |m|
 end
 
 # Or boost limit and take top results
-htm.recall(timeframe: "...", topic: "...", limit: 100)
+htm.recall("...", timeframe: "...", limit: 100, raw: true)
   .sort_by { |m| -m['similarity'].to_f }
   .first(10)
 ```

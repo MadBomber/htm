@@ -19,24 +19,22 @@ rake htm:db:setup            # Create schema and run migrations
 Sets up the HTM database schema and runs all migrations.
 
 **What it does:**
-- Verifies required extensions (timescaledb, pgvector, pg_trgm)
-- Creates all HTM tables (nodes, tags, robots, operations_log)
+- Verifies required extensions (pgvector, pg_trgm)
+- Creates all HTM tables (nodes, tags, robots, file_sources)
 - Runs all pending migrations
-- Sets up hypertables for time-series optimization
 
 **When to use:** First-time setup or after dropping the database
 
 ```bash
 $ rake htm:db:setup
-✓ TimescaleDB version: 2.22.1
-✓ pgvector version: 0.8.1
+✓ pgvector version: 0.8.1+
+✓ pg_trgm version: 1.6
 Creating HTM schema...
 ✓ Schema created
 Running migration: 001_support_variable_dimensions
   ✓ Migration 001_support_variable_dimensions applied
 Running migration: 002_ontology_topic_extraction
   ✓ Migration 002_ontology_topic_extraction applied
-✓ Created hypertable for operations_log
 ✓ HTM database schema created successfully
 ```
 
@@ -92,29 +90,24 @@ HTM Database Information
 ================================================================================
 
 Connection:
-  Host: cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com
-  Port: 37807
-  Database: tsdb
-  User: tsdbadmin
+  Host: localhost
+  Port: 5432
+  Database: htm_development
+  User: postgres
 
 PostgreSQL Version:
-  PostgreSQL 17.6 (Ubuntu 17.6-2.pgdg22.04+1) on aarch64-unknown-linux-gnu
+  PostgreSQL 17.x
 
 Extensions:
-  ai (0.11.2)
-  pg_stat_statements (1.11)
   pg_trgm (1.6)
   plpgsql (1.0)
-  timescaledb (2.22.1)
-  timescaledb_toolkit (1.21.0)
-  vector (0.8.1)
-  vectorscale (0.8.0)
+  vector (0.8.1+)
 
 HTM Tables:
   nodes: 42 rows
   tags: 156 rows
   robots: 3 rows
-  operations_log: 289 rows
+  file_sources: 5 rows
   schema_migrations: 2 rows
 
 Database Size: 14 MB
@@ -127,10 +120,9 @@ Tests database connection by running `test_connection.rb`.
 **Example output:**
 ```bash
 $ rake htm:db:test
-Connecting to TimescaleDB...
+Connecting to PostgreSQL...
 ✓ Connected successfully!
-✓ TimescaleDB Extension: Version 2.22.1
-✓ pgvector Extension: Version 0.8.1
+✓ pgvector Extension: Version 0.8.1+
 ✓ pg_trgm Extension: Version 1.6
 ```
 
@@ -153,14 +145,14 @@ psql (17.6)
 SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off, ALPN: none)
 Type "help" for help.
 
-tsdb=> SELECT COUNT(*) FROM nodes;
+htm_development=> SELECT COUNT(*) FROM nodes;
  count
 -------
     42
 (1 row)
 
-tsdb=> \d nodes
-tsdb=> \q
+htm_development=> \d nodes
+htm_development=> \q
 ```
 
 #### `rake htm:db:seed`
@@ -272,9 +264,9 @@ export HTM_DATABASE__URL="postgresql://user:password@host:port/dbname?sslmode=re
 rake htm:db:info
 ```
 
-### Method 3: Source Tiger Credentials
+### Method 3: Source Credentials File
 ```bash
-source ~/.bashrc__tiger    # If using TimescaleDB Cloud
+source ~/.envrc    # Load environment from credentials file
 rake htm:db:info
 ```
 
@@ -333,9 +325,9 @@ rake htm:db:migrate       # Run new migrations only
 - Test: `rake htm:db:test`
 
 ### "Extension not found"
-- Ensure TimescaleDB Cloud instance has required extensions
+- Enable required extensions manually: `psql $HTM_DATABASE__URL -c "CREATE EXTENSION IF NOT EXISTS vector;"`
 - Check with: `rake htm:db:info`
-- Extensions needed: timescaledb, pgvector, pg_trgm
+- Extensions needed: pgvector, pg_trgm
 
 ### Migrations not running
 - Check migration files exist: `ls -la sql/migrations/`

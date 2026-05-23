@@ -142,7 +142,7 @@ Assistant> I've stored that information about the PostgreSQL connection string.
 you> What do you know about databases?
 
 [Tool Call] RecallTool
-  Arguments: {topic: "databases", limit: 5}
+  Arguments: {query: "databases", limit: 5}
 [Tool Result] RecallTool
   Result: {"memories": [...]}
 

@@ -79,9 +79,9 @@ HTM implements a layered architecture with clear separation of concerns between 
 #### Data Layer
 
 - **PostgreSQL**: Relational storage with ACID guarantees
-- **TimescaleDB**: Time-series optimization and compression
 - **pgvector**: Vector similarity search with HNSW
 - **pg_trgm**: Fuzzy text matching for search
+- **Sequel**: Ruby ORM for database access
 
 ## Component Diagrams
 
@@ -238,7 +238,6 @@ Audit trail of all memory operations for debugging and replay.
 |-----------|---------|---------|------------|
 | **Ruby** | 3.2+ | Implementation language | Readable, expressive, mature ecosystem |
 | **PostgreSQL** | 16+ | Relational database | ACID guarantees, rich extensions, production-proven |
-| **TimescaleDB** | 2.13+ | Time-series extension | Hypertable partitioning, automatic compression |
 | **pgvector** | 0.5+ | Vector similarity | HNSW indexing, PostgreSQL-native, fast approximate search |
 | **pg_trgm** | - | Fuzzy text search | Built-in PostgreSQL extension for trigram matching |
 
@@ -284,8 +283,8 @@ Based on typical production workloads with 10,000 nodes in long-term memory (cli
 | `recall()` (vector) | 80ms | 140ms | 230ms | Client-side query embedding + vector search |
 | `recall()` (fulltext) | 30ms | 60ms | 100ms | GIN index search (no embedding needed) |
 | `recall()` (hybrid) | 110ms | 190ms | 330ms | Client-side embedding + hybrid search |
-| `retrieve()` | 5ms | 10ms | 20ms | Simple primary key lookup |
-| `create_context()` | 8ms | 15ms | 25ms | In-memory sort + join |
+| `HTM::Models::Node.first()` | 5ms | 10ms | 20ms | Simple primary key lookup |
+| `working_memory.assemble_context()` | 8ms | 15ms | 25ms | In-memory sort + join |
 | `forget()` | 10ms | 20ms | 40ms | DELETE with cascades |
 
 !!! tip "Performance Optimization"
@@ -308,15 +307,13 @@ Based on typical production workloads with 10,000 nodes in long-term memory (cli
 | Component | Size Estimate | Compression |
 |-----------|--------------|-------------|
 | Node (text only) | ~1KB average | None |
-| Node (with embedding) | ~7KB (1536 dims × 4 bytes) | TimescaleDB compression (70-90%) |
+| Node (with embedding) | ~7KB (1536 dims × 4 bytes) | TOAST (auto) |
 | Indexes | ~2x data size | Minimal |
-| Operations log | ~200 bytes/op | TimescaleDB compression |
 
 **Example:** 100,000 nodes with embeddings:
 
 - Raw data: ~700 MB
 - With indexes: ~2.1 GB
-- With compression (after 30 days): ~300 MB
 
 ## Scalability Considerations
 
@@ -354,7 +351,7 @@ Based on typical production workloads with 10,000 nodes in long-term memory (cli
 - Add PostgreSQL read replicas
 - Route `recall()` and `retrieve()` to replicas
 - Primary handles writes only
-- TimescaleDB native replication support
+- PostgreSQL native replication support
 
 !!! warning "Consistency Considerations"
     Read replicas may lag primary by seconds. For strong consistency requirements, query primary database.

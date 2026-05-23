@@ -33,11 +33,11 @@ HTM is a two-tier intelligent memory management system for LLM-based robots:
   <rect x="300" y="20" width="200" height="180" class="class-box" rx="5"/>
   <text x="400" y="45" text-anchor="middle" class="class-title">HTM</text>
   <line x1="310" y1="55" x2="490" y2="55" stroke="#4a9eff" stroke-width="1"/>
-  <text x="310" y="75" class="class-method">+ add_node()</text>
+  <text x="310" y="75" class="class-method">+ remember()</text>
   <text x="310" y="90" class="class-method">+ recall()</text>
-  <text x="310" y="105" class="class-method">+ retrieve()</text>
+  <text x="310" y="105" class="class-method">+ restore()</text>
   <text x="310" y="120" class="class-method">+ forget()</text>
-  <text x="310" y="135" class="class-method">+ create_context()</text>
+  <text x="310" y="135" class="class-method">+ working_memory()</text>
   <text x="310" y="150" class="class-method">+ memory_stats()</text>
   <text x="310" y="165" class="class-method">+ which_robot_said()</text>
   <text x="310" y="180" class="class-method">+ conversation_timeline()</text>
@@ -102,7 +102,7 @@ HTM is a two-tier intelligent memory management system for LLM-based robots:
 
 | Class | Purpose | Key Methods |
 |-------|---------|-------------|
-| [HTM](htm.md) | Main interface for memory management | `add_node`, `recall`, `retrieve`, `forget`, `create_context` |
+| [HTM](htm.md) | Main interface for memory management | `remember`, `recall`, `forget`, `restore`, `working_memory` |
 | [WorkingMemory](working-memory.md) | Token-limited active context | `add`, `evict_to_make_space`, `assemble_context` |
 | [LongTermMemory](long-term-memory.md) | Persistent PostgreSQL storage | `add`, `search`, `search_fulltext`, `search_hybrid` |
 | [EmbeddingService](embedding-service.md) | Vector embedding generation | `embed`, `count_tokens` |
@@ -117,14 +117,14 @@ HTM is a two-tier intelligent memory management system for LLM-based robots:
 htm = HTM.new(robot_name: "Assistant")
 
 # Add memories
-htm.add_node("fact_001", "PostgreSQL is our database",
-  type: :fact, importance: 7.0, tags: ["database"])
+htm.remember("PostgreSQL is our database",
+  type: :fact, tags: ["database"])
 
 # Recall memories
-memories = htm.recall(timeframe: "last week", topic: "PostgreSQL")
+memories = htm.recall("PostgreSQL", timeframe: "last week")
 
 # Create LLM context
-context = htm.create_context(strategy: :balanced)
+context = htm.working_memory.assemble_context(strategy: :balanced)
 ```
 
 #### Multi-Robot Collaboration
@@ -143,16 +143,16 @@ timeline = htm.conversation_timeline("deployment", limit: 20)
 ```ruby
 # Vector similarity search
 memories = htm.recall(
+  "API design decisions",
   timeframe: "last 30 days",
-  topic: "API design decisions",
   strategy: :vector,
   limit: 10
 )
 
 # Hybrid search (fulltext + vector)
 memories = htm.recall(
+  "security vulnerabilities",
   timeframe: "this month",
-  topic: "security vulnerabilities",
   strategy: :hybrid,
   limit: 20
 )
@@ -194,13 +194,13 @@ When adding nodes, you can specify a type:
 
 ## Context Assembly Strategies
 
-When creating context with `create_context`:
+When creating context with `working_memory.assemble_context`:
 
 | Strategy | Behavior |
 |----------|----------|
 | `:recent` | Most recently accessed first |
-| `:important` | Highest importance scores first |
-| `:balanced` | Weighted by importance and recency |
+| `:frequent` | Most frequently accessed first |
+| `:balanced` | Weighted by access frequency and recency |
 
 ## API Documentation
 
@@ -243,8 +243,8 @@ HTM is **not thread-safe** by default. Each instance maintains its own working m
 For large memory stores (>100K nodes):
 
 - Use hybrid search with appropriate `prefilter_limit`
-- Consider time-based partitioning (automatic with TimescaleDB)
-- Enable compression for old data (configured in schema)
+- Purge soft-deleted nodes periodically with `htm.purge_deleted`
+- Add partial indexes for frequently filtered columns
 
 ## Next Steps
 

@@ -216,13 +216,13 @@ Look up a memory by its node ID:
 puts "\n4. Looking up specific memory..."
 
 # Use the node_id returned from remember()
-node = HTM::Models::Node.find_by(id: node_id)
+node = HTM::Models::Node.first(id: node_id)
 
 if node
   puts "✓ Found memory:"
   puts "  ID: #{node.id}"
   puts "  Content: #{node.content[0..100]}..."
-  puts "  Tags: #{node.tags.pluck(:name).join(', ')}"
+  puts "  Tags: #{node.tag_names.join(', ')}"
   puts "  Created: #{node.created_at}"
 else
   puts "✗ Memory not found"
@@ -471,8 +471,8 @@ puts HTM::Models::Tag.tree_string
 #       └── postgresql
 #           └── features
 
-# Find all memories under a tag prefix
-nodes = HTM::Models::Tag.find_by(name: 'knowledge:databases')&.nodes
+# Find all memories with a specific tag
+nodes = HTM::Models::Tag.first(name: 'knowledge:databases')&.nodes
 ```
 
 ## Forget (Explicit Deletion)

@@ -535,7 +535,7 @@ jobs:
 
     services:
       postgres:
-        image: timescale/timescaledb-ha:pg17
+        image: pgvector/pgvector:pg17
         env:
           POSTGRES_PASSWORD: testpass
         options: >-

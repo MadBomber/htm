@@ -121,11 +121,19 @@ htm.long_term_memory.add_tag(node_id: node.id, tag: "new:tag")
 tags = htm.long_term_memory.node_topics(node.id)
 # => ["database:postgresql", "search:vector"]
 
-# Find nodes by tag
-nodes = HTM::Models::Node.joins(:tags).where(tags: { name: "database:postgresql" })
+# Find nodes by tag (via Sequel)
+nodes = HTM::Models::Node
+  .join(:nodes_tags, node_id: :id)
+  .join(:tags, id: :tag_id)
+  .where(Sequel[:tags][:name] => "database:postgresql")
+  .all
 
 # Find by tag prefix
-nodes = HTM::Models::Node.joins(:tags).where("tags.name LIKE ?", "database:%")
+nodes = HTM::Models::Node
+  .join(:nodes_tags, node_id: :id)
+  .join(:tags, id: :tag_id)
+  .where(Sequel.like(Sequel[:tags][:name], "database:%"))
+  .all
 ```
 
 ### Tag Relationships
@@ -218,15 +226,15 @@ rake htm:tags:rebuild
 
 ```ruby
 # Filter by specific tag
-results = htm.recall("query", tags: ["database:postgresql"])
+results = htm.recall("query", query_tags: ["database:postgresql"])
 
 # Filter by multiple tags (AND)
-results = htm.recall("query", tags: ["database:postgresql", "search:vector"])
+results = htm.recall("query", query_tags: ["database:postgresql", "search:vector"])
 
 # Combine with other filters
 results = htm.recall(
   "performance optimization",
-  tags: ["database:postgresql"],
+  query_tags: ["database:postgresql"],
   timeframe: "last week",
   strategy: :hybrid,
   limit: 10
@@ -236,14 +244,11 @@ results = htm.recall(
 ### Direct Queries
 
 ```ruby
-# Find all nodes with a tag
-HTM::Models::Node.with_tag("database:postgresql")
+# Find all nodes with a specific tag (via LongTermMemory)
+results = htm.long_term_memory.search_by_tags(tags: ["database:postgresql"])
 
-# Find nodes with any of several tags
-HTM::Models::Node.with_any_tags(["database:postgresql", "database:mysql"])
-
-# Find nodes with all specified tags
-HTM::Models::Node.with_all_tags(["database:postgresql", "search:vector"])
+# Find nodes with multiple tags
+results = htm.long_term_memory.search_by_tags(tags: ["database:postgresql", "search:vector"])
 ```
 
 ## Database Schema

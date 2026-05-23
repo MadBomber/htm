@@ -125,16 +125,16 @@ puts "Removed #{count} chunks"
 
 ```ruby
 HTM.configure do |config|
-  config.chunk_size = 1024    # Characters per chunk (default)
-  config.chunk_overlap = 64   # Overlap between chunks (default)
+  config.chunking.chunk_size = 1024    # Characters per chunk (default)
+  config.chunking.chunk_overlap = 64   # Overlap between chunks (default)
 end
 ```
 
 Or via environment variables:
 
 ```bash
-export HTM_CHUNK_SIZE=512
-export HTM_CHUNK_OVERLAP=50
+export HTM_CHUNKING__CHUNK_SIZE=512
+export HTM_CHUNKING__CHUNK_OVERLAP=50
 ```
 
 ## Expected Output

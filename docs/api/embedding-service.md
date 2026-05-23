@@ -476,8 +476,8 @@ Search queries also generate embeddings:
 ```ruby
 # User searches for "database performance"
 results = htm.recall(
+  "database performance",
   timeframe: "last week",
-  topic: "database performance",
   strategy: :vector
 )
 

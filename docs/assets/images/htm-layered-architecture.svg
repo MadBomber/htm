@@ -5,11 +5,11 @@
   <!-- Layer 1: API Layer -->
   <rect x="100" y="60" width="600" height="100" fill="rgba(76, 175, 80, 0.2)" stroke="#4CAF50" stroke-width="2" rx="5"/>
   <text x="400" y="85" text-anchor="middle" fill="#E0E0E0" font-size="16" font-weight="bold">API Layer</text>
-  <text x="200" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">add_node()</text>
+  <text x="200" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">remember()</text>
   <text x="320" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">recall()</text>
-  <text x="440" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">retrieve()</text>
+  <text x="440" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">restore()</text>
   <text x="560" y="110" text-anchor="middle" fill="#B0B0B0" font-size="12">forget()</text>
-  <text x="400" y="135" text-anchor="middle" fill="#B0B0B0" font-size="12">create_context() • memory_stats() • which_robot_said()</text>
+  <text x="400" y="135" text-anchor="middle" fill="#B0B0B0" font-size="12">assemble_context() • memory_stats() • which_robot_said()</text>
 
   <!-- Layer 2: Coordination Layer -->
   <rect x="100" y="180" width="600" height="100" fill="rgba(33, 150, 243, 0.2)" stroke="#2196F3" stroke-width="2" rx="5"/>

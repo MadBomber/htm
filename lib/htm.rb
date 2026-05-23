@@ -49,13 +49,13 @@ require_relative "htm/railtie" if defined?(Rails::Railtie)
 #   htm = HTM.new(robot_name: "Code Helper")
 #
 #   # Remember information
-#   htm.remember("We decided to use PostgreSQL for HTM", source: "architect")
+#   htm.remember("We decided to use PostgreSQL for HTM", metadata: { source: "architect" })
 #
 #   # Recall from the past
-#   memories = htm.recall(timeframe: "last week", topic: "PostgreSQL")
+#   memories = htm.recall("PostgreSQL", timeframe: "last week")
 #
 #   # Create context for LLM
-#   context = htm.create_context(strategy: :balanced)
+#   context = htm.working_memory.assemble_context(strategy: :balanced)
 #
 class HTM
   attr_reader :robot_id, :robot_name, :working_memory, :long_term_memory

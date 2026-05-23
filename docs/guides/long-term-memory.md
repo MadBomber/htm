@@ -9,7 +9,7 @@ Long-term memory provides:
 - **Permanent storage** for all memories
 - **Vector embeddings** via pgvector
 - **Full-text search** via PostgreSQL's ts_vector
-- **Time-series optimization** via TimescaleDB hypertables
+- **Temporal filtering** via created_at index and Chronic gem for natural language timeframes
 - **Relationship graphs** for knowledge connections
 - **Audit logging** for all operations
 
@@ -383,33 +383,13 @@ conn.close
 puts "Reindexing completed"
 ```
 
-### Compression (TimescaleDB)
+### Cleanup Old Soft-Deleted Nodes
 
-TimescaleDB can compress old data:
+Periodically purge soft-deleted nodes to reclaim storage:
 
 ```ruby
-# Enable compression on operations_log hypertable
-conn = PG.connect(HTM::Database.default_config)
-
-conn.exec(
-  <<~SQL
-    ALTER TABLE operations_log SET (
-      timescaledb.compress,
-      timescaledb.compress_segmentby = 'robot_id'
-    )
-  SQL
-)
-
-# Add compression policy (compress data older than 7 days)
-conn.exec(
-  <<~SQL
-    SELECT add_compression_policy('operations_log', INTERVAL '7 days')
-  SQL
-)
-
-conn.close
-
-puts "Compression policy enabled"
+# Purge nodes soft-deleted more than 90 days ago
+htm.purge_deleted(older_than: Time.now - (90 * 24 * 60 * 60), confirm: :confirmed)
 ```
 
 ### Cleanup Old Logs
@@ -882,9 +862,9 @@ puts "Total nodes: #{HTM::Models::Node.count}"
 puts "Total tags: #{HTM::Models::Tag.count}"
 puts "Active robots: #{HTM::Models::Robot.count}"
 
-# Query by tag using ActiveRecord
+# Query by tag
 puts "\n=== Query by Tag ==="
-test_tag = HTM::Models::Tag.find_by(name: "test")
+test_tag = HTM::Models::Tag.first(name: "test")
 if test_tag
   tagged_nodes = test_tag.nodes
   puts "Found #{tagged_nodes.count} nodes with tag 'test'"

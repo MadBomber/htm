@@ -37,7 +37,7 @@ HTM provides intelligent memory management through five core components that wor
   <rect x="300" y="380" width="200" height="120" fill="rgba(244, 67, 54, 0.2)" stroke="#F44336" stroke-width="2" rx="5"/>
   <text x="400" y="415" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Database</text>
   <text x="400" y="435" text-anchor="middle" fill="#B0B0B0" font-size="11">PostgreSQL 16+</text>
-  <text x="400" y="455" text-anchor="middle" fill="#B0B0B0" font-size="11">TimescaleDB</text>
+  <text x="400" y="455" text-anchor="middle" fill="#B0B0B0" font-size="11">Sequel ORM</text>
   <text x="400" y="475" text-anchor="middle" fill="#B0B0B0" font-size="11">pgvector + pg_trgm</text>
 
   <!-- Connections -->
@@ -102,7 +102,7 @@ Durable PostgreSQL storage for permanent knowledge retention. All memories are s
 **Characteristics:**
 
 - **Capacity:** Effectively unlimited
-- **Storage:** PostgreSQL with TimescaleDB extension
+- **Storage:** PostgreSQL with pgvector and pg_trgm extensions
 - **Retention:** Permanent (explicit deletion only)
 - **Access Pattern:** RAG-based retrieval (semantic + temporal)
 - **Lifetime:** Forever
@@ -126,11 +126,10 @@ Generates vector embeddings for semantic search and manages token counting for m
 
 ### Database
 
-PostgreSQL 16+ with extensions for time-series optimization, vector similarity search, and full-text search.
+PostgreSQL 16+ with extensions for vector similarity search, full-text search, and fuzzy matching.
 
 **Key Extensions:**
 
-- **TimescaleDB**: Hypertable partitioning, compression policies, time-range optimization
 - **pgvector**: Vector similarity search with HNSW indexing
 - **pg_trgm**: Trigram-based fuzzy text matching
 
@@ -282,8 +281,7 @@ Explore detailed architecture documentation:
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | **Language** | Ruby 3.2+ | Core implementation |
-| **Database** | PostgreSQL 16+ | Relational storage |
-| **Time-Series** | TimescaleDB | Hypertable partitioning, compression |
+| **Database** | PostgreSQL 16+ | Relational storage with soft delete |
 | **Vector Search** | pgvector | Semantic similarity (HNSW) |
 | **Full-Text** | pg_trgm | Fuzzy text matching |
 | **Embeddings** | RubyLLM (multi-provider) | Vector generation |
@@ -334,7 +332,7 @@ Explore detailed architecture documentation:
 
 ## Related Documentation
 
-- [Installation Guide](../getting-started/installation.md) - Setup PostgreSQL, TimescaleDB, and dependencies
+- [Installation Guide](../getting-started/installation.md) - Setup PostgreSQL and dependencies
 - [Quick Start](../getting-started/quick-start.md) - Get started with HTM in 5 minutes
 - [API Reference](../api/htm.md) - Complete API documentation
 - [Architecture Decision Records](adrs/index.md) - Detailed decision history
