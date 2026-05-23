@@ -198,6 +198,7 @@ class HTM
         require_relative 'models/robot_node'
         require_relative 'models/tag'
         require_relative 'models/node_tag'
+        require_relative 'models/node_relationship'
         require_relative 'models/file_source'
 
         @models_loaded = true

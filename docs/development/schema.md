@@ -45,6 +45,7 @@ For detailed table definitions, columns, indexes, and constraints, see the auto-
 |-------|-------------|---------|
 | [robot_nodes](../database/public.robot_nodes.md) | Links robots to nodes (many-to-many) | Enables "hive mind" shared memory; includes `working_memory` boolean for per-robot working memory state |
 | [node_tags](../database/public.node_tags.md) | Links nodes to tags (many-to-many) | Flexible multi-tag categorization |
+| node_relationships | Weighted directed edges between related nodes | Stores Jaccard-similarity edges in both directions (A→B and B→A) for CTE graph traversal; populated by `GenerateRelationshipsJob` |
 
 ### System Tables
 
@@ -141,6 +142,40 @@ WHERE fs.file_path = '/path/to/file.md'
 ORDER BY n.chunk_position;
 ```
 
+### Node Relationships (Graph Edges)
+
+The `node_relationships` table stores weighted directed edges between nodes. Edges are created automatically by `GenerateRelationshipsJob` after tags are assigned.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | bigint | Primary key |
+| `source_id` | bigint | FK → nodes.id (ON DELETE CASCADE) |
+| `target_id` | bigint | FK → nodes.id (ON DELETE CASCADE) |
+| `rel_type` | varchar | Edge type: `related_to`, `supports`, `contradicts`, `derived_from` |
+| `origin` | varchar | How the edge was created: `tag_cooccurrence`, `tag_hierarchy`, `explicit` |
+| `weight` | float | Jaccard similarity score [0.0 – 1.0] |
+| `created_at` | timestamptz | When edge was first created |
+| `updated_at` | timestamptz | When edge weight was last refreshed |
+
+**Design principles:**
+- Both directions stored explicitly (A→B and B→A) so traversal only needs `WHERE source_id IN (seeds)` — no OR across columns
+- Unique constraint on `(source_id, target_id, rel_type)` — re-running the job refreshes weights via upsert
+- Self-loops rejected by a DB CHECK constraint
+- Edges with Jaccard weight < 0.1 are skipped; at most 50 edges per source node
+
+**Ruby model:** `HTM::Models::NodeRelationship`
+
+```ruby
+# Direct neighbors by weight
+HTM::Models::NodeRelationship.neighbors_of(node_id).limit(10).all
+
+# Edges above a threshold
+HTM::Models::NodeRelationship.above_weight(0.5).where(source_id: node_id).all
+
+# Edges of a specific type
+HTM::Models::NodeRelationship.by_rel_type('related_to').where(source_id: node_id).all
+```
+
 ### Remember Tracking
 
 The `robot_nodes` table tracks per-robot remember metadata:
@@ -219,6 +254,38 @@ JOIN node_tags nt ON n.id = nt.node_id
 JOIN tags t ON nt.tag_id = t.id
 WHERE t.name LIKE 'ai:llm:%'
 ORDER BY n.created_at DESC;
+```
+
+### Finding Related Nodes via Relationship Graph
+
+```sql
+-- Direct neighbors (1 hop), ordered by Jaccard weight
+SELECT nr.target_id, nr.weight, n.content
+FROM node_relationships nr
+JOIN nodes n ON n.id = nr.target_id
+WHERE nr.source_id = $1
+  AND nr.rel_type = 'related_to'
+ORDER BY nr.weight DESC
+LIMIT 10;
+
+-- Two-hop traversal using a recursive CTE
+WITH RECURSIVE graph AS (
+  SELECT target_id, weight, 1 AS depth
+  FROM node_relationships
+  WHERE source_id = $1
+    AND rel_type = 'related_to'
+    AND weight >= 0.1
+  UNION ALL
+  SELECT nr.target_id, nr.weight * g.weight, g.depth + 1
+  FROM node_relationships nr
+  JOIN graph g ON g.target_id = nr.source_id
+  WHERE g.depth < 2
+    AND nr.rel_type = 'related_to'
+    AND nr.weight >= 0.1
+)
+SELECT DISTINCT ON (target_id) target_id, weight
+FROM graph
+ORDER BY target_id, weight DESC;
 ```
 
 ### Finding Related Topics by Shared Nodes
@@ -336,13 +403,15 @@ REINDEX INDEX CONCURRENTLY idx_nodes_content_gin;
 
 ## Schema Migration
 
-The schema is managed through ActiveRecord migrations located in `db/migrate/`:
+The schema is managed through Sequel migrations located in `db/migrate/`:
 
 1. `20250101000001_create_robots.rb` - Creates robots table
 2. `20250101000002_create_nodes.rb` - Creates nodes table with all indexes
 3. `20250101000005_create_tags.rb` - Creates tags and nodes_tags tables
 4. `20251128000002_create_file_sources.rb` - Creates file_sources table for document tracking
 5. `20251128000003_add_source_to_nodes.rb` - Adds source_id and chunk_position to nodes
+6. `00008_create_node_relationships.rb` - Creates node_relationships table with FK constraints and weight check
+7. `00009_fix_node_relationships_column_types.rb` - Promotes id to bigint and timestamps to timestamptz
 
 To apply migrations:
 ```bash
@@ -412,6 +481,7 @@ SELECT content ILIKE '%pattern%' FROM nodes;          -- Pattern matching (uses 
 2. **Full-text search**: Best for keyword matching ("documents containing Y")
 3. **Fuzzy search**: Best for typo tolerance and pattern matching
 4. **Hybrid search**: Combine vector + full-text with weighted scores
+5. **Graph traversal**: Follow `node_relationships` edges via CTE for association-based retrieval
 
 ### Performance Tuning
 

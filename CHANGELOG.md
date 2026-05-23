@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`node_relationships` table** - Weighted directed edges between related nodes
+  - Stores Jaccard-similarity scores computed from tag co-occurrence
+  - Both directions (A→B and B→A) stored explicitly for O(1) index lookups during CTE traversal
+  - Unique constraint on `(source_id, target_id, rel_type)` — re-runs refresh stale weights via upsert
+  - DB CHECK constraints enforce weight in [0.0, 1.0] and prevent self-loops
+  - FK constraints (ON DELETE CASCADE) from both `source_id` and `target_id` to nodes
+- **`HTM::Models::NodeRelationship`** - Sequel model for the new table
+  - Constants: `REL_TYPES` (`related_to`, `supports`, `contradicts`, `derived_from`) and `ORIGINS` (`tag_cooccurrence`, `tag_hierarchy`, `explicit`)
+  - Dataset scopes: `neighbors_of`, `above_weight`, `by_origin`, `by_rel_type`, `between_nodes`
+  - Full validation: presence, allowed values, weight range, self-loop rejection, uniqueness
+- **`HTM::Jobs::GenerateRelationshipsJob`** - Background job that computes and upserts Jaccard edges
+  - Chained automatically after `GenerateTagsJob` completes
+  - Single SQL query computes Jaccard similarity for all tag-sharing nodes at once
+  - Skips edges below `MIN_WEIGHT_THRESHOLD` (0.1); caps at `MAX_EDGES_PER_NODE` (50) per node
+  - Idempotent: `INSERT ... ON CONFLICT DO UPDATE` refreshes stale weights on re-run
+- **Migrations** `00008_create_node_relationships` and `00009_fix_node_relationships_column_types`
+
+
 - **`sslmode` database configuration support** - SSL mode now extracted from URL and included when building URL
   - `parse_database_url` extracts `sslmode` from URL query string (e.g., `?sslmode=require`)
   - `build_database_url` includes `sslmode` as query parameter when set

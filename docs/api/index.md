@@ -108,6 +108,17 @@ HTM is a two-tier intelligent memory management system for LLM-based robots:
 | [EmbeddingService](embedding-service.md) | Vector embedding generation | `embed`, `count_tokens` |
 | [Database](database.md) | Schema setup and configuration | `setup`, `default_config` |
 
+### Sequel Models
+
+| Class | Table | Purpose |
+|-------|-------|---------|
+| `HTM::Models::Node` | nodes | Core memory storage |
+| `HTM::Models::Tag` | tags | Hierarchical tag names |
+| `HTM::Models::NodeTag` | node_tags | Node ↔ tag join |
+| `HTM::Models::NodeRelationship` | node_relationships | Weighted directed edges between nodes; Jaccard-similarity scores from tag co-occurrence |
+| `HTM::Models::Robot` | robots | Robot registry |
+| `HTM::Models::FileSource` | file_sources | Source file tracking |
+
 ### Common Usage Patterns
 
 #### Basic Memory Operations

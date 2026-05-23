@@ -5,6 +5,7 @@
 | Name | Columns | Comment | Type |
 | ---- | ------- | ------- | ---- |
 | [public.file_sources](public.file_sources.md) | 9 | Source file metadata for loaded documents | BASE TABLE |
+| [public.node_relationships](public.node_relationships.md) | 8 | Weighted directed edges between related nodes (Jaccard similarity) | BASE TABLE |
 | [public.node_tags](public.node_tags.md) | 5 | Join table connecting nodes to tags (many-to-many) | BASE TABLE |
 | [public.nodes](public.nodes.md) | 14 | Core memory storage for conversation messages and context | BASE TABLE |
 | [public.robot_nodes](public.robot_nodes.md) | 10 | Join table connecting robots to nodes (many-to-many) | BASE TABLE |

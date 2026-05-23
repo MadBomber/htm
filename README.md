@@ -150,8 +150,10 @@ For MCP integration, database setup, and configuration options, see the [full do
 | **Hive Mind** | Shared memory across all robots |
 | **Vector Search** | Semantic retrieval with pgvector |
 | **Hybrid Search** | Combines vector + full-text matching |
+| **Graph Traversal** | CTE-based relationship traversal via Jaccard-weighted edges |
 | **Temporal Queries** | "last week", "yesterday", date ranges |
 | **Auto-Tagging** | LLM extracts hierarchical tags automatically |
+| **Auto-Relationships** | Tag co-occurrence edges computed after tagging |
 | **Robot Groups** | High-availability with failover |
 | **Rails Integration** | Auto-configures via Railtie, uses ActiveJob |
 | **Telemetry** | Optional OpenTelemetry metrics |

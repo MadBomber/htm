@@ -342,11 +342,23 @@ node_id = htm.remember("Important fact about databases")
 # 2. Background jobs enqueue (async)
 # - GenerateEmbeddingJob runs (~100ms)
 # - GenerateTagsJob runs (~1 second)
+# - GenerateRelationshipsJob runs after tags (~1-2 seconds total)
 
 # 3. Node is eventually enriched
 # - embedding field populated (enables vector search)
 # - tags associated (enables tag navigation and boosting)
+# - relationship edges computed (enables graph traversal)
 ```
+
+### Job Chain
+
+The three background jobs run in a chain so each job can depend on prior results:
+
+1. **`GenerateEmbeddingJob`** — generates a vector embedding for the node
+2. **`GenerateTagsJob`** — extracts hierarchical tags using an LLM; on success, enqueues step 3
+3. **`GenerateRelationshipsJob`** — computes Jaccard-weighted edges to all tag-sharing nodes and upserts both directions (A→B and B→A) into `node_relationships`
+
+Edges below `MIN_WEIGHT_THRESHOLD` (0.1) are skipped; at most `MAX_EDGES_PER_NODE` (50) edges are stored per node.
 
 ### Immediate vs Eventual Capabilities
 
@@ -357,6 +369,7 @@ node_id = htm.remember("Important fact about databases")
 | Vector search | After ~100ms | Needs embedding |
 | Tag-enhanced search | After ~1s | Needs tags |
 | Hybrid search | After ~1s | Needs embedding + tags |
+| Graph traversal | After ~1-2s | Needs relationship edges |
 
 ## Working Memory Integration
 

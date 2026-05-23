@@ -28,6 +28,8 @@ class HTM
           associate_tags(node, tag_names)
           record_telemetry(provider, start_time, 'success')
           HTM.logger.info "GenerateTagsJob: Generated #{tag_names.length} tags for node #{node_id}: #{tag_names.join(', ')}"
+
+          HTM::JobAdapter.enqueue(HTM::Jobs::GenerateRelationshipsJob, node_id: node_id)
         rescue HTM::CircuitBreakerOpenError
           HTM::Telemetry.job_counter.add(1, attributes: { 'job' => 'tags', 'status' => 'circuit_open' })
           HTM.logger.warn "GenerateTagsJob: Circuit breaker open for node #{node_id}"
