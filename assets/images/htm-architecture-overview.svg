@@ -13,7 +13,7 @@
   <!-- HTM API -->
   <rect x="200" y="190" width="500" height="80" fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3" stroke-width="3" rx="8"/>
   <text x="450" y="225" text-anchor="middle" fill="#FFFFFF" font-size="16" font-weight="bold">HTM API</text>
-  <text x="450" y="250" text-anchor="middle" fill="#B0B0B0" font-size="13">add_node(), recall(), create_context(), etc.</text>
+  <text x="450" y="250" text-anchor="middle" fill="#B0B0B0" font-size="13">remember(), recall(), forget(), restore(), etc.</text>
 
   <!-- Arrows down to both memories -->
   <path d="M 320 270 L 320 330" stroke="#2196F3" stroke-width="3" fill="none" marker-end="url(#arrow1)"/>

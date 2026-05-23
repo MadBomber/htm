@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5754,7 +5754,7 @@
 <p>Before starting, ensure you have:</p>
 <ol>
 <li><strong>Ruby 3.0+</strong> installed</li>
-<li><strong>PostgreSQL with TimescaleDB</strong> (or access to a TimescaleDB cloud instance)</li>
+<li><strong>PostgreSQL 16+</strong> with pgvector and pg_trgm extensions</li>
 <li><strong>LLM Provider</strong> configured - Ollama (default for local development), OpenAI, Anthropic, Gemini, or others via RubyLLM</li>
 <li>Basic understanding of Ruby and LLMs</li>
 </ol>
@@ -5797,7 +5797,7 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>gem<span class="w"> </span>install<span class="w"> </span>htm
 </span></code></pre></div>
 <h2 id="database-setup">Database Setup<a class="headerlink" href="#database-setup" title="Permanent link">&para;</a></h2>
-<p>HTM requires a TimescaleDB database. Set your database connection:</p>
+<p>HTM requires a PostgreSQL database with pgvector and pg_trgm. Set your database connection:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Add to your .bashrc or .zshrc</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@host:port/database&quot;</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>

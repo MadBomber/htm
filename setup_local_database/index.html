@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5044,21 +5044,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#22-install-timescaledb-time-series-database" class="md-nav__link">
+  <a href="#22-pg_trgm-trigram-matching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.2 Install TimescaleDB (Time-Series Database)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#23-pg_trgm-trigram-matching" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.3 pg_trgm (Trigram Matching)
+        2.2 pg_trgm (Trigram Matching)
       
     </span>
   </a>
@@ -5160,10 +5149,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#error-timescaledb-extension-not-found" class="md-nav__link">
+  <a href="#error-pg_trgm-extension-not-found" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Error: "TimescaleDB extension not found"
+        Error: "pg_trgm extension not found"
       
     </span>
   </a>
@@ -5198,10 +5187,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#switching-back-to-timescaledb-cloud" class="md-nav__link">
+  <a href="#switching-to-a-remote-database" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Switching Back to TimescaleDB Cloud
+        Switching to a Remote Database
       
     </span>
   </a>
@@ -5342,21 +5331,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#22-install-timescaledb-time-series-database" class="md-nav__link">
+  <a href="#22-pg_trgm-trigram-matching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2.2 Install TimescaleDB (Time-Series Database)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#23-pg_trgm-trigram-matching" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2.3 pg_trgm (Trigram Matching)
+        2.2 pg_trgm (Trigram Matching)
       
     </span>
   </a>
@@ -5458,10 +5436,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#error-timescaledb-extension-not-found" class="md-nav__link">
+  <a href="#error-pg_trgm-extension-not-found" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Error: "TimescaleDB extension not found"
+        Error: "pg_trgm extension not found"
       
     </span>
   </a>
@@ -5496,10 +5474,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#switching-back-to-timescaledb-cloud" class="md-nav__link">
+  <a href="#switching-to-a-remote-database" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Switching Back to TimescaleDB Cloud
+        Switching to a Remote Database
       
     </span>
   </a>
@@ -5601,184 +5579,141 @@
 <h3 id="21-install-pgvector-vector-similarity-search">2.1 Install pgvector (Vector Similarity Search)<a class="headerlink" href="#21-install-pgvector-vector-similarity-search" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>brew<span class="w"> </span>install<span class="w"> </span>pgvector
 </span></code></pre></div>
-<h3 id="22-install-timescaledb-time-series-database">2.2 Install TimescaleDB (Time-Series Database)<a class="headerlink" href="#22-install-timescaledb-time-series-database" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Add TimescaleDB tap</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>brew<span class="w"> </span>tap<span class="w"> </span>timescale/tap
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Install TimescaleDB</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>brew<span class="w"> </span>install<span class="w"> </span>timescaledb
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Configure PostgreSQL for TimescaleDB</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># This updates your postgresql.conf with TimescaleDB settings</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>timescaledb-tune<span class="w"> </span>--quiet<span class="w"> </span>--yes
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># Restart PostgreSQL to load TimescaleDB</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>brew<span class="w"> </span>services<span class="w"> </span>restart<span class="w"> </span>postgresql@17
-</span></code></pre></div>
-<h3 id="23-pg_trgm-trigram-matching">2.3 pg_trgm (Trigram Matching)<a class="headerlink" href="#23-pg_trgm-trigram-matching" title="Permanent link">&para;</a></h3>
+<h3 id="22-pg_trgm-trigram-matching">2.2 pg_trgm (Trigram Matching)<a class="headerlink" href="#22-pg_trgm-trigram-matching" title="Permanent link">&para;</a></h3>
 <p>This extension is included with PostgreSQL, no installation needed.</p>
 <h2 id="step-3-configure-environment">Step 3: Configure Environment<a class="headerlink" href="#step-3-configure-environment" title="Permanent link">&para;</a></h2>
 <p>Update your <code>.envrc</code> file (already done):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Database connection - Localhost PostgreSQL</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__HOST</span><span class="o">=</span>localhost
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PORT</span><span class="o">=</span><span class="m">5432</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__NAME</span><span class="o">=</span>htm_development
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__USER</span><span class="o">=</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PASSWORD</span><span class="o">=</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://</span><span class="si">${</span><span class="nv">HTM_DATABASE__USER</span><span class="si">}</span><span class="s2">@</span><span class="si">${</span><span class="nv">HTM_DATABASE__HOST</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">HTM_DATABASE__PORT</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">HTM_DATABASE__NAME</span><span class="si">}</span><span class="s2">?sslmode=prefer&quot;</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1"># Client-side embedding generation</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_PROVIDER</span><span class="o">=</span>ollama
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_MODEL</span><span class="o">=</span>embeddinggemma
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_BASE_URL</span><span class="o">=</span>http://localhost:11434
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_DIMENSION</span><span class="o">=</span><span class="m">768</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Database connection - Localhost PostgreSQL</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__HOST</span><span class="o">=</span>localhost
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PORT</span><span class="o">=</span><span class="m">5432</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__NAME</span><span class="o">=</span>htm_development
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__USER</span><span class="o">=</span><span class="si">${</span><span class="nv">USER</span><span class="si">}</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PASSWORD</span><span class="o">=</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://</span><span class="si">${</span><span class="nv">HTM_DATABASE__USER</span><span class="si">}</span><span class="s2">@</span><span class="si">${</span><span class="nv">HTM_DATABASE__HOST</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">HTM_DATABASE__PORT</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">HTM_DATABASE__NAME</span><span class="si">}</span><span class="s2">?sslmode=prefer&quot;</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="c1"># Client-side embedding generation</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_PROVIDER</span><span class="o">=</span>ollama
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_MODEL</span><span class="o">=</span>embeddinggemma
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_BASE_URL</span><span class="o">=</span>http://localhost:11434
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_DIMENSION</span><span class="o">=</span><span class="m">768</span>
 </span></code></pre></div>
 <p>Reload environment:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">cd</span><span class="w"> </span>/path/to/htm
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>direnv<span class="w"> </span>allow
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">cd</span><span class="w"> </span>/path/to/htm
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>direnv<span class="w"> </span>allow
 </span></code></pre></div>
 <h2 id="step-4-create-database">Step 4: Create Database<a class="headerlink" href="#step-4-create-database" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>createdb<span class="w"> </span>htm_development
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>createdb<span class="w"> </span>htm_development
 </span></code></pre></div>
 <h2 id="step-5-enable-extensions">Step 5: Enable Extensions<a class="headerlink" href="#step-5-enable-extensions" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Enable pgvector</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS vector;&quot;</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Enable TimescaleDB</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS timescaledb;&quot;</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Enable pg_trgm (trigram matching)</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pg_trgm;&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Enable pgvector</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS vector;&quot;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Enable pg_trgm (trigram matching)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pg_trgm;&quot;</span>
 </span></code></pre></div>
 <h2 id="step-6-run-htm-database-setup">Step 6: Run HTM Database Setup<a class="headerlink" href="#step-6-run-htm-database-setup" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>be<span class="w"> </span>rake<span class="w"> </span>htm:db:setup
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>be<span class="w"> </span>rake<span class="w"> </span>htm:db:setup
 </span></code></pre></div>
 <p>This will:
 1. Verify extensions are available
 2. Create HTM schema (tables, indexes, triggers)
-3. Set up TimescaleDB hypertables
-4. Run any pending migrations</p>
+3. Run any pending migrations</p>
 <p>Expected output:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>✓ TimescaleDB version: X.X.X
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>✓ pgvector version: X.X.X
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>✓ pg_trgm version: X.X.X
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>Creating HTM schema...
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>✓ Schema created
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>✓ Created hypertable for operations_log
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>✓ Created hypertable for nodes
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>✓ Enabled compression for nodes older than 30 days
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>✓ HTM database schema created successfully
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>✓ pgvector version: X.X.X
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>✓ pg_trgm version: X.X.X
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Creating HTM schema...
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>✓ Schema created
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>✓ HTM database schema created successfully
 </span></code></pre></div>
 <h2 id="step-7-test-with-sample-data">Step 7: Test with Sample Data<a class="headerlink" href="#step-7-test-with-sample-data" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>be<span class="w"> </span>rake<span class="w"> </span>htm:db:seed
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>be<span class="w"> </span>rake<span class="w"> </span>htm:db:seed
 </span></code></pre></div>
 <p>This will:
 1. Initialize HTM with real EmbeddingService
 2. Create 6 sample conversation messages
 3. Generate embeddings client-side using your local Ollama</p>
 <p>Expected output:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Seeding database with sample data...
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Note: This requires Ollama to be running locally for embedding generation.
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  Creating sample conversation...
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>✓ Database seeded with 6 conversation messages (3 exchanges)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Seeding database with sample data...
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Note: This requires Ollama to be running locally for embedding generation.
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  Creating sample conversation...
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>✓ Database seeded with 6 conversation messages (3 exchanges)
 </span></code></pre></div>
 <h2 id="available-rake-tasks">Available Rake Tasks<a class="headerlink" href="#available-rake-tasks" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>rake<span class="w"> </span>htm:db:setup<span class="w">      </span><span class="c1"># Set up database schema and run migrations</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>rake<span class="w"> </span>htm:db:migrate<span class="w">    </span><span class="c1"># Run pending migrations</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>rake<span class="w"> </span>htm:db:status<span class="w">     </span><span class="c1"># Show migration status</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>rake<span class="w"> </span>htm:db:drop<span class="w">       </span><span class="c1"># Drop all HTM tables (WARNING: destructive!)</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>rake<span class="w"> </span>htm:db:reset<span class="w">      </span><span class="c1"># Drop and recreate database</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>rake<span class="w"> </span>htm:db:test<span class="w">       </span><span class="c1"># Test database connection</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>rake<span class="w"> </span>htm:db:console<span class="w">    </span><span class="c1"># Open PostgreSQL console</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>rake<span class="w"> </span>htm:db:seed<span class="w">       </span><span class="c1"># Seed database with sample data</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>rake<span class="w"> </span>htm:db:info<span class="w">       </span><span class="c1"># Show database info (size, tables, extensions)</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>rake<span class="w"> </span>htm:db:setup<span class="w">      </span><span class="c1"># Set up database schema and run migrations</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>rake<span class="w"> </span>htm:db:migrate<span class="w">    </span><span class="c1"># Run pending migrations</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>rake<span class="w"> </span>htm:db:status<span class="w">     </span><span class="c1"># Show migration status</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>rake<span class="w"> </span>htm:db:drop<span class="w">       </span><span class="c1"># Drop all HTM tables (WARNING: destructive!)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>rake<span class="w"> </span>htm:db:reset<span class="w">      </span><span class="c1"># Drop and recreate database</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>rake<span class="w"> </span>htm:db:test<span class="w">       </span><span class="c1"># Test database connection</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>rake<span class="w"> </span>htm:db:console<span class="w">    </span><span class="c1"># Open PostgreSQL console</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>rake<span class="w"> </span>htm:db:seed<span class="w">       </span><span class="c1"># Seed database with sample data</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>rake<span class="w"> </span>htm:db:info<span class="w">       </span><span class="c1"># Show database info (size, tables, extensions)</span>
 </span></code></pre></div>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="error-type-vector-does-not-exist">Error: "type 'vector' does not exist"<a class="headerlink" href="#error-type-vector-does-not-exist" title="Permanent link">&para;</a></h3>
 <p><strong>Problem:</strong> pgvector extension not installed or not enabled.</p>
 <p><strong>Solution:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>brew<span class="w"> </span>install<span class="w"> </span>pgvector
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS vector;&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>brew<span class="w"> </span>install<span class="w"> </span>pgvector
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS vector;&quot;</span>
 </span></code></pre></div></p>
-<h3 id="error-timescaledb-extension-not-found">Error: "TimescaleDB extension not found"<a class="headerlink" href="#error-timescaledb-extension-not-found" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong> TimescaleDB not installed or not enabled.</p>
+<h3 id="error-pg_trgm-extension-not-found">Error: "pg_trgm extension not found"<a class="headerlink" href="#error-pg_trgm-extension-not-found" title="Permanent link">&para;</a></h3>
+<p><strong>Problem:</strong> pg_trgm not enabled (it ships with PostgreSQL but needs to be enabled).</p>
 <p><strong>Solution:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>brew<span class="w"> </span>tap<span class="w"> </span>timescale/tap
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>brew<span class="w"> </span>install<span class="w"> </span>timescaledb
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>timescaledb-tune<span class="w"> </span>--quiet<span class="w"> </span>--yes
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>brew<span class="w"> </span>services<span class="w"> </span>restart<span class="w"> </span>postgresql@17
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS timescaledb;&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>psql<span class="w"> </span>-d<span class="w"> </span>htm_development<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pg_trgm;&quot;</span>
 </span></code></pre></div></p>
 <h3 id="error-connection-refused-to-ollama">Error: "Connection refused" to Ollama<a class="headerlink" href="#error-connection-refused-to-ollama" title="Permanent link">&para;</a></h3>
 <p><strong>Problem:</strong> Ollama not running or not accessible.</p>
 <p><strong>Solution:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Check Ollama is running</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>curl<span class="w"> </span>http://localhost:11434/api/tags
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Start Ollama if not running</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>ollama<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Check Ollama is running</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>curl<span class="w"> </span>http://localhost:11434/api/tags
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># Start Ollama if not running</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>ollama<span class="w"> </span>serve
 </span></code></pre></div></p>
 <h3 id="error-database-configuration-not-found">Error: "Database configuration not found"<a class="headerlink" href="#error-database-configuration-not-found" title="Permanent link">&para;</a></h3>
 <p><strong>Problem:</strong> Environment variables not loaded.</p>
 <p><strong>Solution:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>direnv<span class="w"> </span>allow
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w">  </span><span class="c1"># Verify it&#39;s set</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>direnv<span class="w"> </span>allow
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nb">echo</span><span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w">  </span><span class="c1"># Verify it&#39;s set</span>
 </span></code></pre></div></p>
-<h2 id="switching-back-to-timescaledb-cloud">Switching Back to TimescaleDB Cloud<a class="headerlink" href="#switching-back-to-timescaledb-cloud" title="Permanent link">&para;</a></h2>
-<p>To switch back to TimescaleDB Cloud (production), edit <code>.envrc</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Comment out localhost config</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="c1"># export HTM_DATABASE__HOST=localhost</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="c1"># export HTM_DATABASE__PORT=5432</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># export HTM_DATABASE__NAME=htm_development</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="c1"># export HTM_DATABASE__USER=${USER}</span>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="c1"># export HTM_DATABASE__PASSWORD=</span>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># export HTM_DATABASE__URL=&quot;postgresql://${HTM_DATABASE__USER}@${HTM_DATABASE__HOST}:${HTM_DATABASE__PORT}/${HTM_DATABASE__NAME}?sslmode=prefer&quot;</span>
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="c1"># Uncomment TimescaleDB Cloud config</span>
-</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_SERVICE_NAME</span><span class="o">=</span><span class="nv">$TIGER_SERVICE_NAME</span>
-</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="nv">$TIGER_DBURL</span>
-</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__NAME</span><span class="o">=</span><span class="nv">$TIGER_DBNAME</span>
-</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__USER</span><span class="o">=</span><span class="nv">$TIGER_DBUSER</span>
-</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PASSWORD</span><span class="o">=</span><span class="nv">$TIGER_DBPASS</span>
-</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__HOST</span><span class="o">=</span><span class="nv">$TIGER_DBHOST</span>
-</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PORT</span><span class="o">=</span><span class="nv">$TIGER_DBPORT</span>
+<h2 id="switching-to-a-remote-database">Switching to a Remote Database<a class="headerlink" href="#switching-to-a-remote-database" title="Permanent link">&para;</a></h2>
+<p>To switch to a remote PostgreSQL database (e.g. production), update your environment:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s2">&quot;postgresql://user:password@remote-host:5432/htm_production&quot;</span>
 </span></code></pre></div>
 <p>Then reload:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>direnv<span class="w"> </span>allow
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>direnv<span class="w"> </span>allow
 </span></code></pre></div></p>
 <h2 id="verifying-setup">Verifying Setup<a class="headerlink" href="#verifying-setup" title="Permanent link">&para;</a></h2>
 <p>Check database info:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>be<span class="w"> </span>rake<span class="w"> </span>htm:db:info
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>be<span class="w"> </span>rake<span class="w"> </span>htm:db:info
 </span></code></pre></div>
 <p>Should show:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>HTM Database Information
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>================================================================================
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>Connection:
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>  Host: localhost
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>  Port: 5432
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>  Database: htm_development
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>  User: dewayne
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>PostgreSQL Version:
-</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>  PostgreSQL 17.6
-</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>
-</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>Extensions:
-</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a>  pg_trgm (X.X.X)
-</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a>  plpgsql (X.X.X)
-</span><span id="__span-20-16"><a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a>  timescaledb (X.X.X)
-</span><span id="__span-20-17"><a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a>  vector (X.X.X)
-</span><span id="__span-20-18"><a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a>
-</span><span id="__span-20-19"><a id="__codelineno-20-19" name="__codelineno-20-19" href="#__codelineno-20-19"></a>HTM Tables:
-</span><span id="__span-20-20"><a id="__codelineno-20-20" name="__codelineno-20-20" href="#__codelineno-20-20"></a>  nodes: X rows
-</span><span id="__span-20-21"><a id="__codelineno-20-21" name="__codelineno-20-21" href="#__codelineno-20-21"></a>  tags: X rows
-</span><span id="__span-20-22"><a id="__codelineno-20-22" name="__codelineno-20-22" href="#__codelineno-20-22"></a>  robots: X rows
-</span><span id="__span-20-23"><a id="__codelineno-20-23" name="__codelineno-20-23" href="#__codelineno-20-23"></a>  operations_log: X rows
-</span><span id="__span-20-24"><a id="__codelineno-20-24" name="__codelineno-20-24" href="#__codelineno-20-24"></a>  schema_migrations: X rows
-</span><span id="__span-20-25"><a id="__codelineno-20-25" name="__codelineno-20-25" href="#__codelineno-20-25"></a>
-</span><span id="__span-20-26"><a id="__codelineno-20-26" name="__codelineno-20-26" href="#__codelineno-20-26"></a>Database Size: XX MB
-</span><span id="__span-20-27"><a id="__codelineno-20-27" name="__codelineno-20-27" href="#__codelineno-20-27"></a>================================================================================
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>HTM Database Information
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>================================================================================
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>Connection:
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>  Host: localhost
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>  Port: 5432
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>  Database: htm_development
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>  User: dewayne
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>PostgreSQL Version:
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>  PostgreSQL 17.6
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>Extensions:
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>  pg_trgm (X.X.X)
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>  plpgsql (X.X.X)
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a>  vector (X.X.X)
+</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>
+</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a>HTM Tables:
+</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a>  nodes: X rows
+</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a>  tags: X rows
+</span><span id="__span-19-21"><a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a>  robots: X rows
+</span><span id="__span-19-22"><a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a>  schema_migrations: X rows
+</span><span id="__span-19-23"><a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a>
+</span><span id="__span-19-24"><a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a>Database Size: XX MB
+</span><span id="__span-19-25"><a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a>================================================================================
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <p>Once your local database is set up:</p>

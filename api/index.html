@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5261,11 +5261,11 @@
 <p><rect x="300" y="20" width="200" height="180" class="class-box" rx="5"/>
   <text x="400" y="45" text-anchor="middle" class="class-title">HTM</text>
   <line x1="310" y1="55" x2="490" y2="55" stroke="#4a9eff" stroke-width="1"/>
-  <text x="310" y="75" class="class-method">+ add_node()</text>
+  <text x="310" y="75" class="class-method">+ remember()</text>
   <text x="310" y="90" class="class-method">+ recall()</text>
-  <text x="310" y="105" class="class-method">+ retrieve()</text>
+  <text x="310" y="105" class="class-method">+ restore()</text>
   <text x="310" y="120" class="class-method">+ forget()</text>
-  <text x="310" y="135" class="class-method">+ create_context()</text>
+  <text x="310" y="135" class="class-method">+ working_memory()</text>
   <text x="310" y="150" class="class-method">+ memory_stats()</text>
   <text x="310" y="165" class="class-method">+ which_robot_said()</text>
   <text x="310" y="180" class="class-method">+ conversation_timeline()</text></p>
@@ -5329,7 +5329,7 @@
 <tr>
 <td><a href="htm/">HTM</a></td>
 <td>Main interface for memory management</td>
-<td><code>add_node</code>, <code>recall</code>, <code>retrieve</code>, <code>forget</code>, <code>create_context</code></td>
+<td><code>remember</code>, <code>recall</code>, <code>forget</code>, <code>restore</code>, <code>working_memory</code></td>
 </tr>
 <tr>
 <td><a href="working-memory/">WorkingMemory</a></td>
@@ -5359,14 +5359,14 @@
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">htm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">robot_name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Assistant&quot;</span><span class="p">)</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Add memories</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;fact_001&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;PostgreSQL is our database&quot;</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:fact</span><span class="p">,</span><span class="w"> </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="o">.</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">tags</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;database&quot;</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="s2">&quot;PostgreSQL is our database&quot;</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:fact</span><span class="p">,</span><span class="w"> </span><span class="ss">tags</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;database&quot;</span><span class="o">]</span><span class="p">)</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Recall memories</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last week&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PostgreSQL&quot;</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;PostgreSQL&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last week&quot;</span><span class="p">)</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># Create LLM context</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="multi-robot-collaboration">Multi-Robot Collaboration<a class="headerlink" href="#multi-robot-collaboration" title="Permanent link">&para;</a></h4>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Find who discussed a topic</span>
@@ -5379,16 +5379,16 @@
 <h4 id="advanced-retrieval">Advanced Retrieval<a class="headerlink" href="#advanced-retrieval" title="Permanent link">&para;</a></h4>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Vector similarity search</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last 30 days&quot;</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;API design decisions&quot;</span><span class="p">,</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="s2">&quot;API design decisions&quot;</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last 30 days&quot;</span><span class="p">,</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:vector</span><span class="p">,</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="ss">limit</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># Hybrid search (fulltext + vector)</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;this month&quot;</span><span class="p">,</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;security vulnerabilities&quot;</span><span class="p">,</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="s2">&quot;security vulnerabilities&quot;</span><span class="p">,</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;this month&quot;</span><span class="p">,</span>
 </span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:hybrid</span><span class="p">,</span>
 </span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="ss">limit</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span>
 </span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="p">)</span>
@@ -5466,7 +5466,7 @@
 </tbody>
 </table>
 <h2 id="context-assembly-strategies">Context Assembly Strategies<a class="headerlink" href="#context-assembly-strategies" title="Permanent link">&para;</a></h2>
-<p>When creating context with <code>create_context</code>:</p>
+<p>When creating context with <code>working_memory.assemble_context</code>:</p>
 <table>
 <thead>
 <tr>
@@ -5480,12 +5480,12 @@
 <td>Most recently accessed first</td>
 </tr>
 <tr>
-<td><code>:important</code></td>
-<td>Highest importance scores first</td>
+<td><code>:frequent</code></td>
+<td>Most frequently accessed first</td>
 </tr>
 <tr>
 <td><code>:balanced</code></td>
-<td>Weighted by importance and recency</td>
+<td>Weighted by access frequency and recency</td>
 </tr>
 </tbody>
 </table>
@@ -5525,8 +5525,8 @@
 <p>For large memory stores (&gt;100K nodes):</p>
 <ul>
 <li>Use hybrid search with appropriate <code>prefilter_limit</code></li>
-<li>Consider time-based partitioning (automatic with TimescaleDB)</li>
-<li>Enable compression for old data (configured in schema)</li>
+<li>Purge soft-deleted nodes periodically with <code>htm.purge_deleted</code></li>
+<li>Add partial indexes for frequently filtered columns</li>
 </ul>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>

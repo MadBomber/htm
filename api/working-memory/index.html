@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -7020,7 +7020,7 @@
 <td><code>strategy</code></td>
 <td>Symbol</td>
 <td><em>required</em></td>
-<td>Assembly strategy (<code>:recent</code>, <code>:important</code>, <code>:balanced</code>)</td>
+<td>Assembly strategy (<code>:recent</code>, <code>:frequent</code>, <code>:balanced</code>)</td>
 </tr>
 <tr>
 <td><code>max_tokens</code></td>
@@ -7035,8 +7035,8 @@
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Ordered by access time (newest first)</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="c1"># Good for: Conversational continuity</span>
 </span></code></pre></div>
-<p><strong><code>:important</code></strong> - Highest importance scores first</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Ordered by importance score (highest first)</span>
+<p><strong><code>:frequent</code></strong> - Most frequently accessed first</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Ordered by access count (highest first)</span>
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="c1"># Good for: Critical information prioritization</span>
 </span></code></pre></div>
 <p><strong><code>:balanced</code></strong> - Weighted by importance and recency</p>
@@ -7054,8 +7054,8 @@
 </span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># Recent conversations only</span>
 </span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:recent</span><span class="p">)</span>
 </span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># Most important information</span>
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:important</span><span class="p">)</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># Most frequently accessed information</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:frequent</span><span class="p">)</span>
 </span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>
 </span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="c1"># Limited tokens</span>
 </span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span>
@@ -7226,8 +7226,8 @@
 </span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="w">  </span><span class="k">end</span>
 </span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>
 </span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">for_analysis</span>
-</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="w">    </span><span class="c1"># Important context for deep analysis</span>
-</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a><span class="w">    </span><span class="vi">@wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:important</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">32000</span><span class="p">)</span>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="w">    </span><span class="c1"># Frequently accessed context for deep analysis</span>
+</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a><span class="w">    </span><span class="vi">@wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:frequent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">32000</span><span class="p">)</span>
 </span><span id="__span-27-15"><a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a><span class="w">  </span><span class="k">end</span>
 </span><span id="__span-27-16"><a id="__codelineno-27-16" name="__codelineno-27-16" href="#__codelineno-27-16"></a>
 </span><span id="__span-27-17"><a id="__codelineno-27-17" name="__codelineno-27-17" href="#__codelineno-27-17"></a><span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">for_general_task</span>
@@ -7365,7 +7365,7 @@
 </span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:recent</span><span class="p">)</span>
 </span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>
 </span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="c1"># For analysis/reasoning</span>
-</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:important</span><span class="p">)</span>
+</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:frequent</span><span class="p">)</span>
 </span><span id="__span-34-6"><a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a>
 </span><span id="__span-34-7"><a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a><span class="c1"># For general use</span>
 </span><span id="__span-34-8"><a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wm</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>

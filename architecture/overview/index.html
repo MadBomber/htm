@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -6313,9 +6313,9 @@
 <h4 id="data-layer">Data Layer<a class="headerlink" href="#data-layer" title="Permanent link">&para;</a></h4>
 <ul>
 <li><strong>PostgreSQL</strong>: Relational storage with ACID guarantees</li>
-<li><strong>TimescaleDB</strong>: Time-series optimization and compression</li>
 <li><strong>pgvector</strong>: Vector similarity search with HNSW</li>
 <li><strong>pg_trgm</strong>: Fuzzy text matching for search</li>
+<li><strong>Sequel</strong>: Ruby ORM for database access</li>
 </ul>
 <h2 id="component-diagrams">Component Diagrams<a class="headerlink" href="#component-diagrams" title="Permanent link">&para;</a></h2>
 <h3 id="htm-core-components">HTM Core Components<a class="headerlink" href="#htm-core-components" title="Permanent link">&para;</a></h3>
@@ -6633,12 +6633,6 @@
 <td>ACID guarantees, rich extensions, production-proven</td>
 </tr>
 <tr>
-<td><strong>TimescaleDB</strong></td>
-<td>2.13+</td>
-<td>Time-series extension</td>
-<td>Hypertable partitioning, automatic compression</td>
-</tr>
-<tr>
 <td><strong>pgvector</strong></td>
 <td>0.5+</td>
 <td>Vector similarity</td>
@@ -6769,14 +6763,14 @@
 <td>Client-side embedding + hybrid search</td>
 </tr>
 <tr>
-<td><code>retrieve()</code></td>
+<td><code>HTM::Models::Node.first()</code></td>
 <td>5ms</td>
 <td>10ms</td>
 <td>20ms</td>
 <td>Simple primary key lookup</td>
 </tr>
 <tr>
-<td><code>create_context()</code></td>
+<td><code>working_memory.assemble_context()</code></td>
 <td>8ms</td>
 <td>15ms</td>
 <td>25ms</td>
@@ -6850,17 +6844,12 @@
 <tr>
 <td>Node (with embedding)</td>
 <td>~7KB (1536 dims × 4 bytes)</td>
-<td>TimescaleDB compression (70-90%)</td>
+<td>TOAST (auto)</td>
 </tr>
 <tr>
 <td>Indexes</td>
 <td>~2x data size</td>
 <td>Minimal</td>
-</tr>
-<tr>
-<td>Operations log</td>
-<td>~200 bytes/op</td>
-<td>TimescaleDB compression</td>
 </tr>
 </tbody>
 </table>
@@ -6868,7 +6857,6 @@
 <ul>
 <li>Raw data: ~700 MB</li>
 <li>With indexes: ~2.1 GB</li>
-<li>With compression (after 30 days): ~300 MB</li>
 </ul>
 <h2 id="scalability-considerations">Scalability Considerations<a class="headerlink" href="#scalability-considerations" title="Permanent link">&para;</a></h2>
 <h3 id="vertical-scaling-limits">Vertical Scaling Limits<a class="headerlink" href="#vertical-scaling-limits" title="Permanent link">&para;</a></h3>
@@ -6930,7 +6918,7 @@
 <li>Add PostgreSQL read replicas</li>
 <li>Route <code>recall()</code> and <code>retrieve()</code> to replicas</li>
 <li>Primary handles writes only</li>
-<li>TimescaleDB native replication support</li>
+<li>PostgreSQL native replication support</li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Consistency Considerations</p>

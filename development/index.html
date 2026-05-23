@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5459,7 +5459,7 @@
 <ul>
 <li>Cloning the repository</li>
 <li>Installing Ruby and dependencies</li>
-<li>Setting up TimescaleDB for development</li>
+<li>Setting up PostgreSQL for development</li>
 <li>Configuring Ollama for embeddings</li>
 <li>Running tests and examples</li>
 <li>Development tools and rake tasks</li>
@@ -5504,7 +5504,7 @@
 <li>Troubleshooting guide</li>
 </ul>
 <h3 id="database-schema"><a href="schema/">Database Schema</a><a class="headerlink" href="#database-schema" title="Permanent link">&para;</a></h3>
-<p>Deep dive into HTM's database architecture, tables, indexes, and TimescaleDB optimization strategies.</p>
+<p>Deep dive into HTM's database architecture, tables, indexes, and PostgreSQL optimization strategies.</p>
 <p><strong>Topics covered:</strong></p>
 <ul>
 <li>Complete schema reference</li>
@@ -5512,8 +5512,6 @@
 <li>Table definitions and column details</li>
 <li>Indexes and constraints</li>
 <li>Views and functions</li>
-<li>TimescaleDB hypertables</li>
-<li>Compression policies</li>
 <li>Migration strategies</li>
 </ul>
 <h2 id="quick-start-for-contributors">Quick Start for Contributors<a class="headerlink" href="#quick-start-for-contributors" title="Permanent link">&para;</a></h2>
@@ -5609,7 +5607,7 @@
 <p><strong>Q: Where do I start if I'm new to the project?</strong></p>
 <p>A: Check out issues labeled <code>good-first-issue</code> on GitHub. These are specifically chosen to be approachable for new contributors.</p>
 <p><strong>Q: How do I run tests without a database?</strong></p>
-<p>A: Unit tests (like <code>test/htm_test.rb</code>) don't require a database. Integration tests require TimescaleDB. See the <a href="testing/">Testing Guide</a> for details.</p>
+<p>A: Unit tests (like <code>test/htm_test.rb</code>) don't require a database. Integration tests require PostgreSQL with pgvector. See the <a href="testing/">Testing Guide</a> for details.</p>
 <p><strong>Q: What's the preferred debugging approach?</strong></p>
 <p>A: HTM uses the <code>debug_me</code> gem for debugging. See examples in the codebase and avoid using <code>puts</code> for debugging.</p>
 <p><strong>Q: How do I add new database columns or tables?</strong></p>
@@ -5666,8 +5664,7 @@
 <h3 id="core-technologies">Core Technologies<a class="headerlink" href="#core-technologies" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Ruby 3.0+</strong>: Modern Ruby with pattern matching and better performance</li>
-<li><strong>PostgreSQL 17</strong>: Robust relational database</li>
-<li><strong>TimescaleDB</strong>: Time-series optimization for PostgreSQL</li>
+<li><strong>PostgreSQL 17</strong>: Robust relational database with pgvector and pg_trgm</li>
 <li><strong>pgvector</strong>: Vector similarity search</li>
 <li><strong>RubyLLM</strong>: LLM client library for embeddings</li>
 <li><strong>Ollama</strong>: Local embedding generation</li>

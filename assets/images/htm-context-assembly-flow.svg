@@ -4,7 +4,7 @@
 
   <!-- User -->
   <rect x="50" y="80" width="200" height="60" fill="rgba(76, 175, 80, 0.3)" stroke="#4CAF50" stroke-width="3" rx="8"/>
-  <text x="150" y="110" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">User: create_context</text>
+  <text x="150" y="110" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">User: assemble_context</text>
   <text x="150" y="128" text-anchor="middle" fill="#B0B0B0" font-size="11">(with strategy)</text>
 
   <!-- HTM -->
@@ -81,7 +81,7 @@
   <text x="695" y="165" text-anchor="middle" fill="#673AB7" font-size="10">:recent</text>
 
   <path d="M 670 210 L 720 210 L 720 250" stroke="#F44336" stroke-width="2" fill="none" marker-end="url(#arrowR)"/>
-  <text x="695" y="215" text-anchor="middle" fill="#F44336" font-size="10">:important</text>
+  <text x="695" y="215" text-anchor="middle" fill="#F44336" font-size="10">:frequent</text>
 
   <path d="M 670 245 L 720 245 L 720 330" stroke="#4CAF50" stroke-width="2" fill="none" marker-end="url(#arrowG)"/>
   <text x="695" y="260" text-anchor="middle" fill="#4CAF50" font-size="10">:balanced</text>

@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -2661,10 +2661,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#compression-timescaledb" class="md-nav__link">
+  <a href="#cleanup-old-soft-deleted-nodes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Compression (TimescaleDB)
+        Cleanup Old Soft-Deleted Nodes
       
     </span>
   </a>
@@ -5866,10 +5866,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#compression-timescaledb" class="md-nav__link">
+  <a href="#cleanup-old-soft-deleted-nodes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Compression (TimescaleDB)
+        Cleanup Old Soft-Deleted Nodes
       
     </span>
   </a>
@@ -6244,7 +6244,7 @@
 <li><strong>Permanent storage</strong> for all memories</li>
 <li><strong>Vector embeddings</strong> via pgvector</li>
 <li><strong>Full-text search</strong> via PostgreSQL's ts_vector</li>
-<li><strong>Time-series optimization</strong> via TimescaleDB hypertables</li>
+<li><strong>Temporal filtering</strong> via created_at index and Chronic gem for natural language timeframes</li>
 <li><strong>Relationship graphs</strong> for knowledge connections</li>
 <li><strong>Audit logging</strong> for all operations</li>
 </ul>
@@ -6555,30 +6555,10 @@
 </span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
 </span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Reindexing completed&quot;</span>
 </span></code></pre></div>
-<h3 id="compression-timescaledb">Compression (TimescaleDB)<a class="headerlink" href="#compression-timescaledb" title="Permanent link">&para;</a></h3>
-<p>TimescaleDB can compress old data:</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Enable compression on operations_log hypertable</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">PG</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">default_config</span><span class="p">)</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">  </span><span class="o">&lt;&lt;~</span><span class="dl">SQL</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="sh">    ALTER TABLE operations_log SET (</span>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="sh">      timescaledb.compress,</span>
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="sh">      timescaledb.compress_segmentby = &#39;robot_id&#39;</span>
-</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="sh">    )</span>
-</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="dl">  SQL</span>
-</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="p">)</span>
-</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>
-</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="c1"># Add compression policy (compress data older than 7 days)</span>
-</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span>
-</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="w">  </span><span class="o">&lt;&lt;~</span><span class="dl">SQL</span>
-</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a><span class="sh">    SELECT add_compression_policy(&#39;operations_log&#39;, INTERVAL &#39;7 days&#39;)</span>
-</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a><span class="dl">  SQL</span>
-</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="p">)</span>
-</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a>
-</span><span id="__span-16-20"><a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a><span class="n">conn</span><span class="o">.</span><span class="n">close</span>
-</span><span id="__span-16-21"><a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a>
-</span><span id="__span-16-22"><a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Compression policy enabled&quot;</span>
+<h3 id="cleanup-old-soft-deleted-nodes">Cleanup Old Soft-Deleted Nodes<a class="headerlink" href="#cleanup-old-soft-deleted-nodes" title="Permanent link">&para;</a></h3>
+<p>Periodically purge soft-deleted nodes to reclaim storage:</p>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Purge nodes soft-deleted more than 90 days ago</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">purge_deleted</span><span class="p">(</span><span class="ss">older_than</span><span class="p">:</span><span class="w"> </span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="mi">90</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">24</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span><span class="p">),</span><span class="w"> </span><span class="ss">confirm</span><span class="p">:</span><span class="w"> </span><span class="ss">:confirmed</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="cleanup-old-logs">Cleanup Old Logs<a class="headerlink" href="#cleanup-old-logs" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Delete operations logs older than 90 days</span>
@@ -6984,9 +6964,9 @@
 </span><span id="__span-36-21"><a id="__codelineno-36-21" name="__codelineno-36-21" href="#__codelineno-36-21"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Total tags: </span><span class="si">#{</span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Tag</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span>
 </span><span id="__span-36-22"><a id="__codelineno-36-22" name="__codelineno-36-22" href="#__codelineno-36-22"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Active robots: </span><span class="si">#{</span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Robot</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2">&quot;</span>
 </span><span id="__span-36-23"><a id="__codelineno-36-23" name="__codelineno-36-23" href="#__codelineno-36-23"></a>
-</span><span id="__span-36-24"><a id="__codelineno-36-24" name="__codelineno-36-24" href="#__codelineno-36-24"></a><span class="c1"># Query by tag using ActiveRecord</span>
+</span><span id="__span-36-24"><a id="__codelineno-36-24" name="__codelineno-36-24" href="#__codelineno-36-24"></a><span class="c1"># Query by tag</span>
 </span><span id="__span-36-25"><a id="__codelineno-36-25" name="__codelineno-36-25" href="#__codelineno-36-25"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Query by Tag ===&quot;</span>
-</span><span id="__span-36-26"><a id="__codelineno-36-26" name="__codelineno-36-26" href="#__codelineno-36-26"></a><span class="n">test_tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Tag</span><span class="o">.</span><span class="n">find_by</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+</span><span id="__span-36-26"><a id="__codelineno-36-26" name="__codelineno-36-26" href="#__codelineno-36-26"></a><span class="n">test_tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Tag</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
 </span><span id="__span-36-27"><a id="__codelineno-36-27" name="__codelineno-36-27" href="#__codelineno-36-27"></a><span class="k">if</span><span class="w"> </span><span class="n">test_tag</span>
 </span><span id="__span-36-28"><a id="__codelineno-36-28" name="__codelineno-36-28" href="#__codelineno-36-28"></a><span class="w">  </span><span class="n">tagged_nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">test_tag</span><span class="o">.</span><span class="n">nodes</span>
 </span><span id="__span-36-29"><a id="__codelineno-36-29" name="__codelineno-36-29" href="#__codelineno-36-29"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Found </span><span class="si">#{</span><span class="n">tagged_nodes</span><span class="o">.</span><span class="n">count</span><span class="si">}</span><span class="s2"> nodes with tag &#39;test&#39;&quot;</span>

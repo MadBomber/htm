@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -6426,7 +6426,7 @@
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="n">content_hash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Digest</span><span class="o">::</span><span class="no">SHA256</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="c1"># 2. Check if node with same hash exists</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="n">existing_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Node</span><span class="o">.</span><span class="n">find_by</span><span class="p">(</span><span class="ss">content_hash</span><span class="p">:</span><span class="w"> </span><span class="n">content_hash</span><span class="p">)</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="n">existing_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Node</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="ss">content_hash</span><span class="p">:</span><span class="w"> </span><span class="n">content_hash</span><span class="p">)</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="n">existing_node</span>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="c1"># 3a. Link robot to existing node (or update remember_count)</span>

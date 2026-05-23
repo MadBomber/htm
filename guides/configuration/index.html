@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -6124,14 +6124,14 @@
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nv">HTM_PROPOSITION__MODEL</span><span class="o">=</span>gpt-4o-mini
 </span></code></pre></div></p>
 <h3 id="chunking-configuration">Chunking Configuration<a class="headerlink" href="#chunking-configuration" title="Permanent link">&para;</a></h3>
-<p>Access: <code>HTM.config.chunking.size</code>, <code>HTM.config.chunking.overlap</code></p>
+<p>Access: <code>HTM.config.chunking.chunk_size</code>, <code>HTM.config.chunking.chunk_overlap</code></p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">chunking</span><span class="p">:</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w">                </span><span class="c1"># Characters per chunk</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">overlap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64</span><span class="w">               </span><span class="c1"># Overlap between chunks</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">chunk_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1024</span><span class="w">          </span><span class="c1"># Characters per chunk</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">chunk_overlap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64</span><span class="w">         </span><span class="c1"># Overlap between chunks</span>
 </span></code></pre></div>
 <p><strong>Environment variables:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">HTM_CHUNKING__SIZE</span><span class="o">=</span><span class="m">512</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nv">HTM_CHUNKING__OVERLAP</span><span class="o">=</span><span class="m">50</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nv">HTM_CHUNKING__CHUNK_SIZE</span><span class="o">=</span><span class="m">512</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nv">HTM_CHUNKING__CHUNK_OVERLAP</span><span class="o">=</span><span class="m">50</span>
 </span></code></pre></div></p>
 <h3 id="job-backend-configuration">Job Backend Configuration<a class="headerlink" href="#job-backend-configuration" title="Permanent link">&para;</a></h3>
 <p>Access: <code>HTM.config.job.backend</code></p>

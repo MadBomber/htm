@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -6195,7 +6195,7 @@
 <h3 id="robot-node-association">Robot-Node Association<a class="headerlink" href="#robot-node-association" title="Permanent link">&para;</a></h3>
 <p>Each robot-node relationship is tracked in <code>robot_nodes</code>:</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Check how many times a robot has &quot;remembered&quot; content</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">rn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">RobotNode</span><span class="o">.</span><span class="n">find_by</span><span class="p">(</span><span class="ss">robot_id</span><span class="p">:</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">robot_id</span><span class="p">,</span><span class="w"> </span><span class="ss">node_id</span><span class="p">:</span><span class="w"> </span><span class="n">node_id</span><span class="p">)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">rn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">RobotNode</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="ss">robot_id</span><span class="p">:</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">robot_id</span><span class="p">,</span><span class="w"> </span><span class="ss">node_id</span><span class="p">:</span><span class="w"> </span><span class="n">node_id</span><span class="p">)</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">rn</span><span class="o">.</span><span class="n">remember_count</span><span class="w">      </span><span class="c1"># =&gt; 3 (remembered 3 times)</span>
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">rn</span><span class="o">.</span><span class="n">first_remembered_at</span><span class="w"> </span><span class="c1"># =&gt; When first encountered</span>
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">rn</span><span class="o">.</span><span class="n">last_remembered_at</span><span class="w">  </span><span class="c1"># =&gt; When last tried to remember</span>

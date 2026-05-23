@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -6168,7 +6168,7 @@
 </span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>
 </span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">event</span>
 </span><span id="__span-7-27"><a id="__codelineno-7-27" name="__codelineno-7-27" href="#__codelineno-7-27"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:added</span>
-</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a><span class="w">    </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Node</span><span class="o">.</span><span class="n">find_by</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="n">node_id</span><span class="p">)</span>
+</span><span id="__span-7-28"><a id="__codelineno-7-28" name="__codelineno-7-28" href="#__codelineno-7-28"></a><span class="w">    </span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Node</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="n">node_id</span><span class="p">)</span>
 </span><span id="__span-7-29"><a id="__codelineno-7-29" name="__codelineno-7-29" href="#__codelineno-7-29"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">node</span>
 </span><span id="__span-7-30"><a id="__codelineno-7-30" name="__codelineno-7-30" href="#__codelineno-7-30"></a><span class="w">      </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">add_from_sync</span><span class="p">(</span>
 </span><span id="__span-7-31"><a id="__codelineno-7-31" name="__codelineno-7-31" href="#__codelineno-7-31"></a><span class="w">        </span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>

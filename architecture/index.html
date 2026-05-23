@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5392,7 +5392,7 @@
 <p><rect x="300" y="380" width="200" height="120" fill="rgba(244, 67, 54, 0.2)" stroke="#F44336" stroke-width="2" rx="5"/>
   <text x="400" y="415" text-anchor="middle" fill="#E0E0E0" font-size="14" font-weight="bold">Database</text>
   <text x="400" y="435" text-anchor="middle" fill="#B0B0B0" font-size="11">PostgreSQL 16+</text>
-  <text x="400" y="455" text-anchor="middle" fill="#B0B0B0" font-size="11">TimescaleDB</text>
+  <text x="400" y="455" text-anchor="middle" fill="#B0B0B0" font-size="11">Sequel ORM</text>
   <text x="400" y="475" text-anchor="middle" fill="#B0B0B0" font-size="11">pgvector + pg_trgm</text></p>
 <!-- Connections -->
 <p><line x1="400" y1="130" x2="150" y2="200" stroke="#2196F3" stroke-width="2"/>
@@ -5443,7 +5443,7 @@
 <p><strong>Characteristics:</strong></p>
 <ul>
 <li><strong>Capacity:</strong> Effectively unlimited</li>
-<li><strong>Storage:</strong> PostgreSQL with TimescaleDB extension</li>
+<li><strong>Storage:</strong> PostgreSQL with pgvector and pg_trgm extensions</li>
 <li><strong>Retention:</strong> Permanent (explicit deletion only)</li>
 <li><strong>Access Pattern:</strong> RAG-based retrieval (semantic + temporal)</li>
 <li><strong>Lifetime:</strong> Forever</li>
@@ -5462,10 +5462,9 @@
 </ul>
 <p><strong>Related ADRs:</strong> <a href="adrs/003-ollama-embeddings/">ADR-003</a></p>
 <h3 id="database">Database<a class="headerlink" href="#database" title="Permanent link">&para;</a></h3>
-<p>PostgreSQL 16+ with extensions for time-series optimization, vector similarity search, and full-text search.</p>
+<p>PostgreSQL 16+ with extensions for vector similarity search, full-text search, and fuzzy matching.</p>
 <p><strong>Key Extensions:</strong></p>
 <ul>
-<li><strong>TimescaleDB</strong>: Hypertable partitioning, compression policies, time-range optimization</li>
 <li><strong>pgvector</strong>: Vector similarity search with HNSW indexing</li>
 <li><strong>pg_trgm</strong>: Trigram-based fuzzy text matching</li>
 </ul>
@@ -5606,12 +5605,7 @@
 <tr>
 <td><strong>Database</strong></td>
 <td>PostgreSQL 16+</td>
-<td>Relational storage</td>
-</tr>
-<tr>
-<td><strong>Time-Series</strong></td>
-<td>TimescaleDB</td>
-<td>Hypertable partitioning, compression</td>
+<td>Relational storage with soft delete</td>
 </tr>
 <tr>
 <td><strong>Vector Search</strong></td>
@@ -5683,7 +5677,7 @@
 </div>
 <h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../getting-started/installation/">Installation Guide</a> - Setup PostgreSQL, TimescaleDB, and dependencies</li>
+<li><a href="../getting-started/installation/">Installation Guide</a> - Setup PostgreSQL and dependencies</li>
 <li><a href="../getting-started/quick-start/">Quick Start</a> - Get started with HTM in 5 minutes</li>
 <li><a href="../api/htm/">API Reference</a> - Complete API documentation</li>
 <li><a href="adrs/">Architecture Decision Records</a> - Detailed decision history</li>

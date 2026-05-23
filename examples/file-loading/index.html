@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5509,13 +5509,13 @@
 </span></code></pre></div>
 <h2 id="chunking-configuration">Chunking Configuration<a class="headerlink" href="#chunking-configuration" title="Permanent link">&para;</a></h2>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="no">HTM</span><span class="o">.</span><span class="n">configure</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">config</span><span class="o">|</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="n">config</span><span class="o">.</span><span class="n">chunk_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span><span class="w">    </span><span class="c1"># Characters per chunk (default)</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="n">config</span><span class="o">.</span><span class="n">chunk_overlap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="w">   </span><span class="c1"># Overlap between chunks (default)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="n">config</span><span class="o">.</span><span class="n">chunking</span><span class="o">.</span><span class="n">chunk_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span><span class="w">    </span><span class="c1"># Characters per chunk (default)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="n">config</span><span class="o">.</span><span class="n">chunking</span><span class="o">.</span><span class="n">chunk_overlap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="w">   </span><span class="c1"># Overlap between chunks (default)</span>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="k">end</span>
 </span></code></pre></div>
 <p>Or via environment variables:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_CHUNK_SIZE</span><span class="o">=</span><span class="m">512</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_CHUNK_OVERLAP</span><span class="o">=</span><span class="m">50</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_CHUNKING__CHUNK_SIZE</span><span class="o">=</span><span class="m">512</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_CHUNKING__CHUNK_OVERLAP</span><span class="o">=</span><span class="m">50</span>
 </span></code></pre></div>
 <h2 id="expected-output">Expected Output<a class="headerlink" href="#expected-output" title="Permanent link">&para;</a></h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>HTM File Loader Example

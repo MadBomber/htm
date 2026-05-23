@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -979,10 +979,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-important-important" class="md-nav__link">
+  <a href="#2-frequent-frequent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Important (:important)
+        2. Frequent (:frequent)
       
     </span>
   </a>
@@ -1056,10 +1056,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#why-postgresql-timescaledb" class="md-nav__link">
+  <a href="#why-postgresql" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why PostgreSQL + TimescaleDB?
+        Why PostgreSQL?
       
     </span>
   </a>
@@ -1090,10 +1090,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#retrieve-by-key" class="md-nav__link">
+  <a href="#retrieve-by-id" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Retrieve by Key
+        Retrieve by ID
       
     </span>
   </a>
@@ -1296,10 +1296,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#important-strategy" class="md-nav__link">
+  <a href="#frequent-strategy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Important Strategy
+        Frequent Strategy
       
     </span>
   </a>
@@ -1402,10 +1402,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-leverage-timescaledb-compression" class="md-nav__link">
+  <a href="#1-leverage-postgresql-partitioning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Leverage TimescaleDB Compression
+        1. Leverage PostgreSQL Partitioning
       
     </span>
   </a>
@@ -5849,10 +5849,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-important-important" class="md-nav__link">
+  <a href="#2-frequent-frequent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Important (:important)
+        2. Frequent (:frequent)
       
     </span>
   </a>
@@ -5926,10 +5926,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#why-postgresql-timescaledb" class="md-nav__link">
+  <a href="#why-postgresql" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Why PostgreSQL + TimescaleDB?
+        Why PostgreSQL?
       
     </span>
   </a>
@@ -5960,10 +5960,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#retrieve-by-key" class="md-nav__link">
+  <a href="#retrieve-by-id" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Retrieve by Key
+        Retrieve by ID
       
     </span>
   </a>
@@ -6166,10 +6166,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#important-strategy" class="md-nav__link">
+  <a href="#frequent-strategy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Important Strategy
+        Frequent Strategy
       
     </span>
   </a>
@@ -6272,10 +6272,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-leverage-timescaledb-compression" class="md-nav__link">
+  <a href="#1-leverage-postgresql-partitioning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Leverage TimescaleDB Compression
+        1. Leverage PostgreSQL Partitioning
       
     </span>
   </a>
@@ -6590,16 +6590,11 @@
 </ul>
 <p><strong>Example Use Case:</strong></p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># User having back-and-forth coding conversation</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:recent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">8000</span><span class="p">)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:recent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">8000</span><span class="p">)</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># Recent messages prioritized for coherent conversation flow</span>
 </span></code></pre></div>
-<h4 id="2-important-important">2. Important (<code>:important</code>)<a class="headerlink" href="#2-important-important" title="Permanent link">&para;</a></h4>
-<p>Sort by importance score, highest first.</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:important</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="n">nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@nodes</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="o">|</span><span class="w"> </span><span class="o">-</span><span class="n">v</span><span class="o">[</span><span class="ss">:importance</span><span class="o">]</span><span class="w"> </span><span class="p">}</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:last</span><span class="p">)</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="n">build_context</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="n">max_tokens</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="vi">@max_tokens</span><span class="p">)</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">end</span>
-</span></code></pre></div>
+<h4 id="2-frequent-frequent">2. Frequent (<code>:frequent</code>)<a class="headerlink" href="#2-frequent-frequent" title="Permanent link">&para;</a></h4>
+<p>Sort by access count, most accessed first.</p>
 <p><strong>Best For:</strong></p>
 <ul>
 <li>Strategic planning</li>
@@ -6608,21 +6603,21 @@
 <li>Key facts retrieval</li>
 </ul>
 <p><strong>Example Use Case:</strong></p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># LLM helping with architectural review</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:important</span><span class="p">)</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1"># Critical decisions and facts prioritized over recent chat</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># LLM helping with architectural review</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:frequent</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># Most frequently accessed decisions and facts prioritized</span>
 </span></code></pre></div>
 <h4 id="3-balanced-balanced-recommended-default">3. Balanced (<code>:balanced</code>) - <strong>Recommended Default</strong><a class="headerlink" href="#3-balanced-balanced-recommended-default" title="Permanent link">&para;</a></h4>
 <p>Hybrid scoring with time decay: <code>importance * (1.0 / (1 + recency_hours))</code></p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="n">nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@nodes</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="o">|</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="n">recency_hours</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">v</span><span class="o">[</span><span class="ss">:added_at</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">3600</span><span class="o">.</span><span class="mi">0</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="n">score</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="o">[</span><span class="ss">:importance</span><span class="o">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">recency_hours</span><span class="p">))</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span><span class="o">-</span><span class="n">score</span><span class="w">  </span><span class="c1"># Descending</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">  </span><span class="p">}</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:last</span><span class="p">)</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">  </span><span class="n">build_context</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="n">max_tokens</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="vi">@max_tokens</span><span class="p">)</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="n">nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@nodes</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="o">|</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="n">recency_hours</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="no">Time</span><span class="o">.</span><span class="n">now</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">v</span><span class="o">[</span><span class="ss">:added_at</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">3600</span><span class="o">.</span><span class="mi">0</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="n">score</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="o">[</span><span class="ss">:importance</span><span class="o">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">recency_hours</span><span class="p">))</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">    </span><span class="o">-</span><span class="n">score</span><span class="w">  </span><span class="c1"># Descending</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="p">}</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:last</span><span class="p">)</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">  </span><span class="n">build_context</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="n">max_tokens</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="vi">@max_tokens</span><span class="p">)</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="k">end</span>
 </span></code></pre></div>
 <p><strong>Decay Function:</strong></p>
 <ul>
@@ -6638,9 +6633,9 @@
 <li>Default strategy when unsure</li>
 </ul>
 <p><strong>Example Use Case:</strong></p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Code helper assisting with debugging and design</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="c1"># Recent debugging context + important architectural decisions</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Code helper assisting with debugging and design</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># Recent debugging context + important architectural decisions</span>
 </span></code></pre></div>
 <p><img alt="Balanced Strategy: Importance Decay Over Time" src="../../assets/images/balanced-strategy-decay.svg" /></p>
 <div class="admonition info">
@@ -6711,7 +6706,7 @@
 </tr>
 <tr>
 <td><strong>Storage</strong></td>
-<td>PostgreSQL 16+ with TimescaleDB</td>
+<td>PostgreSQL 16+ with pgvector and pg_trgm</td>
 </tr>
 <tr>
 <td><strong>Access Pattern</strong></td>
@@ -6732,114 +6727,100 @@
 </tbody>
 </table>
 <h3 id="database-schema-simplified">Database Schema (Simplified)<a class="headerlink" href="#database-schema-simplified" title="Permanent link">&para;</a></h3>
-<div class="language-sql highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">nodes</span><span class="w"> </span><span class="p">(</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="n">BIGSERIAL</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="k">key</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">UNIQUE</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="n">value</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="k">type</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="n">importance</span><span class="w"> </span><span class="nb">REAL</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="n">token_count</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">,</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="n">in_working_memory</span><span class="w"> </span><span class="nb">BOOLEAN</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">FALSE</span><span class="p">,</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">  </span><span class="n">robot_id</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">robots</span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="n">embedding</span><span class="w"> </span><span class="n">vector</span><span class="p">(</span><span class="mi">1536</span><span class="p">),</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">  </span><span class="n">created_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span><span class="p">,</span>
-</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">  </span><span class="p">...</span>
-</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="p">);</span>
-</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>
-</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="c1">-- HNSW index for vector similarity</span>
-</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">idx_nodes_embedding</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">nodes</span>
-</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">  </span><span class="k">USING</span><span class="w"> </span><span class="n">hnsw</span><span class="w"> </span><span class="p">(</span><span class="n">embedding</span><span class="w"> </span><span class="n">vector_cosine_ops</span><span class="p">)</span>
-</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">  </span><span class="k">WITH</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="n">ef_construction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="p">);</span>
-</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>
-</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="c1">-- Full-text search</span>
-</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">idx_nodes_value_gin</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">nodes</span>
-</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">  </span><span class="k">USING</span><span class="w"> </span><span class="n">gin</span><span class="p">(</span><span class="n">to_tsvector</span><span class="p">(</span><span class="s1">&#39;english&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">));</span>
+<div class="language-sql highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">nodes</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="n">id</span><span class="w"> </span><span class="n">BIGSERIAL</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="n">content</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="n">content_hash</span><span class="w"> </span><span class="nb">TEXT</span><span class="w"> </span><span class="k">UNIQUE</span><span class="p">,</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">  </span><span class="k">type</span><span class="w"> </span><span class="nb">TEXT</span><span class="p">,</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span><span class="n">token_count</span><span class="w"> </span><span class="nb">INTEGER</span><span class="p">,</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="n">metadata</span><span class="w"> </span><span class="n">JSONB</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="s1">&#39;{}&#39;</span><span class="p">,</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">  </span><span class="n">source_id</span><span class="w"> </span><span class="nb">BIGINT</span><span class="w"> </span><span class="k">REFERENCES</span><span class="w"> </span><span class="n">file_sources</span><span class="p">(</span><span class="n">id</span><span class="p">),</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">  </span><span class="n">embedding</span><span class="w"> </span><span class="n">vector</span><span class="p">(</span><span class="mi">3072</span><span class="p">),</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">  </span><span class="n">deleted_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="p">,</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">  </span><span class="n">created_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span><span class="p">,</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">  </span><span class="n">updated_at</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">DEFAULT</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="p">);</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="c1">-- HNSW index for vector similarity</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">idx_nodes_embedding</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">nodes</span>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">  </span><span class="k">USING</span><span class="w"> </span><span class="n">hnsw</span><span class="w"> </span><span class="p">(</span><span class="n">embedding</span><span class="w"> </span><span class="n">vector_cosine_ops</span><span class="p">)</span>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="w">  </span><span class="k">WITH</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="n">ef_construction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span><span class="p">);</span>
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>
+</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="c1">-- Full-text search</span>
+</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">idx_nodes_content_gin</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">nodes</span>
+</span><span id="__span-10-22"><a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a><span class="w">  </span><span class="k">USING</span><span class="w"> </span><span class="n">gin</span><span class="p">(</span><span class="n">to_tsvector</span><span class="p">(</span><span class="s1">&#39;english&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">));</span>
 </span></code></pre></div>
-<h3 id="why-postgresql-timescaledb">Why PostgreSQL + TimescaleDB?<a class="headerlink" href="#why-postgresql-timescaledb" title="Permanent link">&para;</a></h3>
+<h3 id="why-postgresql">Why PostgreSQL?<a class="headerlink" href="#why-postgresql" title="Permanent link">&para;</a></h3>
 <p><strong>PostgreSQL provides:</strong></p>
 <ul>
 <li>ACID guarantees for data integrity</li>
 <li>Rich ecosystem and tooling</li>
 <li>pgvector for vector similarity search</li>
-<li>Full-text search with GIN indexes</li>
+<li>Full-text search with GIN indexes and pg_trgm for fuzzy matching</li>
+<li>Soft delete support via <code>deleted_at</code> column</li>
+<li>JSONB metadata with GIN index for flexible filtering</li>
 <li>Mature, production-proven</li>
-</ul>
-<p><strong>TimescaleDB adds:</strong></p>
-<ul>
-<li>Hypertable partitioning by time</li>
-<li>Automatic compression (70-90% reduction)</li>
-<li>Time-range query optimization</li>
-<li>Retention policies for data lifecycle</li>
 </ul>
 <div class="admonition info">
 <p class="admonition-title">Related ADR</p>
-<p>See <a href="../../architecture/adrs/001-postgresql-timescaledb/">ADR-001: Use PostgreSQL with TimescaleDB for Storage</a> for complete rationale.</p>
+<p>See <a href="../../architecture/adrs/001-postgresql-timescaledb/">ADR-001: Use PostgreSQL for Storage</a> for complete rationale.</p>
 </div>
 <h3 id="long-term-memory-operations">Long-Term Memory Operations<a class="headerlink" href="#long-term-memory-operations" title="Permanent link">&para;</a></h3>
 <h4 id="add-node_1">Add Node<a class="headerlink" href="#add-node_1" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="ss">key</span><span class="p">:,</span><span class="w"> </span><span class="ss">value</span><span class="p">:,</span><span class="w"> </span><span class="ss">embedding</span><span class="p">:,</span><span class="w"> </span><span class="ss">importance</span><span class="p">:,</span><span class="w"> </span><span class="ss">token_count</span><span class="p">:,</span><span class="w"> </span><span class="ss">robot_id</span><span class="p">:,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@db</span><span class="o">.</span><span class="n">exec_params</span><span class="p">(</span><span class="o">&lt;&lt;~</span><span class="dl">SQL</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">importance</span><span class="p">,</span><span class="w"> </span><span class="n">token_count</span><span class="p">,</span><span class="w"> </span><span class="n">robot_id</span><span class="p">,</span><span class="w"> </span><span class="n">embedding</span><span class="o">]</span><span class="p">)</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="sh">    INSERT INTO nodes (key, value, type, importance, token_count, robot_id, embedding, in_working_memory)</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="sh">    VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="sh">    RETURNING id</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="dl">  SQL</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">  </span><span class="n">result</span><span class="o">[</span><span class="mi">0</span><span class="o">][</span><span class="s1">&#39;id&#39;</span><span class="o">].</span><span class="n">to_i</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># High-level API (recommended)</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">node_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="s2">&quot;PostgreSQL is great for vector search&quot;</span><span class="p">,</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">                       </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:fact</span><span class="p">,</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">                       </span><span class="ss">tags</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;database:postgresql&quot;</span><span class="o">]</span><span class="p">,</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">                       </span><span class="ss">metadata</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">source</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;docs&quot;</span><span class="w"> </span><span class="p">})</span>
 </span></code></pre></div>
 <p><strong>Time Complexity:</strong> O(log n) with B-tree and HNSW indexes</p>
-<h4 id="retrieve-by-key">Retrieve by Key<a class="headerlink" href="#retrieve-by-key" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">retrieve</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@db</span><span class="o">.</span><span class="n">exec_params</span><span class="p">(</span><span class="o">&lt;&lt;~</span><span class="dl">SQL</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">key</span><span class="o">]</span><span class="p">)</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="sh">    SELECT * FROM nodes WHERE key = $1</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="dl">  SQL</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="w">  </span><span class="n">result</span><span class="o">.</span><span class="n">first</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="k">end</span>
+<h4 id="retrieve-by-id">Retrieve by ID<a class="headerlink" href="#retrieve-by-id" title="Permanent link">&para;</a></h4>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Direct model lookup</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Models</span><span class="o">::</span><span class="no">Node</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="nb">id</span><span class="p">:</span><span class="w"> </span><span class="n">node_id</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Time Complexity:</strong> O(1) with unique index on key</p>
 <h4 id="vector-search">Vector Search<a class="headerlink" href="#vector-search" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:,</span><span class="w"> </span><span class="ss">query</span><span class="p">:,</span><span class="w"> </span><span class="ss">limit</span><span class="p">:,</span><span class="w"> </span><span class="ss">embedding_service</span><span class="p">:)</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="n">query_embedding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">embedding_service</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@db</span><span class="o">.</span><span class="n">exec_params</span><span class="p">(</span><span class="o">&lt;&lt;~</span><span class="dl">SQL</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">timeframe</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span><span class="w"> </span><span class="n">timeframe</span><span class="o">.</span><span class="n">end</span><span class="p">,</span><span class="w"> </span><span class="n">query_embedding</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="o">]</span><span class="p">)</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="sh">    SELECT *, embedding &lt;=&gt; $3 AS distance</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="sh">    FROM nodes</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="sh">    WHERE created_at BETWEEN $1 AND $2</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="sh">    ORDER BY distance ASC</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="sh">    LIMIT $4</span>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="dl">  SQL</span>
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">  </span><span class="n">result</span><span class="o">.</span><span class="n">to_a</span>
-</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:,</span><span class="w"> </span><span class="ss">query</span><span class="p">:,</span><span class="w"> </span><span class="ss">limit</span><span class="p">:,</span><span class="w"> </span><span class="ss">embedding_service</span><span class="p">:)</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="n">query_embedding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">embedding_service</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="vi">@db</span><span class="o">.</span><span class="n">exec_params</span><span class="p">(</span><span class="o">&lt;&lt;~</span><span class="dl">SQL</span><span class="p">,</span><span class="w"> </span><span class="o">[</span><span class="n">timeframe</span><span class="o">.</span><span class="n">begin</span><span class="p">,</span><span class="w"> </span><span class="n">timeframe</span><span class="o">.</span><span class="n">end</span><span class="p">,</span><span class="w"> </span><span class="n">query_embedding</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="o">]</span><span class="p">)</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="sh">    SELECT *, embedding &lt;=&gt; $3 AS distance</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="sh">    FROM nodes</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="sh">    WHERE created_at BETWEEN $1 AND $2</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="sh">    ORDER BY distance ASC</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="sh">    LIMIT $4</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="dl">  SQL</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="w">  </span><span class="n">result</span><span class="o">.</span><span class="n">to_a</span>
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="k">end</span>
 </span></code></pre></div>
 <p><strong>Time Complexity:</strong> O(log n) with HNSW approximate nearest neighbor</p>
 <h4 id="hybrid-search-vector-full-text">Hybrid Search (Vector + Full-Text)<a class="headerlink" href="#hybrid-search-vector-full-text" title="Permanent link">&para;</a></h4>
 <p>Combines vector similarity and full-text search using Reciprocal Rank Fusion (RRF):</p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">search_hybrid</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:,</span><span class="w"> </span><span class="ss">query</span><span class="p">:,</span><span class="w"> </span><span class="ss">limit</span><span class="p">:,</span><span class="w"> </span><span class="ss">embedding_service</span><span class="p">:)</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="n">query_embedding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">embedding_service</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span><span class="c1"># Get both vector and full-text results</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">  </span><span class="n">vector_results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">search</span><span class="p">(</span><span class="n">timeframe</span><span class="p">,</span><span class="w"> </span><span class="n">query</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">embedding_service</span><span class="p">)</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span><span class="n">fulltext_results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">search_fulltext</span><span class="p">(</span><span class="n">timeframe</span><span class="p">,</span><span class="w"> </span><span class="n">query</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">  </span><span class="c1"># RRF scoring</span>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">  </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="w">  </span><span class="n">vector_results</span><span class="o">.</span><span class="n">each_with_index</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">rank</span><span class="o">|</span>
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a><span class="w">    </span><span class="n">scores</span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="o">||=</span><span class="w"> </span><span class="mi">0</span>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="w">    </span><span class="n">scores</span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">rank</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span><span class="w">  </span><span class="c1"># RRF constant: 60</span>
-</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>
-</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="w">  </span><span class="n">fulltext_results</span><span class="o">.</span><span class="n">each_with_index</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">rank</span><span class="o">|</span>
-</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a><span class="w">    </span><span class="n">scores</span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="o">||=</span><span class="w"> </span><span class="mi">0</span>
-</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="w">    </span><span class="n">scores</span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">rank</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span>
-</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="w">  </span><span class="k">end</span>
-</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>
-</span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a><span class="w">  </span><span class="c1"># Sort by combined score</span>
-</span><span id="__span-15-22"><a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a><span class="w">  </span><span class="n">all_nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">vector_results</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fulltext_results</span><span class="p">)</span><span class="o">.</span><span class="n">uniq</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">n</span><span class="o">|</span><span class="w"> </span><span class="n">n</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a><span class="w">  </span><span class="n">all_nodes</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">n</span><span class="o">|</span><span class="w"> </span><span class="o">-</span><span class="n">scores</span><span class="o">[</span><span class="n">n</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="p">}</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
-</span><span id="__span-15-24"><a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a><span class="k">end</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">search_hybrid</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:,</span><span class="w"> </span><span class="ss">query</span><span class="p">:,</span><span class="w"> </span><span class="ss">limit</span><span class="p">:,</span><span class="w"> </span><span class="ss">embedding_service</span><span class="p">:)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="n">query_embedding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">embedding_service</span><span class="o">.</span><span class="n">embed</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="c1"># Get both vector and full-text results</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">  </span><span class="n">vector_results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">search</span><span class="p">(</span><span class="n">timeframe</span><span class="p">,</span><span class="w"> </span><span class="n">query</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">embedding_service</span><span class="p">)</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span><span class="n">fulltext_results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">search_fulltext</span><span class="p">(</span><span class="n">timeframe</span><span class="p">,</span><span class="w"> </span><span class="n">query</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">  </span><span class="c1"># RRF scoring</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="w">  </span><span class="n">scores</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="w">  </span><span class="n">vector_results</span><span class="o">.</span><span class="n">each_with_index</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">rank</span><span class="o">|</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="w">    </span><span class="n">scores</span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="o">||=</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="w">    </span><span class="n">scores</span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">rank</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span><span class="w">  </span><span class="c1"># RRF constant: 60</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="w">  </span><span class="n">fulltext_results</span><span class="o">.</span><span class="n">each_with_index</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">rank</span><span class="o">|</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="w">    </span><span class="n">scores</span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="o">||=</span><span class="w"> </span><span class="mi">0</span>
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a><span class="w">    </span><span class="n">scores</span><span class="o">[</span><span class="n">node</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">rank</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="w">  </span><span class="k">end</span>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a><span class="w">  </span><span class="c1"># Sort by combined score</span>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="w">  </span><span class="n">all_nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">vector_results</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fulltext_results</span><span class="p">)</span><span class="o">.</span><span class="n">uniq</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">n</span><span class="o">|</span><span class="w"> </span><span class="n">n</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a><span class="w">  </span><span class="n">all_nodes</span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">n</span><span class="o">|</span><span class="w"> </span><span class="o">-</span><span class="n">scores</span><span class="o">[</span><span class="n">n</span><span class="o">[</span><span class="s1">&#39;id&#39;</span><span class="o">]]</span><span class="w"> </span><span class="p">}</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span>
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a><span class="k">end</span>
 </span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Related ADR</p>
@@ -6857,9 +6838,9 @@
 <li>Semantic matching across paraphrases</li>
 </ul>
 <p><strong>Example:</strong></p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Query: &quot;database optimization&quot;</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="c1"># Finds: &quot;PostgreSQL index tuning&quot;, &quot;query performance&quot;, &quot;EXPLAIN ANALYZE&quot;</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last month&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;database optimization&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:vector</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Query: &quot;database optimization&quot;</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="c1"># Finds: &quot;PostgreSQL index tuning&quot;, &quot;query performance&quot;, &quot;EXPLAIN ANALYZE&quot;</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;database optimization&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last month&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:vector</span><span class="p">)</span>
 </span></code></pre></div>
 <h5 id="2-full-text-search-fulltext">2. Full-Text Search (<code>:fulltext</code>)<a class="headerlink" href="#2-full-text-search-fulltext" title="Permanent link">&para;</a></h5>
 <p>Keyword-based matching using PostgreSQL GIN indexes.</p>
@@ -6871,9 +6852,9 @@
 <li>Proper nouns</li>
 </ul>
 <p><strong>Example:</strong></p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Query: &quot;TimescaleDB compression&quot;</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="c1"># Finds exact matches for &quot;TimescaleDB&quot; and &quot;compression&quot;</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last week&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TimescaleDB compression&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:fulltext</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Query: &quot;TimescaleDB compression&quot;</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="c1"># Finds exact matches for &quot;TimescaleDB&quot; and &quot;compression&quot;</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;TimescaleDB compression&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last week&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:fulltext</span><span class="p">)</span>
 </span></code></pre></div>
 <h5 id="3-hybrid-search-hybrid-recommended">3. Hybrid Search (<code>:hybrid</code>) - <strong>Recommended</strong><a class="headerlink" href="#3-hybrid-search-hybrid-recommended" title="Permanent link">&para;</a></h5>
 <p>Combines vector and full-text with RRF scoring.</p>
@@ -6884,8 +6865,8 @@
 <li>Most use cases</li>
 </ul>
 <p><strong>Example:</strong></p>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Combines semantic similarity AND keyword matching</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last month&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PostgreSQL performance&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:hybrid</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Combines semantic similarity AND keyword matching</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;PostgreSQL performance&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last month&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:hybrid</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="performance-characteristics_1">Performance Characteristics<a class="headerlink" href="#performance-characteristics_1" title="Permanent link">&para;</a></h3>
 <table>
@@ -6937,49 +6918,49 @@
 </tbody>
 </table>
 <p><strong>Storage Efficiency:</strong></p>
-<p>With TimescaleDB compression (after 30 days):</p>
+<p>With PostgreSQL TOAST compression:</p>
 <ul>
-<li>Text node: ~1KB → ~200 bytes (80% reduction)</li>
-<li>Node with embedding: ~7KB → ~1-2KB (70-85% reduction)</li>
-<li>100,000 nodes: ~700MB → ~100-200MB</li>
+<li>Text node: ~1KB (minimal overhead)</li>
+<li>Node with embedding: ~7KB (1536-dim float32 vector)</li>
+<li>100,000 nodes: ~700MB typical storage</li>
 </ul>
 <h2 id="memory-flow-add-evict-recall">Memory Flow: Add → Evict → Recall<a class="headerlink" href="#memory-flow-add-evict-recall" title="Permanent link">&para;</a></h2>
 <h3 id="complete-flow-diagram">Complete Flow Diagram<a class="headerlink" href="#complete-flow-diagram" title="Permanent link">&para;</a></h3>
 <p><img alt="Complete Memory Flow" src="../../assets/images/htm-complete-memory-flow.svg" /></p>
 <h3 id="example-adding-5000-token-memory-to-full-working-memory">Example: Adding 5000-Token Memory to Full Working Memory<a class="headerlink" href="#example-adding-5000-token-memory-to-full-working-memory" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Initial state</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">memory_stats</span><span class="o">[</span><span class="ss">:working_memory</span><span class="o">]</span>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="c1"># =&gt; {</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1">#   current_tokens: 127_500,</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="c1">#   max_tokens: 128_000,</span>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="c1">#   utilization: 99.6%,</span>
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="c1">#   node_count: 85</span>
-</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="c1"># }</span>
-</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
-</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="c1"># Add large memory</span>
-</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;large_doc&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">large_documentation</span><span class="p">,</span><span class="w"> </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>
-</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="c1"># HTM automatically:</span>
-</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="c1"># 1. Generates embedding (Ollama: ~50ms)</span>
-</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="c1"># 2. Stores in long-term memory (PostgreSQL: ~30ms)</span>
-</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="c1"># 3. Checks working memory space: 5000 + 127500 &gt; 128000 (no space!)</span>
-</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="c1"># 4. Evicts low-importance old nodes to free 4500+ tokens</span>
-</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="c1">#    - Evicts 3 nodes: (importance: 1.0, age: 3 days), (importance: 2.0, age: 1 day), etc.</span>
-</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="c1"># 5. Adds new memory to working memory</span>
-</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="c1"># 6. Total time: ~100ms</span>
-</span><span id="__span-19-21"><a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a>
-</span><span id="__span-19-22"><a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a><span class="c1"># New state</span>
-</span><span id="__span-19-23"><a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a><span class="n">htm</span><span class="o">.</span><span class="n">memory_stats</span><span class="o">[</span><span class="ss">:working_memory</span><span class="o">]</span>
-</span><span id="__span-19-24"><a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a><span class="c1"># =&gt; {</span>
-</span><span id="__span-19-25"><a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a><span class="c1">#   current_tokens: 128_000,</span>
-</span><span id="__span-19-26"><a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a><span class="c1">#   max_tokens: 128_000,</span>
-</span><span id="__span-19-27"><a id="__codelineno-19-27" name="__codelineno-19-27" href="#__codelineno-19-27"></a><span class="c1">#   utilization: 100.0%,</span>
-</span><span id="__span-19-28"><a id="__codelineno-19-28" name="__codelineno-19-28" href="#__codelineno-19-28"></a><span class="c1">#   node_count: 83  # Lost 3 nodes, gained 1</span>
-</span><span id="__span-19-29"><a id="__codelineno-19-29" name="__codelineno-19-29" href="#__codelineno-19-29"></a><span class="c1"># }</span>
-</span><span id="__span-19-30"><a id="__codelineno-19-30" name="__codelineno-19-30" href="#__codelineno-19-30"></a>
-</span><span id="__span-19-31"><a id="__codelineno-19-31" name="__codelineno-19-31" href="#__codelineno-19-31"></a><span class="c1"># Evicted nodes still in long-term memory!</span>
-</span><span id="__span-19-32"><a id="__codelineno-19-32" name="__codelineno-19-32" href="#__codelineno-19-32"></a><span class="n">evicted_node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="s2">&quot;old_debug_log&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1"># Still works</span>
-</span><span id="__span-19-33"><a id="__codelineno-19-33" name="__codelineno-19-33" href="#__codelineno-19-33"></a><span class="c1"># =&gt; { &quot;key&quot; =&gt; &quot;old_debug_log&quot;, &quot;in_working_memory&quot; =&gt; false, ... }</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Initial state</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">memory_stats</span><span class="o">[</span><span class="ss">:working_memory</span><span class="o">]</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="c1"># =&gt; {</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1">#   current_tokens: 127_500,</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="c1">#   max_tokens: 128_000,</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="c1">#   utilization: 99.6%,</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="c1">#   node_count: 85</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="c1"># }</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="c1"># Add large memory</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="n">large_documentation</span><span class="p">)</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="c1"># HTM automatically:</span>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="c1"># 1. Generates embedding (Ollama: ~50ms)</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="c1"># 2. Stores in long-term memory (PostgreSQL: ~30ms)</span>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="c1"># 3. Checks working memory space: 5000 + 127500 &gt; 128000 (no space!)</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="c1"># 4. Evicts low-importance old nodes to free 4500+ tokens</span>
+</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="c1">#    - Evicts 3 nodes: (importance: 1.0, age: 3 days), (importance: 2.0, age: 1 day), etc.</span>
+</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="c1"># 5. Adds new memory to working memory</span>
+</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="c1"># 6. Total time: ~100ms</span>
+</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a>
+</span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="c1"># New state</span>
+</span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a><span class="n">htm</span><span class="o">.</span><span class="n">memory_stats</span><span class="o">[</span><span class="ss">:working_memory</span><span class="o">]</span>
+</span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="c1"># =&gt; {</span>
+</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="c1">#   current_tokens: 128_000,</span>
+</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="c1">#   max_tokens: 128_000,</span>
+</span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a><span class="c1">#   utilization: 100.0%,</span>
+</span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a><span class="c1">#   node_count: 83  # Lost 3 nodes, gained 1</span>
+</span><span id="__span-18-29"><a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a><span class="c1"># }</span>
+</span><span id="__span-18-30"><a id="__codelineno-18-30" name="__codelineno-18-30" href="#__codelineno-18-30"></a>
+</span><span id="__span-18-31"><a id="__codelineno-18-31" name="__codelineno-18-31" href="#__codelineno-18-31"></a><span class="c1"># Evicted nodes still in long-term memory!</span>
+</span><span id="__span-18-32"><a id="__codelineno-18-32" name="__codelineno-18-32" href="#__codelineno-18-32"></a><span class="c1"># Retrieve via recall with the original content</span>
+</span><span id="__span-18-33"><a id="__codelineno-18-33" name="__codelineno-18-33" href="#__codelineno-18-33"></a><span class="n">evicted_results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;old_debug_log&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:fulltext</span><span class="p">)</span><span class="w">  </span><span class="c1"># Still works</span>
 </span></code></pre></div>
 <h2 id="context-assembly-strategies-in-detail">Context Assembly Strategies in Detail<a class="headerlink" href="#context-assembly-strategies-in-detail" title="Permanent link">&para;</a></h2>
 <h3 id="strategy-comparison">Strategy Comparison<a class="headerlink" href="#strategy-comparison" title="Permanent link">&para;</a></h3>
@@ -7000,121 +6981,120 @@
 <td>Recent 5-10 messages</td>
 </tr>
 <tr>
-<td><strong>Important</strong></td>
-<td>Importance score (highest first)</td>
+<td><strong>Frequent</strong></td>
+<td>Access count (highest first)</td>
 <td>Planning, decisions</td>
-<td>Top 10 most important facts</td>
+<td>Top 10 most accessed facts</td>
 </tr>
 <tr>
 <td><strong>Balanced</strong></td>
 <td><code>importance / (1 + hours)</code></td>
 <td>General assistant</td>
-<td>Mix of recent + important</td>
+<td>Mix of recent + frequent</td>
 </tr>
 </tbody>
 </table>
 <h3 id="code-examples">Code Examples<a class="headerlink" href="#code-examples" title="Permanent link">&para;</a></h3>
 <h4 id="recent-strategy">Recent Strategy<a class="headerlink" href="#recent-strategy" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Assemble context from most recent memories</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:recent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">8000</span><span class="p">)</span>
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># Typical output (recent conversation):</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="c1"># &quot;&quot;&quot;</span>
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="c1"># User: What&#39;s the capital of France?</span>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="c1"># Assistant: The capital of France is Paris.</span>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="c1"># User: Tell me about its history.</span>
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="c1"># Assistant: Paris has been inhabited since...</span>
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="c1"># ...</span>
-</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="c1"># &quot;&quot;&quot;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Assemble context from most recent memories</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:recent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">8000</span><span class="p">)</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1"># Typical output (recent conversation):</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="c1"># &quot;&quot;&quot;</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="c1"># User: What&#39;s the capital of France?</span>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="c1"># Assistant: The capital of France is Paris.</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="c1"># User: Tell me about its history.</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="c1"># Assistant: Paris has been inhabited since...</span>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="c1"># ...</span>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="c1"># &quot;&quot;&quot;</span>
 </span></code></pre></div>
-<h4 id="important-strategy">Important Strategy<a class="headerlink" href="#important-strategy" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Assemble context from most important memories</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:important</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">4000</span><span class="p">)</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># Typical output (critical facts):</span>
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="c1"># &quot;&quot;&quot;</span>
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="c1"># Decision: Use PostgreSQL with TimescaleDB for storage (importance: 10.0)</span>
-</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="c1"># User preference: Always use debug_me over puts (importance: 9.0)</span>
-</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="c1"># Architecture: Two-tier memory system (importance: 9.0)</span>
-</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="c1"># ...</span>
-</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="c1"># &quot;&quot;&quot;</span>
+<h4 id="frequent-strategy">Frequent Strategy<a class="headerlink" href="#frequent-strategy" title="Permanent link">&para;</a></h4>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># Assemble context from most frequently accessed memories</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:frequent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">4000</span><span class="p">)</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># Typical output (critical facts):</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="c1"># &quot;&quot;&quot;</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="c1"># Decision: Use PostgreSQL for storage (accessed 10 times)</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="c1"># User preference: Always use debug_me over puts (accessed 8 times)</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="c1"># Architecture: Two-tier memory system (accessed 7 times)</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="c1"># ...</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="c1"># &quot;&quot;&quot;</span>
 </span></code></pre></div>
 <h4 id="balanced-strategy">Balanced Strategy<a class="headerlink" href="#balanced-strategy" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Assemble context with time decay</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># Typical output (hybrid):</span>
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="c1"># &quot;&quot;&quot;</span>
-</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="c1"># Recent debugging: ValueError in embedding service (importance: 7.0, 10 min ago) [score: 42.0]</span>
-</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="c1"># Critical decision: PostgreSQL chosen (importance: 10.0, 3 days ago) [score: 0.14]</span>
-</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="c1"># Current task: Implementing RAG search (importance: 6.0, 1 hour ago) [score: 3.0]</span>
-</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="c1"># ...</span>
-</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="c1"># &quot;&quot;&quot;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Assemble context with time decay</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># Typical output (hybrid):</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="c1"># &quot;&quot;&quot;</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="c1"># Recent debugging: ValueError in embedding service (10 min ago)</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="c1"># Current task: Implementing RAG search (1 hour ago)</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="c1"># Critical decision: PostgreSQL chosen (accessed 10 times, 3 days ago)</span>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="c1"># ...</span>
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="c1"># &quot;&quot;&quot;</span>
 </span></code></pre></div>
 <h2 id="performance-optimization">Performance Optimization<a class="headerlink" href="#performance-optimization" title="Permanent link">&para;</a></h2>
 <h3 id="working-memory-optimization">Working Memory Optimization<a class="headerlink" href="#working-memory-optimization" title="Permanent link">&para;</a></h3>
 <h4 id="1-tune-token-limit">1. Tune Token Limit<a class="headerlink" href="#1-tune-token-limit" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># For shorter context windows (e.g., GPT-3.5 with 16K tokens)</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">htm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">working_memory_size</span><span class="p">:</span><span class="w"> </span><span class="mi">8_000</span><span class="p">)</span><span class="w">  </span><span class="c1"># Leave room for prompt + response</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># For longer context windows (e.g., Claude 3 with 200K tokens)</span>
-</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="n">htm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">working_memory_size</span><span class="p">:</span><span class="w"> </span><span class="mi">128_000</span><span class="p">)</span><span class="w">  </span><span class="c1"># Default</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># For shorter context windows (e.g., GPT-3.5 with 16K tokens)</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">htm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">working_memory_size</span><span class="p">:</span><span class="w"> </span><span class="mi">8_000</span><span class="p">)</span><span class="w">  </span><span class="c1"># Leave room for prompt + response</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># For longer context windows (e.g., Claude 3 with 200K tokens)</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="n">htm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">working_memory_size</span><span class="p">:</span><span class="w"> </span><span class="mi">128_000</span><span class="p">)</span><span class="w">  </span><span class="c1"># Default</span>
 </span></code></pre></div>
 <h4 id="2-adjust-importance-scores">2. Adjust Importance Scores<a class="headerlink" href="#2-adjust-importance-scores" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># High importance for critical information</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;user_preference&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;User prefers Vim keybindings&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">9</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># Low importance for transient information</span>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;debug_log&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Temporary debug output&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
-</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="c1"># Medium importance for general context</span>
-</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;discussion&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Discussed API design patterns&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># Store critical information</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="s2">&quot;User prefers Vim keybindings&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">metadata</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">priority</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;high&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># Store transient information</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="s2">&quot;Temporary debug output&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">metadata</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">category</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;debug&quot;</span><span class="w"> </span><span class="p">})</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="c1"># Store general context</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="s2">&quot;Discussed API design patterns&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="3-use-appropriate-context-strategy">3. Use Appropriate Context Strategy<a class="headerlink" href="#3-use-appropriate-context-strategy" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1"># For chat: recent strategy</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="n">chat_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:recent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">8000</span><span class="p">)</span>
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="c1"># For planning: important strategy</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="n">planning_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:important</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">4000</span><span class="p">)</span>
-</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>
-</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="c1"># For general: balanced strategy (default)</span>
-</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a><span class="n">general_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">create_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># For chat: recent strategy</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="n">chat_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:recent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">8000</span><span class="p">)</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># For planning: frequent strategy</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="n">planning_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:frequent</span><span class="p">,</span><span class="w"> </span><span class="ss">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="mi">4000</span><span class="p">)</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="c1"># For general: balanced strategy (default)</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="n">general_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">assemble_context</span><span class="p">(</span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:balanced</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="long-term-memory-optimization">Long-Term Memory Optimization<a class="headerlink" href="#long-term-memory-optimization" title="Permanent link">&para;</a></h3>
-<h4 id="1-leverage-timescaledb-compression">1. Leverage TimescaleDB Compression<a class="headerlink" href="#1-leverage-timescaledb-compression" title="Permanent link">&para;</a></h4>
-<div class="language-sql highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1">-- Enable compression after 30 days</span>
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">add_compression_policy</span><span class="p">(</span><span class="s1">&#39;nodes&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">INTERVAL</span><span class="w"> </span><span class="s1">&#39;30 days&#39;</span><span class="p">);</span>
-</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
-</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="c1">-- Compress by robot_id and type for better ratio</span>
-</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="k">ALTER</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="n">nodes</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="p">(</span>
-</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="w">  </span><span class="n">timescaledb</span><span class="p">.</span><span class="n">compress</span><span class="p">,</span>
-</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="w">  </span><span class="n">timescaledb</span><span class="p">.</span><span class="n">compress_segmentby</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;robot_id,type&#39;</span>
-</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="p">);</span>
+<h4 id="1-leverage-postgresql-partitioning">1. Leverage PostgreSQL Partitioning<a class="headerlink" href="#1-leverage-postgresql-partitioning" title="Permanent link">&para;</a></h4>
+<div class="language-sql highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1">-- Create a partial index for active (non-deleted) nodes</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">CONCURRENTLY</span><span class="w"> </span><span class="n">idx_nodes_active</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">  </span><span class="k">ON</span><span class="w"> </span><span class="n">nodes</span><span class="w"> </span><span class="p">(</span><span class="n">created_at</span><span class="w"> </span><span class="k">DESC</span><span class="p">)</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">deleted_at</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span><span class="p">;</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="c1">-- Periodically VACUUM to reclaim space from soft-deleted rows</span>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="k">VACUUM</span><span class="w"> </span><span class="k">ANALYZE</span><span class="w"> </span><span class="n">nodes</span><span class="p">;</span>
 </span></code></pre></div>
 <h4 id="2-use-appropriate-search-strategy">2. Use Appropriate Search Strategy<a class="headerlink" href="#2-use-appropriate-search-strategy" title="Permanent link">&para;</a></h4>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># For exact matches: full-text</span>
-</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="n">exact_matches</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last week&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PostgreSQL&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:fulltext</span><span class="p">)</span>
-</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
-</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1"># For semantic similarity: vector</span>
-</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="n">similar_concepts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last month&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;database performance&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:vector</span><span class="p">)</span>
-</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>
-</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="c1"># For best results: hybrid (default)</span>
-</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="n">best_results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last month&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">topic</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;PostgreSQL performance&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:hybrid</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1"># For exact matches: full-text</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="n">exact_matches</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;PostgreSQL&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last week&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:fulltext</span><span class="p">)</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="c1"># For semantic similarity: vector</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="n">similar_concepts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;database performance&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last month&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:vector</span><span class="p">)</span>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="c1"># For best results: hybrid (default)</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="n">best_results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">&quot;PostgreSQL performance&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">timeframe</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;last month&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:hybrid</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="3-index-tuning">3. Index Tuning<a class="headerlink" href="#3-index-tuning" title="Permanent link">&para;</a></h4>
-<div class="language-sql highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1">-- Monitor HNSW build time</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">pg_size_pretty</span><span class="p">(</span><span class="n">pg_relation_size</span><span class="p">(</span><span class="s1">&#39;idx_nodes_embedding&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">index_size</span><span class="p">;</span>
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="c1">-- Rebuild HNSW index if needed</span>
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="k">REINDEX</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">CONCURRENTLY</span><span class="w"> </span><span class="n">idx_nodes_embedding</span><span class="p">;</span>
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
-</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="c1">-- Analyze query plans</span>
-</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="k">EXPLAIN</span><span class="w"> </span><span class="k">ANALYZE</span>
-</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">nodes</span>
-</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">created_at</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">NOW</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">INTERVAL</span><span class="w"> </span><span class="s1">&#39;7 days&#39;</span>
-</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">embedding</span><span class="w"> </span><span class="o">&lt;=&gt;</span><span class="w"> </span><span class="s1">&#39;[...]&#39;</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">.</span><span class="mi">5</span>
-</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">embedding</span><span class="w"> </span><span class="o">&lt;=&gt;</span><span class="w"> </span><span class="s1">&#39;[...]&#39;</span>
-</span><span id="__span-28-13"><a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a><span class="k">LIMIT</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+<div class="language-sql highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1">-- Monitor HNSW build time</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="k">SELECT</span><span class="w"> </span><span class="n">pg_size_pretty</span><span class="p">(</span><span class="n">pg_relation_size</span><span class="p">(</span><span class="s1">&#39;idx_nodes_embedding&#39;</span><span class="p">))</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">index_size</span><span class="p">;</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1">-- Rebuild HNSW index if needed</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="k">REINDEX</span><span class="w"> </span><span class="k">INDEX</span><span class="w"> </span><span class="n">CONCURRENTLY</span><span class="w"> </span><span class="n">idx_nodes_embedding</span><span class="p">;</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="c1">-- Analyze query plans</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="k">EXPLAIN</span><span class="w"> </span><span class="k">ANALYZE</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a><span class="k">SELECT</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">nodes</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="k">WHERE</span><span class="w"> </span><span class="n">created_at</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">NOW</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">INTERVAL</span><span class="w"> </span><span class="s1">&#39;7 days&#39;</span>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a><span class="w">  </span><span class="k">AND</span><span class="w"> </span><span class="n">embedding</span><span class="w"> </span><span class="o">&lt;=&gt;</span><span class="w"> </span><span class="s1">&#39;[...]&#39;</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">.</span><span class="mi">5</span>
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">embedding</span><span class="w"> </span><span class="o">&lt;=&gt;</span><span class="w"> </span><span class="s1">&#39;[...]&#39;</span>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="k">LIMIT</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
 </span></code></pre></div>
 <h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
 <ul>

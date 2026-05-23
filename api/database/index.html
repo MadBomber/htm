@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -3047,10 +3047,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#timescaledb-cloud" class="md-nav__link">
+  <a href="#local-postgresql-macos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TimescaleDB Cloud
+        Local PostgreSQL (macOS)
       
     </span>
   </a>
@@ -3058,10 +3058,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#local-postgresql" class="md-nav__link">
+  <a href="#local-postgresql-with-auth" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local PostgreSQL
+        Local PostgreSQL (with auth)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remote-postgresql-with-ssl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remote PostgreSQL (with SSL)
       
     </span>
   </a>
@@ -6034,10 +6045,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#timescaledb-cloud" class="md-nav__link">
+  <a href="#local-postgresql-macos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        TimescaleDB Cloud
+        Local PostgreSQL (macOS)
       
     </span>
   </a>
@@ -6045,10 +6056,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#local-postgresql" class="md-nav__link">
+  <a href="#local-postgresql-with-auth" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local PostgreSQL
+        Local PostgreSQL (with auth)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remote-postgresql-with-ssl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remote PostgreSQL (with SSL)
       
     </span>
   </a>
@@ -6307,14 +6329,12 @@
 <h1 id="database-class">Database Class<a class="headerlink" href="#database-class" title="Permanent link">&para;</a></h1>
 <p>Database schema setup and configuration utilities for HTM.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p><code>HTM::Database</code> provides class methods for setting up the HTM database schema, managing PostgreSQL connections, and configuring TimescaleDB hypertables.</p>
+<p><code>HTM::Database</code> provides class methods for setting up the HTM database schema, managing PostgreSQL connections, and running migrations.</p>
 <p><strong>Key Features:</strong></p>
 <ul>
 <li>Schema creation and migration</li>
-<li>TimescaleDB hypertable setup</li>
-<li>Extension verification (TimescaleDB, pgvector, pg_trgm)</li>
+<li>Extension verification (pgvector, pg_trgm)</li>
 <li>Connection configuration parsing</li>
-<li>Automatic compression policies</li>
 </ul>
 <h2 id="class-definition">Class Definition<a class="headerlink" href="#class-definition" title="Permanent link">&para;</a></h2>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">HTM</span><span class="o">::</span><span class="no">Database</span>
@@ -6324,7 +6344,7 @@
 <hr />
 <h2 id="class-methods">Class Methods<a class="headerlink" href="#class-methods" title="Permanent link">&para;</a></h2>
 <h3 id="setup"><code>setup(db_url = nil)</code><a class="headerlink" href="#setup" title="Permanent link">&para;</a></h3>
-<p>Set up the HTM database schema and TimescaleDB hypertables.</p>
+<p>Set up the HTM database schema and run migrations.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">db_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">nil</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
@@ -6358,10 +6378,9 @@
 <h4 id="side-effects">Side Effects<a class="headerlink" href="#side-effects" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Connects to PostgreSQL database</li>
-<li>Verifies required extensions (TimescaleDB, pgvector, pg_trgm)</li>
+<li>Verifies required extensions (pgvector, pg_trgm)</li>
 <li>Creates schema (tables, indexes, views)</li>
-<li>Converts tables to hypertables</li>
-<li>Sets up compression policies</li>
+<li>Runs pending migrations</li>
 <li>Prints status messages to stdout</li>
 </ul>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
@@ -6371,20 +6390,16 @@
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Use specific database URL</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="s1">&#39;postgresql://user:pass@host:5432/dbname&#39;</span><span class="p">)</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Use TimescaleDB Cloud</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;postgresql://tsdbadmin:pass@xxx.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require&#39;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1"># Use a remote PostgreSQL database</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;postgresql://user:pass@db.example.com:5432/htm_production?sslmode=require&#39;</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h4>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>✓ TimescaleDB version: 2.13.0
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>✓ pgvector version: 0.5.1
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>✓ pg_trgm version: 1.6
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Creating HTM schema...
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>✓ Schema created
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>✓ Created hypertable for operations_log
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>✓ Created hypertable for nodes
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>✓ Enabled compression for nodes older than 30 days
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>✓ HTM database schema created successfully
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>✓ pgvector version: 0.8.1+
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>✓ pg_trgm version: 1.6
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Creating HTM schema...
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>✓ Schema created
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>✓ HTM database schema created successfully
 </span></code></pre></div>
 <hr />
 <h3 id="parse_connection_url"><code>parse_connection_url(url)</code><a class="headerlink" href="#parse_connection_url" title="Permanent link">&para;</a></h3>
@@ -6441,14 +6456,14 @@
 </span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
 </span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="c1"># =&gt; { ..., sslmode: &quot;require&quot; }</span>
 </span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>
-</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="c1"># TimescaleDB Cloud URL</span>
-</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;postgresql://tsdbadmin:secret@xxx.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require&#39;</span>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="c1"># Remote PostgreSQL URL</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="n">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;postgresql://myuser:secret@db.example.com:5432/htm_production?sslmode=require&#39;</span>
 </span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
 </span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="c1"># =&gt; {</span>
-</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="c1">#   host: &quot;xxx.tsdb.cloud.timescale.com&quot;,</span>
-</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="c1">#   port: 37807,</span>
-</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="c1">#   dbname: &quot;tsdb&quot;,</span>
-</span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="c1">#   user: &quot;tsdbadmin&quot;,</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="c1">#   host: &quot;db.example.com&quot;,</span>
+</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="c1">#   port: 5432,</span>
+</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="c1">#   dbname: &quot;htm_production&quot;,</span>
+</span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="c1">#   user: &quot;myuser&quot;,</span>
 </span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="c1">#   password: &quot;secret&quot;,</span>
 </span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="c1">#   sslmode: &quot;require&quot;</span>
 </span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="c1"># }</span>
@@ -6480,12 +6495,12 @@
 <tr>
 <td><code>HTM_DATABASE__HOST</code></td>
 <td>Database hostname</td>
-<td><code>'cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com'</code></td>
+<td><code>'localhost'</code></td>
 </tr>
 <tr>
 <td><code>HTM_DATABASE__PORT</code></td>
 <td>Database port</td>
-<td><code>37807</code></td>
+<td><code>5432</code></td>
 </tr>
 <tr>
 <td><code>HTM_DATABASE__NAME</code></td>
@@ -6506,31 +6521,30 @@
 </table>
 <h4 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h4>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Set environment variables</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__NAME&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tsdb&#39;</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__USER&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;tsdbadmin&#39;</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__NAME&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;htm_development&#39;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__USER&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;postgres&#39;</span>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__PASSWORD&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;secret&#39;</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
 </span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_params</span><span class="p">()</span>
 </span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># =&gt; {</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1">#   host: &quot;cw7rxj91bm.srbbwwxn56.tsdb.cloud.timescale.com&quot;,</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="c1">#   port: 37807,</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1">#   dbname: &quot;tsdb&quot;,</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="c1">#   user: &quot;tsdbadmin&quot;,</span>
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="c1">#   password: &quot;secret&quot;,</span>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="c1">#   sslmode: &quot;require&quot;</span>
-</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="c1"># }</span>
-</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>
-</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="c1"># Custom host and port</span>
-</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__HOST&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;localhost&#39;</span>
-</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__PORT&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;5432&#39;</span>
-</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>
-</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_params</span><span class="p">()</span>
-</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="c1"># =&gt; { host: &quot;localhost&quot;, port: 5432, ... }</span>
-</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
-</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="c1"># Without HTM_DATABASE__NAME</span>
-</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DATABASE__NAME&#39;</span><span class="p">)</span>
-</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_params</span><span class="p">()</span>
-</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="c1"># =&gt; nil</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1">#   host: &quot;localhost&quot;,</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="c1">#   port: 5432,</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1">#   dbname: &quot;htm_development&quot;,</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="c1">#   user: &quot;postgres&quot;,</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="c1">#   password: &quot;secret&quot;</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="c1"># }</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="c1"># Custom host and port</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__HOST&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;localhost&#39;</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HTM_DATABASE__PORT&#39;</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;5432&#39;</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_params</span><span class="p">()</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="c1"># =&gt; { host: &quot;localhost&quot;, port: 5432, ... }</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="c1"># Without HTM_DATABASE__NAME</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="no">ENV</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s1">&#39;HTM_DATABASE__NAME&#39;</span><span class="p">)</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="n">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">Database</span><span class="o">.</span><span class="n">parse_connection_params</span><span class="p">()</span>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="c1"># =&gt; nil</span>
 </span></code></pre></div>
 <hr />
 <h3 id="default_config"><code>default_config()</code><a class="headerlink" href="#default_config" title="Permanent link">&para;</a></h3>
@@ -6631,17 +6645,13 @@
 <hr />
 <h2 id="setup-process">Setup Process<a class="headerlink" href="#setup-process" title="Permanent link">&para;</a></h2>
 <h3 id="1-verify-extensions">1. Verify Extensions<a class="headerlink" href="#1-verify-extensions" title="Permanent link">&para;</a></h3>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Check TimescaleDB</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">timescale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="s2">&quot;SELECT extversion FROM pg_extension WHERE extname=&#39;timescaledb&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># =&gt; {&quot;extversion&quot;=&gt;&quot;2.13.0&quot;}</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Check pgvector</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">pgvector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="s2">&quot;SELECT extversion FROM pg_extension WHERE extname=&#39;vector&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="c1"># =&gt; {&quot;extversion&quot;=&gt;&quot;0.8.1&quot;}</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># Check pgvector</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">pgvector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="s2">&quot;SELECT extversion FROM pg_extension WHERE extname=&#39;vector&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># =&gt; {&quot;extversion&quot;=&gt;&quot;0.5.1&quot;}</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="c1"># Check pg_trgm</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="n">pg_trgm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="s2">&quot;SELECT extversion FROM pg_extension WHERE extname=&#39;pg_trgm&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1"># =&gt; {&quot;extversion&quot;=&gt;&quot;1.6&quot;}</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># Check pg_trgm</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">pg_trgm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">conn</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="s2">&quot;SELECT extversion FROM pg_extension WHERE extname=&#39;pg_trgm&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># =&gt; {&quot;extversion&quot;=&gt;&quot;1.6&quot;}</span>
 </span></code></pre></div>
 <h3 id="2-run-schema">2. Run Schema<a class="headerlink" href="#2-run-schema" title="Permanent link">&para;</a></h3>
 <p>Reads and executes <code>sql/schema.sql</code> from the repository:</p>
@@ -6664,24 +6674,14 @@
 </span></code></pre></div>
 <hr />
 <h2 id="environment-configuration">Environment Configuration<a class="headerlink" href="#environment-configuration" title="Permanent link">&para;</a></h2>
-<h3 id="timescaledb-cloud">TimescaleDB Cloud<a class="headerlink" href="#timescaledb-cloud" title="Permanent link">&para;</a></h3>
-<p>Using URL (recommended):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># In ~/.bashrc__tiger</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://tsdbadmin:PASSWORD@SERVICE.tsdb.cloud.timescale.com:37807/tsdb?sslmode=require&#39;</span>
+<h3 id="local-postgresql-macos">Local PostgreSQL (macOS)<a class="headerlink" href="#local-postgresql-macos" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://localhost/htm_development&#39;</span>
 </span></code></pre></div>
-<p>Using individual variables:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># In ~/.bashrc__tiger</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__HOST</span><span class="o">=</span><span class="s1">&#39;xxx.tsdb.cloud.timescale.com&#39;</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PORT</span><span class="o">=</span><span class="m">37807</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__NAME</span><span class="o">=</span><span class="s1">&#39;tsdb&#39;</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__USER</span><span class="o">=</span><span class="s1">&#39;tsdbadmin&#39;</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PASSWORD</span><span class="o">=</span><span class="s1">&#39;your_password&#39;</span>
+<h3 id="local-postgresql-with-auth">Local PostgreSQL (with auth)<a class="headerlink" href="#local-postgresql-with-auth" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://user:pass@localhost:5432/htm_development&#39;</span>
 </span></code></pre></div>
-<h3 id="local-postgresql">Local PostgreSQL<a class="headerlink" href="#local-postgresql" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://localhost/htm_dev&#39;</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="c1"># Or with auth</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://user:pass@localhost:5432/htm_dev&#39;</span>
+<h3 id="remote-postgresql-with-ssl">Remote PostgreSQL (with SSL)<a class="headerlink" href="#remote-postgresql-with-ssl" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://user:pass@db.example.com:5432/htm_production?sslmode=require&#39;</span>
 </span></code></pre></div>
 <h3 id="docker-postgresql">Docker PostgreSQL<a class="headerlink" href="#docker-postgresql" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__URL</span><span class="o">=</span><span class="s1">&#39;postgresql://postgres:postgres@localhost:5432/htm&#39;</span>
@@ -6759,17 +6759,18 @@
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="extensions-not-available">Extensions Not Available<a class="headerlink" href="#extensions-not-available" title="Permanent link">&para;</a></h3>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>⚠ Warning: TimescaleDB extension not found
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>⚠ Warning: pgvector extension not found
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>⚠ Warning: pgvector extension not found
 </span></code></pre></div>
 <p><strong>Solution</strong>: Install required extensions:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># Ubuntu/Debian</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>postgresql-15-timescaledb<span class="w"> </span>postgresql-15-pgvector
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>postgresql-17-pgvector
 </span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
 </span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1"># macOS with Homebrew</span>
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>brew<span class="w"> </span>install<span class="w"> </span>timescaledb<span class="w"> </span>pgvector
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>brew<span class="w"> </span>install<span class="w"> </span>pgvector
 </span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>
-</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="c1"># Or use TimescaleDB Cloud (extensions pre-installed)</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="c1"># Then enable in your database:</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS vector;&quot;</span>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;CREATE EXTENSION IF NOT EXISTS pg_trgm;&quot;</span>
 </span></code></pre></div>
 <h3 id="connection-refused">Connection Refused<a class="headerlink" href="#connection-refused" title="Permanent link">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>PG::ConnectionBad: could not connect to server: Connection refused
