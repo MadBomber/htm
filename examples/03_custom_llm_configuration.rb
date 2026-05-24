@@ -19,6 +19,7 @@ ExamplesHelper.section "HTM Custom LLM Configuration Example"
 ExamplesHelper.print_environment
 
 # Verify database is available
+ExamplesHelper.reset_if_requested!
 ExamplesHelper.require_database!
 
 # Example 1: Use Default Configuration (RubyLLM with Ollama)

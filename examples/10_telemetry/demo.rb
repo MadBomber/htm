@@ -109,6 +109,7 @@ class TelemetryDemo
     puts "  [OK] Environment: #{HTM.config.environment}"
     puts "  [OK] Database: #{HTM.config.actual_database_name}"
 
+    ExamplesHelper.reset_if_requested!
     ExamplesHelper.require_database!
     puts
   end

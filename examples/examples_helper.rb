@@ -72,6 +72,31 @@ end
 
 # Module with helper methods for examples
 module ExamplesHelper
+  # Reset examples database if --reset flag is present in ARGV
+  #
+  # Drops and recreates htm_examples, then runs all migrations.
+  # Removes --reset from ARGV so downstream option parsers are unaffected.
+  #
+  # @return [void]
+  def self.reset_if_requested!
+    return unless ARGV.delete('--reset')
+
+    db_name = "#{ENV['HTM_SERVICE__NAME'] || 'htm'}_examples"
+    puts "Resetting examples database '#{db_name}'..."
+
+    HTM::SequelConfig.disconnect! if HTM::SequelConfig.db
+
+    abort "ERROR: Failed to drop '#{db_name}'" unless system("dropdb --if-exists #{db_name}")
+    abort "ERROR: Failed to create '#{db_name}'" unless system("createdb #{db_name}")
+
+    HTM::SequelConfig.establish_connection!(load_models: false)
+    HTM::Database.setup
+    HTM::SequelConfig.ensure_models_loaded!
+
+    puts "Database reset complete."
+    puts
+  end
+
   # Check if database is available and configured
   #
   # @return [Boolean] true if database is ready

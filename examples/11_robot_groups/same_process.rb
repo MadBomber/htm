@@ -34,6 +34,7 @@ require 'json'
 
 ExamplesHelper.section "HTM Robot Group Demo - Shared Working Memory & Failover"
 ExamplesHelper.print_environment
+ExamplesHelper.reset_if_requested!
 ExamplesHelper.require_database!
 
 begin

@@ -13,6 +13,7 @@
 
 require_relative 'examples_helper'
 
+ExamplesHelper.reset_if_requested!
 ExamplesHelper.require_database!
 
 puts <<~HEADER

@@ -58,6 +58,7 @@ class HTMMcpClient
   private
 
   def validate_environment
+    ExamplesHelper.reset_if_requested!
     ExamplesHelper.require_database!
 
     unless File.exist?(MCP_SERVER_PATH)

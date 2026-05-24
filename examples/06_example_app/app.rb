@@ -20,6 +20,7 @@ class ExampleApp
     ExamplesHelper.print_environment
 
     # Verify database is available
+    ExamplesHelper.reset_if_requested!
     ExamplesHelper.require_database!
 
     puts "Database configured: #{HTM.config.actual_database_name}"

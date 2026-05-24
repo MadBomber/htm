@@ -24,6 +24,7 @@ ExamplesHelper.section "HTM File Loader Example"
 ExamplesHelper.print_environment
 
 # Verify database is available
+ExamplesHelper.reset_if_requested!
 ExamplesHelper.require_database!
 
 begin

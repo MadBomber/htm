@@ -123,6 +123,7 @@ def run_demo
   BANNER
 
   ExamplesHelper.print_environment
+  ExamplesHelper.reset_if_requested!
   ExamplesHelper.require_database!
 
   group_name = "demo-#{Time.now.to_i}"

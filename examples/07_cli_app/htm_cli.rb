@@ -379,6 +379,7 @@ class HTMCli
 end
 
 # Check database configuration
+ExamplesHelper.reset_if_requested!
 ExamplesHelper.require_database!
 
 # Check Ollama connection (optional but recommended)
