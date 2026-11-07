@@ -118,6 +118,8 @@ class HTM
           JOIN node_tags nt2 ON nt1.node_id = nt2.node_id
           JOIN tags t2 ON nt2.tag_id = t2.id
           WHERE t1.name < t2.name
+            AND t1.deleted_at IS NULL AND t2.deleted_at IS NULL
+            AND nt1.deleted_at IS NULL AND nt2.deleted_at IS NULL
           GROUP BY t1.name, t2.name
           HAVING COUNT(DISTINCT nt1.node_id) >= ?
           ORDER BY shared_nodes DESC
