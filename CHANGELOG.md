@@ -78,6 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - System prompt now explicitly prevents meta-responses
   - Increased specificity requirements for self-contained facts
 
+### Removed
+- **Stale backup test files** - Deleted `test/caching_test.rb.bak3` and `test/ontology_test.rb.bak`; `rake test` never ran them, and `test/caching_test.rb` and `test/ontology_test.rb` replace them
+
 ### Fixed
 - **`token_counter` never set on config load** - `setup_defaults` on-load hook assigned to `@setup_defaults` (typo) instead of `@token_counter`, causing `HTM::ValidationError: token_counter must be callable` in any test that triggered a fresh config load via `HTM.configure`
 - **`reset_htm_configuration` lost mock services** - After `HTM.reset_configuration!` the helper only set `job.backend = :inline`, leaving the real Ollama embedding generator active; subsequent tests accumulated circuit breaker failures and left nodes without embeddings. Now calls `configure_htm_with_mocks` to fully restore test defaults
