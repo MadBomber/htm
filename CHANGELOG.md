@@ -79,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Increased specificity requirements for self-contained facts
 
 ### Removed
-- **Stale backup test files** - Deleted `test/caching_test.rb.bak3` and `test/ontology_test.rb.bak`; `rake test` never ran them, and `test/caching_test.rb` and `test/ontology_test.rb` replace them
+- **Stale backup test files** - `test/caching_test.rb.bak3` and `test/ontology_test.rb.bak`, which `rake test` never ran
 
 ### Fixed
 - **`token_counter` never set on config load** - `setup_defaults` on-load hook assigned to `@setup_defaults` (typo) instead of `@token_counter`, causing `HTM::ValidationError: token_counter must be callable` in any test that triggered a fresh config load via `HTM.configure`
