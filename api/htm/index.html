@@ -7344,7 +7344,7 @@
 </span></code></pre></div>
 <hr />
 <h3 id="unload_file"><code>unload_file(file_path)</code><a class="headerlink" href="#unload_file" title="Permanent link">&para;</a></h3>
-<p>Remove a file from memory by soft-deleting all its chunks and the file source.</p>
+<p>Remove a file from memory by soft-deleting all its chunks and deleting its file source.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">unload_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="parameters_7">Parameters<a class="headerlink" href="#parameters_7" title="Permanent link">&para;</a></h4>
@@ -7366,12 +7366,11 @@
 </table>
 <h4 id="returns_7">Returns<a class="headerlink" href="#returns_7" title="Permanent link">&para;</a></h4>
 <ul>
-<li><code>true</code> if file was found and unloaded</li>
-<li><code>false</code> if file was not found</li>
+<li><code>Integer</code> number of chunks soft-deleted (<code>0</code> if the file was not loaded)</li>
 </ul>
 <h4 id="side-effects_4">Side Effects<a class="headerlink" href="#side-effects_4" title="Permanent link">&para;</a></h4>
 <ul>
-<li>Soft-deletes all nodes from the file (sets <code>deleted_at</code>)</li>
+<li>Soft-deletes all nodes from the file (sets <code>deleted_at</code>), plus their <code>node_tags</code> and <code>robot_nodes</code></li>
 <li>Destroys the FileSource record</li>
 </ul>
 <h4 id="examples_7">Examples<a class="headerlink" href="#examples_7" title="Permanent link">&para;</a></h4>

@@ -5734,7 +5734,7 @@
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">end</span>
 </span></code></pre></div>
 <h3 id="unload_filepath">unload_file(path)<a class="headerlink" href="#unload_filepath" title="Permanent link">&para;</a></h3>
-<p>Soft deletes all nodes from a file and removes the file source.</p>
+<p>Soft deletes all nodes from a file, along with their tag associations and robot links, and removes the file source. Loading the same content again restores them.</p>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">unload_file</span><span class="p">(</span><span class="s2">"docs/guide.md"</span><span class="p">)</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"Removed </span><span class="si">#{</span><span class="n">count</span><span class="si">}</span><span class="s2"> chunks"</span>
 </span></code></pre></div>
