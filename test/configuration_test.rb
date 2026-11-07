@@ -15,7 +15,7 @@ class ConfigurationTest < Minitest::Test
 
   def teardown
     HTM.instance_variable_set(:@config, @original_config)
-    ENV['HTM_SERVICE__NAME'] = @saved_service_name if @saved_service_name
+    @saved_service_name ? ENV['HTM_SERVICE__NAME'] = @saved_service_name : ENV.delete('HTM_SERVICE__NAME')
   end
 
   def test_default_values
