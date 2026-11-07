@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -5014,14 +5014,14 @@ robot adds, evicts, or clears working memory, all other robots in the group
 receive immediate notification.</p>
 <p><strong><code>@see</code></strong> [] Higher-level coordination using this channel</p>
 <p><strong><code>@example</code></strong>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">WorkingMemoryChannel</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;support-team&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">db_config</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">WorkingMemoryChannel</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'support-team'</span><span class="p">,</span><span class="w"> </span><span class="n">db_config</span><span class="p">)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># Subscribe to changes</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">channel</span><span class="o">.</span><span class="n">on_change</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">event</span><span class="p">,</span><span class="w"> </span><span class="n">node_id</span><span class="p">,</span><span class="w"> </span><span class="n">robot_id</span><span class="o">|</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="n">event</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:added</span><span class="w">   </span><span class="k">then</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Node </span><span class="si">#{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> added by robot </span><span class="si">#{</span><span class="n">robot_id</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:evicted</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Node </span><span class="si">#{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> evicted by robot </span><span class="si">#{</span><span class="n">robot_id</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:cleared</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Working memory cleared by robot </span><span class="si">#{</span><span class="n">robot_id</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:added</span><span class="w">   </span><span class="k">then</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"Node </span><span class="si">#{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> added by robot </span><span class="si">#{</span><span class="n">robot_id</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:evicted</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"Node </span><span class="si">#{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> evicted by robot </span><span class="si">#{</span><span class="n">robot_id</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="k">when</span><span class="w"> </span><span class="ss">:cleared</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"Working memory cleared by robot </span><span class="si">#{</span><span class="n">robot_id</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="k">end</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">end</span>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
@@ -5045,8 +5045,8 @@ receive immediate notification.</p>
 of special characters.</p>
 <p><strong><code>@return</code></strong> [String] The PostgreSQL LISTEN/NOTIFY channel name</p>
 <p><strong><code>@example</code></strong>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">WorkingMemoryChannel</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;my-group&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">db_config</span><span class="p">)</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">channel</span><span class="o">.</span><span class="n">channel_name</span><span class="w">  </span><span class="c1"># =&gt; &quot;htm_wm_my_group&quot;</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">WorkingMemoryChannel</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'my-group'</span><span class="p">,</span><span class="w"> </span><span class="n">db_config</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">channel</span><span class="o">.</span><span class="n">channel_name</span><span class="w">  </span><span class="c1"># =&gt; "htm_wm_my_group"</span>
 </span></code></pre></div></p>
 <h2 id="method-i-initialize">initialize(group_name, db_config)<a class="headerlink" href="#method-i-initialize" title="Permanent link">&para;</a></h2>
 <p>Creates a new working memory channel for a robot group.</p>
@@ -5061,8 +5061,8 @@ characters replaced by underscores to ensure PostgreSQL compatibility.</p>
 <p><strong><code>@param</code></strong> [Hash] PostgreSQL connection configuration hash</p>
 <p><strong><code>@return</code></strong> [WorkingMemoryChannel] a new instance of WorkingMemoryChannel</p>
 <p><strong><code>@example</code></strong>
-<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">db_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">host</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">port</span><span class="p">:</span><span class="w"> </span><span class="mi">5432</span><span class="p">,</span><span class="w"> </span><span class="ss">dbname</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;htm_dev&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">user</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;postgres&#39;</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">WorkingMemoryChannel</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;customer-support&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">db_config</span><span class="p">)</span>
+<div class="language-ruby highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">db_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">host</span><span class="p">:</span><span class="w"> </span><span class="s1">'localhost'</span><span class="p">,</span><span class="w"> </span><span class="ss">port</span><span class="p">:</span><span class="w"> </span><span class="mi">5432</span><span class="p">,</span><span class="w"> </span><span class="ss">dbname</span><span class="p">:</span><span class="w"> </span><span class="s1">'htm_dev'</span><span class="p">,</span><span class="w"> </span><span class="ss">user</span><span class="p">:</span><span class="w"> </span><span class="s1">'postgres'</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">HTM</span><span class="o">::</span><span class="no">WorkingMemoryChannel</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">'customer-support'</span><span class="p">,</span><span class="w"> </span><span class="n">db_config</span><span class="p">)</span>
 </span></code></pre></div></p>
 <h2 id="method-i-listening?">listening?()<a class="headerlink" href="#method-i-listening?" title="Permanent link">&para;</a></h2>
 <p>Checks if the listener thread is currently active.</p>
@@ -5098,7 +5098,7 @@ Callbacks are invoked synchronously within the listener thread.</p>
 <p><strong><code>@yieldparam</code></strong> [Integer] ID of the robot that triggered the change</p>
 <p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">channel</span><span class="o">.</span><span class="n">on_change</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">event</span><span class="p">,</span><span class="w"> </span><span class="n">node_id</span><span class="p">,</span><span class="w"> </span><span class="n">robot_id</span><span class="o">|</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Received </span><span class="si">#{</span><span class="n">event</span><span class="si">}</span><span class="s2"> event for node </span><span class="si">#{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"Received </span><span class="si">#{</span><span class="n">event</span><span class="si">}</span><span class="s2"> event for node </span><span class="si">#{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">end</span>
 </span></code></pre></div></p>
 <h2 id="method-i-start_listening">start_listening()<a class="headerlink" href="#method-i-start_listening" title="Permanent link">&para;</a></h2>
@@ -5109,7 +5109,7 @@ via {#stop_listening}.</p>
 <p><strong><code>@return</code></strong> [Thread] The background listener thread</p>
 <p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">channel</span><span class="o">.</span><span class="n">start_listening</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Listening: </span><span class="si">#{</span><span class="n">channel</span><span class="o">.</span><span class="n">listening?</span><span class="si">}</span><span class="s2">&quot;</span><span class="w">  </span><span class="c1"># =&gt; true</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"Listening: </span><span class="si">#{</span><span class="n">channel</span><span class="o">.</span><span class="n">listening?</span><span class="si">}</span><span class="s2">"</span><span class="w">  </span><span class="c1"># =&gt; true</span>
 </span></code></pre></div></p>
 <h2 id="method-i-stop_listening">stop_listening()<a class="headerlink" href="#method-i-stop_listening" title="Permanent link">&para;</a></h2>
 <p>Stops the background listener thread.</p>
@@ -5119,7 +5119,7 @@ automatically.</p>
 <p><strong><code>@return</code></strong> [void] </p>
 <p><strong><code>@example</code></strong>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">channel</span><span class="o">.</span><span class="n">stop_listening</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Listening: </span><span class="si">#{</span><span class="n">channel</span><span class="o">.</span><span class="n">listening?</span><span class="si">}</span><span class="s2">&quot;</span><span class="w">  </span><span class="c1"># =&gt; false</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"Listening: </span><span class="si">#{</span><span class="n">channel</span><span class="o">.</span><span class="n">listening?</span><span class="si">}</span><span class="s2">"</span><span class="w">  </span><span class="c1"># =&gt; false</span>
 </span></code></pre></div></p>
 
 
@@ -5257,10 +5257,10 @@ automatically.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "header.autohide", "content.code.copy", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
         <script src="../../../../assets/js/mathjax.js"></script>
       
