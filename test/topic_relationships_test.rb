@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "minitest/mock"
 
 class TopicRelationshipsTest < Minitest::Test
   def setup
@@ -10,7 +11,7 @@ class TopicRelationshipsTest < Minitest::Test
     configure_htm_with_mocks
     @htm    = HTM.new(robot_name: "Topic Relationships Test Robot")
     @prefix = "trel-#{SecureRandom.hex(4)}"
-    @alpha, @beta, @gamma = %w[alpha beta gamma].map { "#{@prefix}-#{it}" }
+    @alpha, @beta, @gamma = %w[alpha beta gamma].map { |name| "#{@prefix}-#{name}" }
     @node_ids = []
   end
 
@@ -78,6 +79,13 @@ class TopicRelationshipsTest < Minitest::Test
     assert_equal({ [@alpha, @beta] => 1 }, own_pairs(@htm.long_term_memory.topic_relationships(min_shared_nodes: 1, limit: 1000)))
   end
 
+  def test_soft_deleted_tags_are_not_counted
+    remember_with(@alpha, @beta, @gamma)
+    HTM::Models::Tag.where(name: @gamma).update(deleted_at: Time.now)
+
+    assert_equal({ [@alpha, @beta] => 1 }, own_pairs(@htm.long_term_memory.topic_relationships(min_shared_nodes: 1, limit: 1000)))
+  end
+
   private
 
   def remember_with(*tags)
@@ -87,7 +95,7 @@ class TopicRelationshipsTest < Minitest::Test
   end
 
   def own_pairs(rows)
-    rows.select { it["topic1"].start_with?(@prefix) }
-        .to_h { [[it["topic1"], it["topic2"]], it["shared_nodes"]] }
+    rows.select { |row| row["topic1"].start_with?(@prefix) }
+        .to_h { |row| [[row["topic1"], row["topic2"]], row["shared_nodes"]] }
   end
 end
