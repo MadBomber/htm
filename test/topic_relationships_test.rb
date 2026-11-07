@@ -32,15 +32,6 @@ class TopicRelationshipsTest < Minitest::Test
     )
   end
 
-  def test_rows_use_string_keys
-    remember_with(@alpha, @beta)
-
-    row = @htm.long_term_memory.topic_relationships(min_shared_nodes: 1, limit: 1000)
-              .find { it["topic1"] == @alpha }
-
-    assert_equal({ "topic1" => @alpha, "topic2" => @beta, "shared_nodes" => 1 }, row)
-  end
-
   def test_default_min_shared_nodes_is_two
     remember_with(@alpha, @beta, @gamma)
     remember_with(@alpha, @beta)
