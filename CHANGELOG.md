@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Test suite runs with a custom `HTM_SERVICE__NAME`** - `ConfigurationTest` no longer fails when `rake test` is pointed at a non-default test database (e.g. `HTM_SERVICE__NAME=myapp rake test` uses `myapp_test`)
+
 ### Added
 - **`node_relationships` table** - Weighted directed edges between related nodes
   - Stores Jaccard-similarity scores computed from tag co-occurrence

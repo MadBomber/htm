@@ -6,12 +6,16 @@ require 'tmpdir'
 
 class ConfigurationTest < Minitest::Test
   def setup
+    # Tests assume the default service name ('htm'). `rake test` honours
+    # HTM_SERVICE__NAME to pick the test database, so hide it here.
+    @saved_service_name = ENV.delete('HTM_SERVICE__NAME')
     @original_config = HTM.config
     HTM.reset_configuration!
   end
 
   def teardown
     HTM.instance_variable_set(:@config, @original_config)
+    ENV['HTM_SERVICE__NAME'] = @saved_service_name if @saved_service_name
   end
 
   def test_default_values
