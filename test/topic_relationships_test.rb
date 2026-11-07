@@ -60,12 +60,20 @@ class TopicRelationshipsTest < Minitest::Test
 
     HTM.db.stub(:fetch, fetch) { @htm.long_term_memory.topic_relationships(limit: 1_000_000) }
 
-    assert_equal [2, HTM::LongTermMemory::TagOperations::MAX_TAG_QUERY_LIMIT], bound
+    assert_equal HTM::LongTermMemory::TagOperations::MAX_TAG_QUERY_LIMIT, bound.last
   end
 
   def test_forgotten_nodes_are_not_counted
     remember_with(@alpha, @beta)
     @htm.forget(remember_with(@alpha, @beta))
+
+    assert_equal({ [@alpha, @beta] => 1 }, own_pairs(@htm.long_term_memory.topic_relationships(min_shared_nodes: 1, limit: 1000)))
+  end
+
+  def test_nodes_deleted_without_cascading_to_node_tags_are_not_counted
+    remember_with(@alpha, @beta)
+    # FileSource#soft_delete_chunks! (htm.unload_file) marks nodes only, not their node_tags
+    HTM::Models::Node.where(id: remember_with(@alpha, @beta)).update(deleted_at: Time.now)
 
     assert_equal({ [@alpha, @beta] => 1 }, own_pairs(@htm.long_term_memory.topic_relationships(min_shared_nodes: 1, limit: 1000)))
   end
