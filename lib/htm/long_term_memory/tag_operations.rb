@@ -124,7 +124,7 @@ class HTM
             AND n.deleted_at IS NULL
           GROUP BY t1.name, t2.name
           HAVING COUNT(DISTINCT nt1.node_id) >= ?
-          ORDER BY shared_nodes DESC
+          ORDER BY shared_nodes DESC, topic1, topic2
           LIMIT ?
         SQL
 
