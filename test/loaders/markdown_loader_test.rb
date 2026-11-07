@@ -261,6 +261,19 @@ class MarkdownLoaderTest < Minitest::Test
     end
   end
 
+  def test_unload_file_cascades_to_node_tags_and_robot_nodes
+    path = create_test_file('unload_cascade.md', "Content to cascade.")
+
+    result = @htm.load_file(path, force: true)
+    node_ids = HTM::Models::FileSource[result[:file_source_id]].chunks_dataset.select_map(:id)
+    node_ids.each { |id| @htm.long_term_memory.add_tag(node_id: id, tag: "unload:cascade") }
+
+    @htm.unload_file(path)
+
+    assert_empty HTM::Models::NodeTag.where(node_id: node_ids).all
+    assert_empty HTM::Models::RobotNode.where(node_id: node_ids).all
+  end
+
   def test_unload_file_returns_zero_for_unknown_file
     result = @htm.unload_file('/nonexistent/file.md')
 

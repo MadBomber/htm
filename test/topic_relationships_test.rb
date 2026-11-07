@@ -73,7 +73,7 @@ class TopicRelationshipsTest < Minitest::Test
 
   def test_nodes_deleted_without_cascading_to_node_tags_are_not_counted
     remember_with(@alpha, @beta)
-    # FileSource#soft_delete_chunks! (htm.unload_file) marks nodes only, not their node_tags
+    # Nodes soft-deleted directly, without the cascade to node_tags
     HTM::Models::Node.where(id: remember_with(@alpha, @beta)).update(deleted_at: Time.now)
 
     assert_equal({ [@alpha, @beta] => 1 }, own_pairs(@htm.long_term_memory.topic_relationships(min_shared_nodes: 1, limit: 1000)))
