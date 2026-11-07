@@ -261,9 +261,49 @@ class MarkdownLoaderTest < Minitest::Test
     end
   end
 
+  def test_unload_file_cascades_to_node_tags_and_robot_nodes
+    node_ids = load_tagged_file('unload_cascade.md')
+
+    @htm.unload_file(path_for('unload_cascade.md'))
+
+    assert active_links(node_ids).all?(&:empty?), "node_tags and robot_nodes should be soft-deleted"
+    [HTM::Models::NodeTag, HTM::Models::RobotNode].each do |model|
+      refute model.dataset.unfiltered.where(node_id: node_ids).exclude(deleted_at: nil).empty?, "#{model} rows should be kept, not hard-deleted"
+    end
+  end
+
+  def test_reload_after_unload_restores_node_tags_and_robot_nodes
+    node_ids = load_tagged_file('unload_reload.md')
+    path = path_for('unload_reload.md')
+
+    @htm.unload_file(path)
+    @htm.load_file(path, force: true)
+
+    assert active_links(node_ids).none?(&:empty?), "node_tags and robot_nodes should be active again"
+  end
+
   def test_unload_file_returns_zero_for_unknown_file
     result = @htm.unload_file('/nonexistent/file.md')
 
     assert_equal 0, result
+  end
+
+  private
+
+  def path_for(name)
+    File.join(@temp_dir, name)
+  end
+
+  def load_tagged_file(name)
+    result = @htm.load_file(create_test_file(name, "Content for #{name} #{SecureRandom.hex(8)}."), force: true)
+    node_ids = HTM::Models::FileSource[result[:file_source_id]].chunks_dataset.select_map(:id)
+    refute_empty node_ids
+    node_ids.each { |id| @htm.long_term_memory.add_tag(node_id: id, tag: "unload:cascade") }
+    assert active_links(node_ids).none?(&:empty?), "fixture should have active node_tags and robot_nodes"
+    node_ids
+  end
+
+  def active_links(node_ids)
+    [HTM::Models::NodeTag, HTM::Models::RobotNode].map { |model| model.where(node_id: node_ids) }
   end
 end
