@@ -8,8 +8,8 @@ class ConfigurationTest < Minitest::Test
   def setup
     # Tests assume the default service name ('htm'). `rake test` honours
     # HTM_SERVICE__NAME to pick the test database, so hide it here.
-    @saved_service_name = ENV.delete('HTM_SERVICE__NAME')
     @original_config = HTM.config
+    @saved_service_name = ENV.delete('HTM_SERVICE__NAME')
     HTM.reset_configuration!
   end
 
@@ -831,7 +831,7 @@ class ConfigurationTest < Minitest::Test
     # When database.name is missing but other components exist,
     # auto-generate name from service.name and environment
     saved_vars = {}
-    %w[HTM_DATABASE__URL HTM_DATABASE__NAME HTM_DATABASE__USER HTM_ENV HTM_SERVICE__NAME].each do |var|
+    %w[HTM_DATABASE__URL HTM_DATABASE__NAME HTM_DATABASE__USER HTM_ENV].each do |var|
       saved_vars[var] = ENV.fetch(var, nil)
     end
 
