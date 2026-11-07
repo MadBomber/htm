@@ -569,7 +569,7 @@ end
 
 ### `unload_file(file_path)` {: #unload_file }
 
-Remove a file from memory by soft-deleting all its chunks and the file source.
+Remove a file from memory by soft-deleting all its chunks and deleting its file source.
 
 ```ruby
 unload_file(file_path)
