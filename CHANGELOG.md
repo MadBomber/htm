@@ -90,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Identical conditional branches in `Tag.format_tree_branch`** - `branch = is_last ? '+-- ' : '+-- '` both sides were identical; simplified to a direct string literal
 - **`EmptyElse` in `Observability#process_memory_mb`** - Removed redundant `else nil` branch from the platform detection conditional
 - **Test suite runs with a custom `HTM_SERVICE__NAME`** - `ConfigurationTest` no longer fails when `rake test` is pointed at a non-default test database (e.g. `HTM_SERVICE__NAME=myapp rake test` uses `myapp_test`)
+- **`topic_relationships` counted forgotten memories** - Soft-deleted tags and node associations no longer add to `shared_nodes`; the tags guide now shows the real `topic1`/`topic2`/`shared_nodes` keys
 
 ### Refactored
 - **Flog complexity reduced across 15+ files** - All methods now score below the 50.0 failure threshold (previously 9 methods failed):
