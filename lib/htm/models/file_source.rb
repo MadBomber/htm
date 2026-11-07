@@ -107,10 +107,10 @@ class HTM
       def soft_delete_chunks!
         db.transaction do
           now = Time.now
-          chunk_ids = nodes_dataset.select(:id)
+          chunk_ids = nodes_dataset.select_map(:id)
           HTM::Models::RobotNode.where(node_id: chunk_ids).update(deleted_at: now)
           HTM::Models::NodeTag.where(node_id: chunk_ids).update(deleted_at: now)
-          nodes_dataset.update(deleted_at: now)
+          HTM::Models::Node.where(id: chunk_ids).update(deleted_at: now)
         end
       end
 
