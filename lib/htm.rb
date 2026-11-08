@@ -497,7 +497,7 @@ class HTM
   #   nodes.each { |node| puts node.content }
   #
   def nodes_from_file(file_path)
-    source = HTM::Models::FileSource.first(file_path: File.expand_path(file_path))
+    source = HTM::Models::FileSource.by_path(file_path).first
     return [] unless source
 
     HTM::Models::Node.from_source(source.id).all
