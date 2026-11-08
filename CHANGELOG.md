@@ -92,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test suite runs with a custom `HTM_SERVICE__NAME`** - `ConfigurationTest` no longer fails when `rake test` is pointed at a non-default test database (e.g. `HTM_SERVICE__NAME=myapp rake test` uses `myapp_test`)
 - **`topic_relationships` counted forgotten memories** - Soft-deleted tags and node associations no longer add to `shared_nodes`; the tags guide now shows the real `topic1`/`topic2`/`shared_nodes` keys
 - **`unload_file` left chunk tags and robot links active** - `FileSource#soft_delete_chunks!` now soft-deletes the chunks' `node_tags` and `robot_nodes` too, matching `Node#soft_delete!`
+- **`unload_file` could lose a file's chunks but keep its source** - The chunk cascade and the `FileSource` delete now run in one transaction, so a failed delete no longer leaves the file marked as loaded with its content gone
 
 ### Refactored
 - **Flog complexity reduced across 15+ files** - All methods now score below the 50.0 failure threshold (previously 9 methods failed):
