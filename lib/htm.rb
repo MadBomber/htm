@@ -514,14 +514,10 @@ class HTM
   #   puts "Unloaded #{count} chunks"
   #
   def unload_file(file_path)
-    source = HTM::Models::FileSource.first(file_path: File.expand_path(file_path))
+    source = HTM::Models::FileSource.by_path(file_path).first
     return 0 unless source
 
-    count = HTM.db.transaction do
-      deleted = source.soft_delete_chunks!
-      source.delete
-      deleted
-    end
+    count = source.unload!
     @long_term_memory.clear_cache!
 
     update_robot_activity
