@@ -237,12 +237,12 @@ class MarkdownLoaderTest < Minitest::Test
     path = create_test_file('unload.md', "Content to unload.")
 
     @htm.load_file(path, force: true)
-    assert HTM::Models::FileSource.first(file_path: File.expand_path(path))
+    assert HTM::Models::FileSource.by_path(path).first
 
     result = @htm.unload_file(path)
 
     assert result
-    refute HTM::Models::FileSource.first(file_path: File.expand_path(path))
+    refute HTM::Models::FileSource.by_path(path).first
   end
 
   def test_unload_file_soft_deletes_chunks
