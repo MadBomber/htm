@@ -237,12 +237,12 @@ class MarkdownLoaderTest < Minitest::Test
     path = create_test_file('unload.md', "Content to unload.")
 
     @htm.load_file(path, force: true)
-    assert HTM::Models::FileSource.first(file_path: File.expand_path(path))
+    assert HTM::Models::FileSource.by_path(path).first
 
     result = @htm.unload_file(path)
 
     assert result
-    refute HTM::Models::FileSource.first(file_path: File.expand_path(path))
+    refute HTM::Models::FileSource.by_path(path).first
   end
 
   def test_unload_file_soft_deletes_chunks
@@ -280,6 +280,18 @@ class MarkdownLoaderTest < Minitest::Test
     @htm.load_file(path, force: true)
 
     assert active_links(node_ids).none?(&:empty?), "node_tags and robot_nodes should be active again"
+  end
+
+  def test_file_source_unload_rolls_back_when_delete_fails
+    node_ids = load_tagged_file('unload_rollback.md')
+    source = HTM::Models::FileSource.by_path(path_for('unload_rollback.md')).first
+    source.define_singleton_method(:delete) { raise Sequel::DatabaseError, "delete failed" }
+
+    assert_raises(Sequel::DatabaseError) { source.unload! }
+
+    assert HTM::Models::FileSource[source.id], "FileSource should survive"
+    assert_equal node_ids.sort, HTM::Models::Node.where(id: node_ids).select_map(:id).sort, "chunks should stay active"
+    assert active_links(node_ids).none?(&:empty?), "node_tags and robot_nodes should stay active"
   end
 
   def test_unload_file_returns_zero_for_unknown_file

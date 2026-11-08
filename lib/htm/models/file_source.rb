@@ -114,6 +114,19 @@ class HTM
         end
       end
 
+      # Soft delete all chunks and delete this source record in one
+      # transaction, so a failure leaves both in place
+      #
+      # @return [Integer] Number of chunks soft-deleted
+      #
+      def unload!
+        db.transaction do
+          count = soft_delete_chunks!
+          delete
+          count
+        end
+      end
+
       private
 
       # Check if frontmatter is a hash-like object

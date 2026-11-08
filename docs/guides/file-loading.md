@@ -96,7 +96,7 @@ end
 
 ### unload_file(path)
 
-Soft deletes all nodes from a file, along with their tag associations and robot links, and removes the file source. Loading the same content again restores them.
+Soft deletes all nodes from a file, along with their tag associations and robot links, and removes the file source. Both steps run in one transaction, so if either fails nothing changes. Loading the same content again restores them.
 
 ```ruby
 count = htm.unload_file("docs/guide.md")

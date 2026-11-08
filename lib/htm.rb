@@ -497,13 +497,14 @@ class HTM
   #   nodes.each { |node| puts node.content }
   #
   def nodes_from_file(file_path)
-    source = HTM::Models::FileSource.first(file_path: File.expand_path(file_path))
+    source = HTM::Models::FileSource.by_path(file_path).first
     return [] unless source
 
     HTM::Models::Node.from_source(source.id).all
   end
 
-  # Unload a file (soft-delete all its chunks and remove source record)
+  # Unload a file (soft-delete all its chunks and remove source record
+  # in one transaction)
   #
   # @param file_path [String] Path to the source file
   # @return [Integer] Number of nodes soft-deleted
@@ -513,12 +514,11 @@ class HTM
   #   puts "Unloaded #{count} chunks"
   #
   def unload_file(file_path)
-    source = HTM::Models::FileSource.first(file_path: File.expand_path(file_path))
+    source = HTM::Models::FileSource.by_path(file_path).first
     return 0 unless source
 
-    count = source.soft_delete_chunks!
+    count = source.unload!
     @long_term_memory.clear_cache!
-    source.delete
 
     update_robot_activity
     count
