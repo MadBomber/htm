@@ -286,14 +286,14 @@ class MarkdownLoaderTest < Minitest::Test
   def test_unload_file_rolls_back_when_source_delete_fails
     node_ids = load_tagged_file('unload_rollback.md')
     path = path_for('unload_rollback.md')
-    source = HTM::Models::FileSource.first(file_path: File.expand_path(path))
+    source = HTM::Models::FileSource.by_path(path).first
     source.define_singleton_method(:delete) { raise Sequel::DatabaseError, "delete failed" }
 
     HTM::Models::FileSource.stub(:first, source) do
       assert_raises(Sequel::DatabaseError) { @htm.unload_file(path) }
     end
 
-    assert HTM::Models::FileSource.first(file_path: File.expand_path(path)), "FileSource should survive"
+    assert HTM::Models::FileSource[source.id], "FileSource should survive"
     assert_equal node_ids.sort, HTM::Models::Node.where(id: node_ids).select_map(:id).sort, "chunks should stay active"
     assert active_links(node_ids).none?(&:empty?), "node_tags and robot_nodes should stay active"
   end
