@@ -94,6 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`unload_file` left chunk tags and robot links active** - `FileSource#soft_delete_chunks!` now soft-deletes the chunks' `node_tags` and `robot_nodes` too, matching `Node#soft_delete!`
 - **`unload_file` could lose a file's chunks but keep its source** - New `FileSource#unload!` runs the chunk cascade and the source delete in one transaction, and `unload_file` uses it, so a failed delete no longer leaves the file marked as loaded with its content gone
 
+- **`htm:files:unload` reported success for unknown files** - The rake task branched on `unload_file`'s return value, but that is a chunk count (`0` when nothing matched), and `0` is truthy in Ruby, so an unknown path still printed `Unloaded:`. The task now branches on the count and prints `File not found:` for unmatched paths (and the chunk count on success)
+
 ### Refactored
 - **Flog complexity reduced across 15+ files** - All methods now score below the 50.0 failure threshold (previously 9 methods failed):
   - `HTM::Models::Tag::generate_tree_svg` (93.6 → passing): extracted `svg_title_element`, `svg_node_elements`, `svg_node_coords`, `svg_edge_path`, `svg_node_rect`, `svg_node_label`

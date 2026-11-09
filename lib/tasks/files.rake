@@ -197,8 +197,8 @@ namespace :htm do
       htm = HTM.new(robot_name: "FileLoader")
       result = htm.unload_file(path)
 
-      if result
-        puts "Unloaded: #{path}"
+      if result.positive?
+        puts "Unloaded: #{path} (#{result} chunks)"
       else
         puts "File not found: #{path}"
       end
