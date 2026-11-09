@@ -1,10 +1,7 @@
 
 <div align="center">
   <div style="background: linear-gradient(135deg, #90EE90 0%, #32CD32 100%); border: 4px solid #228B22; border-radius: 12px; padding: 20px; margin: 20px auto; max-width: 800px; box-shadow: 0 8px 16px rgba(34, 139, 34, 0.3);">
-    <p style="color: #000000; font-size: 42px; font-weight: bold; margin: 0;">
-        🚀 v0.0.20 🚀
-    </p>
-    <p style="color: #000; font-size: 27px; font-weight: bold; margin: 10px 0 0 0; line-height: 1.6;">
+    <p style="color: #000; font-size: 27px; font-weight: bold; margin: 0; line-height: 1.6;">
         <strong>Fiber-based concurrency</strong> is now the default.<br/>
         Parallel embedding, tagging, and proposition extraction via simple_flow.
     </p>
@@ -170,7 +167,7 @@ For MCP integration, database setup, and configuration options, see the [full do
 
 - [Installation & Setup](https://madbomber.github.io/htm/getting-started/)
 - [MCP Server Guide](https://madbomber.github.io/htm/guides/mcp-server/)
-- [Rails Integration](https://madbomber.github.io/htm/guides/rails/)
+- [Rails Integration](https://madbomber.github.io/htm/examples/rails-integration/)
 - [API Reference](https://madbomber.github.io/htm/api/)
 
 ## Why "Robots" Instead of "Agents"?
