@@ -93,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`topic_relationships` counted forgotten memories** - Soft-deleted tags and node associations no longer add to `shared_nodes`; the tags guide now shows the real `topic1`/`topic2`/`shared_nodes` keys
 - **`unload_file` left chunk tags and robot links active** - `FileSource#soft_delete_chunks!` now soft-deletes the chunks' `node_tags` and `robot_nodes` too, matching `Node#soft_delete!`
 - **`unload_file` could lose a file's chunks but keep its source** - New `FileSource#unload!` runs the chunk cascade and the source delete in one transaction, and `unload_file` uses it, so a failed delete no longer leaves the file marked as loaded with its content gone
+- **`unload_file` kept chunks in working memory** - Unloaded chunks are now evicted from working memory (mirroring `#forget`), so an HTM instance stops serving a file's content in active context immediately after unload instead of waiting for eviction
 
 ### Refactored
 - **Flog complexity reduced across 15+ files** - All methods now score below the 50.0 failure threshold (previously 9 methods failed):

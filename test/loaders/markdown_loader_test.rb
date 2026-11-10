@@ -300,6 +300,29 @@ class MarkdownLoaderTest < Minitest::Test
     assert_equal 0, result
   end
 
+  def test_unload_file_removes_chunks_from_working_memory
+    path = create_test_file('unload_wm.md', "Content for working memory test.")
+
+    result = @htm.load_file(path, force: true)
+    source = HTM::Models::FileSource[result[:file_source_id]]
+    node_ids = source.chunks_dataset.select_map(:id)
+    refute_empty node_ids, "expected the loaded file to have chunks"
+
+    # Simulate the chunks sitting in active context, as they would be after a
+    # recall serves them into working memory.
+    node_ids.each { |id| @htm.working_memory.add(id, "wm-chunk-#{id}", token_count: 1) }
+    assert_equal node_ids.size, @htm.working_memory.node_count
+
+    count = @htm.unload_file(path)
+
+    assert_equal node_ids.size, count, "unload_file should return the chunk count"
+    assert_equal 0, @htm.working_memory.node_count, "unloaded chunks should be evicted from working memory"
+    context = @htm.working_memory.assemble_context(strategy: :recent)
+    node_ids.each do |id|
+      refute_includes context, "wm-chunk-#{id}", "chunk #{id} should not remain in working memory after unload_file"
+    end
+  end
+
   private
 
   def path_for(name)
