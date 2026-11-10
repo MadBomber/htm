@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`docs/llms.txt`** - AI-discoverability index following the llmstxt.org convention
 - **`node_relationships` table** - Weighted directed edges between related nodes
   - Stores Jaccard-similarity scores computed from tag co-occurrence
   - Both directions (A→B and B→A) stored explicitly for O(1) index lookups during CTE traversal
