@@ -517,8 +517,14 @@ class HTM
     source = HTM::Models::FileSource.by_path(file_path).first
     return 0 unless source
 
+    # Capture chunk node ids before unload! soft-deletes them, so we can
+    # evict them from working memory (mirrors #forget).
+    node_ids = source.nodes_dataset.select_map(:id)
+
     count = source.unload!
     @long_term_memory.clear_cache!
+
+    node_ids.each { |id| @working_memory.remove(id) }
 
     update_robot_activity
     count
