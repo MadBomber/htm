@@ -1,0 +1,35 @@
+# HTM
+
+> HTM (Hierarchical Temporal Memory) is a Ruby gem that gives LLM robots a durable, shared, long-term memory on PostgreSQL + pgvector. It pairs token-limited working memory with never-forget long-term storage, supports semantic (vector), full-text, and hybrid search over temporal data, and ships an `htm_mcp` Model Context Protocol server so any MCP client (Claude Desktop, Claude Code, AIA) can remember and recall across sessions. What one robot learns, all robots can recall.
+
+## Docs
+
+- [Documentation site](https://madbomber.github.io/htm): full guides and reference.
+- [Installation](https://madbomber.github.io/htm/getting-started/installation/): requirements and `gem install htm`.
+- [Quick Start](https://madbomber.github.io/htm/getting-started/quick-start/): first memory in minutes.
+- [Configuration](https://madbomber.github.io/htm/guides/configuration/): database, embeddings, and providers.
+- [GitHub repository](https://github.com/MadBomber/htm): source, issues, and CHANGELOG.
+
+## Core API
+
+- [HTM class reference](https://madbomber.github.io/htm/api/htm/): the main entry point.
+- `HTM.new(robot_name:)` — create a robot bound to the shared memory.
+- `#remember(content, tags:, metadata:)` — store a memory.
+- `#recall(topic, timeframe:)` — retrieve memories, optionally scoped by time (e.g. `"last week"`).
+- [Robot Groups](https://madbomber.github.io/htm/robots/robot-groups/): high availability with `HTM::RobotGroup.new(name:, active:, passive:)` and `#failover!`.
+- [Recalling Memories](https://madbomber.github.io/htm/guides/recalling-memories/): search strategies and timeframes.
+
+## MCP
+
+- [MCP Server guide](https://madbomber.github.io/htm/guides/mcp-server/): connect AI tools to shared memory.
+- CLI: `htm_mcp` — starts the server; also `htm_mcp setup`, `verify`, `stats`, and `help`.
+- Exposes 23 tools (memory and robot-group management) plus resources: `htm://statistics`, `htm://tags/hierarchy`, `htm://memories/recent`, and `htm://groups`.
+- [MCP client example](https://madbomber.github.io/htm/examples/mcp-client/): wiring an MCP client to `htm_mcp`.
+
+## Examples
+
+- [Examples index](https://madbomber.github.io/htm/examples/): runnable walkthroughs.
+- [Basic Usage](https://madbomber.github.io/htm/examples/basic-usage/): remember and recall.
+- [Robot Groups](https://madbomber.github.io/htm/examples/robot-groups/): high availability and failover.
+- [Rails Integration](https://madbomber.github.io/htm/examples/rails-integration/): auto-configures via Railtie.
+- [Timeframes](https://madbomber.github.io/htm/examples/timeframes/): temporal recall queries.
