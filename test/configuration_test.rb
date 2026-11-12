@@ -259,6 +259,18 @@ class ConfigurationTest < Minitest::Test
     end
   end
 
+  def test_proposition_enabled_env_var_is_coerced_to_boolean
+    saved = ENV.fetch('HTM_PROPOSITION__ENABLED', nil)
+
+    { 'false' => false, 'FALSE' => false, '0' => false, 'no' => false, 'off' => false,
+      'true' => true, 'True' => true, '1' => true, 'yes' => true, 'on' => true }.each do |raw, expected|
+      ENV['HTM_PROPOSITION__ENABLED'] = raw
+      assert_equal expected, HTM::Config.new.extract_propositions, "HTM_PROPOSITION__ENABLED=#{raw}"
+    end
+  ensure
+    saved ? ENV['HTM_PROPOSITION__ENABLED'] = saved : ENV.delete('HTM_PROPOSITION__ENABLED')
+  end
+
   def test_database_url_takes_precedence
     config = HTM::Config.new
     config.database.url = 'postgresql://override@host:5432/override_db'

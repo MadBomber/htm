@@ -93,6 +93,12 @@ class HTM
       deepseek: 1536
     }.freeze
 
+    # String spellings accepted for nested boolean env vars
+    BOOLEAN_STRINGS = {
+      'true' => true, '1' => true, 'yes' => true, 'on' => true,
+      'false' => false, '0' => false, 'no' => false, 'off' => false
+    }.freeze
+
     on_load :coerce_nested_types, :reconcile_database_config, :validate_config, :setup_defaults
 
     # ==========================================================================
@@ -420,6 +426,15 @@ class HTM
     def coerce_nested_types
       coerce_provider_sections
       coerce_database_integers
+      coerce_proposition_enabled
+    end
+
+    # Nested env vars (HTM_PROPOSITION__ENABLED=false) arrive as strings;
+    # "false" is truthy, so map the common spellings to real booleans.
+    def coerce_proposition_enabled
+      return unless proposition&.enabled.is_a?(String)
+      value = BOOLEAN_STRINGS[proposition.enabled.strip.downcase]
+      proposition.enabled = value unless value.nil?
     end
 
     def coerce_provider_sections
