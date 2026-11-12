@@ -61,14 +61,14 @@ class HTM
               HTM_PROPOSITION__PROVIDER     Provider (default: ollama)
               HTM_PROPOSITION__MODEL        Model (default: gemma3:latest)
               HTM_PROPOSITION__TIMEOUT      Timeout seconds (default: 180)
-              HTM_PROPOSITION__ENABLED      Enable extraction (default: false)
+              HTM_PROPOSITION__ENABLED      Enable extraction (default: true)
 
             Chunking:
-              HTM_CHUNKING__SIZE            Max chars per chunk (default: 1024)
-              HTM_CHUNKING__OVERLAP         Chunk overlap chars (default: 64)
+              HTM_CHUNKING__CHUNK_SIZE      Max chars per chunk (default: 1024)
+              HTM_CHUNKING__CHUNK_OVERLAP   Chunk overlap chars (default: 64)
 
             Job Backend:
-              HTM_JOB__BACKEND              Backend: inline, thread, active_job, sidekiq
+              HTM_JOB__BACKEND              Backend: fiber (default), thread, inline, active_job, sidekiq
 
             Provider API Keys:
               HTM_PROVIDERS__OLLAMA__URL           Ollama URL (default: http://localhost:11434)
@@ -80,7 +80,7 @@ class HTM
 
             Other:
               HTM_LOG_LEVEL                 Log level (default: info)
-              HTM_CONNECTION_TIMEOUT        Connection timeout seconds (default: 30)
+              HTM_CONNECTION_TIMEOUT        Connection timeout seconds (default: 60)
               HTM_TELEMETRY_ENABLED         Enable OpenTelemetry (default: false)
 
           OPTIONS:
