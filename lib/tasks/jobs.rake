@@ -158,7 +158,7 @@ namespace :htm do
 
           tag_names.each do |tag_name|
             tag = HTM::Models::Tag.find_or_create_by_name(tag_name)
-            HTM::Models::NodeTag.find_or_create(node_id: node.id, tag_id: tag.id)
+            HTM::Models::NodeTag.link(node_id: node.id, tag_id: tag.id)
           end
 
           processed += 1

@@ -49,6 +49,23 @@ class HTM
       # Apply default scope for active records
       set_dataset(dataset.where(Sequel[:node_tags][:deleted_at] => nil))
 
+      # Link a node to a tag, restoring a soft-deleted link if one exists
+      #
+      # The unique index on (node_id, tag_id) covers soft-deleted rows, which
+      # the default scope hides, so find_or_create would try to INSERT a duplicate.
+      #
+      # @param node_id [Integer] Node database ID
+      # @param tag_id [Integer] Tag database ID
+      # @return [NodeTag] the active link
+      #
+      def self.link(node_id:, tag_id:)
+        node_tag = with_deleted.first(node_id: node_id, tag_id: tag_id)
+        return create(node_id: node_id, tag_id: tag_id) unless node_tag
+
+        node_tag.restore! if node_tag.deleted?
+        node_tag
+      end
+
       # Hooks
       def before_create
         self.created_at ||= Time.now
@@ -69,7 +86,9 @@ class HTM
       # @return [Boolean] true if restored successfully
       #
       def restore!
-        update(deleted_at: nil)
+        # Use unfiltered dataset to bypass the default scope that excludes deleted records
+        self.class.dataset.unfiltered.where(id: id).update(deleted_at: nil)
+        self.deleted_at = nil
         true
       end
 

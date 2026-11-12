@@ -62,7 +62,7 @@ class HTM
         def associate_tags(node, tag_names)
           tag_names.each do |tag_name|
             HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
-              HTM::Models::NodeTag.find_or_create(node_id: node.id, tag_id: tag.id)
+              HTM::Models::NodeTag.link(node_id: node.id, tag_id: tag.id)
             end
           end
         end
