@@ -6,7 +6,7 @@ This guide will walk you through setting up HTM and all its dependencies.
 
 Before installing HTM, ensure you have:
 
-- **Ruby 3.0 or higher** - HTM requires modern Ruby features
+- **Ruby 3.2 or higher** - HTM requires modern Ruby features
 - **PostgreSQL 17+** - For the database backend
 - **LLM Provider** - For generating embeddings and tags (Ollama is the default for local development, but OpenAI, Anthropic, Gemini, and others are also supported via RubyLLM)
 
@@ -14,7 +14,7 @@ Before installing HTM, ensure you have:
 
 ```bash
 ruby --version
-# Should show: ruby 3.0.0 or higher
+# Should show: ruby 3.2.0 or higher
 ```
 
 If you need to install or upgrade Ruby, we recommend using [rbenv](https://github.com/rbenv/rbenv):
@@ -491,7 +491,7 @@ psql $HTM_DATABASE__URL -c "CREATE EXTENSION IF NOT EXISTS pgvector;"
 
 ### Ruby Version Issues
 
-**Error**: `htm requires Ruby version >= 3.0.0`
+**Error**: `htm requires Ruby version >= 3.2.0`
 
 **Solutions**:
 

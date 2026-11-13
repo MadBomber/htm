@@ -22,7 +22,7 @@ Before you begin, ensure you have:
 
 - **macOS, Linux, or WSL2** (Windows Subsystem for Linux)
 - **Git** installed (`git --version`)
-- **Ruby 3.0 or higher** (we'll install this)
+- **Ruby 3.2 or higher** (we'll install this)
 - **Internet connection** (for downloading dependencies)
 
 ## Step 1: Clone the Repository
@@ -58,7 +58,7 @@ git fetch upstream
 
 ## Step 2: Install Ruby
 
-HTM requires Ruby 3.0 or higher. We recommend using **rbenv** for managing Ruby versions.
+HTM requires Ruby 3.2 or higher. We recommend using **rbenv** for managing Ruby versions.
 
 ### Check Current Ruby Version
 
@@ -67,7 +67,7 @@ ruby --version
 # Example output: ruby 3.3.0 (2023-12-25 revision 5124f9ac75) [arm64-darwin23]
 ```
 
-If you already have Ruby 3.0+, you can skip to Step 3.
+If you already have Ruby 3.2+, you can skip to Step 3.
 
 ### Install rbenv (macOS)
 
