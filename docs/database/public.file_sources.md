@@ -22,6 +22,8 @@ Source file metadata for loaded documents
 
 | Name | Type | Definition |
 | ---- | ---- | ---------- |
+| file_sources_file_path_not_null | n | NOT NULL file_path |
+| file_sources_id_not_null | n | NOT NULL id |
 | file_sources_pkey | PRIMARY KEY | PRIMARY KEY (id) |
 
 ## Indexes
