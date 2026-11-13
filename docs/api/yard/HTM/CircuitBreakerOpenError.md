@@ -1,6 +1,9 @@
-# Exception: HTM::CircuitBreakerOpenError
-**Inherits:** HTM::Error
-    
+# Class HTM::CircuitBreakerOpenError <a id="class-HTM-CircuitBreakerOpenError"></a>
+
+|  |  |
+| --- | --- |
+| **Inherits** | [HTM::Error](Error.md) |
+| **Defined in** | lib/htm/errors.rb |
 
 Raised when circuit breaker is open due to repeated failures
 
@@ -17,12 +20,10 @@ Circuit states:
 After a reset timeout (default: 60 seconds), the circuit transitions to
 half-open and tests if the service has recovered.
 
-**`@see`** [] 
+- **`@see`** `HTM::CircuitBreaker`
+- **`@see`** `HTM::Observability.circuit_breaker_stats`
 
-**`@see`** [] 
-
-
-**`@example`**
+**@example Handling circuit breaker**
 ```ruby
 begin
   htm.remember("new content")
@@ -31,4 +32,3 @@ rescue HTM::CircuitBreakerOpenError
   # Embeddings/tags will be generated later when service recovers
 end
 ```
-
