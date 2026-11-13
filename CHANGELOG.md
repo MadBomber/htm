@@ -100,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`htm:files:unload` reported success for unknown files** - The rake task branched on `unload_file`'s return value, but that is a chunk count (`0` when nothing matched), and `0` is truthy in Ruby, so an unknown path still printed `Unloaded:`. The task now branches on the count and prints `File not found:` for unmatched paths (and the chunk count on success)
 - **`htm_mcp help` listed wrong environment variables and defaults** - Chunking variables are now `HTM_CHUNKING__CHUNK_SIZE`/`HTM_CHUNKING__CHUNK_OVERLAP` (the listed `HTM_CHUNKING__SIZE`/`__OVERLAP` were silently ignored); `HTM_PROPOSITION__ENABLED` defaults to `true`, `HTM_CONNECTION_TIMEOUT` to `60`, and `HTM_JOB__BACKEND` lists `fiber`, the default. A new test checks every variable and default in the help against `defaults.yml`
+- **`HTM::Database.drop` left `node_relationships` behind** - The hard-coded table list predated migration 00008, so the next migrate raised `PG::DuplicateTable` and `htm:db:reset` failed. The list is now `HTM::Database::TABLES`, includes `node_relationships`, and a test keeps it in sync with `db/schema.sql` (#38)
 
 ### Refactored
 - **Flog complexity reduced across 15+ files** - All methods now score below the 50.0 failure threshold (previously 9 methods failed):
