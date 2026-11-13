@@ -98,6 +98,9 @@ class HTM
       /\b(?:yesterday|today|tonight|this\s+morning|this\s+afternoon|this\s+evening|last\s+night)\b/i
     ].freeze
 
+    # Expressions whose timeframe extends from the start of the period to now
+    THROUGH_NOW_PATTERN = /\A(?:since\s+.+|today|this\s+(?:week|month|year))\z/i
+
     # Result structure for extracted timeframe
     Result = Struct.new(:query, :timeframe, :original_expression, keyword_init: true)
 
@@ -204,11 +207,19 @@ class HTM
         target_saturday..(target_saturday + (2 * 86_400))
       end
 
+      # Recall looks backwards, so Chronic is parsed in past context.
+      # Periods that are still in progress ("today", "this month",
+      # "since monday") run from their start through now.
       def chronic_parse_expression(expr)
-        week_start = fetch_week_start
-        result     = Chronic.parse(expr, guess: false, week_start: week_start)
-        return result.begin..result.end if result.respond_to?(:begin) && result.respond_to?(:end)
-        Chronic.parse(expr, week_start: week_start)
+        options = { week_start: fetch_week_start, context: :past }
+        result  = Chronic.parse(expr, guess: false, **options)
+
+        if result.respond_to?(:begin) && result.respond_to?(:end)
+          range_end = expr.match?(THROUGH_NOW_PATTERN) ? Time.now : result.end
+          return result.begin..range_end
+        end
+
+        Chronic.parse(expr, **options)
       end
 
       def fetch_week_start

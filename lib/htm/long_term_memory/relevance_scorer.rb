@@ -232,22 +232,6 @@ class HTM
         enriched.sort_by { |n| -n['relevance'] }
       end
 
-      # Calculate Jaccard similarity between two sets
-      #
-      # @param set_a [Array] First set
-      # @param set_b [Array] Second set
-      # @return [Float] Jaccard similarity (0.0-1.0)
-      #
-      def jaccard_similarity(set_a, set_b)
-        return 0.0 if set_a.empty? && set_b.empty?
-        return 0.0 if set_a.empty? || set_b.empty?
-
-        intersection = (set_a & set_b).size
-        union = (set_a | set_b).size
-
-        intersection.to_f / union
-      end
-
       # Calculate weighted hierarchical Jaccard similarity
       #
       # Compares hierarchical tags accounting for partial matches at different levels.
@@ -371,19 +355,6 @@ class HTM
         end
 
         candidates
-      end
-
-      # Calculate similarity between two hierarchical tags (string version)
-      #
-      # Compares tags level by level, returning both similarity and a weight
-      # based on hierarchy depth (higher levels = more weight).
-      #
-      # @param tag_a [String] First tag (e.g., "database:postgresql:extensions")
-      # @param tag_b [String] Second tag (e.g., "database:postgresql:queries")
-      # @return [Array<Float, Float>] [similarity, weight] both in range 0.0-1.0
-      #
-      def calculate_hierarchical_similarity(tag_a, tag_b)
-        calculate_hierarchical_similarity_cached(tag_a.split(':'), tag_b.split(':'))
       end
     end
   end

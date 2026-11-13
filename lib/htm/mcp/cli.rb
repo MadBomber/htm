@@ -471,17 +471,17 @@ class HTM
         # Load HTM rake tasks
         load_htm_rake_tasks
 
-        # Check if task exists
-        unless Rake::Task.task_defined?(task_name)
-          warn "Unknown rake task: #{task_name}"
+        # Split "task[arg1,arg2]" into the task name and its arguments
+        name, task_args = Rake.application.parse_task_string(task_name)
+
+        unless Rake::Task.task_defined?(name)
+          warn "Unknown rake task: #{name}"
           warn "Run 'htm_mcp rake --tasks' to see available tasks."
           exit 1
         end
 
-        # Set remaining args as task arguments if any
-        # Rake tasks use ARGV for arguments in brackets like task[arg1,arg2]
         begin
-          Rake::Task[task_name].invoke
+          Rake::Task[name].invoke(*task_args)
         rescue => e
           warn "Rake task failed: #{e.message}"
           warn e.backtrace.first(5).join("\n") if ENV['DEBUG']

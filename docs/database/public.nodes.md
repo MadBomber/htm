@@ -16,7 +16,7 @@ Core memory storage for conversation messages and context
 | deleted_at | timestamp with time zone |  | true |  |  | Soft delete timestamp - node is considered deleted when set |
 | embedding | vector(2000) |  | true |  |  | Vector embedding (max 2000 dimensions) for semantic search |
 | embedding_dimension | integer |  | true |  |  | Actual number of dimensions used in the embedding vector (max 2000) |
-| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.node_tags](public.node_tags.md) [public.robot_nodes](public.robot_nodes.md) |  |  |
+| id | bigint | nextval('nodes_id_seq'::regclass) | false | [public.node_relationships](public.node_relationships.md) [public.node_tags](public.node_tags.md) [public.robot_nodes](public.robot_nodes.md) |  |  |
 | last_accessed | timestamp with time zone | CURRENT_TIMESTAMP | true |  |  | When this memory was last accessed |
 | metadata | jsonb | '{}'::jsonb | false |  |  | Flexible metadata storage (memory_type, importance, source, etc.) |
 | source_id | bigint |  | true |  | [public.file_sources](public.file_sources.md) | Reference to source file (for file-loaded nodes) |
@@ -29,6 +29,10 @@ Core memory storage for conversation messages and context
 | ---- | ---- | ---------- |
 | check_embedding_dimension | CHECK | CHECK (((embedding_dimension IS NULL) OR ((embedding_dimension > 0) AND (embedding_dimension <= 2000)))) |
 | fk_rails_920ad16d08 | FOREIGN KEY | FOREIGN KEY (source_id) REFERENCES file_sources(id) ON DELETE SET NULL |
+| nodes_access_count_not_null | n | NOT NULL access_count |
+| nodes_content_not_null | n | NOT NULL content |
+| nodes_id_not_null | n | NOT NULL id |
+| nodes_metadata_not_null | n | NOT NULL metadata |
 | nodes_pkey | PRIMARY KEY | PRIMARY KEY (id) |
 
 ## Indexes

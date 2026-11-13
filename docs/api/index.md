@@ -227,10 +227,10 @@ HTM raises standard Ruby exceptions:
 
 ```ruby
 # ArgumentError for invalid parameters
-htm.forget("key")  # Raises: Must pass confirm: :confirmed
+htm.forget(node_id, soft: false)  # Raises: Permanent deletion requires confirm: :confirmed
 
-# PG::Error for database issues
-htm.add_node("key", "value")  # May raise PG connection errors
+# Sequel::DatabaseError for database issues
+htm.remember("value")  # May raise database connection errors
 
 # Invalid timeframe
 htm.recall(timeframe: "invalid")  # Raises ArgumentError
