@@ -39,6 +39,21 @@ class MCPCLIRakeTest < Minitest::Test
     assert_nil @received
   end
 
+  # The shipped rake files must not define top-level tasks such as
+  # db:migrate that would merge into a host app's tasks (#71)
+  def test_loaded_tasks_are_all_namespaced_under_htm
+    original_argv = ARGV.dup
+    ARGV.clear
+    HTM::MCP::CLI.load_htm_rake_tasks
+
+    # :environment is a deliberate no-op fallback defined by jobs.rake
+    outside = Rake.application.tasks.map(&:name).reject { |name| name.start_with?('htm:') || name == 'environment' }
+
+    assert_empty outside
+  ensure
+    ARGV.replace(original_argv)
+  end
+
   private
 
   def with_stub_tasks(&block)

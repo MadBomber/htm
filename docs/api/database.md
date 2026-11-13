@@ -545,7 +545,7 @@ end
 
 # Good:
 # Run once during deployment:
-# rake db:setup -> HTM::Database.setup
+# rake htm:db:setup -> HTM::Database.setup
 ```
 
 ### 4. Handle Missing Configuration
