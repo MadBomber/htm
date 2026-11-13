@@ -214,4 +214,34 @@ class WorkingMemoryTest < Minitest::Test
     assert_equal "node1", evicted.first[:key]
     assert_equal "evicted content", evicted.first[:value]
   end
+
+  def test_add_from_sync_shares_key_with_local_add
+    @wm.add_from_sync(id: 42, content: "shared fact", token_count: 5, created_at: Time.now)
+    @wm.add(42, "shared fact", token_count: 5)
+
+    assert_equal 1, @wm.node_count
+    assert_equal 5, @wm.token_count
+    assert_equal "shared fact", @wm.assemble_context(strategy: :recent)
+  end
+
+  def test_local_add_is_not_duplicated_by_sync
+    @wm.add(42, "shared fact", token_count: 5)
+    @wm.add_from_sync(id: 42, content: "shared fact", token_count: 5, created_at: Time.now)
+
+    assert_equal 1, @wm.node_count
+  end
+
+  def test_remove_from_sync_removes_locally_added_node
+    @wm.add(7, "local fact", token_count: 5)
+    @wm.remove_from_sync(7)
+
+    assert_equal 0, @wm.node_count
+  end
+
+  def test_remove_removes_synced_node
+    @wm.add_from_sync(id: 7, content: "synced fact", token_count: 5, created_at: Time.now)
+    @wm.remove(7)
+
+    assert_equal 0, @wm.node_count
+  end
 end
