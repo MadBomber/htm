@@ -16,7 +16,7 @@ class HTM
   # The actual LLM call is delegated to HTM.configuration.tag_extractor
   #
   class TagService
-    TAG_FORMAT = /^[a-z0-9-]+(:[a-z0-9-]+)*$/  # Validation regex
+    TAG_FORMAT = /\A[a-z0-9-]+(:[a-z0-9-]+)*\z/  # Validation regex
 
     # Circuit breaker for tag extraction API calls
     @circuit_breaker = nil

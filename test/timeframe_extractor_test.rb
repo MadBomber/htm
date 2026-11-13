@@ -192,6 +192,34 @@ class TimeframeExtractorTest < Minitest::Test
     refute_nil result.timeframe
   end
 
+  # In-progress periods run from their start through now
+  def test_current_periods_include_the_past_through_now
+    now = Time.now
+    {
+      "notes from today" => Time.new(now.year, now.month, now.day),
+      "notes this month" => Time.new(now.year, now.month, 1),
+      "notes this year" => Time.new(now.year, 1, 1),
+      "notes since yesterday" => Time.new(now.year, now.month, now.day) - 86_400
+    }.each do |query, expected_start|
+      timeframe = HTM::TimeframeExtractor.extract(query).timeframe
+
+      assert_kind_of Range, timeframe, query
+      assert_in_delta expected_start.to_i, timeframe.begin.to_i, 3_600, query
+      assert timeframe.end >= now, "#{query}: range should extend through now"
+    end
+  end
+
+  def test_this_week_and_since_weekday_start_in_the_past
+    now = Time.now
+    ["notes this week", "notes since monday"].each do |query|
+      timeframe = HTM::TimeframeExtractor.extract(query).timeframe
+
+      assert_operator timeframe.begin, :<=, now, query
+      assert_operator timeframe.begin, :>, now - (8 * 86_400), query
+      assert timeframe.end >= now, "#{query}: range should extend through now"
+    end
+  end
+
   # Test nil input
   def test_extract_handles_nil
     result = HTM::TimeframeExtractor.extract(nil)

@@ -119,11 +119,23 @@ class HTM
 
       # Find or create a tag by name
       #
+      # A soft-deleted tag with this name is restored rather than inserted
+      # again, since the unique index on name still covers deleted rows.
+      #
       # @param name [String] Hierarchical tag name (e.g., "database:postgresql")
-      # @return [Tag] The found or created tag
+      # @return [Tag] The found, restored or created tag
       #
       def self.find_or_create_by_name(name)
-        find_or_create(name: name)
+        tag = first(name: name)
+        return tag if tag
+
+        deleted_tag = with_deleted.first(name: name)
+        if deleted_tag
+          deleted_tag.restore!
+          return deleted_tag
+        end
+
+        create(name: name)
       end
 
       # Expand a hierarchical tag name into all ancestor paths
@@ -145,7 +157,7 @@ class HTM
       #
       def self.find_or_create_with_ancestors(name)
         expand_hierarchy(name).map do |tag_name|
-          find_or_create(name: tag_name)
+          find_or_create_by_name(tag_name)
         end
       end
 
@@ -422,7 +434,9 @@ class HTM
       # @return [Boolean] true if restored successfully
       #
       def restore!
-        update(deleted_at: nil)
+        # Use unfiltered dataset to bypass the default scope that excludes deleted records
+        self.class.dataset.unfiltered.where(id: id).update(deleted_at: nil)
+        self.deleted_at = nil
         true
       end
 

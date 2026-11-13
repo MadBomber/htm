@@ -6,7 +6,7 @@ Welcome to HTM! This guide will help you build your first intelligent memory sys
 
 Before starting, ensure you have:
 
-1. **Ruby 3.0+** installed
+1. **Ruby 3.2+** installed
 2. **PostgreSQL 16+** with pgvector and pg_trgm extensions
 3. **LLM Provider** configured - Ollama (default for local development), OpenAI, Anthropic, Gemini, or others via RubyLLM
 4. Basic understanding of Ruby and LLMs
