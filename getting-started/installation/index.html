@@ -5813,13 +5813,13 @@
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
 <p>Before installing HTM, ensure you have:</p>
 <ul>
-<li><strong>Ruby 3.0 or higher</strong> - HTM requires modern Ruby features</li>
+<li><strong>Ruby 3.2 or higher</strong> - HTM requires modern Ruby features</li>
 <li><strong>PostgreSQL 17+</strong> - For the database backend</li>
 <li><strong>LLM Provider</strong> - For generating embeddings and tags (Ollama is the default for local development, but OpenAI, Anthropic, Gemini, and others are also supported via RubyLLM)</li>
 </ul>
 <h3 id="check-your-ruby-version">Check Your Ruby Version<a class="headerlink" href="#check-your-ruby-version" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ruby<span class="w"> </span>--version
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Should show: ruby 3.0.0 or higher</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Should show: ruby 3.2.0 or higher</span>
 </span></code></pre></div>
 <p>If you need to install or upgrade Ruby, we recommend using <a href="https://github.com/rbenv/rbenv">rbenv</a>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Install rbenv (macOS)</span>
@@ -6285,7 +6285,7 @@ Download the installer from <a href="https://ollama.ai/download">https://ollama.
 </span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>psql<span class="w"> </span><span class="nv">$HTM_DATABASE__URL</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">"CREATE EXTENSION IF NOT EXISTS pgvector;"</span>
 </span></code></pre></div>
 <h3 id="ruby-version-issues">Ruby Version Issues<a class="headerlink" href="#ruby-version-issues" title="Permanent link">&para;</a></h3>
-<p><strong>Error</strong>: <code>htm requires Ruby version &gt;= 3.0.0</code></p>
+<p><strong>Error</strong>: <code>htm requires Ruby version &gt;= 3.2.0</code></p>
 <p><strong>Solutions</strong>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="c1"># Check current version</span>
 </span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>ruby<span class="w"> </span>--version
