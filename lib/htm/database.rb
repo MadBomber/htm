@@ -7,6 +7,9 @@ class HTM
   # Database setup and configuration for HTM
   # Handles schema creation and database initialization using Sequel
   class Database
+    # Every table HTM creates; drop removes them all (keep in sync with db/schema.sql)
+    TABLES = %w[nodes node_tags node_relationships tags robots robot_nodes file_sources schema_migrations].freeze
+
     class << self
       # Set up the HTM database schema
       #
@@ -90,10 +93,8 @@ class HTM
 
         conn = PG.connect(config)
 
-        tables = %w[nodes node_tags tags robots robot_nodes file_sources schema_migrations]
-
         puts "Dropping HTM tables..."
-        tables.each do |table|
+        TABLES.each do |table|
           conn.exec("DROP TABLE IF EXISTS #{table} CASCADE")
           puts "  Dropped #{table}"
         rescue PG::Error => e
