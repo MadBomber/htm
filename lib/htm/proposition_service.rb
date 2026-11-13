@@ -51,11 +51,13 @@ class HTM
       # @return [HTM::CircuitBreaker] The circuit breaker instance
       #
       def circuit_breaker
+        config = HTM.configuration
         @circuit_breaker_mutex.synchronize do
           @circuit_breaker ||= HTM::CircuitBreaker.new(
             name: 'proposition_service',
-            failure_threshold: 5,
-            reset_timeout: 60
+            failure_threshold: config.circuit_breaker_failure_threshold,
+            reset_timeout: config.circuit_breaker_reset_timeout,
+            half_open_max_calls: config.circuit_breaker_half_open_max_calls
           )
         end
       end
