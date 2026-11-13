@@ -17,6 +17,8 @@ Unique tag names for categorization
 
 | Name | Type | Definition |
 | ---- | ---- | ---------- |
+| tags_id_not_null | n | NOT NULL id |
+| tags_name_not_null | n | NOT NULL name |
 | tags_pkey | PRIMARY KEY | PRIMARY KEY (id) |
 
 ## Indexes

@@ -1,4 +1,3 @@
-# examples/robot_groups/lib/htm/robot_group.rb
 # frozen_string_literal: true
 
 class HTM
