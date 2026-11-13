@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stale backup test files** - `test/caching_test.rb.bak3` and `test/ontology_test.rb.bak`, which `rake test` never ran
 
 ### Fixed
+- **`rake test` ran 0 tests on Ruby 4.1** - The test task no longer preloads `test_helper` with `-rtest_helper`; that loaded json before `bundler/setup` and Bundler aborted on the version mismatch. Every test file already requires `test_helper` itself
 - **`PropositionService` circuit breaker ignored config** - It hardcoded a failure threshold of 5 and a reset timeout of 60; it now reads `HTM.configuration.circuit_breaker_*` like `EmbeddingService` and `TagService`
 - **Multi-line tags passed `TagService` validation** - `HTM::TagService::TAG_FORMAT` anchored with `^`/`$`, which match per line, so a tag like `"ai\nNOT A TAG!!"` was accepted and later failed the `Tag` model validation inside `GenerateTagsJob`. Now anchored with `\A`/`\z` like `HTM::Models::Tag::TAG_FORMAT`
 - **Re-adding a soft-deleted tag link** - `Node#add_tags` raised `Sequel::UniqueConstraintViolation` and `LongTermMemory#add_tag` silently left the link deleted, because `NodeTag.find_or_create` cannot see soft-deleted rows but the unique index on `(node_id, tag_id)` still covers them. New `NodeTag.link(node_id:, tag_id:)` restores the soft-deleted row or creates one, and replaces `find_or_create` at every call site. `NodeTag#restore!` now updates through the unfiltered dataset instead of raising `Sequel::NoExistingObject` (#19)
