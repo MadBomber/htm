@@ -38,7 +38,8 @@ class HTM
         end
 
         def deleted
-          exclude(deleted_at: nil)
+          # unfiltered drops the default deleted_at IS NULL scope
+          unfiltered.exclude(deleted_at: nil)
         end
 
         def with_deleted
