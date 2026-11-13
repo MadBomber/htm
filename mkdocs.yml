@@ -282,16 +282,9 @@ nav:
               - File Sources: database/public.file_sources.md
           - Join Tables:
               - Node Tags: database/public.node_tags.md
-              - Nodes Tags (Legacy): database/public.nodes_tags.md
               - Robot Nodes: database/public.robot_nodes.md
-          - Views & Stats:
-              - Node Stats: database/public.node_stats.md
-              - Robot Activity: database/public.robot_activity.md
-              - Topic Relationships: database/public.topic_relationships.md
-              - Ontology Structure: database/public.ontology_structure.md
-              - Relationships: database/public.relationships.md
+              - Node Relationships: database/public.node_relationships.md
           - System:
-              - Operations Log: database/public.operations_log.md
               - Schema Migrations: database/public.schema_migrations.md
       - Multi-Framework Support: multi_framework_support.md
       - Database Rake Tasks: database_rake_tasks.md
