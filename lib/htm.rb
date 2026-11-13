@@ -342,7 +342,7 @@ class HTM
     end
 
     # Find all nodes containing the substring (case-insensitive)
-    matching_nodes = HTM::Models::Node.where(Sequel.ilike(:content, "%#{content_substring}%"))
+    matching_nodes = HTM::Models::Node.where(Sequel.ilike(:content, "%#{HTM::SqlBuilder.sanitize_like_pattern(content_substring)}%"))
     node_ids = matching_nodes.select_map(:id)
 
     if node_ids.empty?
