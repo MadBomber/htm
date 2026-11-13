@@ -1,101 +1,79 @@
-# Class: HTM::Database
-**Inherits:** Object
-    
+# Class HTM::Database <a id="class-HTM-Database"></a>
+
+|  |  |
+| --- | --- |
+| **Inherits** | Object |
+| **Defined in** | lib/htm/database.rb |
 
 Database setup and configuration for HTM Handles schema creation and database
-initialization
+initialization using Sequel
 
-
-# Class Methods
-## default_config() {: #method-c-default_config }
+## Public Class Methods
+### `default_config()` <a id="method-c-default_config"></a> <a id="default_config-class_method"></a>
 Get default database configuration
 
 Uses HTM::Config for database settings.
-**`@return`** [Hash, nil] Connection configuration hash with PG-style keys
+- **`@return`** [Hash, nil] Connection configuration hash with PG-style keys
 
-## drop(db_url nil) {: #method-c-drop }
+### `drop(db_url = nil)` <a id="method-c-drop"></a> <a id="drop-class_method"></a>
 Drop all HTM tables (respects RAILS_ENV)
-**`@param`** [String] Database connection URL (uses default_config if not provided)
+- **`@param`** `db_url` [String] Database connection URL (uses default_config if not provided)
+- **`@return`** [void]
 
-**`@return`** [void] 
-
-## dump_schema(db_url nil) {: #method-c-dump_schema }
+### `dump_schema(db_url = nil)` <a id="method-c-dump_schema"></a> <a id="dump_schema-class_method"></a>
 Dump current database schema to db/schema.sql (respects RAILS_ENV)
 
 Uses pg_dump to create a clean SQL schema file without data
-**`@param`** [String] Database connection URL (uses default_config if not provided)
+- **`@param`** `db_url` [String] Database connection URL (uses default_config if not provided)
+- **`@return`** [void]
 
-**`@return`** [void] 
-
-## generate_docs(db_url nil) {: #method-c-generate_docs }
+### `generate_docs(db_url = nil)` <a id="method-c-generate_docs"></a> <a id="generate_docs-class_method"></a>
 Generate database documentation using tbls
+- **`@param`** `db_url` [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
+- **`@return`** [void]
 
-Uses .tbls.yml configuration file for output directory and settings. Creates
-comprehensive database documentation including:
-*   Entity-relationship diagrams
-*   Table schemas with comments
-*   Index information
-*   Relationship diagrams
-**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
-
-**`@return`** [void] 
-
-## info(db_url nil) {: #method-c-info }
+### `info(db_url = nil)` <a id="method-c-info"></a> <a id="info-class_method"></a>
 Show database info (respects RAILS_ENV)
-**`@param`** [String] Database connection URL (uses default_config if not provided)
+- **`@param`** `db_url` [String] Database connection URL (uses default_config if not provided)
+- **`@return`** [void]
 
-**`@return`** [void] 
-
-## load_schema(db_url nil) {: #method-c-load_schema }
+### `load_schema(db_url = nil)` <a id="method-c-load_schema"></a> <a id="load_schema-class_method"></a>
 Load schema from db/schema.sql (respects RAILS_ENV)
 
 Uses psql to load the schema file
-**`@param`** [String] Database connection URL (uses default_config if not provided)
+- **`@param`** `db_url` [String] Database connection URL (uses default_config if not provided)
+- **`@return`** [void]
 
-**`@return`** [void] 
-
-## migrate(db_url nil) {: #method-c-migrate }
+### `migrate(db_url = nil)` <a id="method-c-migrate"></a> <a id="migrate-class_method"></a>
 Run pending database migrations
-**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
+- **`@param`** `db_url` [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
+- **`@return`** [void]
 
-**`@return`** [void] 
-
-## migration_status(db_url nil) {: #method-c-migration_status }
+### `migration_status(db_url = nil)` <a id="method-c-migration_status"></a> <a id="migration_status-class_method"></a>
 Show migration status
-**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
+- **`@param`** `db_url` [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
+- **`@return`** [void]
 
-**`@return`** [void] 
-
-## parse_connection_params() {: #method-c-parse_connection_params }
+### `parse_connection_params()` <a id="method-c-parse_connection_params"></a> <a id="parse_connection_params-class_method"></a>
 Build config from individual environment variables
-**`@return`** [Hash, nil] Connection configuration hash
+- **`@return`** [Hash, nil] Connection configuration hash
 
-## parse_connection_url(url ) {: #method-c-parse_connection_url }
+### `parse_connection_url(url)` <a id="method-c-parse_connection_url"></a> <a id="parse_connection_url-class_method"></a>
 Parse database connection URL
-**`@param`** [String] Connection URL (e.g., postgresql://user:pass@host:port/dbname)
+- **`@param`** `url` [String] Connection URL (e.g., postgresql://user:pass@host:port/dbname)
+- **`@raise`** [ArgumentError] If URL format is invalid
+- **`@return`** [Hash, nil] Connection configuration hash
 
-**`@raise`** [ArgumentError] If URL format is invalid
-
-**`@return`** [Hash, nil] Connection configuration hash
-
-## seed(db_url nil) {: #method-c-seed }
+### `seed(db_url = nil)` <a id="method-c-seed"></a> <a id="seed-class_method"></a>
 Seed database with sample data
 
-Loads and executes db/seeds.rb file following Rails conventions. All seeding
-logic is contained in db/seeds.rb and reads data from markdown files in
-db/seed_data/ directory.
-**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
+Loads and executes db/seeds.rb file following Rails conventions.
+- **`@param`** `db_url` [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
+- **`@return`** [void]
 
-**`@return`** [void] 
-
-## setup(db_url nil, run_migrations: true, dump_schema: false) {: #method-c-setup }
+### `setup(db_url = nil, run_migrations: true, dump_schema: false)` <a id="method-c-setup"></a> <a id="setup-class_method"></a>
 Set up the HTM database schema
-**`@param`** [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
-
-**`@param`** [Boolean] Whether to run migrations (default: true)
-
-**`@param`** [Boolean] Whether to dump schema to db/schema.sql after setup (default: false)
-
-**`@return`** [void] 
-
-
+- **`@param`** `db_url` [String] Database connection URL (uses ENV['HTM_DATABASE__URL'] if not provided)
+- **`@param`** `run_migrations` [Boolean] Whether to run migrations (default: true)
+- **`@param`** `dump_schema` [Boolean] Whether to dump schema to db/schema.sql after setup (default: false)
+- **`@return`** [void]
