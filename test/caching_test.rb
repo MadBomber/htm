@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "securerandom"
 
 class CachingTest < Minitest::Test
   def setup
@@ -217,6 +218,22 @@ class CachingTest < Minitest::Test
     # Cache should be cleared
     cache_stats = @htm.long_term_memory.stats[:cache]
     assert_equal 0, cache_stats[:size], "Cache should be empty after deleting node"
+  end
+
+  def test_cache_invalidation_when_remember_restores_soft_deleted_node
+    word = "zebracorn#{SecureRandom.hex(4)}"
+    content = "the #{word} grazes in the meadow"
+    node_id = @htm.remember(content)
+    @htm.forget(node_id, confirm: :confirmed)
+
+    # Cache an empty result while the node is forgotten
+    assert_empty @htm.recall(word, strategy: :fulltext, raw: true)
+
+    # Remembering the same content restores the soft-deleted node
+    assert_equal node_id, @htm.remember(content)
+
+    ids = @htm.recall(word, strategy: :fulltext, raw: true).map { |row| row['id'] }
+    assert_includes ids, node_id
   end
 
   def test_query_cache_can_be_disabled

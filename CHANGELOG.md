@@ -113,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`htm_mcp rake` rejected tasks with arguments** - `run_rake` looked up the raw `name[args]` string; it now splits it with `Rake.application.parse_task_string` and invokes the task with its arguments, so `htm_mcp rake 'htm:files:load[path]'` and the other argument-taking tasks work (#44)
 - **`forget_content` treated `%` and `_` as wildcards** - The substring is now escaped with `SqlBuilder.sanitize_like_pattern` before the `ILIKE`, so `forget_content("%")` no longer forgets every memory and `"a_b"` no longer matches `"axb"` (#45)
 - **Working memory sync keyed entries by string id** - `WorkingMemory#add_from_sync` and `#remove_from_sync` now key on the integer node id like local adds, so a synced memory is no longer duplicated when recalled locally and `forget`/sync evictions remove it (#46)
+- **`recall` returned stale cached results after `remember` restored a forgotten node** - `LongTermMemory#add` now invalidates the search caches when it restores a soft-deleted node, as it already did when creating one (#70)
 
 ### Refactored
 - **Dead private methods removed** - `RelevanceScorer#jaccard_similarity`, `RelevanceScorer#calculate_hierarchical_similarity` and `HTM::Database.verify_extensions` (which warned about the unused `pg_search` extension) had no callers (#35)
