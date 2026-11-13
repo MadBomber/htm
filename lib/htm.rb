@@ -273,6 +273,7 @@ class HTM
   # @param soft [Boolean] If true (default), soft delete; if false, permanent delete
   # @param confirm [Symbol] Must be :confirmed to proceed with permanent deletion
   # @return [Boolean] true if deleted
+  # @raise [HTM::ValidationError] if node_id is not a positive Integer
   # @raise [ArgumentError] if permanent deletion requested without confirmation
   # @raise [HTM::NotFoundError] if node doesn't exist
   #
@@ -284,8 +285,7 @@ class HTM
   #   htm.forget(node_id, soft: false, confirm: :confirmed)
   #
   def forget(node_id, soft: true, confirm: false)
-    # Validate inputs
-    raise ArgumentError, "Node ID cannot be nil" if node_id.nil?
+    validate_positive_integer!(node_id, "node_id")
 
     # Permanent delete requires confirmation
     if !soft && confirm != :confirmed
@@ -363,6 +363,7 @@ class HTM
   #
   # @param node_id [Integer] ID of the soft-deleted node to restore
   # @return [Boolean] true if restored
+  # @raise [HTM::ValidationError] if node_id is not a positive Integer
   # @raise [HTM::NotFoundError] if node doesn't exist or isn't deleted
   #
   # @example
@@ -370,7 +371,7 @@ class HTM
   #   htm.restore(node_id)       # Bring it back
   #
   def restore(node_id)
-    raise ArgumentError, "Node ID cannot be nil" if node_id.nil?
+    validate_positive_integer!(node_id, "node_id")
 
     # Find including soft-deleted nodes
     node = HTM::Models::Node.with_deleted.first(id: node_id)
