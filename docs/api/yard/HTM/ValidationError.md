@@ -1,6 +1,9 @@
-# Exception: HTM::ValidationError
-**Inherits:** HTM::Error
-    
+# Class HTM::ValidationError <a id="class-HTM-ValidationError"></a>
+
+|  |  |
+| --- | --- |
+| **Inherits** | [HTM::Error](Error.md) |
+| **Defined in** | lib/htm/errors.rb |
 
 Raised when input validation fails
 
@@ -11,10 +14,8 @@ Common causes:
 *   Invalid recall strategy
 *   Invalid timeframe format
 
-
 **`@example`**
 ```ruby
 htm.remember("")  # => raises ValidationError
 htm.remember("x", tags: ["INVALID!"])  # => raises ValidationError
 ```
-

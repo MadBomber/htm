@@ -237,28 +237,109 @@ nav:
           - HTM Module: api/yard/HTM.md
           - Core Classes:
               - Configuration: api/yard/HTM/Config.md
+              - Config::Builder: api/yard/HTM/Config/Builder.md
+              - Config::Database: api/yard/HTM/Config/Database.md
+              - Config::Validator: api/yard/HTM/Config/Validator.md
               - Database: api/yard/HTM/Database.md
               - LongTermMemory: api/yard/HTM/LongTermMemory.md
               - WorkingMemory: api/yard/HTM/WorkingMemory.md
+              - RobotGroup: api/yard/HTM/RobotGroup.md
+              - WorkingMemoryChannel: api/yard/HTM/WorkingMemoryChannel.md
+          - Long-Term Memory Modules:
+              - NodeOperations: api/yard/HTM/LongTermMemory/NodeOperations.md
+              - RobotOperations: api/yard/HTM/LongTermMemory/RobotOperations.md
+              - TagOperations: api/yard/HTM/LongTermMemory/TagOperations.md
+              - FulltextSearch: api/yard/HTM/LongTermMemory/FulltextSearch.md
+              - VectorSearch: api/yard/HTM/LongTermMemory/VectorSearch.md
+              - HybridSearch: api/yard/HTM/LongTermMemory/HybridSearch.md
+              - RelevanceScorer: api/yard/HTM/LongTermMemory/RelevanceScorer.md
+          - Models:
+              - Models: api/yard/HTM/Models.md
+              - Node: api/yard/HTM/Models/Node.md
+              - Robot: api/yard/HTM/Models/Robot.md
+              - RobotNode: api/yard/HTM/Models/RobotNode.md
+              - Tag: api/yard/HTM/Models/Tag.md
+              - NodeTag: api/yard/HTM/Models/NodeTag.md
+              - NodeRelationship: api/yard/HTM/Models/NodeRelationship.md
+              - FileSource: api/yard/HTM/Models/FileSource.md
           - Services:
               - EmbeddingService: api/yard/HTM/EmbeddingService.md
               - TagService: api/yard/HTM/TagService.md
+              - PropositionService: api/yard/HTM/PropositionService.md
               - JobAdapter: api/yard/HTM/JobAdapter.md
+          - Jobs:
+              - Jobs: api/yard/HTM/Jobs.md
+              - GenerateEmbeddingJob: api/yard/HTM/Jobs/GenerateEmbeddingJob.md
+              - GenerateTagsJob: api/yard/HTM/Jobs/GenerateTagsJob.md
+              - GeneratePropositionsJob: api/yard/HTM/Jobs/GeneratePropositionsJob.md
+              - GenerateRelationshipsJob: api/yard/HTM/Jobs/GenerateRelationshipsJob.md
+          - Loaders & Workflows:
+              - Loaders: api/yard/HTM/Loaders.md
+              - MarkdownLoader: api/yard/HTM/Loaders/MarkdownLoader.md
+              - MarkdownChunker: api/yard/HTM/Loaders/MarkdownChunker.md
+              - Workflows: api/yard/HTM/Workflows.md
+              - RememberWorkflow: api/yard/HTM/Workflows/RememberWorkflow.md
+          - MCP:
+              - MCP: api/yard/HTM/MCP.md
+              - CLI: api/yard/HTM/MCP/CLI.md
+              - CreateGroupTool: api/yard/HTM/MCP/CreateGroupTool.md
+              - FailoverTool: api/yard/HTM/MCP/FailoverTool.md
+              - FindByTopicTool: api/yard/HTM/MCP/FindByTopicTool.md
+              - ForgetTool: api/yard/HTM/MCP/ForgetTool.md
+              - GetGroupStatusTool: api/yard/HTM/MCP/GetGroupStatusTool.md
+              - GetGroupWorkingMemoryTool: api/yard/HTM/MCP/GetGroupWorkingMemoryTool.md
+              - GetRobotTool: api/yard/HTM/MCP/GetRobotTool.md
+              - GetWorkingMemoryTool: api/yard/HTM/MCP/GetWorkingMemoryTool.md
+              - GroupRecallTool: api/yard/HTM/MCP/GroupRecallTool.md
+              - GroupRememberTool: api/yard/HTM/MCP/GroupRememberTool.md
+              - GroupSession: api/yard/HTM/MCP/GroupSession.md
+              - JoinGroupTool: api/yard/HTM/MCP/JoinGroupTool.md
+              - LeaveGroupTool: api/yard/HTM/MCP/LeaveGroupTool.md
+              - ListGroupsTool: api/yard/HTM/MCP/ListGroupsTool.md
+              - ListTagsTool: api/yard/HTM/MCP/ListTagsTool.md
+              - MemoryStatsResource: api/yard/HTM/MCP/MemoryStatsResource.md
+              - PromoteRobotTool: api/yard/HTM/MCP/PromoteRobotTool.md
+              - RecallTool: api/yard/HTM/MCP/RecallTool.md
+              - RecentMemoriesResource: api/yard/HTM/MCP/RecentMemoriesResource.md
+              - RememberTool: api/yard/HTM/MCP/RememberTool.md
+              - RestoreTool: api/yard/HTM/MCP/RestoreTool.md
+              - RobotGroupsResource: api/yard/HTM/MCP/RobotGroupsResource.md
+              - SearchTagsTool: api/yard/HTM/MCP/SearchTagsTool.md
+              - Server: api/yard/HTM/MCP/Server.md
+              - Session: api/yard/HTM/MCP/Session.md
+              - SetRobotTool: api/yard/HTM/MCP/SetRobotTool.md
+              - ShutdownGroupTool: api/yard/HTM/MCP/ShutdownGroupTool.md
+              - StatsTool: api/yard/HTM/MCP/StatsTool.md
+              - SyncGroupTool: api/yard/HTM/MCP/SyncGroupTool.md
+              - TagHierarchyResource: api/yard/HTM/MCP/TagHierarchyResource.md
           - Utilities:
               - CircuitBreaker: api/yard/HTM/CircuitBreaker.md
               - Observability: api/yard/HTM/Observability.md
+              - QueryCache: api/yard/HTM/QueryCache.md
+              - SqlBuilder: api/yard/HTM/SqlBuilder.md
+              - Telemetry: api/yard/HTM/Telemetry.md
+              - Telemetry::NullInstrument: api/yard/HTM/Telemetry/NullInstrument.md
+              - Telemetry::NullMeter: api/yard/HTM/Telemetry/NullMeter.md
               - Timeframe: api/yard/HTM/Timeframe.md
               - TimeframeExtractor: api/yard/HTM/TimeframeExtractor.md
-          - Internal:
-              - ActiveRecordConfig: api/yard/HTM/ActiveRecordConfig.md
+          - Integrations:
               - Railtie: api/yard/HTM/Railtie.md
+              - Sinatra: api/yard/HTM/Sinatra.md
+              - Sinatra::Helpers: api/yard/HTM/Sinatra/Helpers.md
+              - Sinatra::Middleware: api/yard/HTM/Sinatra/Middleware.md
+              - Sinatra::Base (extension): api/yard/Sinatra/Base.md
+          - Internal:
+              - SequelConfig: api/yard/HTM/SequelConfig.md
+              - Migration: api/yard/HTM/Migration.md
           - Errors:
               - Error: api/yard/HTM/Error.md
               - AuthorizationError: api/yard/HTM/AuthorizationError.md
               - CircuitBreakerOpenError: api/yard/HTM/CircuitBreakerOpenError.md
+              - ConfigurationError: api/yard/HTM/ConfigurationError.md
               - DatabaseError: api/yard/HTM/DatabaseError.md
               - EmbeddingError: api/yard/HTM/EmbeddingError.md
               - NotFoundError: api/yard/HTM/NotFoundError.md
+              - PropositionError: api/yard/HTM/PropositionError.md
               - QueryTimeoutError: api/yard/HTM/QueryTimeoutError.md
               - ResourceExhaustedError: api/yard/HTM/ResourceExhaustedError.md
               - TagError: api/yard/HTM/TagError.md
