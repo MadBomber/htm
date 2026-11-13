@@ -102,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`htm_mcp help` listed wrong environment variables and defaults** - Chunking variables are now `HTM_CHUNKING__CHUNK_SIZE`/`HTM_CHUNKING__CHUNK_OVERLAP` (the listed `HTM_CHUNKING__SIZE`/`__OVERLAP` were silently ignored); `HTM_PROPOSITION__ENABLED` defaults to `true`, `HTM_CONNECTION_TIMEOUT` to `60`, and `HTM_JOB__BACKEND` lists `fiber`, the default. A new test checks every variable and default in the help against `defaults.yml`
 
 ### Refactored
+- **Dead private methods removed** - `RelevanceScorer#jaccard_similarity`, `RelevanceScorer#calculate_hierarchical_similarity` and `HTM::Database.verify_extensions` (which warned about the unused `pg_search` extension) had no callers (#35)
 - **Flog complexity reduced across 15+ files** - All methods now score below the 50.0 failure threshold (previously 9 methods failed):
   - `HTM::Models::Tag::generate_tree_svg` (93.6 → passing): extracted `svg_title_element`, `svg_node_elements`, `svg_node_coords`, `svg_edge_path`, `svg_node_rect`, `svg_node_label`
   - `HybridSearch#search_hybrid_rrf` (83.2 → passing): extracted `extract_rrf_tag_info`, `build_rrf_literals`, `build_rrf_filter_sql`, `post_process_rrf_results`
