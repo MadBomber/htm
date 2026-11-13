@@ -158,7 +158,7 @@ end
 ### Environment Variable
 
 ```bash
-export HTM_JOB_BACKEND=inline  # Override auto-detection
+export HTM_JOB__BACKEND=inline  # Override the default (fiber) backend
 ```
 
 ---
