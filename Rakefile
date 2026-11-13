@@ -10,7 +10,6 @@ Rake::TestTask.new(:test) do |t|
   t.libs << "lib"
   t.test_files = FileList["test/**/*_test.rb"]
   t.verbose = true
-  t.ruby_opts << "-rtest_helper"
 end
 
 # Prepend environment setup before test runs
