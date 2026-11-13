@@ -274,7 +274,7 @@ HTM is built with modern Ruby tools:
 
 ### Core Technologies
 
-- **Ruby 3.0+**: Modern Ruby with pattern matching and better performance
+- **Ruby 3.2+**: Modern Ruby with pattern matching and better performance
 - **PostgreSQL 17**: Robust relational database with pgvector and pg_trgm
 - **pgvector**: Vector similarity search
 - **RubyLLM**: LLM client library for embeddings

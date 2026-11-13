@@ -157,7 +157,7 @@ For MCP integration, database setup, and configuration options, see the [full do
 
 ## Requirements
 
-- Ruby 3.0+
+- Ruby 3.2+
 - PostgreSQL with pgvector and pg_trgm extensions
 - Ollama (default) or any local/private provider for embeddings and classifications
 

@@ -227,7 +227,7 @@ Access: `HTM.config.job.backend`
 
 ```yaml
 job:
-  backend: ~                # nil = auto-detect, or: inline, thread, sidekiq, active_job
+  backend: :fiber           # fiber (default), inline, thread, sidekiq, active_job
 ```
 
 **Environment variables:**
@@ -237,7 +237,8 @@ HTM_JOB__BACKEND=sidekiq
 
 | Backend | Behavior | Use Case |
 |---------|----------|----------|
-| `~` (nil) | Auto-detect | Default |
+| `fiber` | Fiber-based concurrency (async gem) | Default |
+| `~` (nil) | Auto-detect (inline in test, else active_job, sidekiq, fiber) | Opt-in |
 | `inline` | Synchronous | Testing |
 | `thread` | Background threads | Development |
 | `sidekiq` | Sidekiq workers | Production |
@@ -365,7 +366,7 @@ service:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HTM_PROPOSITION__ENABLED` | Enable extraction | `false` |
+| `HTM_PROPOSITION__ENABLED` | Enable extraction | `true` |
 | `HTM_PROPOSITION__PROVIDER` | LLM provider | `ollama` |
 | `HTM_PROPOSITION__MODEL` | Model name | `gemma3:latest` |
 | `HTM_PROPOSITION__TIMEOUT` | Timeout (seconds) | `180` |
@@ -374,14 +375,14 @@ service:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HTM_CHUNKING__SIZE` | Characters per chunk | `1024` |
-| `HTM_CHUNKING__OVERLAP` | Overlap characters | `64` |
+| `HTM_CHUNKING__CHUNK_SIZE` | Characters per chunk | `1024` |
+| `HTM_CHUNKING__CHUNK_OVERLAP` | Overlap characters | `64` |
 
 ### Job Processing
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HTM_JOB__BACKEND` | Job backend | - (auto) |
+| `HTM_JOB__BACKEND` | Job backend | `fiber` |
 
 ### Circuit Breaker
 
@@ -406,7 +407,7 @@ service:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `HTM_WEEK_START` | Week start day | `sunday` |
-| `HTM_CONNECTION_TIMEOUT` | Connection timeout | `30` |
+| `HTM_CONNECTION_TIMEOUT` | Connection timeout | `60` |
 | `HTM_TELEMETRY_ENABLED` | Enable telemetry | `false` |
 | `HTM_LOG_LEVEL` | Log level | `info` |
 | `HTM_SERVICE__NAME` | Service name | `htm` |

@@ -51,6 +51,11 @@ class TagServiceTest < Minitest::Test
     refute HTM::TagService.valid_tag?("database_sql")
   end
 
+  def test_invalid_tag_format_embedded_newline
+    refute HTM::TagService.valid_tag?("ai\nNOT A TAG!!")
+    refute HTM::TagService.valid_tag?("database\n")
+  end
+
   def test_invalid_tag_format_empty
     refute HTM::TagService.valid_tag?("")
   end
@@ -157,6 +162,12 @@ class TagServiceTest < Minitest::Test
     result = HTM::TagService.validate_and_filter_tags(["database", "ai:llm"])
 
     assert_equal ["database", "ai:llm"], result
+  end
+
+  def test_validate_and_filter_tags_rejects_multiline_tag
+    result = HTM::TagService.validate_and_filter_tags(["database:postgresql", "ai\nNOT A TAG!!"])
+
+    assert_equal ["database:postgresql"], result
   end
 
   def test_validate_and_filter_tags_rejects_invalid_format
