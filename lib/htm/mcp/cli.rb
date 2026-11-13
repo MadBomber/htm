@@ -138,9 +138,11 @@ class HTM
       end
 
       def check_database_config!
-        return if ENV['HTM_DATABASE__URL'] || ENV['HTM_DATABASE__NAME']
+        return if HTM.config.database_configured?
+
         warn "Error: Database not configured."
-        warn "Set HTM_DATABASE__URL or HTM_DATABASE__NAME environment variable."
+        warn "Set HTM_DATABASE__URL or HTM_DATABASE__NAME, or database.url / database.name"
+        warn "in a config file (--config FILE or ~/.config/htm/htm.yml)."
         warn "Run 'htm_mcp help' for details."
         exit 1
       end
