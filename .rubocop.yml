@@ -106,8 +106,6 @@ Naming/PredicateMethod:
 
 # ── Lint ───────────────────────────────────────────────────────────────────
 Lint/EmptyBlock:
-  AllowedMethods:
-    - arguments
   Exclude:
     - 'test/**/*'
     - 'lib/htm/mcp/**/*'

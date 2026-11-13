@@ -409,32 +409,6 @@ class HTM
         end
       end
 
-      def verify_extensions(conn)
-        # Check pgvector
-        pgvector = conn.exec("SELECT extversion FROM pg_extension WHERE extname='vector'").first
-        if pgvector
-          puts "pgvector version: #{pgvector['extversion']}"
-        else
-          puts "Warning: pgvector extension not found"
-        end
-
-        # Check pg_trgm
-        pg_trgm = conn.exec("SELECT extversion FROM pg_extension WHERE extname='pg_trgm'").first
-        if pg_trgm
-          puts "pg_trgm version: #{pg_trgm['extversion']}"
-        else
-          puts "Warning: pg_trgm extension not found"
-        end
-
-        # Check pg_search (BM25 full-text search)
-        pg_search = conn.exec("SELECT extversion FROM pg_extension WHERE extname='pg_search'").first
-        if pg_search
-          puts "pg_search version: #{pg_search['extversion']}"
-        else
-          puts "Warning: pg_search extension not found"
-        end
-      end
-
       # Run Sequel migrations from db/migrate/
       #
       # @return [void]
