@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Increased specificity requirements for self-contained facts
 
 ### Removed
+- **`lib/tasks/db.rake`** - Its top-level `db:migrate` and `db:setup` tasks duplicated `htm:db:migrate` and `htm:db:setup`, were loaded only by `htm_mcp`'s rake glob (and hidden from its listing), and could merge HTM actions into a host app's tasks of the same name. Use `htm:db:migrate` / `htm:db:setup` (#71)
 - **Stale backup test files** - `test/caching_test.rb.bak3` and `test/ontology_test.rb.bak`, which `rake test` never ran
 
 ### Fixed
