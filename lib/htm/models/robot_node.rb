@@ -75,7 +75,9 @@ class HTM
       # @return [Boolean] true if restored successfully
       #
       def restore!
-        update(deleted_at: nil)
+        # Use unfiltered dataset to bypass the default scope that excludes deleted records
+        self.class.dataset.unfiltered.where(id: id).update(deleted_at: nil)
+        self.deleted_at = nil
         true
       end
 

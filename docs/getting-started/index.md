@@ -35,7 +35,7 @@ HTM provides intelligent memory management for LLM-based applications (robots) w
 
 Before installing HTM, ensure you have:
 
-- **Ruby 3.1+** - HTM uses modern Ruby features
+- **Ruby 3.2+** - HTM uses modern Ruby features
 - **PostgreSQL 14+** - With pgvector and pg_trgm extensions
 - **Ollama** (optional) - For local embedding generation
 
