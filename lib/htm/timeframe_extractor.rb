@@ -178,7 +178,24 @@ class HTM
           return parse_last_x(match[1].to_i, match[2])
         end
 
+        if (since = chronic_expr[/\Asince\s+(.+)/i, 1])
+          return start_through_now(since)
+        end
+        return start_through_now(chronic_expr) if chronic_expr.match?(/\A(?:today|this\s+(?:week|month|year))\z/i)
+
         chronic_parse_expression(chronic_expr)
+      end
+
+      # Range from the start of a (past) expression through now,
+      # e.g. "this month" or "since monday"
+      #
+      # @param expr [String] Expression Chronic can parse
+      # @return [Range, nil] Start of expr up to now
+      #
+      def start_through_now(expr)
+        parsed = chronic_parse_expression(expr)
+        parsed = parsed.begin if parsed.is_a?(Range)
+        parsed && (parsed..Time.now)
       end
 
       # Parse a number from string (numeric or written word)
@@ -206,9 +223,9 @@ class HTM
 
       def chronic_parse_expression(expr)
         week_start = fetch_week_start
-        result     = Chronic.parse(expr, guess: false, week_start: week_start)
+        result     = Chronic.parse(expr, guess: false, context: :past, week_start: week_start)
         return result.begin..result.end if result.respond_to?(:begin) && result.respond_to?(:end)
-        Chronic.parse(expr, week_start: week_start)
+        Chronic.parse(expr, context: :past, week_start: week_start)
       end
 
       def fetch_week_start

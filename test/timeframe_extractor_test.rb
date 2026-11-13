@@ -294,6 +294,29 @@ class TimeframeExtractorTest < Minitest::Test
     assert_kind_of Range, result.timeframe
   end
 
+  # Period phrases run from the start of the period up to now (issue #41).
+  # Frozen at Thursday 2026-11-12 07:30 local time.
+  FROZEN_NOW = Time.local(2026, 11, 12, 7, 30, 0)
+
+  def extract_frozen(query)
+    Time.stub(:now, FROZEN_NOW) { HTM::TimeframeExtractor.extract(query).timeframe }
+  end
+
+  {
+    "today"           => Time.local(2026, 11, 12),
+    "this week"       => Time.local(2026, 11, 8),
+    "this month"      => Time.local(2026, 11, 1),
+    "this year"       => Time.local(2026, 1, 1),
+    "since yesterday" => Time.local(2026, 11, 11),
+    "since monday"    => Time.local(2026, 11, 9)
+  }.each do |phrase, start|
+    define_method("test_extract_#{phrase.tr(' ', '_')}_runs_from_period_start_to_now") do
+      timeframe = extract_frozen("notes #{phrase} about Ruby")
+
+      assert_equal start..FROZEN_NOW, timeframe
+    end
+  end
+
   # Test WORD_NUMBERS constant
   def test_word_numbers_constant
     assert_equal 1, HTM::TimeframeExtractor::WORD_NUMBERS['one']
