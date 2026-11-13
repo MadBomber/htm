@@ -138,9 +138,11 @@ class HTM
       end
 
       def check_database_config!
-        return if ENV['HTM_DATABASE__URL'] || ENV['HTM_DATABASE__NAME']
+        return if HTM.config.database_configured?
+
         warn "Error: Database not configured."
-        warn "Set HTM_DATABASE__URL or HTM_DATABASE__NAME environment variable."
+        warn "Set HTM_DATABASE__URL or HTM_DATABASE__NAME, or database.url / database.name"
+        warn "in a config file (--config FILE or ~/.config/htm/htm.yml)."
         warn "Run 'htm_mcp help' for details."
         exit 1
       end
@@ -469,17 +471,17 @@ class HTM
         # Load HTM rake tasks
         load_htm_rake_tasks
 
-        # Check if task exists
-        unless Rake::Task.task_defined?(task_name)
-          warn "Unknown rake task: #{task_name}"
+        # Split "task[arg1,arg2]" into the task name and its arguments
+        name, task_args = Rake.application.parse_task_string(task_name)
+
+        unless Rake::Task.task_defined?(name)
+          warn "Unknown rake task: #{name}"
           warn "Run 'htm_mcp rake --tasks' to see available tasks."
           exit 1
         end
 
-        # Set remaining args as task arguments if any
-        # Rake tasks use ARGV for arguments in brackets like task[arg1,arg2]
         begin
-          Rake::Task[task_name].invoke
+          Rake::Task[name].invoke(*task_args)
         rescue => e
           warn "Rake task failed: #{e.message}"
           warn e.backtrace.first(5).join("\n") if ENV['DEBUG']

@@ -4,6 +4,7 @@ require 'logger'
 require 'fast_mcp'
 require 'ruby_llm'
 
+require_relative 'cli'
 require_relative 'tools'
 require_relative 'group_tools'
 require_relative 'resources'
@@ -15,7 +16,7 @@ class HTM
       module_function
 
       def start
-        check_database_config!
+        CLI.check_database_config!
         verify_database_connection!
         configure_logging!
         configure_htm!
@@ -25,14 +26,6 @@ class HTM
         register_resources(server)
 
         server.start
-      end
-
-      def check_database_config!
-        return if ENV['HTM_DATABASE__URL'] || ENV['HTM_DATABASE__NAME']
-        warn "Error: Database not configured."
-        warn "Set HTM_DATABASE__URL or HTM_DATABASE__NAME environment variable."
-        warn "Run 'htm_mcp help' for details."
-        exit 1
       end
 
       def verify_database_connection!
