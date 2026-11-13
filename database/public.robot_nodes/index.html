@@ -15,10 +15,10 @@
         <link rel="canonical" href="https://madbomber.github.io/htm/database/public.robot_nodes/">
       
       
-        <link rel="prev" href="../public.nodes_tags/">
+        <link rel="prev" href="../public.node_tags/">
       
       
-        <link rel="next" href="../public.node_stats/">
+        <link rel="next" href="../public.node_relationships/">
       
       
         
@@ -4117,8 +4117,6 @@
       
         
       
-        
-      
     
     
     
@@ -4443,34 +4441,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.nodes_tags/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Nodes Tags (Legacy)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -4599,6 +4569,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../public.node_relationships/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Node Relationships
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -4615,14 +4613,6 @@
   
     
     
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -4647,7 +4637,7 @@
   <span class="md-ellipsis">
     
   
-    Views & Stats
+    System
   
 
     
@@ -4663,243 +4653,11 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Views & Stats
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.node_stats/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Node Stats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.robot_activity/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Robot Activity
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.topic_relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Topic Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.ontology_structure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ontology Structure
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_6_7_5" id="__nav_6_7_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    System
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_7_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
     System
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.operations_log/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operations Log
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -5377,9 +5135,34 @@
 <td>FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE</td>
 </tr>
 <tr>
+<td>robot_nodes_id_not_null</td>
+<td>n</td>
+<td>NOT NULL id</td>
+</tr>
+<tr>
+<td>robot_nodes_node_id_not_null</td>
+<td>n</td>
+<td>NOT NULL node_id</td>
+</tr>
+<tr>
 <td>robot_nodes_pkey</td>
 <td>PRIMARY KEY</td>
 <td>PRIMARY KEY (id)</td>
+</tr>
+<tr>
+<td>robot_nodes_remember_count_not_null</td>
+<td>n</td>
+<td>NOT NULL remember_count</td>
+</tr>
+<tr>
+<td>robot_nodes_robot_id_not_null</td>
+<td>n</td>
+<td>NOT NULL robot_id</td>
+</tr>
+<tr>
+<td>robot_nodes_working_memory_not_null</td>
+<td>n</td>
+<td>NOT NULL working_memory</td>
 </tr>
 </tbody>
 </table>
@@ -5517,7 +5300,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../public.nodes_tags/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Nodes Tags (Legacy)">
+          <a href="../public.node_tags/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Node Tags">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -5527,20 +5310,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Nodes Tags (Legacy)
+                Node Tags
               </div>
             </div>
           </a>
         
         
           
-          <a href="../public.node_stats/" class="md-footer__link md-footer__link--next" aria-label="Next: Node Stats">
+          <a href="../public.node_relationships/" class="md-footer__link md-footer__link--next" aria-label="Next: Node Relationships">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Node Stats
+                Node Relationships
               </div>
             </div>
             <div class="md-footer__button md-icon">

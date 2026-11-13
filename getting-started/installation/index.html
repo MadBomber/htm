@@ -4653,8 +4653,6 @@
       
         
       
-        
-      
     
     
     
@@ -4980,14 +4978,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../database/public.nodes_tags/" class="md-nav__link">
+      <a href="../../database/public.robot_nodes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Nodes Tags (Legacy)
+    Robot Nodes
   
 
     
@@ -5008,14 +5006,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../database/public.robot_nodes/" class="md-nav__link">
+      <a href="../../database/public.node_relationships/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Robot Nodes
+    Node Relationships
   
 
     
@@ -5045,14 +5043,6 @@
   
     
     
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -5077,7 +5067,7 @@
   <span class="md-ellipsis">
     
   
-    Views & Stats
+    System
   
 
     
@@ -5093,243 +5083,11 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Views & Stats
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.node_stats/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Node Stats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.robot_activity/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Robot Activity
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.topic_relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Topic Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.ontology_structure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ontology Structure
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_6_7_5" id="__nav_6_7_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    System
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_7_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
     System
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.operations_log/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operations Log
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -6359,37 +6117,34 @@ Download the installer from <a href="https://ollama.ai/download">https://ollama.
 </span><span id="__span-25-15"><a id="__codelineno-25-15" name="__codelineno-25-15" href="#__codelineno-25-15"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"  Robot Name: </span><span class="si">#{</span><span class="n">htm</span><span class="o">.</span><span class="n">robot_name</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="__span-25-16"><a id="__codelineno-25-16" name="__codelineno-25-16" href="#__codelineno-25-16"></a>
 </span><span id="__span-25-17"><a id="__codelineno-25-17" name="__codelineno-25-17" href="#__codelineno-25-17"></a><span class="c1"># Add a test memory</span>
-</span><span id="__span-25-18"><a id="__codelineno-25-18" name="__codelineno-25-18" href="#__codelineno-25-18"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
-</span><span id="__span-25-19"><a id="__codelineno-25-19" name="__codelineno-25-19" href="#__codelineno-25-19"></a><span class="w">  </span><span class="s2">"test_001"</span><span class="p">,</span>
-</span><span id="__span-25-20"><a id="__codelineno-25-20" name="__codelineno-25-20" href="#__codelineno-25-20"></a><span class="w">  </span><span class="s2">"This is a test memory to verify HTM installation."</span><span class="p">,</span>
-</span><span id="__span-25-21"><a id="__codelineno-25-21" name="__codelineno-25-21" href="#__codelineno-25-21"></a><span class="w">  </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="ss">:fact</span><span class="p">,</span>
-</span><span id="__span-25-22"><a id="__codelineno-25-22" name="__codelineno-25-22" href="#__codelineno-25-22"></a><span class="w">  </span><span class="ss">importance</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="o">.</span><span class="mi">0</span><span class="p">,</span>
-</span><span id="__span-25-23"><a id="__codelineno-25-23" name="__codelineno-25-23" href="#__codelineno-25-23"></a><span class="w">  </span><span class="ss">tags</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">"test"</span><span class="o">]</span>
-</span><span id="__span-25-24"><a id="__codelineno-25-24" name="__codelineno-25-24" href="#__codelineno-25-24"></a><span class="p">)</span>
-</span><span id="__span-25-25"><a id="__codelineno-25-25" name="__codelineno-25-25" href="#__codelineno-25-25"></a>
-</span><span id="__span-25-26"><a id="__codelineno-25-26" name="__codelineno-25-26" href="#__codelineno-25-26"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ Memory node added successfully"</span>
-</span><span id="__span-25-27"><a id="__codelineno-25-27" name="__codelineno-25-27" href="#__codelineno-25-27"></a>
-</span><span id="__span-25-28"><a id="__codelineno-25-28" name="__codelineno-25-28" href="#__codelineno-25-28"></a><span class="c1"># Retrieve the memory</span>
-</span><span id="__span-25-29"><a id="__codelineno-25-29" name="__codelineno-25-29" href="#__codelineno-25-29"></a><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">retrieve</span><span class="p">(</span><span class="s2">"test_001"</span><span class="p">)</span>
-</span><span id="__span-25-30"><a id="__codelineno-25-30" name="__codelineno-25-30" href="#__codelineno-25-30"></a><span class="k">if</span><span class="w"> </span><span class="n">node</span>
-</span><span id="__span-25-31"><a id="__codelineno-25-31" name="__codelineno-25-31" href="#__codelineno-25-31"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ Memory retrieval works"</span>
-</span><span id="__span-25-32"><a id="__codelineno-25-32" name="__codelineno-25-32" href="#__codelineno-25-32"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"  Content: </span><span class="si">#{</span><span class="n">node</span><span class="o">[</span><span class="s1">'value'</span><span class="o">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span id="__span-25-33"><a id="__codelineno-25-33" name="__codelineno-25-33" href="#__codelineno-25-33"></a><span class="k">else</span>
-</span><span id="__span-25-34"><a id="__codelineno-25-34" name="__codelineno-25-34" href="#__codelineno-25-34"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"✗ Failed to retrieve memory"</span>
-</span><span id="__span-25-35"><a id="__codelineno-25-35" name="__codelineno-25-35" href="#__codelineno-25-35"></a><span class="k">end</span>
-</span><span id="__span-25-36"><a id="__codelineno-25-36" name="__codelineno-25-36" href="#__codelineno-25-36"></a>
-</span><span id="__span-25-37"><a id="__codelineno-25-37" name="__codelineno-25-37" href="#__codelineno-25-37"></a><span class="c1"># Get stats</span>
-</span><span id="__span-25-38"><a id="__codelineno-25-38" name="__codelineno-25-38" href="#__codelineno-25-38"></a><span class="n">stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">memory_stats</span>
-</span><span id="__span-25-39"><a id="__codelineno-25-39" name="__codelineno-25-39" href="#__codelineno-25-39"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ Memory stats:"</span>
-</span><span id="__span-25-40"><a id="__codelineno-25-40" name="__codelineno-25-40" href="#__codelineno-25-40"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"  Total nodes: </span><span class="si">#{</span><span class="n">stats</span><span class="o">[</span><span class="ss">:total_nodes</span><span class="o">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span id="__span-25-41"><a id="__codelineno-25-41" name="__codelineno-25-41" href="#__codelineno-25-41"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"  Working memory: </span><span class="si">#{</span><span class="n">stats</span><span class="o">[</span><span class="ss">:working_memory</span><span class="o">][</span><span class="ss">:node_count</span><span class="o">]</span><span class="si">}</span><span class="s2"> nodes"</span>
-</span><span id="__span-25-42"><a id="__codelineno-25-42" name="__codelineno-25-42" href="#__codelineno-25-42"></a>
-</span><span id="__span-25-43"><a id="__codelineno-25-43" name="__codelineno-25-43" href="#__codelineno-25-43"></a><span class="c1"># Clean up test data</span>
-</span><span id="__span-25-44"><a id="__codelineno-25-44" name="__codelineno-25-44" href="#__codelineno-25-44"></a><span class="n">htm</span><span class="o">.</span><span class="n">forget</span><span class="p">(</span><span class="s2">"test_001"</span><span class="p">,</span><span class="w"> </span><span class="ss">confirm</span><span class="p">:</span><span class="w"> </span><span class="ss">:confirmed</span><span class="p">)</span>
-</span><span id="__span-25-45"><a id="__codelineno-25-45" name="__codelineno-25-45" href="#__codelineno-25-45"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ Memory deletion works"</span>
-</span><span id="__span-25-46"><a id="__codelineno-25-46" name="__codelineno-25-46" href="#__codelineno-25-46"></a>
-</span><span id="__span-25-47"><a id="__codelineno-25-47" name="__codelineno-25-47" href="#__codelineno-25-47"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">"="</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span>
-</span><span id="__span-25-48"><a id="__codelineno-25-48" name="__codelineno-25-48" href="#__codelineno-25-48"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ HTM installation verified successfully!"</span>
+</span><span id="__span-25-18"><a id="__codelineno-25-18" name="__codelineno-25-18" href="#__codelineno-25-18"></a><span class="n">node_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span>
+</span><span id="__span-25-19"><a id="__codelineno-25-19" name="__codelineno-25-19" href="#__codelineno-25-19"></a><span class="w">  </span><span class="s2">"This is a test memory to verify HTM installation."</span><span class="p">,</span>
+</span><span id="__span-25-20"><a id="__codelineno-25-20" name="__codelineno-25-20" href="#__codelineno-25-20"></a><span class="w">  </span><span class="ss">tags</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="s2">"test"</span><span class="o">]</span>
+</span><span id="__span-25-21"><a id="__codelineno-25-21" name="__codelineno-25-21" href="#__codelineno-25-21"></a><span class="p">)</span>
+</span><span id="__span-25-22"><a id="__codelineno-25-22" name="__codelineno-25-22" href="#__codelineno-25-22"></a>
+</span><span id="__span-25-23"><a id="__codelineno-25-23" name="__codelineno-25-23" href="#__codelineno-25-23"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ Memory node added successfully (node ID: </span><span class="si">#{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">)"</span>
+</span><span id="__span-25-24"><a id="__codelineno-25-24" name="__codelineno-25-24" href="#__codelineno-25-24"></a>
+</span><span id="__span-25-25"><a id="__codelineno-25-25" name="__codelineno-25-25" href="#__codelineno-25-25"></a><span class="c1"># Recall the memory (full-text search, no embeddings needed)</span>
+</span><span id="__span-25-26"><a id="__codelineno-25-26" name="__codelineno-25-26" href="#__codelineno-25-26"></a><span class="n">memories</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">recall</span><span class="p">(</span><span class="s2">"verify HTM installation"</span><span class="p">,</span><span class="w"> </span><span class="ss">strategy</span><span class="p">:</span><span class="w"> </span><span class="ss">:fulltext</span><span class="p">,</span><span class="w"> </span><span class="ss">limit</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+</span><span id="__span-25-27"><a id="__codelineno-25-27" name="__codelineno-25-27" href="#__codelineno-25-27"></a><span class="k">if</span><span class="w"> </span><span class="n">memories</span><span class="o">.</span><span class="n">any?</span>
+</span><span id="__span-25-28"><a id="__codelineno-25-28" name="__codelineno-25-28" href="#__codelineno-25-28"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ Memory recall works"</span>
+</span><span id="__span-25-29"><a id="__codelineno-25-29" name="__codelineno-25-29" href="#__codelineno-25-29"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"  Content: </span><span class="si">#{</span><span class="n">memories</span><span class="o">.</span><span class="n">first</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-25-30"><a id="__codelineno-25-30" name="__codelineno-25-30" href="#__codelineno-25-30"></a><span class="k">else</span>
+</span><span id="__span-25-31"><a id="__codelineno-25-31" name="__codelineno-25-31" href="#__codelineno-25-31"></a><span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">"✗ Failed to recall memory"</span>
+</span><span id="__span-25-32"><a id="__codelineno-25-32" name="__codelineno-25-32" href="#__codelineno-25-32"></a><span class="k">end</span>
+</span><span id="__span-25-33"><a id="__codelineno-25-33" name="__codelineno-25-33" href="#__codelineno-25-33"></a>
+</span><span id="__span-25-34"><a id="__codelineno-25-34" name="__codelineno-25-34" href="#__codelineno-25-34"></a><span class="c1"># Get stats</span>
+</span><span id="__span-25-35"><a id="__codelineno-25-35" name="__codelineno-25-35" href="#__codelineno-25-35"></a><span class="n">stats</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">htm</span><span class="o">.</span><span class="n">long_term_memory</span><span class="o">.</span><span class="n">stats</span>
+</span><span id="__span-25-36"><a id="__codelineno-25-36" name="__codelineno-25-36" href="#__codelineno-25-36"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ Memory stats:"</span>
+</span><span id="__span-25-37"><a id="__codelineno-25-37" name="__codelineno-25-37" href="#__codelineno-25-37"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"  Total nodes: </span><span class="si">#{</span><span class="n">stats</span><span class="o">[</span><span class="ss">:total_nodes</span><span class="o">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-25-38"><a id="__codelineno-25-38" name="__codelineno-25-38" href="#__codelineno-25-38"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"  Working memory: </span><span class="si">#{</span><span class="n">htm</span><span class="o">.</span><span class="n">working_memory</span><span class="o">.</span><span class="n">node_count</span><span class="si">}</span><span class="s2"> nodes"</span>
+</span><span id="__span-25-39"><a id="__codelineno-25-39" name="__codelineno-25-39" href="#__codelineno-25-39"></a>
+</span><span id="__span-25-40"><a id="__codelineno-25-40" name="__codelineno-25-40" href="#__codelineno-25-40"></a><span class="c1"># Clean up test data (permanent delete requires confirmation)</span>
+</span><span id="__span-25-41"><a id="__codelineno-25-41" name="__codelineno-25-41" href="#__codelineno-25-41"></a><span class="n">htm</span><span class="o">.</span><span class="n">forget</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span><span class="w"> </span><span class="ss">soft</span><span class="p">:</span><span class="w"> </span><span class="kp">false</span><span class="p">,</span><span class="w"> </span><span class="ss">confirm</span><span class="p">:</span><span class="w"> </span><span class="ss">:confirmed</span><span class="p">)</span>
+</span><span id="__span-25-42"><a id="__codelineno-25-42" name="__codelineno-25-42" href="#__codelineno-25-42"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ Memory deletion works"</span>
+</span><span id="__span-25-43"><a id="__codelineno-25-43" name="__codelineno-25-43" href="#__codelineno-25-43"></a>
+</span><span id="__span-25-44"><a id="__codelineno-25-44" name="__codelineno-25-44" href="#__codelineno-25-44"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">"="</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">60</span>
+</span><span id="__span-25-45"><a id="__codelineno-25-45" name="__codelineno-25-45" href="#__codelineno-25-45"></a><span class="nb">puts</span><span class="w"> </span><span class="s2">"✓ HTM installation verified successfully!"</span>
 </span></code></pre></div>
 <p>Run the test:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>ruby<span class="w"> </span>test_htm_setup.rb

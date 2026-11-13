@@ -12,13 +12,13 @@
         <meta name="author" content="Dewayne VanHoozer">
       
       
-        <link rel="canonical" href="https://madbomber.github.io/htm/database/public.topic_relationships/">
+        <link rel="canonical" href="https://madbomber.github.io/htm/database/public.node_relationships/">
       
       
-        <link rel="prev" href="../public.robot_activity/">
+        <link rel="prev" href="../public.robot_nodes/">
       
       
-        <link rel="next" href="../public.ontology_structure/">
+        <link rel="next" href="../public.schema_migrations/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Topic Relationships - HTM - Hierarchical Temporal Memory</title>
+        <title>Node Relationships - HTM - Hierarchical Temporal Memory</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#publictopic_relationships" class="md-skip">
+        <a href="#publicnode_relationships" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Topic Relationships
+              Node Relationships
             
           </span>
         </div>
@@ -4117,8 +4117,6 @@
       
         
       
-        
-      
     
     
     
@@ -4355,8 +4353,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -4373,11 +4373,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_3" checked>
         
           
           <label class="md-nav__link" for="__nav_6_7_3" id="__nav_6_7_3_label" tabindex="0">
@@ -4398,7 +4398,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6_7_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -4444,34 +4444,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../public.nodes_tags/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Nodes Tags (Legacy)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../public.robot_nodes/" class="md-nav__link">
         
   
@@ -4480,134 +4452,6 @@
     
   
     Robot Nodes
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_4" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_6_7_4" id="__nav_6_7_4_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Views & Stats
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_4_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6_7_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Views & Stats
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.node_stats/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Node Stats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.robot_activity/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Robot Activity
   
 
     
@@ -4644,7 +4488,7 @@
   <span class="md-ellipsis">
     
   
-    Topic Relationships
+    Node Relationships
   
 
     
@@ -4662,7 +4506,7 @@
   <span class="md-ellipsis">
     
   
-    Topic Relationships
+    Node Relationships
   
 
     
@@ -4712,10 +4556,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#referenced-tables" class="md-nav__link">
+  <a href="#constraints" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Referenced Tables
+        Constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indexes
       
     </span>
   </a>
@@ -4742,62 +4597,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.ontology_structure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ontology Structure
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -4817,8 +4616,6 @@
       
         
       
-        
-      
     
     
     
@@ -4830,10 +4627,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_4" >
         
           
-          <label class="md-nav__link" for="__nav_6_7_5" id="__nav_6_7_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_7_4" id="__nav_6_7_4_label" tabindex="0">
             
   
   
@@ -4851,8 +4648,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_7_5">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4861,34 +4658,6 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../public.operations_log/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operations Log
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -5104,10 +4873,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#referenced-tables" class="md-nav__link">
+  <a href="#constraints" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Referenced Tables
+        Constraints
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indexes
       
     </span>
   </a>
@@ -5187,10 +4967,10 @@
     
     
       <li class="md-path__item">
-        <a href="../public.node_stats/" class="md-path__link">
+        <a href="../public.node_tags/" class="md-path__link">
           
   <span class="md-ellipsis">
-    Views & Stats
+    Join Tables
   </span>
 
         </a>
@@ -5209,7 +4989,7 @@
 
 
   
-    <a href="https://github.com/madbomber/htm/edit/main/docs/database/public.topic_relationships.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/madbomber/htm/edit/main/docs/database/public.node_relationships.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -5218,33 +4998,16 @@
     
       
     
-    <a href="https://github.com/madbomber/htm/raw/main/docs/database/public.topic_relationships.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/madbomber/htm/raw/main/docs/database/public.node_relationships.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="publictopic_relationships">public.topic_relationships<a class="headerlink" href="#publictopic_relationships" title="Permanent link">&para;</a></h1>
+<h1 id="publicnode_relationships">public.node_relationships<a class="headerlink" href="#publicnode_relationships" title="Permanent link">&para;</a></h1>
 <h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h2>
-<p>Shows which topics co-occur on the same nodes, revealing cross-topic relationships in the knowledge base.</p>
-<details>
-<summary><strong>Table Definition</strong></summary>
-
-<div class="language-sql highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">CREATE</span><span class="w"> </span><span class="k">VIEW</span><span class="w"> </span><span class="n">topic_relationships</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="p">(</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w"> </span><span class="k">SELECT</span><span class="w"> </span><span class="n">t1</span><span class="p">.</span><span class="n">tag</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">topic1</span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="n">t2</span><span class="p">.</span><span class="n">tag</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">topic2</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">t1</span><span class="p">.</span><span class="n">node_id</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">shared_nodes</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">   </span><span class="k">FROM</span><span class="w"> </span><span class="p">(</span><span class="n">tags</span><span class="w"> </span><span class="n">t1</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">     </span><span class="k">JOIN</span><span class="w"> </span><span class="n">tags</span><span class="w"> </span><span class="n">t2</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="p">(((</span><span class="n">t1</span><span class="p">.</span><span class="n">node_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t2</span><span class="p">.</span><span class="n">node_id</span><span class="p">)</span><span class="w"> </span><span class="k">AND</span><span class="w"> </span><span class="p">(</span><span class="n">t1</span><span class="p">.</span><span class="n">tag</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">t2</span><span class="p">.</span><span class="n">tag</span><span class="p">))))</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">t1</span><span class="p">.</span><span class="n">tag</span><span class="p">,</span><span class="w"> </span><span class="n">t2</span><span class="p">.</span><span class="n">tag</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w"> </span><span class="k">HAVING</span><span class="w"> </span><span class="p">(</span><span class="k">count</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">t1</span><span class="p">.</span><span class="n">node_id</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="k">ORDER</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="p">(</span><span class="k">count</span><span class="p">(</span><span class="k">DISTINCT</span><span class="w"> </span><span class="n">t1</span><span class="p">.</span><span class="n">node_id</span><span class="p">))</span><span class="w"> </span><span class="k">DESC</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span>
-</span></code></pre></div>
-
-</details>
-
+<p>Weighted directed edges between nodes for graph traversal</p>
 <h2 id="columns">Columns<a class="headerlink" href="#columns" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -5260,55 +5023,183 @@
 </thead>
 <tbody>
 <tr>
-<td>topic1</td>
-<td>text</td>
-<td></td>
+<td>created_at</td>
+<td>timestamp with time zone</td>
+<td>CURRENT_TIMESTAMP</td>
 <td>true</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 <tr>
-<td>topic2</td>
-<td>text</td>
-<td></td>
-<td>true</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>shared_nodes</td>
+<td>id</td>
 <td>bigint</td>
 <td></td>
+<td>false</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>origin</td>
+<td>text</td>
+<td>'tag_cooccurrence'::text</td>
+<td>false</td>
+<td></td>
+<td></td>
+<td>How created: tag_cooccurrence, tag_hierarchy, explicit</td>
+</tr>
+<tr>
+<td>rel_type</td>
+<td>text</td>
+<td>'related_to'::text</td>
+<td>false</td>
+<td></td>
+<td></td>
+<td>Semantic label: related_to, supports, contradicts, derived_from</td>
+</tr>
+<tr>
+<td>source_id</td>
+<td>bigint</td>
+<td></td>
+<td>false</td>
+<td></td>
+<td><a href="../public.nodes/">public.nodes</a></td>
+<td>Starting node of the relationship</td>
+</tr>
+<tr>
+<td>target_id</td>
+<td>bigint</td>
+<td></td>
+<td>false</td>
+<td></td>
+<td><a href="../public.nodes/">public.nodes</a></td>
+<td>Ending node of the relationship</td>
+</tr>
+<tr>
+<td>updated_at</td>
+<td>timestamp with time zone</td>
+<td>CURRENT_TIMESTAMP</td>
 <td>true</td>
 <td></td>
 <td></td>
+<td>When weight was last recalculated</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>double precision</td>
+<td>1.0</td>
+<td>false</td>
 <td></td>
+<td></td>
+<td>Relationship strength 0.0-1.0 (Jaccard similarity for tag_cooccurrence)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="referenced-tables">Referenced Tables<a class="headerlink" href="#referenced-tables" title="Permanent link">&para;</a></h2>
+<h2 id="constraints">Constraints<a class="headerlink" href="#constraints" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Name</th>
-<th>Columns</th>
-<th>Comment</th>
 <th>Type</th>
+<th>Definition</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="../public.tags/">public.tags</a></td>
-<td>4</td>
-<td>Hierarchical topic tags for flexible categorization using colon-delimited format</td>
-<td>BASE TABLE</td>
+<td>chk_node_relationships_no_self_loop</td>
+<td>CHECK</td>
+<td>CHECK ((source_id &lt;&gt; target_id))</td>
+</tr>
+<tr>
+<td>chk_node_relationships_weight</td>
+<td>CHECK</td>
+<td>CHECK (((weight &gt;= (0.0)::double precision) AND (weight &lt;= (1.0)::double precision)))</td>
+</tr>
+<tr>
+<td>fk_node_relationships_source</td>
+<td>FOREIGN KEY</td>
+<td>FOREIGN KEY (source_id) REFERENCES nodes(id) ON DELETE CASCADE</td>
+</tr>
+<tr>
+<td>fk_node_relationships_target</td>
+<td>FOREIGN KEY</td>
+<td>FOREIGN KEY (target_id) REFERENCES nodes(id) ON DELETE CASCADE</td>
+</tr>
+<tr>
+<td>node_relationships_id_not_null</td>
+<td>n</td>
+<td>NOT NULL id</td>
+</tr>
+<tr>
+<td>node_relationships_origin_not_null</td>
+<td>n</td>
+<td>NOT NULL origin</td>
+</tr>
+<tr>
+<td>node_relationships_pkey</td>
+<td>PRIMARY KEY</td>
+<td>PRIMARY KEY (id)</td>
+</tr>
+<tr>
+<td>node_relationships_rel_type_not_null</td>
+<td>n</td>
+<td>NOT NULL rel_type</td>
+</tr>
+<tr>
+<td>node_relationships_source_id_not_null</td>
+<td>n</td>
+<td>NOT NULL source_id</td>
+</tr>
+<tr>
+<td>node_relationships_target_id_not_null</td>
+<td>n</td>
+<td>NOT NULL target_id</td>
+</tr>
+<tr>
+<td>node_relationships_weight_not_null</td>
+<td>n</td>
+<td>NOT NULL weight</td>
+</tr>
+</tbody>
+</table>
+<h2 id="indexes">Indexes<a class="headerlink" href="#indexes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>idx_node_relationships_origin</td>
+<td>CREATE INDEX idx_node_relationships_origin ON public.node_relationships USING btree (origin)</td>
+</tr>
+<tr>
+<td>idx_node_relationships_source_id</td>
+<td>CREATE INDEX idx_node_relationships_source_id ON public.node_relationships USING btree (source_id)</td>
+</tr>
+<tr>
+<td>idx_node_relationships_target_id</td>
+<td>CREATE INDEX idx_node_relationships_target_id ON public.node_relationships USING btree (target_id)</td>
+</tr>
+<tr>
+<td>idx_node_relationships_unique</td>
+<td>CREATE UNIQUE INDEX idx_node_relationships_unique ON public.node_relationships USING btree (source_id, target_id, rel_type)</td>
+</tr>
+<tr>
+<td>idx_node_relationships_weight</td>
+<td>CREATE INDEX idx_node_relationships_weight ON public.node_relationships USING btree (weight)</td>
+</tr>
+<tr>
+<td>node_relationships_pkey</td>
+<td>CREATE UNIQUE INDEX node_relationships_pkey ON public.node_relationships USING btree (id)</td>
 </tr>
 </tbody>
 </table>
 <h2 id="relations">Relations<a class="headerlink" href="#relations" title="Permanent link">&para;</a></h2>
-<p><img alt="er" src="../public.topic_relationships.svg" /></p>
+<p><img alt="er" src="../public.node_relationships.svg" /></p>
 <hr />
 <blockquote>
 <p>Generated by <a href="https://github.com/k1LoW/tbls">tbls</a></p>
@@ -5402,7 +5293,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../public.robot_activity/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Robot Activity">
+          <a href="../public.robot_nodes/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Robot Nodes">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -5412,20 +5303,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Robot Activity
+                Robot Nodes
               </div>
             </div>
           </a>
         
         
           
-          <a href="../public.ontology_structure/" class="md-footer__link md-footer__link--next" aria-label="Next: Ontology Structure">
+          <a href="../public.schema_migrations/" class="md-footer__link md-footer__link--next" aria-label="Next: Schema Migrations">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Ontology Structure
+                Schema Migrations
               </div>
             </div>
             <div class="md-footer__button md-icon">

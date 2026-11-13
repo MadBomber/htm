@@ -4919,8 +4919,6 @@
       
         
       
-        
-      
     
     
     
@@ -5246,14 +5244,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../database/public.nodes_tags/" class="md-nav__link">
+      <a href="../../database/public.robot_nodes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Nodes Tags (Legacy)
+    Robot Nodes
   
 
     
@@ -5274,14 +5272,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../database/public.robot_nodes/" class="md-nav__link">
+      <a href="../../database/public.node_relationships/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Robot Nodes
+    Node Relationships
   
 
     
@@ -5311,14 +5309,6 @@
   
     
     
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -5343,7 +5333,7 @@
   <span class="md-ellipsis">
     
   
-    Views & Stats
+    System
   
 
     
@@ -5359,243 +5349,11 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Views & Stats
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.node_stats/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Node Stats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.robot_activity/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Robot Activity
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.topic_relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Topic Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.ontology_structure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ontology Structure
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_6_7_5" id="__nav_6_7_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    System
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_7_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
     System
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.operations_log/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operations Log
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -7556,7 +7314,7 @@
 <td>-</td>
 </tr>
 <tr>
-<td><code>HTM_DBSSLMODE</code></td>
+<td><code>HTM_DATABASE__SSLMODE</code></td>
 <td>SSL mode</td>
 <td><code>prefer</code></td>
 </tr>
@@ -7574,27 +7332,27 @@
 </thead>
 <tbody>
 <tr>
-<td><code>HTM_EMBEDDING_PROVIDER</code></td>
+<td><code>HTM_EMBEDDING__PROVIDER</code></td>
 <td>Embedding provider (<code>ollama</code>, <code>openai</code>, <code>gemini</code>, etc.)</td>
 <td><code>ollama</code></td>
 </tr>
 <tr>
-<td><code>HTM_EMBEDDING_MODEL</code></td>
+<td><code>HTM_EMBEDDING__MODEL</code></td>
 <td>Embedding model (provider-specific)</td>
-<td><code>nomic-embed-text</code></td>
+<td><code>nomic-embed-text:latest</code></td>
 </tr>
 <tr>
-<td><code>HTM_TAG_PROVIDER</code></td>
+<td><code>HTM_TAG__PROVIDER</code></td>
 <td>Tag extraction provider</td>
 <td><code>ollama</code></td>
 </tr>
 <tr>
-<td><code>HTM_TAG_MODEL</code></td>
+<td><code>HTM_TAG__MODEL</code></td>
 <td>Tag model</td>
 <td><code>gemma3:latest</code></td>
 </tr>
 <tr>
-<td><code>HTM_OLLAMA_URL</code></td>
+<td><code>HTM_PROVIDERS__OLLAMA__URL</code></td>
 <td>Ollama server URL (if using Ollama)</td>
 <td><code>http://localhost:11434</code></td>
 </tr>
@@ -7610,31 +7368,23 @@
 </thead>
 <tbody>
 <tr>
-<td><code>OPENAI_API_KEY</code></td>
+<td><code>HTM_PROVIDERS__OPENAI__API_KEY</code></td>
 <td>OpenAI API key</td>
 </tr>
 <tr>
-<td><code>ANTHROPIC_API_KEY</code></td>
+<td><code>HTM_PROVIDERS__ANTHROPIC__API_KEY</code></td>
 <td>Anthropic API key</td>
 </tr>
 <tr>
-<td><code>GEMINI_API_KEY</code></td>
+<td><code>HTM_PROVIDERS__GEMINI__API_KEY</code></td>
 <td>Google Gemini API key</td>
 </tr>
 <tr>
-<td><code>HTM_ANTHROPIC_API_KEY</code></td>
-<td>Anthropic API key</td>
-</tr>
-<tr>
-<td><code>HTM_GEMINI_API_KEY</code></td>
-<td>Google Gemini API key</td>
-</tr>
-<tr>
-<td><code>HTM_AZURE_API_KEY</code></td>
+<td><code>HTM_PROVIDERS__AZURE__API_KEY</code></td>
 <td>Azure OpenAI API key</td>
 </tr>
 <tr>
-<td><code>HTM_AZURE_ENDPOINT</code></td>
+<td><code>HTM_PROVIDERS__AZURE__ENDPOINT</code></td>
 <td>Azure OpenAI endpoint</td>
 </tr>
 </tbody>

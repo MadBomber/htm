@@ -4115,8 +4115,6 @@
       
         
       
-        
-      
     
     
     
@@ -4442,14 +4440,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../database/public.nodes_tags/" class="md-nav__link">
+      <a href="../database/public.robot_nodes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Nodes Tags (Legacy)
+    Robot Nodes
   
 
     
@@ -4470,14 +4468,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../database/public.robot_nodes/" class="md-nav__link">
+      <a href="../database/public.node_relationships/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Robot Nodes
+    Node Relationships
   
 
     
@@ -4507,14 +4505,6 @@
   
     
     
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -4539,7 +4529,7 @@
   <span class="md-ellipsis">
     
   
-    Views & Stats
+    System
   
 
     
@@ -4555,243 +4545,11 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Views & Stats
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../database/public.node_stats/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Node Stats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../database/public.robot_activity/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Robot Activity
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../database/public.topic_relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Topic Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../database/public.ontology_structure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ontology Structure
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../database/public.relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_6_7_5" id="__nav_6_7_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    System
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_7_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
     System
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../database/public.operations_log/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operations Log
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -5614,15 +5372,16 @@
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_DATABASE__PASSWORD</span><span class="o">=</span><span class="s2">"your_password"</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># Embedding configuration</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_PROVIDER</span><span class="o">=</span>ollama
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_MODEL</span><span class="o">=</span>nomic-embed-text
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_BASE_URL</span><span class="o">=</span>http://localhost:11434
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDINGS_DIMENSION</span><span class="o">=</span><span class="m">768</span>
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="c1"># Topic extraction configuration</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_TOPIC_PROVIDER</span><span class="o">=</span>ollama
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_TOPIC_MODEL</span><span class="o">=</span>llama3
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_TOPIC_BASE_URL</span><span class="o">=</span>http://localhost:11434
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDING__PROVIDER</span><span class="o">=</span>ollama
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDING__MODEL</span><span class="o">=</span>nomic-embed-text
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_EMBEDDING__DIMENSIONS</span><span class="o">=</span><span class="m">768</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="c1"># Tag extraction configuration</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_TAG__PROVIDER</span><span class="o">=</span>ollama
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_TAG__MODEL</span><span class="o">=</span>llama3
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="c1"># Ollama server URL (shared by all Ollama-backed services)</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="nb">export</span><span class="w"> </span><span class="nv">HTM_PROVIDERS__OLLAMA__URL</span><span class="o">=</span>http://localhost:11434
 </span></code></pre></div>
 <p>Then enable direnv:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>direnv<span class="w"> </span>allow

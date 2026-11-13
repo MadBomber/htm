@@ -4746,8 +4746,6 @@
       
         
       
-        
-      
     
     
     
@@ -5073,14 +5071,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../database/public.nodes_tags/" class="md-nav__link">
+      <a href="../../database/public.robot_nodes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Nodes Tags (Legacy)
+    Robot Nodes
   
 
     
@@ -5101,14 +5099,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../database/public.robot_nodes/" class="md-nav__link">
+      <a href="../../database/public.node_relationships/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Robot Nodes
+    Node Relationships
   
 
     
@@ -5138,14 +5136,6 @@
   
     
     
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -5170,7 +5160,7 @@
   <span class="md-ellipsis">
     
   
-    Views & Stats
+    System
   
 
     
@@ -5186,243 +5176,11 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Views & Stats
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.node_stats/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Node Stats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.robot_activity/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Robot Activity
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.topic_relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Topic Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.ontology_structure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ontology Structure
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_6_7_5" id="__nav_6_7_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    System
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_7_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
     System
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.operations_log/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operations Log
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -6826,7 +6584,7 @@
 </span></code></pre></div>
 <h3 id="2-connection-management">2. Connection Management<a class="headerlink" href="#2-connection-management" title="Permanent link">&para;</a></h3>
 <div class="language-ruby highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Good: Use HTM's internal connection handling</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="w">  </span><span class="c1"># Manages connections automatically</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="n">htm</span><span class="o">.</span><span class="n">remember</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="w">  </span><span class="c1"># Manages connections automatically</span>
 </span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>
 </span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="c1"># Advanced: Manual connections, always close</span>
 </span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">PG</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>

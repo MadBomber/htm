@@ -4581,8 +4581,6 @@
       
         
       
-        
-      
     
     
     
@@ -4908,14 +4906,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../database/public.nodes_tags/" class="md-nav__link">
+      <a href="../../database/public.robot_nodes/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Nodes Tags (Legacy)
+    Robot Nodes
   
 
     
@@ -4936,14 +4934,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../database/public.robot_nodes/" class="md-nav__link">
+      <a href="../../database/public.node_relationships/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Robot Nodes
+    Node Relationships
   
 
     
@@ -4973,14 +4971,6 @@
   
     
     
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -5005,7 +4995,7 @@
   <span class="md-ellipsis">
     
   
-    Views & Stats
+    System
   
 
     
@@ -5021,243 +5011,11 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Views & Stats
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.node_stats/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Node Stats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.robot_activity/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Robot Activity
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.topic_relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Topic Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.ontology_structure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ontology Structure
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.relationships/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Relationships
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_6_7_5" id="__nav_6_7_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    System
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_7_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
     System
   
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../database/public.operations_log/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operations Log
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -6136,7 +5894,7 @@
 <h3 id="job-backend-configuration">Job Backend Configuration<a class="headerlink" href="#job-backend-configuration" title="Permanent link">&para;</a></h3>
 <p>Access: <code>HTM.config.job.backend</code></p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">job</span><span class="p">:</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">~</span><span class="w">                </span><span class="c1"># nil = auto-detect, or: inline, thread, sidekiq, active_job</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">:fiber</span><span class="w">           </span><span class="c1"># fiber (default), inline, thread, sidekiq, active_job</span>
 </span></code></pre></div>
 <p><strong>Environment variables:</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nv">HTM_JOB__BACKEND</span><span class="o">=</span>sidekiq
@@ -6151,9 +5909,14 @@
 </thead>
 <tbody>
 <tr>
-<td><code>~</code> (nil)</td>
-<td>Auto-detect</td>
+<td><code>fiber</code></td>
+<td>Fiber-based concurrency (async gem)</td>
 <td>Default</td>
+</tr>
+<tr>
+<td><code>~</code> (nil)</td>
+<td>Auto-detect (inline in test, else active_job, sidekiq, fiber)</td>
+<td>Opt-in</td>
 </tr>
 <tr>
 <td><code>inline</code></td>
@@ -6400,7 +6163,7 @@
 <tr>
 <td><code>HTM_PROPOSITION__ENABLED</code></td>
 <td>Enable extraction</td>
-<td><code>false</code></td>
+<td><code>true</code></td>
 </tr>
 <tr>
 <td><code>HTM_PROPOSITION__PROVIDER</code></td>
@@ -6430,12 +6193,12 @@
 </thead>
 <tbody>
 <tr>
-<td><code>HTM_CHUNKING__SIZE</code></td>
+<td><code>HTM_CHUNKING__CHUNK_SIZE</code></td>
 <td>Characters per chunk</td>
 <td><code>1024</code></td>
 </tr>
 <tr>
-<td><code>HTM_CHUNKING__OVERLAP</code></td>
+<td><code>HTM_CHUNKING__CHUNK_OVERLAP</code></td>
 <td>Overlap characters</td>
 <td><code>64</code></td>
 </tr>
@@ -6454,7 +6217,7 @@
 <tr>
 <td><code>HTM_JOB__BACKEND</code></td>
 <td>Job backend</td>
-<td>- (auto)</td>
+<td><code>fiber</code></td>
 </tr>
 </tbody>
 </table>
@@ -6540,7 +6303,7 @@
 <tr>
 <td><code>HTM_CONNECTION_TIMEOUT</code></td>
 <td>Connection timeout</td>
-<td><code>30</code></td>
+<td><code>60</code></td>
 </tr>
 <tr>
 <td><code>HTM_TELEMETRY_ENABLED</code></td>
