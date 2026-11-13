@@ -49,11 +49,15 @@
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
+         <loc>https://madbomber.github.io/htm/api/yard/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
          <loc>https://madbomber.github.io/htm/api/yard/HTM/</loc>
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/htm/api/yard/HTM/ActiveRecordConfig/</loc>
+         <loc>https://madbomber.github.io/htm/api/yard/Sinatra/</loc>
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
@@ -73,7 +77,7 @@
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
-         <loc>https://madbomber.github.io/htm/api/yard/HTM/ConfigSection/</loc>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/ConfigurationError/</loc>
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
@@ -101,7 +105,27 @@
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Jobs/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Loaders/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
          <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Migration/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Models/</loc>
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
@@ -141,6 +165,14 @@
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/SequelConfig/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Sinatra/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
          <loc>https://madbomber.github.io/htm/api/yard/HTM/SqlBuilder/</loc>
          <lastmod>2026-11-13</lastmod>
     </url>
@@ -169,11 +201,239 @@
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Workflows/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
          <loc>https://madbomber.github.io/htm/api/yard/HTM/WorkingMemory/</loc>
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/yard/HTM/WorkingMemoryChannel/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Config/Builder/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Config/Database/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Config/Validator/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Jobs/GenerateEmbeddingJob/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Jobs/GeneratePropositionsJob/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Jobs/GenerateRelationshipsJob/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Jobs/GenerateTagsJob/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Loaders/MarkdownChunker/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Loaders/MarkdownLoader/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/FulltextSearch/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/HybridSearch/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/NodeOperations/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/RelevanceScorer/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/RobotOperations/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/TagOperations/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/LongTermMemory/VectorSearch/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/CLI/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/CreateGroupTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/FailoverTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/FindByTopicTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/ForgetTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/GetGroupStatusTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/GetGroupWorkingMemoryTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/GetRobotTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/GetWorkingMemoryTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/GroupRecallTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/GroupRememberTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/GroupSession/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/JoinGroupTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/LeaveGroupTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/ListGroupsTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/ListTagsTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/MemoryStatsResource/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/PromoteRobotTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/RecallTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/RecentMemoriesResource/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/RememberTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/RestoreTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/RobotGroupsResource/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/SearchTagsTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/Server/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/Session/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/SetRobotTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/ShutdownGroupTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/StatsTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/SyncGroupTool/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/MCP/TagHierarchyResource/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Models/FileSource/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Models/Node/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Models/NodeRelationship/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Models/NodeTag/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Models/Robot/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Models/RobotNode/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Models/Tag/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Sinatra/Helpers/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Sinatra/Middleware/</loc>
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
@@ -190,6 +450,14 @@
     </url>
     <url>
          <loc>https://madbomber.github.io/htm/api/yard/HTM/TimeframeExtractor/Result/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/HTM/Workflows/RememberWorkflow/</loc>
+         <lastmod>2026-11-13</lastmod>
+    </url>
+    <url>
+         <loc>https://madbomber.github.io/htm/api/yard/Sinatra/Base/</loc>
          <lastmod>2026-11-13</lastmod>
     </url>
     <url>
