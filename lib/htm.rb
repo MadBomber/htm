@@ -166,7 +166,7 @@ class HTM
   #   - String: Natural language (e.g., "last week", "few days ago")
   #   - :auto: Extract timeframe from topic query automatically
   # @param limit [Integer] Maximum number of nodes to retrieve (default: 20)
-  # @param strategy [Symbol] Search strategy (:vector, :fulltext, :hybrid) (default: :vector)
+  # @param strategy [Symbol] Search strategy (:vector, :fulltext, :hybrid) (default: :fulltext)
   # @param with_relevance [Boolean] Include dynamic relevance scores (default: false)
   # @param query_tags [Array<String>] Tags to boost relevance (default: [])
   # @param raw [Boolean] Return full node hashes (true) or just content strings (false) (default: false)
