@@ -95,6 +95,13 @@ class IntegrationTest < Minitest::Test
     assert_nil HTM::Models::Node.with_deleted.first(id: node_id), "Node should be permanently deleted"
   end
 
+  def test_forget_and_restore_reject_non_integer_ids
+    ["temp_note", "42", 0, -1, nil].each do |bad_id|
+      assert_raises(HTM::ValidationError) { @htm.forget(bad_id) }
+      assert_raises(HTM::ValidationError) { @htm.restore(bad_id) }
+    end
+  end
+
   def test_forget_content_treats_like_wildcards_literally
     marker = "fc#{SecureRandom.hex(4)}"
     exact_id = @htm.remember("#{marker} a_b exact")
