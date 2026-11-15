@@ -84,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stale backup test files** - `test/caching_test.rb.bak3` and `test/ontology_test.rb.bak`, which `rake test` never ran
 
 ### Fixed
+- **Tag prefix filters treated `_` and `%` as wildcards** - `Tag.with_prefix` (and so `Tag.find_by_topic_prefix`, the `htm:tags:*` rake tasks, and the MCP `ListTagsTool`) now escapes LIKE wildcards with `HTM::SqlBuilder.sanitize_like_pattern`, so `data_base` no longer matches `dataxbase` and `%` no longer matches every tag
 - **`rake test` ran 0 tests on Ruby 4.1** - The test task no longer preloads `test_helper` with `-rtest_helper`; that loaded json before `bundler/setup` and Bundler aborted on the version mismatch. Every test file already requires `test_helper` itself
 - **`PropositionService` circuit breaker ignored config** - It hardcoded a failure threshold of 5 and a reset timeout of 60; it now reads `HTM.configuration.circuit_breaker_*` like `EmbeddingService` and `TagService`
 - **Multi-line tags passed `TagService` validation** - `HTM::TagService::TAG_FORMAT` anchored with `^`/`$`, which match per line, so a tag like `"ai\nNOT A TAG!!"` was accepted and later failed the `Tag` model validation inside `GenerateTagsJob`. Now anchored with `\A`/`\z` like `HTM::Models::Tag::TAG_FORMAT`
