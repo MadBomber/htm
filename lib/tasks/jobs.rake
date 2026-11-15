@@ -23,10 +23,7 @@ namespace :htm do
       puts "Nodes without embeddings: #{without_embeddings} (#{percentage(without_embeddings, total_nodes)}%)"
 
       # Nodes with tags
-      nodes_with_tags = HTM::Models::Node
-                        .join(:node_tags, node_id: :id)
-                        .distinct
-                        .count
+      nodes_with_tags = HTM::Models::Node.with_tags.count
       puts "Nodes with tags: #{nodes_with_tags} (#{percentage(nodes_with_tags, total_nodes)}%)"
 
       # Nodes without tags
