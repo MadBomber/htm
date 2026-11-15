@@ -115,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`forget_content` treated `%` and `_` as wildcards** - The substring is now escaped with `SqlBuilder.sanitize_like_pattern` before the `ILIKE`, so `forget_content("%")` no longer forgets every memory and `"a_b"` no longer matches `"axb"` (#45)
 - **Working memory sync keyed entries by string id** - `WorkingMemory#add_from_sync` and `#remove_from_sync` now key on the integer node id like local adds, so a synced memory is no longer duplicated when recalled locally and `forget`/sync evictions remove it (#46)
 - **`recall` returned stale cached results after `remember` restored a forgotten node** - `LongTermMemory#add` now invalidates the search caches when it restores a soft-deleted node, as it already did when creating one (#70)
+- **`recall` returned stale cached results after `restore`** - `HTM#restore` now invalidates the search caches, as `forget` and `unload_file` already did
 - **`deleted` scopes never matched a row** - `Node.deleted`, `NodeTag.deleted`, `RobotNode.deleted` and `Tag.deleted` (and `Node.deleted_before`) added `deleted_at IS NOT NULL` on top of the default `deleted_at IS NULL` scope. They now start from `unfiltered`, so `htm:db:purge_all` purges soft-deleted rows and `htm:db:stats`, `htm_mcp stats` and the MCP `StatsTool` report real deleted counts (#69)
 
 ### Refactored
