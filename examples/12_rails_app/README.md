@@ -43,7 +43,7 @@ This project uses [direnv](https://direnv.net/) to automatically configure envir
 | `HTM_EMBEDDING__MODEL` | `embeddinggemma` | Embedding model |
 | `HTM_TAG__PROVIDER` | `ollama` | Tag extraction provider |
 | `HTM_TAG__MODEL` | `phi4` | Tag extraction model |
-| `HTM_EXTRACT_PROPOSITIONS` | `true` | Enable proposition extraction |
+| `HTM_PROPOSITION__ENABLED` | `true` | Enable proposition extraction |
 
 To verify your environment is configured:
 ```bash
