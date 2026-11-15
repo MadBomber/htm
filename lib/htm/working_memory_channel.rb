@@ -37,6 +37,14 @@ class HTM
     # @return [String]
     CHANNEL_PREFIX = 'htm_wm'
 
+    # PostgreSQL identifier limit (NAMEDATALEN - 1); pg_notify rejects longer channels
+    # @return [Integer]
+    MAX_CHANNEL_BYTES = 63
+
+    # Longest group name that fits in a channel name
+    # @return [Integer]
+    MAX_GROUP_NAME_LENGTH = MAX_CHANNEL_BYTES - CHANNEL_PREFIX.length - 1
+
     # Number of notifications received since channel was created
     # @return [Integer]
     attr_reader :notifications_received
@@ -53,6 +61,7 @@ class HTM
     # @option db_config [String] :dbname Database name
     # @option db_config [String] :user Database user
     # @option db_config [String] :password Database password (optional)
+    # @raise [ArgumentError] if the group name is longer than {MAX_GROUP_NAME_LENGTH} characters
     #
     # @example
     #   db_config = { host: 'localhost', port: 5432, dbname: 'htm_dev', user: 'postgres' }
@@ -61,6 +70,11 @@ class HTM
     def initialize(group_name, db_config)
       @group_name             = group_name
       @channel                = "#{CHANNEL_PREFIX}_#{group_name.gsub(/[^a-z0-9_]/i, '_')}"
+      if @channel.bytesize > MAX_CHANNEL_BYTES
+        raise ArgumentError,
+              "Robot group name is too long (#{group_name.length} characters); " \
+              "the maximum is #{MAX_GROUP_NAME_LENGTH} so the PostgreSQL channel name fits in #{MAX_CHANNEL_BYTES} bytes"
+      end
       @db_config              = db_config
       @listeners              = []
       @listen_thread          = nil
