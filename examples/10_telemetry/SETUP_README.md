@@ -59,14 +59,14 @@ You should see "Successfully queried the Prometheus API."
 
 1. Go to **Dashboards** → **Import**
 2. Click **Upload JSON file**
-3. Select: `examples/telemetry/grafana/dashboards/htm-metrics.json`
+3. Select: `examples/10_telemetry/grafana/dashboards/htm-metrics.json`
 4. Select your Prometheus datasource from the dropdown
 5. Click **Import**
 
 ## Running the Demo
 
 ```bash
-cd examples/telemetry
+cd examples/10_telemetry
 ./demo.rb
 ```
 

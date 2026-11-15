@@ -86,7 +86,7 @@ puts <<~FOOTER
   Examples database is ready!
 
   You can now run examples:
-    ruby examples/basic_usage.rb
+    ruby examples/01_basic_usage.rb
     rake examples:basic
     rake examples:all
   ==========================================

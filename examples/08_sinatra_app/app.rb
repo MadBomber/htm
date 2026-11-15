@@ -11,10 +11,10 @@
 #
 # Prerequisites:
 # 1. Set up examples database: rake examples:setup
-# 2. Install dependencies: cd examples/sinatra_app && bundle install
+# 2. Install dependencies: cd examples/08_sinatra_app && bundle install
 #
 # Usage:
-#   cd examples/sinatra_app
+#   cd examples/08_sinatra_app
 #   bundle exec ruby app.rb
 #
 # Environment:

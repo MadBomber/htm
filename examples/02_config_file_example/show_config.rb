@@ -3,7 +3,7 @@
 
 # Show Config Example
 #
-# Demonstrates how anyway_config automatically loads configuration
+# Demonstrates how myway_config (built on anyway_config) automatically loads configuration
 # from standard locations and traces the source of each value.
 #
 # Config loading priority (lowest to highest):
@@ -21,7 +21,6 @@
 #   HTM_CONF=/path/to/custom.yml ruby show_config.rb
 
 require_relative '../../lib/htm'
-require 'amazing_print'
 
 puts <<~HEADER
 
@@ -46,7 +45,7 @@ puts <<~HEADER
 
 HEADER
 
-# Get the source trace from anyway_config
+# Get the source trace from myway_config
 trace = HTM.config.to_source_trace
 
 # Helper to format source information

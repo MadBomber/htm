@@ -14,7 +14,7 @@ brew install prometheus grafana
 gem install prometheus-client webrick
 
 # 3. Run the demo
-cd examples/telemetry
+cd examples/10_telemetry
 ruby demo.rb
 ```
 
@@ -47,7 +47,7 @@ Once running, open Grafana at http://localhost:3000 (login: admin/admin) and imp
 1. Open Grafana: http://localhost:3000
 2. Go to: **Dashboards** → **Import**
 3. Click "Upload JSON file"
-4. Select: `examples/telemetry/grafana/dashboards/htm-metrics.json`
+4. Select: `examples/10_telemetry/grafana/dashboards/htm-metrics.json`
 5. Select your Prometheus datasource
 6. Click **Import**
 
@@ -137,7 +137,7 @@ brew services info grafana
 ## Files
 
 ```
-examples/telemetry/
+examples/10_telemetry/
 ├── README.md                 # This file
 ├── SETUP_README.md           # Detailed setup instructions
 ├── demo.rb                   # Main demo script

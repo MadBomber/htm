@@ -14,7 +14,7 @@
 # 2. Install dependencies: bundle install
 #
 # Run via:
-#   ruby examples/file_loader_usage.rb
+#   ruby examples/04_file_loader_usage.rb
 
 require_relative 'examples_helper'
 require 'tempfile'

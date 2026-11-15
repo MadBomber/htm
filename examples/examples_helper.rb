@@ -17,7 +17,7 @@
 # Before running examples:
 #   1. Create the examples database: createdb htm_examples
 #   2. Set up schema: HTM_ENV=examples rake htm:db:setup
-#   3. Run example: ruby examples/basic_usage.rb
+#   3. Run example: ruby examples/01_basic_usage.rb
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 

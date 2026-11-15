@@ -1,6 +1,6 @@
 # HTM Configuration Example
 
-This example demonstrates how HTM uses the `anyway_config` gem for flexible, layered configuration management.
+This example demonstrates how HTM uses the `myway_config` gem (built on `anyway_config`) for flexible, layered configuration management.
 
 ## Configuration Sources (Priority Order)
 
@@ -186,7 +186,7 @@ HTM_ENV=test ruby show_config.rb
 ## Running the Example
 
 ```bash
-cd examples/config_file_example
+cd examples/02_config_file_example
 
 # Basic usage - loads ./config/htm.local.yml automatically
 ruby show_config.rb
@@ -241,7 +241,7 @@ embedding:
 ## Files in This Example
 
 ```
-config_file_example/
+02_config_file_example/
 ├── README.md              # This file
 ├── show_config.rb         # Demo script with source tracing
 ├── custom_config.yml      # Example for HTM_CONF usage
@@ -251,6 +251,7 @@ config_file_example/
 
 ## See Also
 
+- [myway_config documentation](https://github.com/madbomber/myway_config)
 - [anyway_config documentation](https://github.com/palkan/anyway_config)
 - [HTM Configuration Guide](../../docs/configuration.md)
 - [HTM README](../../README.md)
