@@ -375,6 +375,19 @@ class MCPServerTest < Minitest::Test
     end
   end
 
+  def test_list_tags_tool_prefix_treats_wildcards_literally
+    robot_name = "list_tags_wildcard_test_#{rand(10_000)}"
+    HTM::MCP::Session.set_robot(robot_name)
+    htm = HTM::MCP::Session.htm_instance
+
+    htm.remember("Wildcard content", tags: ["wildcardtest:data-base"])
+
+    tool = HTM::MCP::ListTagsTool.new
+
+    assert_equal 0, JSON.parse(tool.call(prefix: "wildcardtest:data_base"))["count"]
+    assert_equal 0, JSON.parse(tool.call(prefix: "%"))["count"]
+  end
+
   # ============================================================
   # SearchTagsTool Tests
   # ============================================================

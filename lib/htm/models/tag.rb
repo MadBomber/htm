@@ -38,7 +38,7 @@ class HTM
         end
 
         def with_prefix(prefix)
-          where(Sequel.like(:name, "#{prefix}%"))
+          where(Sequel.like(:name, "#{HTM::SqlBuilder.sanitize_like_pattern(prefix)}%"))
         end
 
         def hierarchical

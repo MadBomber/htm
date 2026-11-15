@@ -308,7 +308,7 @@ class HTM
         Session.logger&.info "ListTagsTool called: prefix=#{prefix.inspect}"
 
         tags_query = HTM::Models::Tag.order(:name)
-        tags_query = tags_query.where(Sequel.like(:name, "#{prefix}%")) if prefix
+        tags_query = tags_query.with_prefix(prefix) if prefix
 
         tags = tags_query.map do |tag|
           {
