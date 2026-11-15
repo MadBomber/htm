@@ -382,6 +382,7 @@ class HTM
     end
 
     node.restore!
+    @long_term_memory.clear_cache!  # Invalidate cache since node is visible again
     HTM.logger.info "Node #{node_id} restored"
 
     update_robot_activity

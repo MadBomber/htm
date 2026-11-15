@@ -236,6 +236,20 @@ class CachingTest < Minitest::Test
     assert_includes ids, node_id
   end
 
+  def test_cache_invalidation_when_restore_brings_back_soft_deleted_node
+    word = "zebracorn#{SecureRandom.hex(4)}"
+    node_id = @htm.remember("the #{word} grazes in the meadow")
+    @htm.forget(node_id, confirm: :confirmed)
+
+    # Cache an empty result while the node is forgotten
+    assert_empty @htm.recall(word, strategy: :fulltext, raw: true)
+
+    @htm.restore(node_id)
+
+    ids = @htm.recall(word, strategy: :fulltext, raw: true).map { |row| row['id'] }
+    assert_includes ids, node_id
+  end
+
   def test_query_cache_can_be_disabled
     # Create HTM with caching disabled
     htm_no_cache = HTM.new(
