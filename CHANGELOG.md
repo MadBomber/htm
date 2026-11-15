@@ -118,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`recall` returned stale cached results after `remember` restored a forgotten node** - `LongTermMemory#add` now invalidates the search caches when it restores a soft-deleted node, as it already did when creating one (#70)
 - **`recall` returned stale cached results after `restore`** - `HTM#restore` now invalidates the search caches, as `forget` and `unload_file` already did
 - **`deleted` scopes never matched a row** - `Node.deleted`, `NodeTag.deleted`, `RobotNode.deleted` and `Tag.deleted` (and `Node.deleted_before`) added `deleted_at IS NOT NULL` on top of the default `deleted_at IS NULL` scope. They now start from `unfiltered`, so `htm:db:purge_all` purges soft-deleted rows and `htm:db:stats`, `htm_mcp stats` and the MCP `StatsTool` report real deleted counts (#69)
+- **Rails example and `.envrc` set `HTM_EXTRACT_PROPOSITIONS`, which HTM ignores** - Both now use `HTM_PROPOSITION__ENABLED`
 
 ### Refactored
 - **Dead private methods removed** - `RelevanceScorer#jaccard_similarity`, `RelevanceScorer#calculate_hierarchical_similarity` and `HTM::Database.verify_extensions` (which warned about the unused `pg_search` extension) had no callers (#35)
