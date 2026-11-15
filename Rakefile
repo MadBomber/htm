@@ -109,13 +109,12 @@ namespace :examples do
     if HTM.config.database_configured?
       puts "Database configured: Yes"
       begin
-        HTM::ActiveRecordConfig.establish_connection!
-        if HTM::ActiveRecordConfig.connected?
+        HTM::SequelConfig.establish_connection!
+        if HTM::SequelConfig.connected?
           puts "Database connected: Yes"
           puts "\nTable counts:"
-          %w[nodes robots tags file_sources].each do |table|
-            count = ActiveRecord::Base.connection.execute("SELECT COUNT(*) FROM #{table}").first['count']
-            puts "  #{table}: #{count}"
+          %i[nodes robots tags file_sources].each do |table|
+            puts "  #{table}: #{HTM.db[table].count}"
           end
         else
           puts "Database connected: No"
