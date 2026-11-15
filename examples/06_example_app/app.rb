@@ -8,7 +8,7 @@
 # 2. Install dependencies: bundle install
 #
 # Run via:
-#   ruby examples/example_app/app.rb
+#   ruby examples/06_example_app/app.rb
 
 require_relative '../examples_helper'
 require 'ruby_llm'

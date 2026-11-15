@@ -95,7 +95,7 @@ ruby examples/01_basic_usage.rb
 
 **Configuration management with source tracing.**
 
-Demonstrates how HTM uses `anyway_config` for layered configuration from multiple sources, with source tracing to show where each value originated.
+Demonstrates how HTM uses `myway_config` (built on `anyway_config`) for layered configuration from multiple sources, with source tracing to show where each value originated.
 
 ```bash
 cd examples/02_config_file_example
@@ -481,10 +481,8 @@ examples/
 ├── 11_robot_groups/
 │   ├── same_process.rb                 # Single-process robot groups
 │   ├── multi_process.rb                # Multi-process coordination
-│   ├── robot_worker.rb                 # Worker process for multi_process.rb
 │   └── lib/
-│       ├── robot_group.rb              # RobotGroup coordination class
-│       └── working_memory_channel.rb   # PostgreSQL pub/sub
+│       └── robot_worker.rb             # Worker process for multi_process.rb
 └── 12_rails_app/
     ├── app/                            # Rails application files
     ├── config/                         # Rails configuration

@@ -11,7 +11,7 @@
 # 2. Install dependencies: bundle install
 #
 # Run via:
-#   ruby examples/custom_llm_configuration.rb
+#   ruby examples/03_custom_llm_configuration.rb
 
 require_relative 'examples_helper'
 

@@ -17,7 +17,7 @@
 # 2. Install dependencies: bundle install
 #
 # Run via:
-#   ruby examples/robot_groups/multi_process.rb
+#   ruby examples/11_robot_groups/multi_process.rb
 
 require_relative '../examples_helper'
 require 'json'

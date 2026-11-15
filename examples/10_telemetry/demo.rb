@@ -12,7 +12,7 @@
 #   3. gem install prometheus-client webrick
 #
 # Usage:
-#   cd examples/telemetry
+#   cd examples/10_telemetry
 #   ruby demo.rb
 #
 # The demo will:
@@ -347,7 +347,7 @@ class TelemetryDemo
 
   def import_grafana_dashboard
     puts "Grafana dashboard setup..."
-    puts "  Dashboard JSON: examples/telemetry/grafana/dashboards/htm-metrics.json"
+    puts "  Dashboard JSON: examples/10_telemetry/grafana/dashboards/htm-metrics.json"
     puts "  To import: Grafana > Dashboards > Import > Upload JSON"
     puts
   end
