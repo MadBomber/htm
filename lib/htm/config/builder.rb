@@ -28,7 +28,7 @@ class HTM
           refresh_ollama_models! if embedding_provider == :ollama
 
           model = embedding_provider == :ollama ? normalize_ollama_model(embedding_model) : embedding_model
-          response = RubyLLM.embed(text, model: model)
+          response = ruby_llm_context(embedding_timeout).embed(text, model: model)
           embedding = extract_embedding_from_response(response)
 
           unless embedding.is_a?(Array) && embedding.all?(Numeric)
@@ -51,7 +51,7 @@ class HTM
           prompt = build_tag_extraction_prompt(text, existing_ontology)
           system_prompt = build_tag_system_prompt
 
-          chat = RubyLLM.chat(model: model)
+          chat = ruby_llm_context(tag_timeout).chat(model: model)
           chat.with_instructions(system_prompt)
           response = chat.ask(prompt)
 
@@ -71,11 +71,19 @@ class HTM
           prompt = build_proposition_extraction_prompt(text)
           system_prompt = build_proposition_system_prompt
 
-          chat = RubyLLM.chat(model: model)
+          chat = ruby_llm_context(proposition_timeout).chat(model: model)
           chat.with_instructions(system_prompt)
           response = chat.ask(prompt)
 
           parse_proposition_response(extract_text_from_response(response))
+        end
+      end
+
+      # Per-call ruby_llm context, so concurrent embedding, tag and proposition
+      # calls don't overwrite each other's global request_timeout
+      def ruby_llm_context(timeout)
+        RubyLLM.context do |config|
+          config.request_timeout = timeout if timeout.positive?
         end
       end
 
