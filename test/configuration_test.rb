@@ -731,6 +731,64 @@ class ConfigurationTest < Minitest::Test
     saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
   end
 
+  RESERVED_PASSWORD = 'p@ss/w#rd%:? +'
+  RESERVED_USER = 'bob@corp'
+
+  def config_with_reserved_credentials
+    config = HTM::Config.new
+    config.database.url = nil
+    config.database.name = 'htm_test'
+    config.database.host = 'dbhost'
+    config.database.port = 5433
+    config.database.user = RESERVED_USER
+    config.database.password = RESERVED_PASSWORD
+    config
+  end
+
+  def test_database_url_round_trips_reserved_characters_in_credentials
+    config = config_with_reserved_credentials
+    config.database.url = config.database_url
+
+    parsed = config.parse_database_url
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal 5433, parsed[:port]
+    assert_equal 'htm_test', parsed[:name]
+    assert_equal RESERVED_USER, parsed[:user]
+    assert_equal RESERVED_PASSWORD, parsed[:password]
+  end
+
+  def test_database_config_decodes_reserved_characters_in_credentials
+    db_config = config_with_reserved_credentials.database_config
+
+    assert_equal 'dbhost', db_config[:host]
+    assert_equal 'htm_test', db_config[:database]
+    assert_equal RESERVED_USER, db_config[:username]
+    assert_equal RESERVED_PASSWORD, db_config[:password]
+  end
+
+  def test_connection_url_parser_decodes_reserved_characters_in_credentials
+    url = config_with_reserved_credentials.database_url
+
+    parsed = HTM::Database.parse_connection_url(url)
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal 'htm_test', parsed[:dbname]
+    assert_equal RESERVED_USER, parsed[:user]
+    assert_equal RESERVED_PASSWORD, parsed[:password]
+  end
+
+  def test_sequel_connection_string_round_trips_reserved_characters_in_credentials
+    db_config = config_with_reserved_credentials.database_config
+
+    url = HTM::SequelConfig.send(:build_connection_string, db_config)
+    parsed = HTM::Database.parse_connection_url(url)
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal RESERVED_USER, parsed[:user]
+    assert_equal RESERVED_PASSWORD, parsed[:password]
+  end
+
   def test_parse_database_url_with_sslmode
     config = HTM::Config.new
     config.database.url = 'postgresql://myuser@dbhost:5432/mydb?sslmode=require'
