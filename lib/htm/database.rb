@@ -295,8 +295,8 @@ class HTM
           host: uri.host,
           port: uri.port || 5432,
           dbname: dbname,
-          user: uri.user,
-          password: uri.password,
+          user: uri.user && URI.decode_uri_component(uri.user),
+          password: uri.password && URI.decode_uri_component(uri.password),
           sslmode: params['sslmode'] || 'prefer'
         }
       rescue URI::InvalidURIError => e

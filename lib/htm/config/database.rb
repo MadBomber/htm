@@ -54,8 +54,8 @@ class HTM
           host: uri.host,
           port: uri.port || 5432,
           database: uri.path&.sub(%r{^/}, ''),
-          username: uri.user,
-          password: uri.password,
+          username: decode_url_credential(uri.user),
+          password: decode_url_credential(uri.password),
           pool: database.pool_size.to_i,
           timeout: database.timeout.to_i,
           sslmode: database.sslmode,
@@ -206,8 +206,8 @@ class HTM
           host: uri.host,
           port: uri.port,
           name: uri.path&.sub(%r{^/}, ''),
-          user: uri.user,
-          password: uri.password,
+          user: decode_url_credential(uri.user),
+          password: decode_url_credential(uri.password),
           sslmode: sslmode
         }.compact
       end
@@ -223,8 +223,16 @@ class HTM
 
       def database_auth_segment
         return '' unless database.user && !database.user.empty?
-        return "#{database.user}@" unless database.password && !database.password.empty?
-        "#{database.user}:#{database.password}@"
+
+        user = URI.encode_uri_component(database.user)
+        return "#{user}@" unless database.password && !database.password.empty?
+
+        "#{user}:#{URI.encode_uri_component(database.password)}@"
+      end
+
+      # Percent-decode a user or password read from a URL's userinfo.
+      def decode_url_credential(value)
+        value && URI.decode_uri_component(value)
       end
 
       # ==========================================================================
