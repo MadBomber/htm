@@ -8171,7 +8171,7 @@
 <p>The file loading system tracks file modification times for efficient re-syncing:</p>
 <ol>
 <li><strong>First load</strong>: Creates FileSource record and chunks</li>
-<li><strong>Subsequent loads</strong>: Compares mtime, skips unchanged files</li>
+<li><strong>Subsequent loads</strong>: Compares mtime and content hash, skips unchanged files</li>
 <li><strong>Changed files</strong>: Re-chunks and updates nodes</li>
 <li><strong>Force reload</strong>: Bypasses mtime check</li>
 </ol>
