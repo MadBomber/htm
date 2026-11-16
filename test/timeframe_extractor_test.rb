@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "minitest/mock"
 
 class TimeframeExtractorTest < Minitest::Test
   # Test the FEW constant
@@ -220,6 +221,16 @@ class TimeframeExtractorTest < Minitest::Test
     end
   end
 
+  def test_this_week_on_sunday_starts_today_for_sunday_week_start
+    assert_equal Time.new(2026, 11, 15), this_week_start(Time.new(2026, 11, 15, 10, 0, 0), :sunday)
+  end
+
+  def test_this_week_honors_monday_week_start
+    assert_equal Time.new(2026, 11, 9), this_week_start(Time.new(2026, 11, 15, 10, 0, 0), :monday)
+    assert_equal Time.new(2026, 11, 16), this_week_start(Time.new(2026, 11, 16, 10, 0, 0), :monday)
+    assert_equal Time.new(2026, 11, 15), this_week_start(Time.new(2026, 11, 18, 10, 0, 0), :sunday)
+  end
+
   # Test nil input
   def test_extract_handles_nil
     result = HTM::TimeframeExtractor.extract(nil)
@@ -327,5 +338,15 @@ class TimeframeExtractorTest < Minitest::Test
     assert_equal 1, HTM::TimeframeExtractor::WORD_NUMBERS['one']
     assert_equal 2, HTM::TimeframeExtractor::WORD_NUMBERS['two']
     assert_equal 10, HTM::TimeframeExtractor::WORD_NUMBERS['ten']
+  end
+
+  private
+
+  def this_week_start(now, week_start)
+    timeframe = HTM.configuration.stub(:week_start, week_start) do
+      Time.stub(:now, now) { HTM::TimeframeExtractor.extract("notes this week").timeframe }
+    end
+    assert_equal now, timeframe.end
+    timeframe.begin
   end
 end
