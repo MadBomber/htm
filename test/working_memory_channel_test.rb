@@ -274,3 +274,16 @@ class WorkingMemoryChannelTest < Minitest::Test
     other_channel.stop_listening
   end
 end
+
+class WorkingMemoryChannelNameLengthTest < Minitest::Test
+  def test_group_name_over_56_characters_raises
+    error = assert_raises(ArgumentError) { HTM::WorkingMemoryChannel.new("a" * 57, {}) }
+    assert_match(/56/, error.message)
+  end
+
+  def test_group_name_of_56_characters_is_accepted
+    channel = HTM::WorkingMemoryChannel.new("a" * 56, {})
+
+    assert_equal 63, channel.channel_name.bytesize
+  end
+end

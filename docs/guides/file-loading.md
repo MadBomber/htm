@@ -171,7 +171,7 @@ loader.load("docs/guide.md")
 The file loading system tracks file modification times for efficient re-syncing:
 
 1. **First load**: Creates FileSource record and chunks
-2. **Subsequent loads**: Compares mtime, skips unchanged files
+2. **Subsequent loads**: Compares mtime and content hash, skips unchanged files
 3. **Changed files**: Re-chunks and updates nodes
 4. **Force reload**: Bypasses mtime check
 
