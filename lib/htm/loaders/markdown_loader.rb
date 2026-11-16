@@ -160,10 +160,11 @@ class HTM
           body = content[match.end(0)..]
 
           begin
-            frontmatter = YAML.safe_load(yaml_content, permitted_classes: [Date, Time, Symbol]) || {}
+            frontmatter = YAML.safe_load(yaml_content, permitted_classes: [Date, Time, Symbol])
+            frontmatter = {} unless frontmatter.is_a?(Hash)
             # Convert symbol keys to strings
-            frontmatter = frontmatter.transform_keys(&:to_s) if frontmatter.is_a?(Hash)
-          rescue Psych::SyntaxError
+            frontmatter = frontmatter.transform_keys(&:to_s)
+          rescue Psych::Exception
             frontmatter = {}
           end
         else

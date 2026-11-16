@@ -84,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stale backup test files** - `test/caching_test.rb.bak3` and `test/ontology_test.rb.bak`, which `rake test` never ran
 
 ### Fixed
+- **`load_file` crashed on non-mapping or aliased frontmatter** - A `---` block whose YAML is a scalar (for example a thematic break above a setext heading) raised `NoMethodError`, and frontmatter with YAML anchors/aliases raised `Psych::AliasesNotEnabled`. `MarkdownLoader#extract_frontmatter` now rescues any `Psych::Exception` and treats non-Hash frontmatter as empty (#92)
 - **OpenAI organization/project and Azure endpoint never reached ruby_llm** - `HTM::Config` assigned `openai_organization=`, `openai_project=` and `azure_endpoint=` behind `respond_to?` guards, but ruby_llm names those settings `openai_organization_id`, `openai_project_id` and `azure_api_base`, so they were silently skipped. They are now assigned to the ruby_llm names (#91)
 - **Tag prefix filters treated `_` and `%` as wildcards** - `Tag.with_prefix` (and so `Tag.find_by_topic_prefix`, the `htm:tags:*` rake tasks, and the MCP `ListTagsTool`) now escapes LIKE wildcards with `HTM::SqlBuilder.sanitize_like_pattern`, so `data_base` no longer matches `dataxbase` and `%` no longer matches every tag
 - **`rake examples:status` always said "Database connected: No"** - It still called the removed `HTM::ActiveRecordConfig`, and its rescue turned the `NameError` into that line. It now connects through `HTM::SequelConfig` and counts rows with `HTM.db`

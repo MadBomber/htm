@@ -342,3 +342,25 @@ class MarkdownLoaderTest < Minitest::Test
     [HTM::Models::NodeTag, HTM::Models::RobotNode].map { |model| model.where(node_id: node_ids) }
   end
 end
+
+class MarkdownLoaderFrontmatterTest < Minitest::Test
+  def test_non_mapping_frontmatter_is_treated_as_empty
+    frontmatter, body = extract("---\nJust a title line\n---\nBody")
+
+    assert_equal({}, frontmatter)
+    assert_equal "Body", body
+  end
+
+  def test_frontmatter_with_yaml_aliases_is_treated_as_empty
+    frontmatter, body = extract("---\na: &b x\nc: *b\n---\nBody")
+
+    assert_equal({}, frontmatter)
+    assert_equal "Body", body
+  end
+
+  private
+
+  def extract(content)
+    HTM::Loaders::MarkdownLoader.allocate.send(:extract_frontmatter, content)
+  end
+end
