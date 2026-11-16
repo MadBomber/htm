@@ -54,6 +54,7 @@ examples_db_url = "postgresql://#{ENV['USER']}@localhost:5432/#{examples_db_name
 ENV['HTM_DATABASE__URL'] = examples_db_url
 
 # Load HTM first
+require "uri"
 require "htm"
 
 # Configure HTM for examples environment
@@ -86,8 +87,9 @@ module ExamplesHelper
 
     HTM::SequelConfig.disconnect! if HTM::SequelConfig.db
 
-    abort "ERROR: Failed to drop '#{db_name}'" unless system("dropdb --if-exists #{db_name}")
-    abort "ERROR: Failed to create '#{db_name}'" unless system("createdb #{db_name}")
+    conn_args = pg_connection_args(ENV.fetch('HTM_DATABASE__URL'))
+    abort "ERROR: Failed to drop '#{db_name}'" unless system('dropdb', *conn_args, '--if-exists', db_name)
+    abort "ERROR: Failed to create '#{db_name}'" unless system('createdb', *conn_args, db_name)
 
     HTM::SequelConfig.establish_connection!(load_models: false)
     HTM::Database.setup
@@ -95,6 +97,20 @@ module ExamplesHelper
 
     puts "Database reset complete."
     puts
+  end
+
+  # Host, port and user flags for psql/createdb/dropdb, taken from the
+  # database URL so they reach the same server HTM connects to
+  #
+  # @param url [String] PostgreSQL connection URL
+  # @return [Array<String>]
+  def self.pg_connection_args(url)
+    uri = URI.parse(url)
+    args = []
+    args.push('-h', uri.host) if uri.host
+    args.push('-p', uri.port.to_s) if uri.port
+    args.push('-U', URI.decode_uri_component(uri.user)) if uri.user
+    args
   end
 
   # Check if database is available and configured
