@@ -39,7 +39,7 @@ class HTM
       # Load a single markdown file into long-term memory
       #
       # @param path [String] Path to markdown file
-      # @param force [Boolean] Force re-sync even if mtime unchanged
+      # @param force [Boolean] Force re-sync even if mtime and content are unchanged
       # @return [Hash] Load result with keys:
       #   - :file_path [String] Absolute path to file
       #   - :chunks_created [Integer] Number of new chunks created
@@ -57,7 +57,8 @@ class HTM
         is_new = source.nil?
         source ||= HTM::Models::FileSource.new(file_path: expanded_path)
 
-        unless force || is_new || source.needs_sync?(stat.mtime)
+        content_changed = source.file_hash != file_hash
+        unless force || is_new || content_changed || source.needs_sync?(stat.mtime)
           return { file_path: expanded_path, chunks_created: 0, chunks_updated: 0, chunks_deleted: 0, skipped: true }
         end
 

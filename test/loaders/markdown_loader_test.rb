@@ -131,6 +131,20 @@ class MarkdownLoaderTest < Minitest::Test
     assert result2[:skipped]
   end
 
+  def test_load_file_resyncs_changed_content_with_unchanged_mtime
+    path = create_test_file('edited.md', "Original paragraph.")
+    first = @htm.load_file(path)
+    mtime = File.mtime(path)
+
+    File.write(path, "Edited paragraph.")
+    File.utime(mtime, mtime, path)
+    result = @htm.load_file(path)
+
+    refute result[:skipped], "changed content was skipped"
+    contents = HTM::Models::FileSource[first[:file_source_id]].chunks_dataset.where(deleted_at: nil).select_map(:content)
+    assert_equal ["Edited paragraph."], contents
+  end
+
   def test_load_file_force_reloads_unchanged_file
     path = create_test_file('force.md', "Content here.")
 
