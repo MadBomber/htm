@@ -115,11 +115,12 @@ begin
   puts "  ⚠ Primary robot 'support-primary' has stopped responding!"
 
   # Failover to standby
-  group.failover!
+  promoted = group.failover!
+  puts "  ⚡ Failover: #{promoted} promoted to active"
 
   status = group.status
   puts "  Active robots now: #{status[:active].join(', ')}"
-  puts "  Passive robots now: #{status[:passive].join(', ') || '(none)'}"
+  puts "  Passive robots now: #{status[:passive].empty? ? '(none)' : status[:passive].join(', ')}"
 
   # ---------------------------------------------------------------------------
   # Scenario 5: Verify standby has full context

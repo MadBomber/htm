@@ -23,10 +23,7 @@ namespace :htm do
       puts "Nodes without embeddings: #{without_embeddings} (#{percentage(without_embeddings, total_nodes)}%)"
 
       # Nodes with tags
-      nodes_with_tags = HTM::Models::Node
-                        .join(:node_tags, node_id: :id)
-                        .distinct
-                        .count
+      nodes_with_tags = HTM::Models::Node.with_tags.count
       puts "Nodes with tags: #{nodes_with_tags} (#{percentage(nodes_with_tags, total_nodes)}%)"
 
       # Nodes without tags
@@ -124,9 +121,9 @@ namespace :htm do
 
       # Find nodes without any tags (using NOT EXISTS subquery)
       nodes_without_tags = HTM::Models::Node
-                           .where(Sequel.~(Sequel.exists(
-                                             HTM::Models::NodeTag.where(Sequel[:node_tags][:node_id] => Sequel[:nodes][:id]).select(1)
-                                           )))
+                           .where(Sequel.~(
+                                    HTM::Models::NodeTag.where(Sequel[:node_tags][:node_id] => Sequel[:nodes][:id]).select(1).exists
+                                  ))
 
       total = nodes_without_tags.count
 
@@ -156,10 +153,7 @@ namespace :htm do
           existing_ontology = HTM::Models::Tag.order(Sequel.desc(:created_at)).limit(100).select_map(:name)
           tag_names = HTM::TagService.extract(node.content, existing_ontology: existing_ontology)
 
-          tag_names.each do |tag_name|
-            tag = HTM::Models::Tag.find_or_create_by_name(tag_name)
-            HTM::Models::NodeTag.link(node_id: node.id, tag_id: tag.id)
-          end
+          node.add_tags(tag_names)
 
           processed += 1
         rescue StandardError => e
