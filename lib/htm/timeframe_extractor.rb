@@ -174,6 +174,8 @@ class HTM
           return parse_weekends_ago(parse_number(match[1]))
         end
 
+        return parse_this_week if expression.match?(/\Athis\s+week\z/i)
+
         normalized    = normalize_few_keywords(expression)
         chronic_expr  = normalized.gsub(/\bin\s+the\s+/i, '')
 
@@ -220,6 +222,15 @@ class HTM
         end
 
         Chronic.parse(expr, **options)
+      end
+
+      # Chronic ignores week_start for "this week" in past context and, on the
+      # first day of the week, returns the week that just ended.
+      def parse_this_week
+        now        = Time.now
+        start_wday = fetch_week_start == :monday ? 1 : 0
+        start_date = Date.new(now.year, now.month, now.day) - ((now.wday - start_wday) % 7)
+        Time.new(start_date.year, start_date.month, start_date.day)..now
       end
 
       def fetch_week_start
