@@ -487,6 +487,23 @@ class MCPServerTest < Minitest::Test
     assert result["statistics"].key?("robots")
   end
 
+  def test_stats_tool_counts_each_tagged_node_once
+    HTM::MCP::Session.set_robot("stats_test_tags_#{rand(10_000)}")
+    prefix = "statstags#{SecureRandom.hex(4)}"
+    before = stats_nodes_with_tags
+
+    tagged = create_stats_node("three tags")
+    %w[a b c].each { |t| tagged.add_tags("#{prefix}:#{t}") }
+    removed = create_stats_node("removed tag")
+    removed.add_tags("#{prefix}:gone")
+    HTM::Models::NodeTag.where(node_id: removed.id).each(&:soft_delete!)
+
+    assert_equal before + 1, stats_nodes_with_tags
+  ensure
+    [tagged, removed].compact.each(&:destroy)
+    HTM::Models::Tag.where(Sequel.like(:name, "#{prefix}%")).delete
+  end
+
   def test_stats_tool_shows_current_robot
     robot_name = "stats_robot_test_#{rand(10_000)}"
     HTM::MCP::Session.set_robot(robot_name)
@@ -995,6 +1012,15 @@ class MCPServerTest < Minitest::Test
 
     # Clear the groups hash
     HTM::MCP::GroupSession.instance_variable_set(:@groups, {})
+  end
+
+  def stats_nodes_with_tags
+    JSON.parse(HTM::MCP::StatsTool.new.call)["statistics"]["nodes"]["with_tags"]
+  end
+
+  def create_stats_node(label)
+    content = "stats #{label} #{SecureRandom.hex(8)}"
+    HTM::Models::Node.create(content: content, content_hash: Digest::SHA256.hexdigest(content))
   end
 
   def cleanup_test_data
