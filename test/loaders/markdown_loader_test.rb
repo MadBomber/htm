@@ -131,6 +131,20 @@ class MarkdownLoaderTest < Minitest::Test
     assert result2[:skipped]
   end
 
+  def test_load_file_resyncs_changed_content_with_unchanged_mtime
+    path = create_test_file('edited.md', "Original paragraph.")
+    first = @htm.load_file(path)
+    mtime = File.mtime(path)
+
+    File.write(path, "Edited paragraph.")
+    File.utime(mtime, mtime, path)
+    result = @htm.load_file(path)
+
+    refute result[:skipped], "changed content was skipped"
+    contents = HTM::Models::FileSource[first[:file_source_id]].chunks_dataset.where(deleted_at: nil).select_map(:content)
+    assert_equal ["Edited paragraph."], contents
+  end
+
   def test_load_file_force_reloads_unchanged_file
     path = create_test_file('force.md', "Content here.")
 
@@ -340,5 +354,27 @@ class MarkdownLoaderTest < Minitest::Test
 
   def active_links(node_ids)
     [HTM::Models::NodeTag, HTM::Models::RobotNode].map { |model| model.where(node_id: node_ids) }
+  end
+end
+
+class MarkdownLoaderFrontmatterTest < Minitest::Test
+  def test_non_mapping_frontmatter_is_treated_as_empty
+    frontmatter, body = extract("---\nJust a title line\n---\nBody")
+
+    assert_equal({}, frontmatter)
+    assert_equal "Body", body
+  end
+
+  def test_frontmatter_with_yaml_aliases_is_treated_as_empty
+    frontmatter, body = extract("---\na: &b x\nc: *b\n---\nBody")
+
+    assert_equal({}, frontmatter)
+    assert_equal "Body", body
+  end
+
+  private
+
+  def extract(content)
+    HTM::Loaders::MarkdownLoader.allocate.send(:extract_frontmatter, content)
   end
 end
