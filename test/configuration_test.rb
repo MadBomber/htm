@@ -3,6 +3,7 @@
 require "test_helper"
 require 'fileutils'
 require 'tmpdir'
+require 'ruby_llm'
 
 class ConfigurationTest < Minitest::Test
   def setup
@@ -989,5 +990,26 @@ class ConfigurationTest < Minitest::Test
     assert_equal config.database.password, config.database_password
   ensure
     saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_openai_and_azure_provider_settings_reach_ruby_llm
+    vars = {
+      'HTM_PROVIDERS__OPENAI__ORGANIZATION' => 'org-probe',
+      'HTM_PROVIDERS__OPENAI__PROJECT'      => 'proj-probe',
+      'HTM_PROVIDERS__AZURE__ENDPOINT'      => 'https://probe.invalid'
+    }
+    saved = vars.keys.to_h { |k| [k, ENV.fetch(k, nil)] }
+    vars.each { |k, v| ENV[k] = v }
+
+    config = HTM::Config.new
+    llm_config = RubyLLM::Configuration.new
+    config.send(:apply_provider_config, llm_config, :openai)
+    config.send(:apply_provider_config, llm_config, :azure)
+
+    assert_equal 'org-probe', llm_config.openai_organization_id
+    assert_equal 'proj-probe', llm_config.openai_project_id
+    assert_equal 'https://probe.invalid', llm_config.azure_api_base
+  ensure
+    saved.each { |k, v| v ? ENV[k] = v : ENV.delete(k) }
   end
 end
