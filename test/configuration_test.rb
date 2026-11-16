@@ -4,6 +4,7 @@ require "test_helper"
 require 'fileutils'
 require 'tmpdir'
 require 'ruby_llm'
+require 'minitest/mock'
 
 class ConfigurationTest < Minitest::Test
   def setup
@@ -990,6 +991,40 @@ class ConfigurationTest < Minitest::Test
     assert_equal config.database.password, config.database_password
   ensure
     saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_default_llm_callables_apply_per_service_timeouts
+    config = HTM::Config.new
+    config.embedding.timeout = 7
+    config.tag.timeout = 8
+    config.proposition.timeout = 9
+
+    timeouts = []
+    llm = Object.new
+    def llm.embed(*, **) = [0.1, 0.2]
+    def llm.chat(*, **) = self
+    def llm.with_instructions(*) = self
+    def llm.ask(*) = ''
+    record_context = lambda do |&block|
+      ctx_config = RubyLLM.config.dup
+      block&.call(ctx_config)
+      timeouts << ctx_config.request_timeout
+      llm
+    end
+
+    config.stub(:refresh_ollama_models!, nil) do
+      RubyLLM.stub(:context, record_context) do
+        RubyLLM.stub(:embed, llm.embed) do
+          RubyLLM.stub(:chat, llm) do
+            config.build_default_embedding_generator.call('text')
+            config.build_default_tag_extractor.call('text')
+            config.build_default_proposition_extractor.call('text')
+          end
+        end
+      end
+    end
+
+    assert_equal [7, 8, 9], timeouts
   end
 
   def test_openai_and_azure_provider_settings_reach_ruby_llm
