@@ -374,7 +374,7 @@ class HTM
 
       def print_table_counts(conn)
         puts "\nHTM Tables:"
-        %w[nodes node_tags tags robots robot_nodes file_sources schema_migrations].each do |table|
+        TABLES.each do |table|
           count = conn.exec("SELECT COUNT(*) FROM #{table}").first['count']
           puts "  #{table}: #{count} rows"
         rescue PG::UndefinedTable
