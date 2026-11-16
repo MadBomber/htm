@@ -12,4 +12,18 @@ class DatabaseTablesTest < Minitest::Test
 
     assert_equal schema_tables.sort, HTM::Database::TABLES.sort
   end
+
+  def test_info_counts_every_table
+    conn = Object.new
+    queries = []
+    conn.define_singleton_method(:exec) do |sql|
+      queries << sql
+      [{ 'count' => '0' }]
+    end
+
+    capture_io { HTM::Database.send(:print_table_counts, conn) }
+
+    counted = queries.map { |sql| sql[/FROM (\w+)/, 1] }
+    assert_equal HTM::Database::TABLES.sort, counted.sort
+  end
 end

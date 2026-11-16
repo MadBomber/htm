@@ -69,6 +69,11 @@ class HTM
           exclude(embedding: nil)
         end
 
+        # Nodes with at least one active (not soft-deleted) tag link
+        def with_tags
+          where(HTM::Models::NodeTag.where(Sequel[:node_tags][:node_id] => Sequel[:nodes][:id]).select(1).exists)
+        end
+
         def from_source(source_id)
           where(source_id: source_id).order(:chunk_position)
         end

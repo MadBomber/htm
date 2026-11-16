@@ -311,7 +311,7 @@ providers:
 ### General Settings
 
 ```yaml
-week_start: sunday          # For "last weekend" calculations
+week_start: sunday          # First day of "this week" (sunday or monday)
 connection_timeout: 60      # General connection timeout
 telemetry_enabled: false    # Enable OpenTelemetry metrics
 log_level: info             # Logging level
