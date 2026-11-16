@@ -469,6 +469,14 @@ class RobotGroupTest < Minitest::Test
     refute @group.passive?("standby-1")
   end
 
+  def test_failover_writes_nothing_to_stdout
+    @group = HTM::RobotGroup.new(name: @group_name, active: ["agent-1"], passive: ["standby-1"])
+
+    stdout, = capture_io { @group.failover! }
+
+    assert_empty stdout
+  end
+
   def test_failover_raises_without_passive_robots
     @group = HTM::RobotGroup.new(name: @group_name, active: ["agent-1"])
 
