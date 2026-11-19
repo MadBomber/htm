@@ -14,7 +14,7 @@
 # 4. The htm_mcp executable must be available (this client will launch it)
 #
 # Usage:
-#   ruby examples/mcp_client.rb
+#   ruby examples/09_mcp_client.rb
 #
 # The client connects to the HTM MCP server via STDIO transport
 # and provides an interactive chat loop where you can:

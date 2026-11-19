@@ -25,7 +25,12 @@ Join table connecting robots to nodes (many-to-many)
 | ---- | ---- | ---------- |
 | fk_rails_9b003078a8 | FOREIGN KEY | FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE |
 | fk_rails_f2fc98d49e | FOREIGN KEY | FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE |
+| robot_nodes_id_not_null | n | NOT NULL id |
+| robot_nodes_node_id_not_null | n | NOT NULL node_id |
 | robot_nodes_pkey | PRIMARY KEY | PRIMARY KEY (id) |
+| robot_nodes_remember_count_not_null | n | NOT NULL remember_count |
+| robot_nodes_robot_id_not_null | n | NOT NULL robot_id |
+| robot_nodes_working_memory_not_null | n | NOT NULL working_memory |
 
 ## Indexes
 

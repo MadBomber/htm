@@ -1105,7 +1105,7 @@ Run `htm_mcp help` for a complete list. Key variables:
 | `HTM_DATABASE__PORT` | Database port | `5432` |
 | `HTM_DATABASE__USER` | Database username | - |
 | `HTM_DATABASE__PASSWORD` | Database password | - |
-| `HTM_DBSSLMODE` | SSL mode | `prefer` |
+| `HTM_DATABASE__SSLMODE` | SSL mode | `prefer` |
 
 ### LLM Providers
 
@@ -1113,23 +1113,21 @@ HTM uses RubyLLM which supports multiple providers. Defaults to Ollama for local
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `HTM_EMBEDDING_PROVIDER` | Embedding provider (`ollama`, `openai`, `gemini`, etc.) | `ollama` |
-| `HTM_EMBEDDING_MODEL` | Embedding model (provider-specific) | `nomic-embed-text` |
-| `HTM_TAG_PROVIDER` | Tag extraction provider | `ollama` |
-| `HTM_TAG_MODEL` | Tag model | `gemma3:latest` |
-| `HTM_OLLAMA_URL` | Ollama server URL (if using Ollama) | `http://localhost:11434` |
+| `HTM_EMBEDDING__PROVIDER` | Embedding provider (`ollama`, `openai`, `gemini`, etc.) | `ollama` |
+| `HTM_EMBEDDING__MODEL` | Embedding model (provider-specific) | `nomic-embed-text:latest` |
+| `HTM_TAG__PROVIDER` | Tag extraction provider | `ollama` |
+| `HTM_TAG__MODEL` | Tag model | `gemma3:latest` |
+| `HTM_PROVIDERS__OLLAMA__URL` | Ollama server URL (if using Ollama) | `http://localhost:11434` |
 
 ### Cloud Provider API Keys
 
 | Variable | Description |
 |----------|-------------|
-| `OPENAI_API_KEY` | OpenAI API key |
-| `ANTHROPIC_API_KEY` | Anthropic API key |
-| `GEMINI_API_KEY` | Google Gemini API key |
-| `HTM_ANTHROPIC_API_KEY` | Anthropic API key |
-| `HTM_GEMINI_API_KEY` | Google Gemini API key |
-| `HTM_AZURE_API_KEY` | Azure OpenAI API key |
-| `HTM_AZURE_ENDPOINT` | Azure OpenAI endpoint |
+| `HTM_PROVIDERS__OPENAI__API_KEY` | OpenAI API key |
+| `HTM_PROVIDERS__ANTHROPIC__API_KEY` | Anthropic API key |
+| `HTM_PROVIDERS__GEMINI__API_KEY` | Google Gemini API key |
+| `HTM_PROVIDERS__AZURE__API_KEY` | Azure OpenAI API key |
+| `HTM_PROVIDERS__AZURE__ENDPOINT` | Azure OpenAI endpoint |
 
 ## Next Steps
 

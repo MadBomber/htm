@@ -3,15 +3,22 @@
 require "test_helper"
 require 'fileutils'
 require 'tmpdir'
+require 'ruby_llm'
+require 'minitest/mock'
 
 class ConfigurationTest < Minitest::Test
   def setup
+    # Tests assume the default service name ('htm'). `rake test` honours
+    # HTM_SERVICE__NAME to pick the test database, so hide it here.
+    @saved_service_name = ENV.fetch('HTM_SERVICE__NAME', nil)
     @original_config = HTM.config
+    ENV.delete('HTM_SERVICE__NAME')
     HTM.reset_configuration!
   end
 
   def teardown
     HTM.instance_variable_set(:@config, @original_config)
+    @saved_service_name ? ENV['HTM_SERVICE__NAME'] = @saved_service_name : ENV.delete('HTM_SERVICE__NAME')
   end
 
   def test_default_values
@@ -252,6 +259,18 @@ class ConfigurationTest < Minitest::Test
     saved_vars.each do |var, val|
       val ? ENV[var] = val : ENV.delete(var)
     end
+  end
+
+  def test_proposition_enabled_env_var_is_coerced_to_boolean
+    saved = ENV.fetch('HTM_PROPOSITION__ENABLED', nil)
+
+    { 'false' => false, 'FALSE' => false, '0' => false, 'no' => false, 'off' => false,
+      'true' => true, 'True' => true, '1' => true, 'yes' => true, 'on' => true }.each do |raw, expected|
+      ENV['HTM_PROPOSITION__ENABLED'] = raw
+      assert_equal expected, HTM::Config.new.extract_propositions, "HTM_PROPOSITION__ENABLED=#{raw}"
+    end
+  ensure
+    saved ? ENV['HTM_PROPOSITION__ENABLED'] = saved : ENV.delete('HTM_PROPOSITION__ENABLED')
   end
 
   def test_database_url_takes_precedence
@@ -714,6 +733,64 @@ class ConfigurationTest < Minitest::Test
     saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
   end
 
+  RESERVED_PASSWORD = 'p@ss/w#rd%:? +'
+  RESERVED_USER = 'bob@corp'
+
+  def config_with_reserved_credentials
+    config = HTM::Config.new
+    config.database.url = nil
+    config.database.name = 'htm_test'
+    config.database.host = 'dbhost'
+    config.database.port = 5433
+    config.database.user = RESERVED_USER
+    config.database.password = RESERVED_PASSWORD
+    config
+  end
+
+  def test_database_url_round_trips_reserved_characters_in_credentials
+    config = config_with_reserved_credentials
+    config.database.url = config.database_url
+
+    parsed = config.parse_database_url
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal 5433, parsed[:port]
+    assert_equal 'htm_test', parsed[:name]
+    assert_equal RESERVED_USER, parsed[:user]
+    assert_equal RESERVED_PASSWORD, parsed[:password]
+  end
+
+  def test_database_config_decodes_reserved_characters_in_credentials
+    db_config = config_with_reserved_credentials.database_config
+
+    assert_equal 'dbhost', db_config[:host]
+    assert_equal 'htm_test', db_config[:database]
+    assert_equal RESERVED_USER, db_config[:username]
+    assert_equal RESERVED_PASSWORD, db_config[:password]
+  end
+
+  def test_connection_url_parser_decodes_reserved_characters_in_credentials
+    url = config_with_reserved_credentials.database_url
+
+    parsed = HTM::Database.parse_connection_url(url)
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal 'htm_test', parsed[:dbname]
+    assert_equal RESERVED_USER, parsed[:user]
+    assert_equal RESERVED_PASSWORD, parsed[:password]
+  end
+
+  def test_sequel_connection_string_round_trips_reserved_characters_in_credentials
+    db_config = config_with_reserved_credentials.database_config
+
+    url = HTM::SequelConfig.send(:build_connection_string, db_config)
+    parsed = HTM::Database.parse_connection_url(url)
+
+    assert_equal 'dbhost', parsed[:host]
+    assert_equal RESERVED_USER, parsed[:user]
+    assert_equal RESERVED_PASSWORD, parsed[:password]
+  end
+
   def test_parse_database_url_with_sslmode
     config = HTM::Config.new
     config.database.url = 'postgresql://myuser@dbhost:5432/mydb?sslmode=require'
@@ -914,5 +991,60 @@ class ConfigurationTest < Minitest::Test
     assert_equal config.database.password, config.database_password
   ensure
     saved_dburl ? ENV['HTM_DATABASE__URL'] = saved_dburl : ENV.delete('HTM_DATABASE__URL')
+  end
+
+  def test_default_llm_callables_apply_per_service_timeouts
+    config = HTM::Config.new
+    config.embedding.timeout = 7
+    config.tag.timeout = 8
+    config.proposition.timeout = 9
+
+    timeouts = []
+    llm = Object.new
+    def llm.embed(*, **) = [0.1, 0.2]
+    def llm.chat(*, **) = self
+    def llm.with_instructions(*) = self
+    def llm.ask(*) = ''
+    record_context = lambda do |&block|
+      ctx_config = RubyLLM.config.dup
+      block&.call(ctx_config)
+      timeouts << ctx_config.request_timeout
+      llm
+    end
+
+    config.stub(:refresh_ollama_models!, nil) do
+      RubyLLM.stub(:context, record_context) do
+        RubyLLM.stub(:embed, llm.embed) do
+          RubyLLM.stub(:chat, llm) do
+            config.build_default_embedding_generator.call('text')
+            config.build_default_tag_extractor.call('text')
+            config.build_default_proposition_extractor.call('text')
+          end
+        end
+      end
+    end
+
+    assert_equal [7, 8, 9], timeouts
+  end
+
+  def test_openai_and_azure_provider_settings_reach_ruby_llm
+    vars = {
+      'HTM_PROVIDERS__OPENAI__ORGANIZATION' => 'org-probe',
+      'HTM_PROVIDERS__OPENAI__PROJECT'      => 'proj-probe',
+      'HTM_PROVIDERS__AZURE__ENDPOINT'      => 'https://probe.invalid'
+    }
+    saved = vars.keys.to_h { |k| [k, ENV.fetch(k, nil)] }
+    vars.each { |k, v| ENV[k] = v }
+
+    config = HTM::Config.new
+    llm_config = RubyLLM::Configuration.new
+    config.send(:apply_provider_config, llm_config, :openai)
+    config.send(:apply_provider_config, llm_config, :azure)
+
+    assert_equal 'org-probe', llm_config.openai_organization_id
+    assert_equal 'proj-probe', llm_config.openai_project_id
+    assert_equal 'https://probe.invalid', llm_config.azure_api_base
+  ensure
+    saved.each { |k, v| v ? ENV[k] = v : ENV.delete(k) }
   end
 end

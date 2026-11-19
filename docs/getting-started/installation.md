@@ -6,7 +6,7 @@ This guide will walk you through setting up HTM and all its dependencies.
 
 Before installing HTM, ensure you have:
 
-- **Ruby 3.0 or higher** - HTM requires modern Ruby features
+- **Ruby 3.2 or higher** - HTM requires modern Ruby features
 - **PostgreSQL 17+** - For the database backend
 - **LLM Provider** - For generating embeddings and tags (Ollama is the default for local development, but OpenAI, Anthropic, Gemini, and others are also supported via RubyLLM)
 
@@ -14,7 +14,7 @@ Before installing HTM, ensure you have:
 
 ```bash
 ruby --version
-# Should show: ruby 3.0.0 or higher
+# Should show: ruby 3.2.0 or higher
 ```
 
 If you need to install or upgrade Ruby, we recommend using [rbenv](https://github.com/rbenv/rbenv):
@@ -344,33 +344,30 @@ puts "  Robot ID: #{htm.robot_id}"
 puts "  Robot Name: #{htm.robot_name}"
 
 # Add a test memory
-htm.add_node(
-  "test_001",
+node_id = htm.remember(
   "This is a test memory to verify HTM installation.",
-  type: :fact,
-  importance: 5.0,
   tags: ["test"]
 )
 
-puts "✓ Memory node added successfully"
+puts "✓ Memory node added successfully (node ID: #{node_id})"
 
-# Retrieve the memory
-node = htm.retrieve("test_001")
-if node
-  puts "✓ Memory retrieval works"
-  puts "  Content: #{node['value']}"
+# Recall the memory (full-text search, no embeddings needed)
+memories = htm.recall("verify HTM installation", strategy: :fulltext, limit: 5)
+if memories.any?
+  puts "✓ Memory recall works"
+  puts "  Content: #{memories.first}"
 else
-  puts "✗ Failed to retrieve memory"
+  puts "✗ Failed to recall memory"
 end
 
 # Get stats
-stats = htm.memory_stats
+stats = htm.long_term_memory.stats
 puts "✓ Memory stats:"
 puts "  Total nodes: #{stats[:total_nodes]}"
-puts "  Working memory: #{stats[:working_memory][:node_count]} nodes"
+puts "  Working memory: #{htm.working_memory.node_count} nodes"
 
-# Clean up test data
-htm.forget("test_001", confirm: :confirmed)
+# Clean up test data (permanent delete requires confirmation)
+htm.forget(node_id, soft: false, confirm: :confirmed)
 puts "✓ Memory deletion works"
 
 puts "\n" + "=" * 60
@@ -494,7 +491,7 @@ psql $HTM_DATABASE__URL -c "CREATE EXTENSION IF NOT EXISTS pgvector;"
 
 ### Ruby Version Issues
 
-**Error**: `htm requires Ruby version >= 3.0.0`
+**Error**: `htm requires Ruby version >= 3.2.0`
 
 **Solutions**:
 

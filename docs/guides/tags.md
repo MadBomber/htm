@@ -143,8 +143,8 @@ Find tags that co-occur frequently:
 ```ruby
 relationships = htm.long_term_memory.topic_relationships(min_shared_nodes: 2)
 # => [
-#   { tag1: "database:postgresql", tag2: "search:vector", shared_count: 15 },
-#   { tag1: "programming:ruby", tag2: "web:rails", shared_count: 12 }
+#   { "topic1" => "database:postgresql", "topic2" => "search:vector", "shared_nodes" => 15 },
+#   { "topic1" => "programming:ruby", "topic2" => "web:rails", "shared_nodes" => 12 }
 # ]
 ```
 

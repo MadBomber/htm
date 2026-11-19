@@ -54,10 +54,10 @@ export HTM_DATABASE__PASSWORD=
 export HTM_DATABASE__URL="postgresql://${HTM_DATABASE__USER}@${HTM_DATABASE__HOST}:${HTM_DATABASE__PORT}/${HTM_DATABASE__NAME}?sslmode=prefer"
 
 # Client-side embedding generation
-export HTM_EMBEDDINGS_PROVIDER=ollama
-export HTM_EMBEDDINGS_MODEL=embeddinggemma
-export HTM_EMBEDDINGS_BASE_URL=http://localhost:11434
-export HTM_EMBEDDINGS_DIMENSION=768
+export HTM_EMBEDDING__PROVIDER=ollama
+export HTM_EMBEDDING__MODEL=embeddinggemma
+export HTM_EMBEDDING__DIMENSIONS=768
+export HTM_PROVIDERS__OLLAMA__URL=http://localhost:11434
 ```
 
 Reload environment:

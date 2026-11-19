@@ -248,35 +248,29 @@ class DatabaseIntegrationTest < Minitest::Test
 
     @htm = HTM.new(
       robot_name: "Test Robot",
-      working_memory_size: 128_000,
-      embedding_service: :ollama
+      working_memory_size: 128_000
     )
   end
 
   def teardown
-    return unless @htm
+    return unless @node_id
 
     # Clean up test data
-    @htm.forget("test_node_001", confirm: :confirmed) rescue nil
+    @htm.forget(@node_id, soft: false, confirm: :confirmed) rescue nil
   end
 
-  def test_adds_and_retrieves_node
+  def test_remembers_and_retrieves_node
     # Add a node
-    node_id = @htm.add_node(
-      "test_node_001",
-      "Test memory content",
-      type: :fact,
-      importance: 5.0
-    )
+    @node_id = @htm.remember("Test memory content", tags: ["test"])
 
-    assert_instance_of Integer, node_id
+    assert_instance_of Integer, @node_id
 
     # Retrieve it
-    node = @htm.retrieve("test_node_001")
+    node = @htm.long_term_memory.retrieve(@node_id)
 
     refute_nil node
-    assert_equal "test_node_001", node['key']
-    assert_includes node['value'], "Test memory"
+    assert_equal @node_id, node[:id]
+    assert_includes node[:content], "Test memory"
   end
 end
 ```
@@ -326,17 +320,12 @@ Fixtures are pre-defined test data that can be reused across tests. HTM will use
 module Fixtures
   MEMORIES = {
     fact: {
-      key: "user_preference_001",
-      value: "User prefers debug_me over puts for debugging",
-      type: :fact,
-      importance: 7.0
+      content: "User prefers debug_me over puts for debugging",
+      tags: ["preferences:debugging"]
     },
     decision: {
-      key: "decision_001",
-      value: "We decided to use TimescaleDB for time-series optimization",
-      type: :decision,
-      importance: 9.0,
-      tags: ["database", "architecture"]
+      content: "We decided to use TimescaleDB for time-series optimization",
+      tags: ["database:timescaledb", "architecture"]
     }
   }
 end
@@ -352,12 +341,7 @@ class MemoryTest < Minitest::Test
     htm = HTM.new(robot_name: "Test")
     fact = Fixtures::MEMORIES[:fact]
 
-    node_id = htm.add_node(
-      fact[:key],
-      fact[:value],
-      type: fact[:type],
-      importance: fact[:importance]
-    )
+    node_id = htm.remember(fact[:content], tags: fact[:tags])
 
     assert node_id > 0
   end
@@ -628,21 +612,18 @@ def test_add
 ```ruby
 def setup
   @htm = HTM.new(robot_name: "Test")
-  @test_keys = []
+  @test_node_ids = []
 end
 
 def teardown
   # Clean up any created nodes
-  @test_keys.each do |key|
-    @htm.forget(key, confirm: :confirmed) rescue nil
+  @test_node_ids.each do |node_id|
+    @htm.forget(node_id, soft: false, confirm: :confirmed) rescue nil
   end
 end
 
 def test_adds_node
-  key = "test_#{Time.now.to_i}"
-  @test_keys << key
-
-  @htm.add_node(key, "content", type: :fact)
+  @test_node_ids << @htm.remember("content #{Time.now.to_i}")
   # Test continues...
 end
 ```
@@ -652,24 +633,24 @@ end
 ```ruby
 # Bad: Tests depend on each other
 def test_1_creates_node
-  @htm.add_node("shared", "value", type: :fact)
+  @@shared_id = @htm.remember("shared value")
 end
 
 def test_2_retrieves_node  # Fails if test_1 doesn't run first
-  node = @htm.retrieve("shared")
+  node = @htm.long_term_memory.retrieve(@@shared_id)
   assert node
 end
 
 # Good: Each test is independent
 def test_creates_node
-  @htm.add_node("test_create", "value", type: :fact)
-  node = @htm.retrieve("test_create")
+  node_id = @htm.remember("test create value")
+  node = @htm.long_term_memory.retrieve(node_id)
   assert node
 end
 
 def test_retrieves_node
-  @htm.add_node("test_retrieve", "value", type: :fact)
-  node = @htm.retrieve("test_retrieve")
+  node_id = @htm.remember("test retrieve value")
+  node = @htm.long_term_memory.retrieve(node_id)
   assert node
 end
 ```
@@ -711,13 +692,13 @@ end
 
 # Good: Testing behavior/outcome
 def test_retrieves_all_node_fields
-  @htm.add_node("key", "value", type: :fact)
-  node = @htm.retrieve("key")
+  node_id = @htm.remember("value")
+  node = @htm.long_term_memory.retrieve(node_id)
 
-  assert node.key?('id')
-  assert node.key?('key')
-  assert node.key?('value')
-  assert node.key?('type')
+  assert node.key?(:id)
+  assert node.key?(:content)
+  assert node.key?(:created_at)
+  assert node.key?(:access_count)
 end
 ```
 

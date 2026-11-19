@@ -1,13 +1,16 @@
-# Class: HTM::Telemetry::NullInstrument
-**Inherits:** Object
-    
-**Includes:** Singleton
-  
+# Class HTM::Telemetry::NullInstrument <a id="class-HTM-Telemetry-NullInstrument"></a>
+
+|  |  |
+| --- | --- |
+| **Inherits** | Object |
+| **Includes** | Singleton |
+| **Defined in** | lib/htm/telemetry.rb |
 
 Null instrument that accepts but ignores all metric operations
 
+## Public Instance Methods
+### `add()` <a id="method-i-add"></a> <a id="add-instance_method"></a>
+Not documented.
 
-
-# Instance Methods
-## add() {: #method-i-add }
-## record() {: #method-i-record }
+### `record()` <a id="method-i-record"></a> <a id="record-instance_method"></a>
+Not documented.

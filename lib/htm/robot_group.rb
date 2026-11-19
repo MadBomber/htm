@@ -1,4 +1,3 @@
-# examples/robot_groups/lib/htm/robot_group.rb
 # frozen_string_literal: true
 
 class HTM
@@ -595,7 +594,7 @@ class HTM
       # Promote it
       promote(standby_name)
 
-      puts "  ⚡ Failover: #{standby_name} promoted to active"
+      HTM.logger.info "Failover: #{standby_name} promoted to active"
       standby_name
     end
 

@@ -73,15 +73,16 @@ export HTM_DATABASE__USER="postgres"
 export HTM_DATABASE__PASSWORD="your_password"
 
 # Embedding configuration
-export HTM_EMBEDDINGS_PROVIDER=ollama
-export HTM_EMBEDDINGS_MODEL=nomic-embed-text
-export HTM_EMBEDDINGS_BASE_URL=http://localhost:11434
-export HTM_EMBEDDINGS_DIMENSION=768
+export HTM_EMBEDDING__PROVIDER=ollama
+export HTM_EMBEDDING__MODEL=nomic-embed-text
+export HTM_EMBEDDING__DIMENSIONS=768
 
-# Topic extraction configuration
-export HTM_TOPIC_PROVIDER=ollama
-export HTM_TOPIC_MODEL=llama3
-export HTM_TOPIC_BASE_URL=http://localhost:11434
+# Tag extraction configuration
+export HTM_TAG__PROVIDER=ollama
+export HTM_TAG__MODEL=llama3
+
+# Ollama server URL (shared by all Ollama-backed services)
+export HTM_PROVIDERS__OLLAMA__URL=http://localhost:11434
 ```
 
 Then enable direnv:

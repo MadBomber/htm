@@ -28,10 +28,10 @@ namespace :htm do
         "--charset utf-8",
         "--protected",
         "--no-private",
-        "lib/**/*.rb",
-        "-",
-        "README.md",
-        "CHANGELOG.md"
+        # yard-markdown >= 0.10 adds every *.md in the project unless excluded
+        "--exclude '\\.md$'",
+        # Quoted so YARD (not the shell) expands ** recursively
+        "'lib/**/*.rb'"
       ]
 
       system("yard doc #{options.join(' ')}")
@@ -198,7 +198,7 @@ namespace :htm do
         basename = File.basename(file, ".md")
 
         # Skip index files and non-class files
-        next if %w[index _index].include?(basename)
+        next if %w[index _index README].include?(basename)
         next if basename.start_with?("_")
 
         # Determine class name from path

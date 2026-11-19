@@ -321,7 +321,7 @@ class HTM
                           "fr.rank as fulltext_rank", "fr.text_rank"]
         fields         << "tr.rank as tag_rank" << "tr.matched_tags" if has_tags
         fields         << "vr.rank as vector_rank" << "vr.similarity" if has_embedding
-        from           = "fulltext_ranked fr"
+        from = "fulltext_ranked fr"
         from += "\n      FULL OUTER JOIN tag_ranked tr ON fr.id = tr.id" if has_tags
         coalesce_id = has_tags ? "COALESCE(fr.id, tr.id)" : "fr.id"
         from += "\n      FULL OUTER JOIN vector_ranked vr ON #{coalesce_id} = vr.id" if has_embedding

@@ -69,3 +69,7 @@ build-iPhoneSimulator/
 
 # Local configuration (anyway_config local overrides)
 config/htm.local.yml
+
+# Editor and manual backup files
+*.bak
+*.bak[0-9]*

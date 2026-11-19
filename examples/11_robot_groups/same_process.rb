@@ -23,7 +23,7 @@
 # 2. Install dependencies: bundle install
 #
 # Run via:
-#   ruby examples/robot_groups/same_process.rb
+#   ruby examples/11_robot_groups/same_process.rb
 
 require_relative '../examples_helper'
 require 'json'
@@ -115,11 +115,12 @@ begin
   puts "  ⚠ Primary robot 'support-primary' has stopped responding!"
 
   # Failover to standby
-  group.failover!
+  promoted = group.failover!
+  puts "  ⚡ Failover: #{promoted} promoted to active"
 
   status = group.status
   puts "  Active robots now: #{status[:active].join(', ')}"
-  puts "  Passive robots now: #{status[:passive].join(', ') || '(none)'}"
+  puts "  Passive robots now: #{status[:passive].empty? ? '(none)' : status[:passive].join(', ')}"
 
   # ---------------------------------------------------------------------------
   # Scenario 5: Verify standby has full context

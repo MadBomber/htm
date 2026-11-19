@@ -231,6 +231,19 @@ class PropositionServiceTest < Minitest::Test
     assert_equal 'proposition_service', breaker.name
   end
 
+  def test_circuit_breaker_uses_configured_thresholds
+    HTM.configuration.circuit_breaker.failure_threshold = 2
+    HTM.configuration.circuit_breaker.reset_timeout = 5
+    HTM::PropositionService.instance_variable_set(:@circuit_breaker, nil)
+
+    stats = HTM::PropositionService.circuit_breaker.stats
+
+    assert_equal 2, stats[:failure_threshold]
+    assert_equal 5, stats[:reset_timeout]
+  ensure
+    HTM::PropositionService.instance_variable_set(:@circuit_breaker, nil)
+  end
+
   def test_circuit_breaker_opens_after_failures
     HTM.configure do |config|
       config.job.backend = :inline

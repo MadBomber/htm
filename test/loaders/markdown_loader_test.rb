@@ -131,6 +131,20 @@ class MarkdownLoaderTest < Minitest::Test
     assert result2[:skipped]
   end
 
+  def test_load_file_resyncs_changed_content_with_unchanged_mtime
+    path = create_test_file('edited.md', "Original paragraph.")
+    first = @htm.load_file(path)
+    mtime = File.mtime(path)
+
+    File.write(path, "Edited paragraph.")
+    File.utime(mtime, mtime, path)
+    result = @htm.load_file(path)
+
+    refute result[:skipped], "changed content was skipped"
+    contents = HTM::Models::FileSource[first[:file_source_id]].chunks_dataset.where(deleted_at: nil).select_map(:content)
+    assert_equal ["Edited paragraph."], contents
+  end
+
   def test_load_file_force_reloads_unchanged_file
     path = create_test_file('force.md', "Content here.")
 
@@ -237,12 +251,12 @@ class MarkdownLoaderTest < Minitest::Test
     path = create_test_file('unload.md', "Content to unload.")
 
     @htm.load_file(path, force: true)
-    assert HTM::Models::FileSource.first(file_path: File.expand_path(path))
+    assert HTM::Models::FileSource.by_path(path).first
 
     result = @htm.unload_file(path)
 
     assert result
-    refute HTM::Models::FileSource.first(file_path: File.expand_path(path))
+    refute HTM::Models::FileSource.by_path(path).first
   end
 
   def test_unload_file_soft_deletes_chunks
@@ -261,9 +275,106 @@ class MarkdownLoaderTest < Minitest::Test
     end
   end
 
+  def test_unload_file_cascades_to_node_tags_and_robot_nodes
+    node_ids = load_tagged_file('unload_cascade.md')
+
+    @htm.unload_file(path_for('unload_cascade.md'))
+
+    assert active_links(node_ids).all?(&:empty?), "node_tags and robot_nodes should be soft-deleted"
+    [HTM::Models::NodeTag, HTM::Models::RobotNode].each do |model|
+      refute model.dataset.unfiltered.where(node_id: node_ids).exclude(deleted_at: nil).empty?, "#{model} rows should be kept, not hard-deleted"
+    end
+  end
+
+  def test_reload_after_unload_restores_node_tags_and_robot_nodes
+    node_ids = load_tagged_file('unload_reload.md')
+    path = path_for('unload_reload.md')
+
+    @htm.unload_file(path)
+    @htm.load_file(path, force: true)
+
+    assert active_links(node_ids).none?(&:empty?), "node_tags and robot_nodes should be active again"
+  end
+
+  def test_file_source_unload_rolls_back_when_delete_fails
+    node_ids = load_tagged_file('unload_rollback.md')
+    source = HTM::Models::FileSource.by_path(path_for('unload_rollback.md')).first
+    source.define_singleton_method(:delete) { raise Sequel::DatabaseError, "delete failed" }
+
+    assert_raises(Sequel::DatabaseError) { source.unload! }
+
+    assert HTM::Models::FileSource[source.id], "FileSource should survive"
+    assert_equal node_ids.sort, HTM::Models::Node.where(id: node_ids).select_map(:id).sort, "chunks should stay active"
+    assert active_links(node_ids).none?(&:empty?), "node_tags and robot_nodes should stay active"
+  end
+
   def test_unload_file_returns_zero_for_unknown_file
     result = @htm.unload_file('/nonexistent/file.md')
 
     assert_equal 0, result
+  end
+
+  def test_unload_file_removes_chunks_from_working_memory
+    path = create_test_file('unload_wm.md', "Content for working memory test.")
+
+    result = @htm.load_file(path, force: true)
+    source = HTM::Models::FileSource[result[:file_source_id]]
+    node_ids = source.chunks_dataset.select_map(:id)
+    refute_empty node_ids, "expected the loaded file to have chunks"
+
+    # Simulate the chunks sitting in active context, as they would be after a
+    # recall serves them into working memory.
+    node_ids.each { |id| @htm.working_memory.add(id, "wm-chunk-#{id}", token_count: 1) }
+    assert_equal node_ids.size, @htm.working_memory.node_count
+
+    count = @htm.unload_file(path)
+
+    assert_equal node_ids.size, count, "unload_file should return the chunk count"
+    assert_equal 0, @htm.working_memory.node_count, "unloaded chunks should be evicted from working memory"
+    context = @htm.working_memory.assemble_context(strategy: :recent)
+    node_ids.each do |id|
+      refute_includes context, "wm-chunk-#{id}", "chunk #{id} should not remain in working memory after unload_file"
+    end
+  end
+
+  private
+
+  def path_for(name)
+    File.join(@temp_dir, name)
+  end
+
+  def load_tagged_file(name)
+    result = @htm.load_file(create_test_file(name, "Content for #{name} #{SecureRandom.hex(8)}."), force: true)
+    node_ids = HTM::Models::FileSource[result[:file_source_id]].chunks_dataset.select_map(:id)
+    refute_empty node_ids
+    node_ids.each { |id| @htm.long_term_memory.add_tag(node_id: id, tag: "unload:cascade") }
+    assert active_links(node_ids).none?(&:empty?), "fixture should have active node_tags and robot_nodes"
+    node_ids
+  end
+
+  def active_links(node_ids)
+    [HTM::Models::NodeTag, HTM::Models::RobotNode].map { |model| model.where(node_id: node_ids) }
+  end
+end
+
+class MarkdownLoaderFrontmatterTest < Minitest::Test
+  def test_non_mapping_frontmatter_is_treated_as_empty
+    frontmatter, body = extract("---\nJust a title line\n---\nBody")
+
+    assert_equal({}, frontmatter)
+    assert_equal "Body", body
+  end
+
+  def test_frontmatter_with_yaml_aliases_is_treated_as_empty
+    frontmatter, body = extract("---\na: &b x\nc: *b\n---\nBody")
+
+    assert_equal({}, frontmatter)
+    assert_equal "Body", body
+  end
+
+  private
+
+  def extract(content)
+    HTM::Loaders::MarkdownLoader.allocate.send(:extract_frontmatter, content)
   end
 end

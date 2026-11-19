@@ -8,18 +8,18 @@ The seeding process uses environment variables for configuration. All settings h
 
 ### LLM Provider Settings
 
-- `HTM_EMBEDDING_PROVIDER` - Embedding provider (default: `ollama`)
-- `HTM_EMBEDDING_MODEL` - Embedding model (default: `nomic-embed-text`)
-- `HTM_EMBEDDING_DIMENSIONS` - Embedding dimensions (default: `768`)
-- `HTM_TAG_PROVIDER` - Tag extraction provider (default: `ollama`)
-- `HTM_TAG_MODEL` - Tag extraction model (default: `gemma3`)
-- `OLLAMA_URL` - Ollama server URL (default: `http://localhost:11434`)
+- `HTM_EMBEDDING__PROVIDER` - Embedding provider (default: `ollama`)
+- `HTM_EMBEDDING__MODEL` - Embedding model (default: `nomic-embed-text:latest`)
+- `HTM_EMBEDDING__DIMENSIONS` - Embedding dimensions (default: `768`)
+- `HTM_TAG__PROVIDER` - Tag extraction provider (default: `ollama`)
+- `HTM_TAG__MODEL` - Tag extraction model (default: `gemma3:latest`)
+- `HTM_PROVIDERS__OLLAMA__URL` - Ollama server URL (default: `http://localhost:11434`)
 
 ### Timeout Settings
 
-- `HTM_EMBEDDING_TIMEOUT` - Embedding generation timeout in seconds (default: `120`)
-- `HTM_TAG_TIMEOUT` - Tag generation timeout in seconds (default: `180`)
-- `HTM_CONNECTION_TIMEOUT` - LLM connection timeout in seconds (default: `30`)
+- `HTM_EMBEDDING__TIMEOUT` - Embedding generation timeout in seconds (default: `120`)
+- `HTM_TAG__TIMEOUT` - Tag generation timeout in seconds (default: `180`)
+- `HTM_CONNECTION_TIMEOUT` - LLM connection timeout in seconds (default: `60`)
 
 ### Database Settings
 

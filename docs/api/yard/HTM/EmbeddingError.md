@@ -1,6 +1,9 @@
-# Exception: HTM::EmbeddingError
-**Inherits:** HTM::Error
-    
+# Class HTM::EmbeddingError <a id="class-HTM-EmbeddingError"></a>
+
+|  |  |
+| --- | --- |
+| **Inherits** | [HTM::Error](Error.md) |
+| **Defined in** | lib/htm/errors.rb |
 
 Raised when embedding generation fails
 
@@ -13,6 +16,3 @@ Common causes:
 Note: This error is distinct from CircuitBreakerOpenError. EmbeddingError
 indicates a single failure, while CircuitBreakerOpenError indicates repeated
 failures have triggered protective circuit breaking.
-
-
-

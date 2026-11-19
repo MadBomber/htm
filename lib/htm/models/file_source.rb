@@ -99,12 +99,32 @@ class HTM
         frontmatter['author'] || frontmatter[:author]
       end
 
-      # Soft delete all chunks from this file
+      # Soft delete all chunks from this file, cascading to their
+      # robot_nodes and node_tags like Node#soft_delete!
       #
       # @return [Integer] Number of chunks soft-deleted
       #
       def soft_delete_chunks!
-        nodes_dataset.update(deleted_at: Time.now)
+        db.transaction do
+          now = Time.now
+          chunk_ids = nodes_dataset.select_map(:id)
+          HTM::Models::RobotNode.where(node_id: chunk_ids).update(deleted_at: now)
+          HTM::Models::NodeTag.where(node_id: chunk_ids).update(deleted_at: now)
+          HTM::Models::Node.where(id: chunk_ids).update(deleted_at: now)
+        end
+      end
+
+      # Soft delete all chunks and delete this source record in one
+      # transaction, so a failure leaves both in place
+      #
+      # @return [Integer] Number of chunks soft-deleted
+      #
+      def unload!
+        db.transaction do
+          count = soft_delete_chunks!
+          delete
+          count
+        end
       end
 
       private

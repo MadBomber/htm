@@ -194,7 +194,8 @@ class HTM
     #
     def add_from_sync(id:, content:, token_count:, created_at:)
       @mutex.synchronize do
-        key = id.to_s
+        # Key on the integer node id, as HTM#add_to_working_memory does
+        key = Integer(id)
         return if @nodes.key?(key)  # Already have this node
 
         @nodes[key] = {
@@ -219,7 +220,7 @@ class HTM
     #
     def remove_from_sync(node_id)
       @mutex.synchronize do
-        key = node_id.to_s
+        key = Integer(node_id)
         @nodes.delete(key)
         @access_order.delete(key)
       end

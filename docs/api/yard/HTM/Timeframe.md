@@ -1,6 +1,9 @@
-# Class: HTM::Timeframe
-**Inherits:** Object
-    
+# Class HTM::Timeframe <a id="class-HTM-Timeframe"></a>
+
+|  |  |
+| --- | --- |
+| **Inherits** | Object |
+| **Defined in** | lib/htm/timeframe.rb |
 
 Timeframe - Normalizes various timeframe inputs for database queries
 
@@ -9,8 +12,7 @@ Handles multiple input types and normalizes them to either:
 *   Range (single time window)
 *   Array<Range> (multiple time windows, OR'd together)
 
-
-**`@example`**
+**@example Various input types**
 ```ruby
 Timeframe.normalize(nil)                    # => nil (no filter)
 Timeframe.normalize(Date.today)             # => Range for entire day
@@ -20,21 +22,16 @@ Timeframe.normalize(:auto, query: "...")    # => Extract from query text
 Timeframe.normalize(range1..range2)         # => Pass through
 Timeframe.normalize([range1, range2])       # => Array of ranges
 ```
-# Class Methods
-## normalize(input , query: nil) {: #method-c-normalize }
+
+## Public Class Methods
+### `normalize(input, query: nil)` <a id="method-c-normalize"></a> <a id="normalize-class_method"></a>
 Normalize a timeframe input to nil, Range, or Array<Range>
-**`@param`** [nil, Range, Array, Date, DateTime, Time, String, Symbol] Timeframe specification
+- **`@param`** `input` [nil, Range, Array, Date, DateTime, Time, String, Symbol] Timeframe specification
+- **`@param`** `query` [String, nil] Query text (required when input is :auto)
+- **`@return`** [nil, Range, Array<Range>] Normalized timeframe
+- **`@return`** [Result] When input is :auto, returns Result with :timeframe, :query, :extracted
 
-**`@param`** [String, nil] Query text (required when input is :auto)
-
-**`@return`** [nil, Range, Array<Range>] Normalized timeframe
-
-**`@return`** [Result] When input is :auto, returns Result with :timeframe, :query, :extracted
-
-## valid?(input ) {: #method-c-valid? }
+### `valid?(input)` <a id="method-c-valid-3F"></a> <a id="valid?-class_method"></a>
 Check if a value is a valid timeframe input
-**`@param`** [Object] Value to check
-
-**`@return`** [Boolean] 
-
-
+- **`@param`** `input` [Object] Value to check
+- **`@return`** [Boolean]

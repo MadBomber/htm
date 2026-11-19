@@ -69,6 +69,11 @@ class HTM
           exclude(embedding: nil)
         end
 
+        # Nodes with at least one active (not soft-deleted) tag link
+        def with_tags
+          where(HTM::Models::NodeTag.where(Sequel[:node_tags][:node_id] => Sequel[:nodes][:id]).select(1).exists)
+        end
+
         def from_source(source_id)
           where(source_id: source_id).order(:chunk_position)
         end
@@ -84,7 +89,8 @@ class HTM
 
         # Soft delete scopes
         def deleted
-          exclude(deleted_at: nil)
+          # unfiltered drops the default deleted_at IS NULL scope
+          unfiltered.exclude(deleted_at: nil)
         end
 
         def with_deleted
@@ -276,7 +282,7 @@ class HTM
       def add_tags(tag_names)
         Array(tag_names).each do |tag_name|
           HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
-            HTM::Models::NodeTag.find_or_create(node_id: id, tag_id: tag.id)
+            HTM::Models::NodeTag.link(node_id: id, tag_id: tag.id)
           end
         end
       end

@@ -93,6 +93,12 @@ class HTM
       deepseek: 1536
     }.freeze
 
+    # String spellings accepted for nested boolean env vars
+    BOOLEAN_STRINGS = {
+      'true' => true, '1' => true, 'yes' => true, 'on' => true,
+      'false' => false, '0' => false, 'no' => false, 'off' => false
+    }.freeze
+
     on_load :coerce_nested_types, :reconcile_database_config, :validate_config, :setup_defaults
 
     # ==========================================================================
@@ -420,6 +426,15 @@ class HTM
     def coerce_nested_types
       coerce_provider_sections
       coerce_database_integers
+      coerce_proposition_enabled
+    end
+
+    # Nested env vars (HTM_PROPOSITION__ENABLED=false) arrive as strings;
+    # "false" is truthy, so map the common spellings to real booleans.
+    def coerce_proposition_enabled
+      return unless proposition&.enabled.is_a?(String)
+      value = BOOLEAN_STRINGS[proposition.enabled.strip.downcase]
+      proposition.enabled = value unless value.nil?
     end
 
     def coerce_provider_sections
@@ -444,8 +459,8 @@ class HTM
 
     def apply_openai_provider_config(config)
       config.openai_api_key      = openai_api_key     if openai_api_key
-      config.openai_organization = openai_organization if openai_organization && config.respond_to?(:openai_organization=)
-      config.openai_project      = openai_project      if openai_project && config.respond_to?(:openai_project=)
+      config.openai_organization_id = openai_organization if openai_organization
+      config.openai_project_id      = openai_project      if openai_project
     end
 
     def apply_anthropic_provider_config(config)
@@ -458,7 +473,7 @@ class HTM
 
     def apply_azure_provider_config(config)
       config.azure_api_key     = azure_api_key     if azure_api_key && config.respond_to?(:azure_api_key=)
-      config.azure_endpoint    = azure_endpoint    if azure_endpoint && config.respond_to?(:azure_endpoint=)
+      config.azure_api_base    = azure_endpoint    if azure_endpoint
       config.azure_api_version = azure_api_version if azure_api_version && config.respond_to?(:azure_api_version=)
     end
 

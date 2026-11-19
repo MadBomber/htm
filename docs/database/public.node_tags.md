@@ -20,7 +20,10 @@ Join table connecting nodes to tags (many-to-many)
 | ---- | ---- | ---------- |
 | fk_rails_b51cdcc57f | FOREIGN KEY | FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE |
 | fk_rails_ebc9aafd9f | FOREIGN KEY | FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE |
+| node_tags_id_not_null | n | NOT NULL id |
+| node_tags_node_id_not_null | n | NOT NULL node_id |
 | node_tags_pkey | PRIMARY KEY | PRIMARY KEY (id) |
+| node_tags_tag_id_not_null | n | NOT NULL tag_id |
 
 ## Indexes
 

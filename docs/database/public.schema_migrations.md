@@ -1,7 +1,5 @@
 # public.schema_migrations
 
-## Description
-
 ## Columns
 
 | Name | Type | Default | Nullable | Children | Parents | Comment |
@@ -13,6 +11,7 @@
 | Name | Type | Definition |
 | ---- | ---- | ---------- |
 | schema_migrations_pkey | PRIMARY KEY | PRIMARY KEY (version) |
+| schema_migrations_version_not_null | n | NOT NULL version |
 
 ## Indexes
 

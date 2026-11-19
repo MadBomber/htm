@@ -98,6 +98,26 @@
       ],
       "constraints": [
         {
+          "name": "file_sources_file_path_not_null",
+          "type": "n",
+          "def": "NOT NULL file_path",
+          "table": "public.file_sources",
+          "referenced_table": "",
+          "columns": [
+            "file_path"
+          ]
+        },
+        {
+          "name": "file_sources_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.file_sources",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
           "name": "file_sources_pkey",
           "type": "PRIMARY KEY",
           "def": "PRIMARY KEY (id)",
@@ -105,6 +125,235 @@
           "referenced_table": "",
           "columns": [
             "id"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public.node_relationships",
+      "type": "BASE TABLE",
+      "comment": "Weighted directed edges between nodes for graph traversal",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false
+        },
+        {
+          "name": "origin",
+          "type": "text",
+          "nullable": false,
+          "default": "'tag_cooccurrence'::text",
+          "comment": "How created: tag_cooccurrence, tag_hierarchy, explicit"
+        },
+        {
+          "name": "rel_type",
+          "type": "text",
+          "nullable": false,
+          "default": "'related_to'::text",
+          "comment": "Semantic label: related_to, supports, contradicts, derived_from"
+        },
+        {
+          "name": "source_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "Starting node of the relationship"
+        },
+        {
+          "name": "target_id",
+          "type": "bigint",
+          "nullable": false,
+          "comment": "Ending node of the relationship"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": "When weight was last recalculated"
+        },
+        {
+          "name": "weight",
+          "type": "double precision",
+          "nullable": false,
+          "default": "1.0",
+          "comment": "Relationship strength 0.0-1.0 (Jaccard similarity for tag_cooccurrence)"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_node_relationships_origin",
+          "def": "CREATE INDEX idx_node_relationships_origin ON public.node_relationships USING btree (origin)",
+          "table": "public.node_relationships",
+          "columns": [
+            "origin"
+          ]
+        },
+        {
+          "name": "idx_node_relationships_source_id",
+          "def": "CREATE INDEX idx_node_relationships_source_id ON public.node_relationships USING btree (source_id)",
+          "table": "public.node_relationships",
+          "columns": [
+            "source_id"
+          ]
+        },
+        {
+          "name": "idx_node_relationships_target_id",
+          "def": "CREATE INDEX idx_node_relationships_target_id ON public.node_relationships USING btree (target_id)",
+          "table": "public.node_relationships",
+          "columns": [
+            "target_id"
+          ]
+        },
+        {
+          "name": "idx_node_relationships_unique",
+          "def": "CREATE UNIQUE INDEX idx_node_relationships_unique ON public.node_relationships USING btree (source_id, target_id, rel_type)",
+          "table": "public.node_relationships",
+          "columns": [
+            "source_id",
+            "target_id",
+            "rel_type"
+          ]
+        },
+        {
+          "name": "idx_node_relationships_weight",
+          "def": "CREATE INDEX idx_node_relationships_weight ON public.node_relationships USING btree (weight)",
+          "table": "public.node_relationships",
+          "columns": [
+            "weight"
+          ]
+        },
+        {
+          "name": "node_relationships_pkey",
+          "def": "CREATE UNIQUE INDEX node_relationships_pkey ON public.node_relationships USING btree (id)",
+          "table": "public.node_relationships",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "chk_node_relationships_no_self_loop",
+          "type": "CHECK",
+          "def": "CHECK ((source_id \u003c\u003e target_id))",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "source_id",
+            "target_id"
+          ]
+        },
+        {
+          "name": "chk_node_relationships_weight",
+          "type": "CHECK",
+          "def": "CHECK (((weight \u003e= (0.0)::double precision) AND (weight \u003c= (1.0)::double precision)))",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "weight"
+          ]
+        },
+        {
+          "name": "fk_node_relationships_source",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (source_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.node_relationships",
+          "referenced_table": "public.nodes",
+          "columns": [
+            "source_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "fk_node_relationships_target",
+          "type": "FOREIGN KEY",
+          "def": "FOREIGN KEY (target_id) REFERENCES nodes(id) ON DELETE CASCADE",
+          "table": "public.node_relationships",
+          "referenced_table": "public.nodes",
+          "columns": [
+            "target_id"
+          ],
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "node_relationships_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "node_relationships_origin_not_null",
+          "type": "n",
+          "def": "NOT NULL origin",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "origin"
+          ]
+        },
+        {
+          "name": "node_relationships_pkey",
+          "type": "PRIMARY KEY",
+          "def": "PRIMARY KEY (id)",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "node_relationships_rel_type_not_null",
+          "type": "n",
+          "def": "NOT NULL rel_type",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "rel_type"
+          ]
+        },
+        {
+          "name": "node_relationships_source_id_not_null",
+          "type": "n",
+          "def": "NOT NULL source_id",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "source_id"
+          ]
+        },
+        {
+          "name": "node_relationships_target_id_not_null",
+          "type": "n",
+          "def": "NOT NULL target_id",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "target_id"
+          ]
+        },
+        {
+          "name": "node_relationships_weight_not_null",
+          "type": "n",
+          "def": "NOT NULL weight",
+          "table": "public.node_relationships",
+          "referenced_table": "",
+          "columns": [
+            "weight"
           ]
         }
       ]
@@ -195,7 +444,7 @@
           "type": "FOREIGN KEY",
           "def": "FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE",
           "table": "public.node_tags",
-          "referenced_table": "tags",
+          "referenced_table": "public.tags",
           "columns": [
             "tag_id"
           ],
@@ -208,12 +457,32 @@
           "type": "FOREIGN KEY",
           "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
           "table": "public.node_tags",
-          "referenced_table": "nodes",
+          "referenced_table": "public.nodes",
           "columns": [
             "node_id"
           ],
           "referenced_columns": [
             "id"
+          ]
+        },
+        {
+          "name": "node_tags_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.node_tags",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "node_tags_node_id_not_null",
+          "type": "n",
+          "def": "NOT NULL node_id",
+          "table": "public.node_tags",
+          "referenced_table": "",
+          "columns": [
+            "node_id"
           ]
         },
         {
@@ -224,6 +493,16 @@
           "referenced_table": "",
           "columns": [
             "id"
+          ]
+        },
+        {
+          "name": "node_tags_tag_id_not_null",
+          "type": "n",
+          "def": "NOT NULL tag_id",
+          "table": "public.node_tags",
+          "referenced_table": "",
+          "columns": [
+            "tag_id"
           ]
         }
       ]
@@ -470,12 +749,52 @@
           "type": "FOREIGN KEY",
           "def": "FOREIGN KEY (source_id) REFERENCES file_sources(id) ON DELETE SET NULL",
           "table": "public.nodes",
-          "referenced_table": "file_sources",
+          "referenced_table": "public.file_sources",
           "columns": [
             "source_id"
           ],
           "referenced_columns": [
             "id"
+          ]
+        },
+        {
+          "name": "nodes_access_count_not_null",
+          "type": "n",
+          "def": "NOT NULL access_count",
+          "table": "public.nodes",
+          "referenced_table": "",
+          "columns": [
+            "access_count"
+          ]
+        },
+        {
+          "name": "nodes_content_not_null",
+          "type": "n",
+          "def": "NOT NULL content",
+          "table": "public.nodes",
+          "referenced_table": "",
+          "columns": [
+            "content"
+          ]
+        },
+        {
+          "name": "nodes_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.nodes",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "nodes_metadata_not_null",
+          "type": "n",
+          "def": "NOT NULL metadata",
+          "table": "public.nodes",
+          "referenced_table": "",
+          "columns": [
+            "metadata"
           ]
         },
         {
@@ -626,7 +945,7 @@
           "type": "FOREIGN KEY",
           "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE",
           "table": "public.robot_nodes",
-          "referenced_table": "robots",
+          "referenced_table": "public.robots",
           "columns": [
             "robot_id"
           ],
@@ -639,12 +958,32 @@
           "type": "FOREIGN KEY",
           "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE",
           "table": "public.robot_nodes",
-          "referenced_table": "nodes",
+          "referenced_table": "public.nodes",
           "columns": [
             "node_id"
           ],
           "referenced_columns": [
             "id"
+          ]
+        },
+        {
+          "name": "robot_nodes_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.robot_nodes",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "robot_nodes_node_id_not_null",
+          "type": "n",
+          "def": "NOT NULL node_id",
+          "table": "public.robot_nodes",
+          "referenced_table": "",
+          "columns": [
+            "node_id"
           ]
         },
         {
@@ -655,6 +994,36 @@
           "referenced_table": "",
           "columns": [
             "id"
+          ]
+        },
+        {
+          "name": "robot_nodes_remember_count_not_null",
+          "type": "n",
+          "def": "NOT NULL remember_count",
+          "table": "public.robot_nodes",
+          "referenced_table": "",
+          "columns": [
+            "remember_count"
+          ]
+        },
+        {
+          "name": "robot_nodes_robot_id_not_null",
+          "type": "n",
+          "def": "NOT NULL robot_id",
+          "table": "public.robot_nodes",
+          "referenced_table": "",
+          "columns": [
+            "robot_id"
+          ]
+        },
+        {
+          "name": "robot_nodes_working_memory_not_null",
+          "type": "n",
+          "def": "NOT NULL working_memory",
+          "table": "public.robot_nodes",
+          "referenced_table": "",
+          "columns": [
+            "working_memory"
           ]
         }
       ]
@@ -703,6 +1072,16 @@
       ],
       "constraints": [
         {
+          "name": "robots_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.robots",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
           "name": "robots_pkey",
           "type": "PRIMARY KEY",
           "def": "PRIMARY KEY (id)",
@@ -739,6 +1118,16 @@
           "name": "schema_migrations_pkey",
           "type": "PRIMARY KEY",
           "def": "PRIMARY KEY (version)",
+          "table": "public.schema_migrations",
+          "referenced_table": "",
+          "columns": [
+            "version"
+          ]
+        },
+        {
+          "name": "schema_migrations_version_not_null",
+          "type": "n",
+          "def": "NOT NULL version",
           "table": "public.schema_migrations",
           "referenced_table": "",
           "columns": [
@@ -822,6 +1211,26 @@
       ],
       "constraints": [
         {
+          "name": "tags_id_not_null",
+          "type": "n",
+          "def": "NOT NULL id",
+          "table": "public.tags",
+          "referenced_table": "",
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "tags_name_not_null",
+          "type": "n",
+          "def": "NOT NULL name",
+          "table": "public.tags",
+          "referenced_table": "",
+          "columns": [
+            "name"
+          ]
+        },
+        {
           "name": "tags_pkey",
           "type": "PRIMARY KEY",
           "def": "PRIMARY KEY (id)",
@@ -835,6 +1244,32 @@
     }
   ],
   "relations": [
+    {
+      "table": "public.node_relationships",
+      "columns": [
+        "source_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (source_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.node_relationships",
+      "columns": [
+        "target_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.nodes",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (target_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    },
     {
       "table": "public.node_tags",
       "columns": [
@@ -877,19 +1312,6 @@
     {
       "table": "public.robot_nodes",
       "columns": [
-        "robot_id"
-      ],
-      "cardinality": "zero_or_more",
-      "parent_table": "public.robots",
-      "parent_columns": [
-        "id"
-      ],
-      "parent_cardinality": "exactly_one",
-      "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
-    },
-    {
-      "table": "public.robot_nodes",
-      "columns": [
         "node_id"
       ],
       "cardinality": "zero_or_more",
@@ -899,6 +1321,19 @@
       ],
       "parent_cardinality": "exactly_one",
       "def": "FOREIGN KEY (node_id) REFERENCES nodes(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "public.robot_nodes",
+      "columns": [
+        "robot_id"
+      ],
+      "cardinality": "zero_or_more",
+      "parent_table": "public.robots",
+      "parent_columns": [
+        "id"
+      ],
+      "parent_cardinality": "exactly_one",
+      "def": "FOREIGN KEY (robot_id) REFERENCES robots(id) ON DELETE CASCADE"
     }
   ],
   "functions": [
@@ -1797,9 +2232,29 @@
       "type": "FUNCTION"
     }
   ],
+  "enums": [
+    {
+      "name": "paradedb.rangerelation",
+      "values": [
+        "Contains",
+        "Intersects",
+        "Within"
+      ]
+    },
+    {
+      "name": "paradedb.testtable",
+      "values": [
+        "Customers",
+        "Deliveries",
+        "Items",
+        "Orders",
+        "Parts"
+      ]
+    }
+  ],
   "driver": {
     "name": "postgres",
-    "database_version": "PostgreSQL 17.7 (Homebrew) on aarch64-apple-darwin25.1.0, compiled by Apple clang version 17.0.0 (clang-1700.4.4.1), 64-bit",
+    "database_version": "PostgreSQL 18.6 (Homebrew) on aarch64-apple-darwin27.0.0, compiled by Apple clang version 21.0.0 (clang-2100.3.34.2), 64-bit",
     "meta": {
       "current_schema": "public",
       "search_paths": [

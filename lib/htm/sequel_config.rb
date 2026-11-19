@@ -94,13 +94,14 @@ class HTM
         end
 
         user = config[:username] || config[:user]
+        user = URI.encode_uri_component(user) if user
         password = config[:password]
         host = config[:host] || 'localhost'
         port = config[:port] || 5432
         database = config[:database]
 
         if password && !password.empty?
-          "postgres://#{user}:#{password}@#{host}:#{port}/#{database}"
+          "postgres://#{user}:#{URI.encode_uri_component(password)}@#{host}:#{port}/#{database}"
         elsif user
           "postgres://#{user}@#{host}:#{port}/#{database}"
         else

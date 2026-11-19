@@ -40,6 +40,8 @@ class HTM
           # If found but soft-deleted, restore it
           if existing_node&.deleted?
             existing_node.restore!
+            # Cached searches from while the node was forgotten are now stale
+            @cache&.invalidate_methods!(:search, :fulltext, :hybrid)
             HTM.logger.info "Restored soft-deleted node #{existing_node.id} for content match"
           end
 

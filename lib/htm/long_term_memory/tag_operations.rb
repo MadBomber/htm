@@ -54,7 +54,7 @@ class HTM
       def add_tag(node_id:, tag:)
         # Create tag and all ancestor tags, then associate each with the node
         HTM::Models::Tag.find_or_create_with_ancestors(tag).each do |tag_record|
-          HTM::Models::NodeTag.find_or_create(
+          HTM::Models::NodeTag.link(
             node_id: node_id,
             tag_id: tag_record.id
           )
@@ -115,12 +115,16 @@ class HTM
           SELECT t1.name AS topic1, t2.name AS topic2, COUNT(DISTINCT nt1.node_id) AS shared_nodes
           FROM tags t1
           JOIN node_tags nt1 ON t1.id = nt1.tag_id
+          JOIN nodes n ON n.id = nt1.node_id
           JOIN node_tags nt2 ON nt1.node_id = nt2.node_id
           JOIN tags t2 ON nt2.tag_id = t2.id
           WHERE t1.name < t2.name
+            AND t1.deleted_at IS NULL AND t2.deleted_at IS NULL
+            AND nt1.deleted_at IS NULL AND nt2.deleted_at IS NULL
+            AND n.deleted_at IS NULL
           GROUP BY t1.name, t2.name
           HAVING COUNT(DISTINCT nt1.node_id) >= ?
-          ORDER BY shared_nodes DESC
+          ORDER BY shared_nodes DESC, topic1, topic2
           LIMIT ?
         SQL
 

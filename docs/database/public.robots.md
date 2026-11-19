@@ -17,6 +17,7 @@ Registry of all LLM robots using the HTM system
 
 | Name | Type | Definition |
 | ---- | ---- | ---------- |
+| robots_id_not_null | n | NOT NULL id |
 | robots_pkey | PRIMARY KEY | PRIMARY KEY (id) |
 
 ## Indexes

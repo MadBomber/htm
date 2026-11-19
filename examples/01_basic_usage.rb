@@ -10,7 +10,7 @@
 # Run via:
 #   rake examples:basic
 #   # or
-#   ruby examples/basic_usage.rb
+#   ruby examples/01_basic_usage.rb
 
 require_relative 'examples_helper'
 

@@ -14,7 +14,7 @@
 # 2. Install dependencies: bundle install
 #
 # Usage:
-#   ruby examples/cli_app/htm_cli.rb
+#   ruby examples/07_cli_app/htm_cli.rb
 #
 # Environment:
 #   OLLAMA_URL - Ollama server URL (default: http://localhost:11434)

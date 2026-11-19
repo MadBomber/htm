@@ -50,7 +50,8 @@ class HTM
         end
 
         def deleted
-          exclude(deleted_at: nil)
+          # unfiltered drops the default deleted_at IS NULL scope
+          unfiltered.exclude(deleted_at: nil)
         end
 
         def with_deleted
@@ -75,7 +76,9 @@ class HTM
       # @return [Boolean] true if restored successfully
       #
       def restore!
-        update(deleted_at: nil)
+        # Use unfiltered dataset to bypass the default scope that excludes deleted records
+        self.class.dataset.unfiltered.where(id: id).update(deleted_at: nil)
+        self.deleted_at = nil
         true
       end
 

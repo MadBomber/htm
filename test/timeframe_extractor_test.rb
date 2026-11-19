@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "minitest/mock"
 
 class TimeframeExtractorTest < Minitest::Test
   # Test the FEW constant
@@ -192,6 +193,44 @@ class TimeframeExtractorTest < Minitest::Test
     refute_nil result.timeframe
   end
 
+  # In-progress periods run from their start through now
+  def test_current_periods_include_the_past_through_now
+    now = Time.now
+    {
+      "notes from today" => Time.new(now.year, now.month, now.day),
+      "notes this month" => Time.new(now.year, now.month, 1),
+      "notes this year" => Time.new(now.year, 1, 1),
+      "notes since yesterday" => Time.new(now.year, now.month, now.day) - 86_400
+    }.each do |query, expected_start|
+      timeframe = HTM::TimeframeExtractor.extract(query).timeframe
+
+      assert_kind_of Range, timeframe, query
+      assert_in_delta expected_start.to_i, timeframe.begin.to_i, 3_600, query
+      assert timeframe.end >= now, "#{query}: range should extend through now"
+    end
+  end
+
+  def test_this_week_and_since_weekday_start_in_the_past
+    now = Time.now
+    ["notes this week", "notes since monday"].each do |query|
+      timeframe = HTM::TimeframeExtractor.extract(query).timeframe
+
+      assert_operator timeframe.begin, :<=, now, query
+      assert_operator timeframe.begin, :>, now - (8 * 86_400), query
+      assert timeframe.end >= now, "#{query}: range should extend through now"
+    end
+  end
+
+  def test_this_week_on_sunday_starts_today_for_sunday_week_start
+    assert_equal Time.new(2026, 11, 15), this_week_start(Time.new(2026, 11, 15, 10, 0, 0), :sunday)
+  end
+
+  def test_this_week_honors_monday_week_start
+    assert_equal Time.new(2026, 11, 9), this_week_start(Time.new(2026, 11, 15, 10, 0, 0), :monday)
+    assert_equal Time.new(2026, 11, 16), this_week_start(Time.new(2026, 11, 16, 10, 0, 0), :monday)
+    assert_equal Time.new(2026, 11, 15), this_week_start(Time.new(2026, 11, 18, 10, 0, 0), :sunday)
+  end
+
   # Test nil input
   def test_extract_handles_nil
     result = HTM::TimeframeExtractor.extract(nil)
@@ -299,5 +338,15 @@ class TimeframeExtractorTest < Minitest::Test
     assert_equal 1, HTM::TimeframeExtractor::WORD_NUMBERS['one']
     assert_equal 2, HTM::TimeframeExtractor::WORD_NUMBERS['two']
     assert_equal 10, HTM::TimeframeExtractor::WORD_NUMBERS['ten']
+  end
+
+  private
+
+  def this_week_start(now, week_start)
+    timeframe = HTM.configuration.stub(:week_start, week_start) do
+      Time.stub(:now, now) { HTM::TimeframeExtractor.extract("notes this week").timeframe }
+    end
+    assert_equal now, timeframe.end
+    timeframe.begin
   end
 end

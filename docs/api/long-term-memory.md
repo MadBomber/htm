@@ -626,7 +626,7 @@ topic_relationships(min_shared_nodes: 2, limit: 50)
 
 #### Returns
 
-- `Array<Hash>` - `[{ topic1:, topic2:, shared_nodes: }, ...]`
+- `Array<Hash>` - `[{ "topic1" => ..., "topic2" => ..., "shared_nodes" => ... }, ...]` (string keys)
 
 #### Examples
 

@@ -166,7 +166,7 @@ class HTM
   #   - String: Natural language (e.g., "last week", "few days ago")
   #   - :auto: Extract timeframe from topic query automatically
   # @param limit [Integer] Maximum number of nodes to retrieve (default: 20)
-  # @param strategy [Symbol] Search strategy (:vector, :fulltext, :hybrid) (default: :vector)
+  # @param strategy [Symbol] Search strategy (:vector, :fulltext, :hybrid) (default: :fulltext)
   # @param with_relevance [Boolean] Include dynamic relevance scores (default: false)
   # @param query_tags [Array<String>] Tags to boost relevance (default: [])
   # @param raw [Boolean] Return full node hashes (true) or just content strings (false) (default: false)
@@ -273,6 +273,7 @@ class HTM
   # @param soft [Boolean] If true (default), soft delete; if false, permanent delete
   # @param confirm [Symbol] Must be :confirmed to proceed with permanent deletion
   # @return [Boolean] true if deleted
+  # @raise [HTM::ValidationError] if node_id is not a positive Integer
   # @raise [ArgumentError] if permanent deletion requested without confirmation
   # @raise [HTM::NotFoundError] if node doesn't exist
   #
@@ -284,8 +285,7 @@ class HTM
   #   htm.forget(node_id, soft: false, confirm: :confirmed)
   #
   def forget(node_id, soft: true, confirm: false)
-    # Validate inputs
-    raise ArgumentError, "Node ID cannot be nil" if node_id.nil?
+    validate_positive_integer!(node_id, "node_id")
 
     # Permanent delete requires confirmation
     if !soft && confirm != :confirmed
@@ -342,7 +342,7 @@ class HTM
     end
 
     # Find all nodes containing the substring (case-insensitive)
-    matching_nodes = HTM::Models::Node.where(Sequel.ilike(:content, "%#{content_substring}%"))
+    matching_nodes = HTM::Models::Node.where(Sequel.ilike(:content, "%#{HTM::SqlBuilder.sanitize_like_pattern(content_substring)}%"))
     node_ids = matching_nodes.select_map(:id)
 
     if node_ids.empty?
@@ -363,6 +363,7 @@ class HTM
   #
   # @param node_id [Integer] ID of the soft-deleted node to restore
   # @return [Boolean] true if restored
+  # @raise [HTM::ValidationError] if node_id is not a positive Integer
   # @raise [HTM::NotFoundError] if node doesn't exist or isn't deleted
   #
   # @example
@@ -370,7 +371,7 @@ class HTM
   #   htm.restore(node_id)       # Bring it back
   #
   def restore(node_id)
-    raise ArgumentError, "Node ID cannot be nil" if node_id.nil?
+    validate_positive_integer!(node_id, "node_id")
 
     # Find including soft-deleted nodes
     node = HTM::Models::Node.with_deleted.first(id: node_id)
@@ -381,6 +382,7 @@ class HTM
     end
 
     node.restore!
+    @long_term_memory.clear_cache!  # Invalidate cache since node is visible again
     HTM.logger.info "Node #{node_id} restored"
 
     update_robot_activity
@@ -497,13 +499,14 @@ class HTM
   #   nodes.each { |node| puts node.content }
   #
   def nodes_from_file(file_path)
-    source = HTM::Models::FileSource.first(file_path: File.expand_path(file_path))
+    source = HTM::Models::FileSource.by_path(file_path).first
     return [] unless source
 
     HTM::Models::Node.from_source(source.id).all
   end
 
-  # Unload a file (soft-delete all its chunks and remove source record)
+  # Unload a file (soft-delete all its chunks and remove source record
+  # in one transaction)
   #
   # @param file_path [String] Path to the source file
   # @return [Integer] Number of nodes soft-deleted
@@ -513,12 +516,17 @@ class HTM
   #   puts "Unloaded #{count} chunks"
   #
   def unload_file(file_path)
-    source = HTM::Models::FileSource.first(file_path: File.expand_path(file_path))
+    source = HTM::Models::FileSource.by_path(file_path).first
     return 0 unless source
 
-    count = source.soft_delete_chunks!
+    # Capture chunk node ids before unload! soft-deletes them, so we can
+    # evict them from working memory (mirrors #forget).
+    node_ids = source.nodes_dataset.select_map(:id)
+
+    count = source.unload!
     @long_term_memory.clear_cache!
-    source.delete
+
+    node_ids.each { |id| @working_memory.remove(id) }
 
     update_robot_activity
     count
@@ -586,7 +594,7 @@ class HTM
     if manual_tags.any?
       manual_tags.each do |tag_name|
         HTM::Models::Tag.find_or_create_with_ancestors(tag_name).each do |tag|
-          HTM::Models::NodeTag.find_or_create(node_id: node_id, tag_id: tag.id)
+          HTM::Models::NodeTag.link(node_id: node_id, tag_id: tag.id)
         end
       end
     end

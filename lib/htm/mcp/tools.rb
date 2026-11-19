@@ -308,7 +308,7 @@ class HTM
         Session.logger&.info "ListTagsTool called: prefix=#{prefix.inspect}"
 
         tags_query = HTM::Models::Tag.order(:name)
-        tags_query = tags_query.where(Sequel.like(:name, "#{prefix}%")) if prefix
+        tags_query = tags_query.with_prefix(prefix) if prefix
 
         tags = tags_query.map do |tag|
           {
@@ -436,10 +436,7 @@ class HTM
         total_nodes           = HTM::Models::Node.count
         deleted_nodes         = HTM::Models::Node.deleted.count
         nodes_with_embeddings = HTM::Models::Node.with_embeddings.count
-        nodes_with_tags       = HTM::Models::Node
-                                .join(:node_tags, node_id: :id)
-                                .distinct
-                                .count
+        nodes_with_tags       = HTM::Models::Node.with_tags.count
         total_tags            = HTM::Models::Tag.count
         total_robots          = HTM::Models::Robot.count
 

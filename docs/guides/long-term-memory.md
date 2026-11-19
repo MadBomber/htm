@@ -702,7 +702,7 @@ conn.exec_params(
 
 ```ruby
 # Good: Use HTM's internal connection handling
-htm.add_node(...)  # Manages connections automatically
+htm.remember(...)  # Manages connections automatically
 
 # Advanced: Manual connections, always close
 conn = PG.connect(config)

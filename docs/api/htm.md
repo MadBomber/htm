@@ -569,7 +569,7 @@ end
 
 ### `unload_file(file_path)` {: #unload_file }
 
-Remove a file from memory by soft-deleting all its chunks and the file source.
+Remove a file from memory by soft-deleting all its chunks and deleting its file source.
 
 ```ruby
 unload_file(file_path)
@@ -583,12 +583,11 @@ unload_file(file_path)
 
 #### Returns
 
-- `true` if file was found and unloaded
-- `false` if file was not found
+- `Integer` number of chunks soft-deleted (`0` if the file was not loaded)
 
 #### Side Effects
 
-- Soft-deletes all nodes from the file (sets `deleted_at`)
+- Soft-deletes all nodes from the file (sets `deleted_at`), plus their `node_tags` and `robot_nodes`
 - Destroys the FileSource record
 
 #### Examples

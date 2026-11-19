@@ -1,6 +1,9 @@
-# Class: HTM::Railtie
-**Inherits:** Rails::Railtie
-    
+# Class HTM::Railtie <a id="class-HTM-Railtie"></a>
+
+|  |  |
+| --- | --- |
+| **Inherits** | Rails::Railtie |
+| **Defined in** | lib/htm/railtie.rb |
 
 Rails Railtie for automatic HTM configuration in Rails applications
 
@@ -10,13 +13,13 @@ This railtie automatically configures HTM when Rails boots:
 *   Loads Rake tasks
 *   Configures test environment for synchronous jobs
 
-
-**`@example`**
+**@example Rails application**
 ```ruby
 # HTM is automatically configured on Rails boot
 # No additional setup required
 ```
-**`@example`**
+
+**@example Custom configuration**
 ```ruby
 # config/initializers/htm.rb
 HTM.configure do |config|
@@ -24,4 +27,3 @@ HTM.configure do |config|
   config.tag_model = 'custom-tag-model'
 end
 ```
-

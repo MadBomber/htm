@@ -22,6 +22,15 @@ db_url = "postgresql://#{ENV['USER']}@localhost:5432/#{db_name}"
 
 ENV['HTM_DATABASE__URL'] = db_url
 
+# Point psql/createdb at the same server HTM will connect to,
+# not whatever libpq defaults to (PGHOST, PGPORT, Unix socket)
+require 'uri'
+db_uri = URI.parse(db_url)
+pg_conn_args = []
+pg_conn_args.push('-h', db_uri.host) if db_uri.host
+pg_conn_args.push('-p', db_uri.port.to_s) if db_uri.port
+pg_conn_args.push('-U', URI.decode_uri_component(db_uri.user)) if db_uri.user
+
 puts <<~HEADER
 
   ==========================================
@@ -35,14 +44,18 @@ HEADER
 # Step 1: Create database if it doesn't exist
 puts "1. Checking if database exists..."
 
-check_cmd = "psql -lqt | cut -d \\| -f 1 | grep -qw #{db_name}"
-db_exists = system(check_cmd)
+db_list = begin
+  IO.popen(['psql', *pg_conn_args, '-lqt'], err: File::NULL, &:read)
+rescue Errno::ENOENT
+  ''
+end
+db_exists = db_list.lines.any? { |line| line.split('|').first.to_s.strip == db_name }
 
 if db_exists
   puts "   Database '#{db_name}' already exists."
 else
   puts "   Creating database '#{db_name}'..."
-  unless system("createdb #{db_name}")
+  unless system('createdb', *pg_conn_args, db_name)
     abort "   ERROR: Failed to create database '#{db_name}'"
   end
   puts "   Database created."
@@ -56,7 +69,7 @@ extensions_sql = <<~SQL
   CREATE EXTENSION IF NOT EXISTS pg_trgm;
 SQL
 
-unless system("psql -d #{db_name} -c \"#{extensions_sql}\" > /dev/null 2>&1")
+unless system('psql', *pg_conn_args, '-d', db_name, '-c', extensions_sql, out: File::NULL, err: File::NULL)
   abort "   ERROR: Failed to enable extensions"
 end
 puts "   Extensions enabled (pgvector, pg_trgm)."
@@ -86,7 +99,7 @@ puts <<~FOOTER
   Examples database is ready!
 
   You can now run examples:
-    ruby examples/basic_usage.rb
+    ruby examples/01_basic_usage.rb
     rake examples:basic
     rake examples:all
   ==========================================
